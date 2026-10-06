@@ -128,3 +128,55 @@
     @apply font-sans;
   }
 }
+
+/* Chargeur générique (AppLoader) : 100 % CSS, sans JS client. */
+@keyframes tks-loader-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes tks-loader-ping {
+  0% {
+    transform: scale(0.92);
+    opacity: 0.9;
+  }
+  70% {
+    transform: scale(1.12);
+    opacity: 0;
+  }
+  100% {
+    transform: scale(1.12);
+    opacity: 0;
+  }
+}
+@keyframes tks-loader-dots {
+  0% {
+    content: "";
+  }
+  25% {
+    content: ".";
+  }
+  50% {
+    content: "..";
+  }
+  75% {
+    content: "...";
+  }
+}
+.tks-loader-orbit {
+  animation: tks-loader-orbit 2.4s linear infinite;
+}
+.tks-loader-ping {
+  animation: tks-loader-ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+.tks-loader-dots::after {
+  content: "";
+  animation: tks-loader-dots 1.5s steps(1) infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tks-loader-orbit,
+  .tks-loader-ping,
+  .tks-loader-dots::after {
+    animation: none;
+  }
+}

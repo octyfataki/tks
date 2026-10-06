@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1791304448912,
+      "tag": "0000_broken_logan",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1791305172628,
+      "tag": "0001_s1-comptes-staff-invitations",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1791311626832,
+      "tag": "0002_s1-comptes-admin-complement",
+      "breakpoints": true
+    }
+  ]
+}
