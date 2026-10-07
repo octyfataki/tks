@@ -1,43 +1,125 @@
-import { AuthShell } from "@/components/auth-shell";
-import { Button } from "@/components/ui/button";
+import { headers } from "next/headers";
+import { desc, eq } from "drizzle-orm";
+import { auth } from "@/lib/auth";
+import { db } from "@/lib/db/client";
+import { comptesStaff, invitationsAgents } from "@/lib/db/schema/s1-comptes";
 import {
-  Field,
-  FieldDescription,
-  FieldGroup,
-  FieldLabel,
-} from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
+  peutInviterAdminPrincipal,
+  peutInviterAgent,
+} from "@/lib/db/schema/s1-comptes";
+import { lireDureeInvitationJours } from "@/lib/s1-comptes/reglages";
+import {
+  Tabs,
+  TabsContent,
+  TabsList,
+  TabsTrigger,
+} from "@/components/ui/tabs";
+import { FormulaireInvitationAdmin } from "../administrateurs/formulaire-invitation";
+import { FormulaireInvitationAgent } from "./formulaire";
 
-export default function AdminInvitesPage() {
+/**
+ * /admin/invites — Invitations par lien (?cible=admin|agent, défaut agent).
+ * Les deux voies partagent la même page car la sidebar y envoie les deux
+ * entrées (« Inviter un administrateur principal » et « Inviter un
+ * agent ») : un onglet par rôle cible, chacun avec son autorisation S1.
+ * Le lien fixe le rôle, jamais l'identifiant : la personne choisit
+ * elle-même son email et son mot de passe. Usage unique, durée [1, 30].
+ *
+ * Le shell SidebarProvider + AdminHeader vit dans /admin/layout : ici,
+ * uniquement le contenu.
+ */
+export default async function InviterPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ cible?: string }>;
+}) {
+  const { cible } = await searchParams;
+  const session = await auth.api.getSession({ headers: await headers() });
+  const email = session?.user?.email ?? "";
+  const lignes = email
+    ? await db
+        .select({ role: comptesStaff.role, etat: comptesStaff.etat })
+        .from(comptesStaff)
+        .where(eq(comptesStaff.email, email))
+    : [];
+  const moi = lignes[0];
+  const peutInviterAdmin = moi
+    ? peutInviterAdminPrincipal(moi.role, moi.etat)
+    : false;
+  const peutInviterAgentRole = moi ? peutInviterAgent(moi.role, moi.etat) : false;
+
+  if (!peutInviterAdmin && !peutInviterAgentRole) {
+    return (
+      <p className="p-4 text-xs text-muted-foreground">
+        Seul un administrateur principal ou technique validé peut inviter un
+        membre du personnel.
+      </p>
+    );
+  }
+
+  const invitations =
+    peutInviterAgentRole
+      ? await db
+          .select({
+            id: invitationsAgents.id,
+            jeton: invitationsAgents.jeton,
+            expireLe: invitationsAgents.expireLe,
+            consommeLe: invitationsAgents.consommeLe,
+          })
+          .from(invitationsAgents)
+          .where(eq(invitationsAgents.roleCible, "AGENT"))
+          .orderBy(desc(invitationsAgents.createdAt))
+      : [];
+
+  const defautDureeInvitation =
+    peutInviterAdmin || peutInviterAgentRole
+      ? await lireDureeInvitationJours()
+      : 7;
+
+  const seulOnglet = peutInviterAdmin && !peutInviterAgentRole ? "admin" : null;
+
+  // Un seul rôle autorisé (administrateur technique) : pas d'onglets,
+  // le formulaire suffit.
+  if (seulOnglet) {
+    return (
+      <div className="flex flex-1 flex-col">
+        <FormulaireInvitationAdmin defautJours={defautDureeInvitation} />
+      </div>
+    );
+  }
+
+  const ongletDefaut =
+    cible === "admin" && peutInviterAdmin ? "admin" : "agent";
+
   return (
-    <AuthShell
-      title="Inviter un agent de service"
-      description="Le distributeur crée un lien à usage unique et à durée limitée. Le lien ne crée qu'un compte agent de service."
-    >
-      <form action="#" method="post">
-        <FieldGroup>
-          <Field>
-            <FieldLabel htmlFor="duree">Durée de validité (jours)</FieldLabel>
-            <Input
-              id="duree"
-              name="duree"
-              type="number"
-              min={1}
-              defaultValue={7}
-              required
+    <div className="flex flex-1 flex-col">
+      <Tabs defaultValue={ongletDefaut} className="flex flex-1 flex-col">
+        <div className="px-4 pt-4">
+          <TabsList aria-label="Qui inviter">
+            {peutInviterAdmin ? (
+              <TabsTrigger value="admin">
+                Administrateur principal
+              </TabsTrigger>
+            ) : null}
+            {peutInviterAgentRole ? (
+              <TabsTrigger value="agent">Agent de service</TabsTrigger>
+            ) : null}
+          </TabsList>
+        </div>
+        {peutInviterAdmin ? (
+          <TabsContent value="admin">
+            <FormulaireInvitationAdmin defautJours={defautDureeInvitation} />
+          </TabsContent>
+        ) : null}
+        {peutInviterAgentRole ? (
+          <TabsContent value="agent">
+            <FormulaireInvitationAgent
+              defautJours={defautDureeInvitation}
+              invitations={invitations}
             />
-            <FieldDescription>
-              Passé l&apos;expiration, le lien est refusé visiblement et un
-              nouveau lien doit être envoyé.
-            </FieldDescription>
-          </Field>
-          <Field>
-            <Button type="submit" size="lg" className="w-full">
-              Créer le lien d&apos;invitation
-            </Button>
-          </Field>
-        </FieldGroup>
-      </form>
-    </AuthShell>
+          </TabsContent>
+        ) : null}
+      </Tabs>
+    </div>
   );
 }

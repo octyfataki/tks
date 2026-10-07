@@ -10,7 +10,7 @@ export default function SignInPage() {
       description="Votre adresse email, puis votre mot de passe — client comme administrateur."
     >
       <SignInForm />
-      <FieldGroup>
+      <FieldGroup className="mt-4">
         <Field>
           <p className="text-xs text-muted-foreground">
             Pas de compte ?{" "}

@@ -2,194 +2,250 @@
 
 import * as React from "react"
 
-import { NavMain } from "@/components/nav-main"
-import { NavProjects } from "@/components/nav-projects"
+import { NavMain, type NavItem } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
 import { BrandLogo } from "@/components/brand-logo"
-import { TeamSwitcher } from "@/components/team-switcher"
 import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
   SidebarHeader,
+  SidebarMenu,
+  SidebarMenuItem,
   SidebarRail,
 } from "@/components/ui/sidebar"
-import { GalleryVerticalEndIcon, AudioLinesIcon, TerminalIcon, TerminalSquareIcon, BotIcon, BookOpenIcon, Settings2Icon, FrameIcon, PieChartIcon, MapIcon } from "lucide-react"
+import {
+  AlertTriangleIcon,
+  BanknoteIcon,
+  ClipboardListIcon,
+  FileCheckIcon,
+  FolderOpenIcon,
+  GaugeIcon,
+  LayoutDashboardIcon,
+  PercentIcon,
+  ScaleIcon,
+  ScrollTextIcon,
+  SettingsIcon,
+  ShieldCheckIcon,
+  TagsIcon,
+  UserCheckIcon,
+  UserPlusIcon,
+  WalletIcon,
+} from "lucide-react"
 
-// This is sample data.
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
+const groups: { label: string; items: NavItem[] }[] = [
+  {
+    label: "Pilotage",
+    items: [
+      {
+        title: "Tableau de bord",
+        url: "/admin/dashboard",
+        icon: <LayoutDashboardIcon />,
+        isActive: true,
+      },
+      {
+        title: "Alertes et réconciliation",
+        url: "#",
+        icon: <AlertTriangleIcon />,
+        soon: true,
+        items: [
+          { title: "Preuves en attente", soon: true },
+          { title: "Conflits ouverts", soon: true },
+          { title: "Cas de plafond dépassé", soon: true },
+        ],
+      },
+    ],
   },
-  teams: [
-    {
-      name: "Acme Inc",
-      logo: (
-        <GalleryVerticalEndIcon
-        />
-      ),
-      plan: "Enterprise",
-    },
-    {
-      name: "Acme Corp.",
-      logo: (
-        <AudioLinesIcon
-        />
-      ),
-      plan: "Startup",
-    },
-    {
-      name: "Evil Corp.",
-      logo: (
-        <TerminalIcon
-        />
-      ),
-      plan: "Free",
-    },
-  ],
-  navMain: [
-    {
-      title: "Playground",
-      url: "#",
-      icon: (
-        <TerminalSquareIcon
-        />
-      ),
-      isActive: true,
-      items: [
-        {
-          title: "History",
-          url: "#",
-        },
-        {
-          title: "Starred",
-          url: "#",
-        },
-        {
-          title: "Settings",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Models",
-      url: "#",
-      icon: (
-        <BotIcon
-        />
-      ),
-      items: [
-        {
-          title: "Genesis",
-          url: "#",
-        },
-        {
-          title: "Explorer",
-          url: "#",
-        },
-        {
-          title: "Quantum",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Documentation",
-      url: "#",
-      icon: (
-        <BookOpenIcon
-        />
-      ),
-      items: [
-        {
-          title: "Introduction",
-          url: "#",
-        },
-        {
-          title: "Get Started",
-          url: "#",
-        },
-        {
-          title: "Tutorials",
-          url: "#",
-        },
-        {
-          title: "Changelog",
-          url: "#",
-        },
-      ],
-    },
-    {
-      title: "Settings",
-      url: "#",
-      icon: (
-        <Settings2Icon
-        />
-      ),
-      items: [
-        {
-          title: "General",
-          url: "#",
-        },
-        {
-          title: "Team",
-          url: "#",
-        },
-        {
-          title: "Billing",
-          url: "#",
-        },
-        {
-          title: "Limits",
-          url: "#",
-        },
-      ],
-    },
-  ],
-  projects: [
-    {
-      name: "Design Engineering",
-      url: "#",
-      icon: (
-        <FrameIcon
-        />
-      ),
-    },
-    {
-      name: "Sales & Marketing",
-      url: "#",
-      icon: (
-        <PieChartIcon
-        />
-      ),
-    },
-    {
-      name: "Travel",
-      url: "#",
-      icon: (
-        <MapIcon
-        />
-      ),
-    },
-  ],
+  {
+    label: "Accès",
+    items: [
+      {
+        title: "Administrateurs principaux",
+        url: "/admin/list",
+        icon: <ShieldCheckIcon />,
+        items: [
+          {
+            title: "Liste des admins",
+            url: "/admin/list",
+          },
+          {
+            title: "Créer un administrateur principal",
+            url: "/admin/create",
+          },
+          {
+            title: "Inviter un administrateur principal",
+            url: "/admin/invites",
+          },
+        ],
+      },
+      {
+        title: "Comptes à valider",
+        url: "/admin/pending",
+        icon: <UserCheckIcon />,
+        items: [{ title: "File d'attente", url: "/admin/pending" }],
+      },
+      {
+        title: "Agents de service",
+        url: "/agent/invites",
+        icon: <UserPlusIcon />,
+        items: [
+          { title: "Inviter un agent", url: "/admin/invites" },
+          { title: "Liste des agents", soon: true },
+        ],
+      },
+      {
+        title: "Journal d'audit",
+        url: "#",
+        icon: <ScrollTextIcon />,
+        soon: true,
+      },
+    ],
+  },
+  {
+    label: "Clients et crédit",
+    items: [
+      {
+        title: "Dossiers clients",
+        url: "#",
+        icon: <FolderOpenIcon />,
+        soon: true,
+        items: [
+          { title: "Tous les dossiers", soon: true },
+          { title: "Suivi des retards", soon: true },
+        ],
+      },
+      {
+        title: "Statuts et plafonds",
+        url: "#",
+        icon: <GaugeIcon />,
+        soon: true,
+      },
+    ],
+  },
+  {
+    label: "Opérations",
+    items: [
+      {
+        title: "Commandes",
+        url: "#",
+        icon: <ClipboardListIcon />,
+        soon: true,
+        items: [
+          { title: "File d'attente", soon: true },
+          { title: "Caisse rapide", soon: true },
+        ],
+      },
+      {
+        title: "Preuves de paiement",
+        url: "#",
+        icon: <FileCheckIcon />,
+        soon: true,
+      },
+      {
+        title: "Encaissements",
+        url: "#",
+        icon: <BanknoteIcon />,
+        soon: true,
+      },
+      {
+        title: "Créances et dettes",
+        url: "#",
+        icon: <ScaleIcon />,
+        soon: true,
+      },
+    ],
+  },
+  {
+    label: "Trésorerie et taux",
+    items: [
+      {
+        title: "Caisse et mobile money",
+        url: "#",
+        icon: <WalletIcon />,
+        soon: true,
+        items: [
+          { title: "Comptes", soon: true },
+          { title: "Mouvements", soon: true },
+          { title: "Transferts", soon: true },
+        ],
+      },
+      {
+        title: "Taux de change",
+        url: "#",
+        icon: <PercentIcon />,
+        soon: true,
+      },
+      {
+        title: "Grille tarifaire",
+        url: "#",
+        icon: <TagsIcon />,
+        soon: true,
+      },
+    ],
+  },
+  {
+    label: "Système",
+    items: [
+      {
+        title: "Paramètres",
+        url: "/admin/parametres",
+        icon: <SettingsIcon />,
+      },
+    ],
+  },
+]
+
+export type UtilisateurSidebar = {
+  nom: string
+  email: string
 }
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function AppSidebar({
+  utilisateur,
+  profilUrl = "/admin/profil",
+  ...props
+}: React.ComponentProps<typeof Sidebar> & {
+  utilisateur?: UtilisateurSidebar
+  /** Destination de « Mon compte » dans l'encart utilisateur. */
+  profilUrl?: string
+}) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <div className="flex items-center gap-2 px-1 py-1">
-          <BrandLogo height={30} />
-        </div>
-        <TeamSwitcher teams={data.teams} />
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <div className="flex items-center gap-2.5 px-2 py-2 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:gap-0 group-data-[collapsible=icon]:px-0">
+              <BrandLogo
+                height={28}
+                className="shrink-0 group-data-[collapsible=icon]:hidden"
+              />
+              <BrandLogo
+                height={15}
+                className="hidden shrink-0 group-data-[collapsible=icon]:inline-flex"
+              />
+              <span className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
+                <span className="truncate font-medium">TKS Distribution</span>
+                <span className="truncate text-xs text-muted-foreground">
+                  Administrateur
+                </span>
+              </span>
+            </div>
+          </SidebarMenuItem>
+        </SidebarMenu>
       </SidebarHeader>
-      <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavProjects projects={data.projects} />
+      <SidebarContent className="gap-1 py-2">
+        {groups.map((group) => (
+          <NavMain key={group.label} label={group.label} items={group.items} />
+        ))}
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser
+          user={{
+            name: utilisateur?.nom ?? "Administrateur",
+            email: utilisateur?.email ?? "Espace distributeur",
+          }}
+          profilUrl={profilUrl}
+        />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

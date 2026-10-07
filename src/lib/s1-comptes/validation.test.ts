@@ -1,12 +1,18 @@
 import { describe, expect, it } from "vitest";
 import {
+  DEFAUT_DUREE_INVITATION_JOURS,
   estBootstrapTechniqueValide,
+  estCleReglage,
   estEtatStaff,
   estRoleStaff,
+  normaliserDureeInvitationJours,
   peutChangerRole,
   peutCreerAdminPrincipal,
+  peutInviterAdminPrincipal,
   peutInviterAgent,
+  peutModifierReglage,
   roleCibleInvitationValide,
+  telephoneStaffValide,
 } from "../db/schema/s1-comptes/validation";
 
 describe("règles staff", () => {
@@ -37,11 +43,48 @@ describe("règles staff", () => {
     expect(peutCreerAdminPrincipal("ADMIN_TECHNIQUE", "REVOQUE")).toBe(false);
   });
 
-  it("invitation : seul le principal valide invite, cible AGENT", () => {
+  it("invitation : seul le principal valide invite un agent ; cible AGENT ou ADMIN_PRINCIPAL", () => {
     expect(peutInviterAgent("ADMIN_PRINCIPAL", "VALIDE")).toBe(true);
     expect(peutInviterAgent("ADMIN_TECHNIQUE", "VALIDE")).toBe(false);
     expect(peutInviterAgent("ADMIN_PRINCIPAL", "REVOQUE")).toBe(false);
     expect(roleCibleInvitationValide("AGENT")).toBe(true);
-    expect(roleCibleInvitationValide("ADMIN_PRINCIPAL")).toBe(false);
+    // Écart assumé à S1-spec (lien admin demandé explicitement).
+    expect(roleCibleInvitationValide("ADMIN_PRINCIPAL")).toBe(true);
+    expect(roleCibleInvitationValide("ADMIN_TECHNIQUE")).toBe(false);
+    expect(roleCibleInvitationValide("CLIENT")).toBe(false);
+  });
+
+  it("invitation admin : même autorisation que la création directe", () => {
+    expect(peutInviterAdminPrincipal("ADMIN_TECHNIQUE", "VALIDE")).toBe(true);
+    expect(peutInviterAdminPrincipal("ADMIN_PRINCIPAL", "VALIDE")).toBe(true);
+    expect(peutInviterAdminPrincipal("AGENT", "VALIDE")).toBe(false);
+    expect(peutInviterAdminPrincipal("ADMIN_TECHNIQUE", "REVOQUE")).toBe(false);
+  });
+
+  it("réglages : clés fermées, durée bornée, même autorisation", () => {
+    expect(estCleReglage("duree_invitation_jours")).toBe(true);
+    expect(estCleReglage("taux_change")).toBe(false);
+    expect(normaliserDureeInvitationJours(7)).toBe(7);
+    expect(normaliserDureeInvitationJours("10")).toBe(10);
+    expect(normaliserDureeInvitationJours(0)).toBe(1);
+    expect(normaliserDureeInvitationJours(99)).toBe(30);
+    expect(normaliserDureeInvitationJours("illisible")).toBe(
+      DEFAUT_DUREE_INVITATION_JOURS,
+    );
+    expect(peutModifierReglage("ADMIN_TECHNIQUE", "VALIDE")).toBe(true);
+    expect(peutModifierReglage("ADMIN_PRINCIPAL", "VALIDE")).toBe(true);
+    expect(peutModifierReglage("AGENT", "VALIDE")).toBe(false);
+    expect(peutModifierReglage("ADMIN_PRINCIPAL", "REVOQUE")).toBe(false);
+  });
+
+  it("téléphone staff : optionnel, contact uniquement, jamais vérifié par SMS", () => {
+    expect(telephoneStaffValide("")).toBe(true);
+    expect(telephoneStaffValide("   ")).toBe(true);
+    expect(telephoneStaffValide("+243 815 000 000")).toBe(true);
+    expect(telephoneStaffValide("0815000000")).toBe(true);
+    expect(telephoneStaffValide("+1-555-0100")).toBe(true);
+    expect(telephoneStaffValide("abc")).toBe(false);
+    expect(telephoneStaffValide("123")).toBe(false);
+    expect(telephoneStaffValide("+243 815 000 000 000 000")).toBe(false);
   });
 });

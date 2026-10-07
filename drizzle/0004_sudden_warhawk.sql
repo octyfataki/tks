@@ -1,0 +1,1 @@
+ALTER TABLE `comptes_staff` ADD `telephone` varchar(20);

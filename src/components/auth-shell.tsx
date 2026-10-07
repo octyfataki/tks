@@ -26,10 +26,10 @@ const DEFAUT_POINTS = [
  * Mise en page inspirée d'une référence split (formulaire + panneau
  * contexte) : à gauche le formulaire, à droite un rappel S1 avec
  * cercles décoratifs aux couleurs du thème. Tous les comptes utilisent
- * email + mot de passe, avec une seule inscription : /sign-up demande
- * d'abord le profil (client ou administrateur, deux boutons façon
- * providers) puis affiche les champs. L'agent de service passe par son
- * lien d'invitation. Aucun bouton OAuth : S1 l'interdit.
+ * email + mot de passe, avec une seule inscription publique : /sign-up
+ * est réservée aux clients. L'agent de service passe par son
+ * lien d'invitation, l'administrateur par bootstrap ou création interne.
+ * Aucun bouton OAuth : S1 l'interdit.
  */
 export function AuthShell({
   title,

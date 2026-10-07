@@ -22,6 +22,27 @@
       "when": 1791311626832,
       "tag": "0002_s1-comptes-admin-complement",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1791325196778,
+      "tag": "0003_tricky_skrulls",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1791332054504,
+      "tag": "0004_sudden_warhawk",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1791332413985,
+      "tag": "0005_shallow_ultron",
+      "breakpoints": true
     }
   ]
 }

@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
+import { demanderDestination } from "@/lib/destination-connexion";
+import { MESSAGE_RESEAU, messageErreurSecondFacteur } from "@/lib/erreurs-auth";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -29,11 +31,24 @@ export function Verify2faForm() {
         code,
         trustDevice: false,
       });
-      if (error) throw new Error(error.message ?? "code refusé");
+      if (error) throw new Error(messageErreurSecondFacteur(error));
       if (!data) throw new Error("code refusé");
-      router.push("/dashboard");
+      // Session ouverte : le serveur dit où atterrir (le second facteur
+      // n'exige que les administrateurs, mais la décision reste la même).
+      const suite = await demanderDestination();
+      if (suite.code !== "OK") {
+        setErreur("Session introuvable : réessayez.");
+        return;
+      }
+      router.push(suite.destination);
     } catch (e) {
-      setErreur(e instanceof Error ? e.message : "code refusé");
+      setErreur(
+        e instanceof TypeError
+          ? MESSAGE_RESEAU
+          : e instanceof Error
+            ? e.message
+            : "code refusé",
+      );
     } finally {
       setChargement(false);
     }

@@ -7,6 +7,9 @@ import { mysqlTable, timestamp, varchar, index } from "drizzle-orm/mysql-core";
 // - role immuable après création (changement = révocation + recréation, S2).
 // - etat VALIDE | REVOQUE uniquement — staff jamais EN_ATTENTE_VALIDATION.
 // - creePar NULL uniquement pour le premier ADMIN_TECHNIQUE (bootstrap développeur).
+// - telephone NULL par défaut : contact uniquement, jamais identifiant, jamais
+//   vérifié par SMS — la confiance passe par l'email (décision produit :
+//   assouplit « staff = email, jamais téléphone » de 00-vue-ensemble §52).
 export const comptesStaff = mysqlTable(
   "comptes_staff",
   {
@@ -15,6 +18,7 @@ export const comptesStaff = mysqlTable(
       .notNull()
       .unique(),
     email: varchar("email", { length: 255 }).notNull().unique(),
+    telephone: varchar("telephone", { length: 20 }),
     // VARCHAR (pas TEXT) : MySQL ne peut pas indexer une colonne TEXT sans
     // longueur de préfixe, et (role, etat) est indexé. Valeurs fermées
     // vérifiées côté applicatif (validation.ts).

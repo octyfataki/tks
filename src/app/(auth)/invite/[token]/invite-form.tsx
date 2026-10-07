@@ -13,9 +13,16 @@ import { PasswordInput } from "@/components/password-input";
 import { Input } from "@/components/ui/input";
 import { accepterInvitation } from "./actions";
 
-// S1-04 : l'agent choisit email + mot de passe, le rôle AGENT vient du lien.
-// Jeton à usage unique, expiré ou consommé -> refus affiché.
-export function InviteForm({ jeton }: { jeton: string }) {
+// S1-04 : l'invité choisit email + mot de passe, le rôle vient du lien
+// (agent de service ou administrateur principal). Jeton à usage unique,
+// expiré ou consommé -> refus affiché.
+export function InviteForm({
+  jeton,
+  estAdmin = false,
+}: {
+  jeton: string;
+  estAdmin?: boolean;
+}) {
   const router = useRouter();
   const [erreur, setErreur] = useState<string | null>(null);
   const [chargement, setChargement] = useState(false);
@@ -28,7 +35,10 @@ export function InviteForm({ jeton }: { jeton: string }) {
         jeton,
         email: String(form.get("email") ?? "").trim(),
         password: String(form.get("password") ?? ""),
-        name: String(form.get("name") ?? "").trim() || "Agent de service",
+        telephone: String(form.get("telephone") ?? "").trim(),
+        name:
+          String(form.get("name") ?? "").trim() ||
+          (estAdmin ? "Administrateur principal" : "Agent de service"),
       });
       if (!res.ok) throw new Error(res.message);
       router.push("/sign-in");
@@ -43,13 +53,22 @@ export function InviteForm({ jeton }: { jeton: string }) {
     <form action={onSubmit}>
       <FieldGroup>
         <Field>
-          <FieldLabel htmlFor="name">Nom</FieldLabel>
+          <FieldLabel htmlFor="name">Nom complet</FieldLabel>
           <Input
             id="name"
             name="name"
             autoComplete="name"
-            placeholder="Nom de l'agent"
+            placeholder={
+              estAdmin
+                ? "Nom complet de l'administrateur"
+                : "Nom complet de l'agent"
+            }
+            required
+            minLength={2}
           />
+          <FieldDescription>
+            C&apos;est sous ce nom que le compte sera désigné.
+          </FieldDescription>
         </Field>
         <Field>
           <FieldLabel htmlFor="email">Email</FieldLabel>
@@ -75,6 +94,22 @@ export function InviteForm({ jeton }: { jeton: string }) {
             required
           />
         </Field>
+        <Field>
+          <FieldLabel htmlFor="telephone">
+            Téléphone <span className="font-normal">(optionnel)</span>
+          </FieldLabel>
+          <Input
+            id="telephone"
+            name="telephone"
+            type="tel"
+            autoComplete="tel"
+            placeholder="+243 …"
+          />
+          <FieldDescription>
+            Contact uniquement — aucune vérification par SMS, la confiance
+            passe par l&apos;email.
+          </FieldDescription>
+        </Field>
         {erreur ? (
           <p role="alert" className="text-xs text-destructive">
             {erreur}
@@ -87,7 +122,11 @@ export function InviteForm({ jeton }: { jeton: string }) {
             className="w-full"
             disabled={chargement}
           >
-            {chargement ? "Création…" : "Créer mon compte agent"}
+            {chargement
+              ? "Création…"
+              : estAdmin
+                ? "Créer mon compte administrateur"
+                : "Créer mon compte agent"}
           </Button>
         </Field>
       </FieldGroup>

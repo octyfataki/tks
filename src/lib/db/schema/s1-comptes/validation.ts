@@ -25,6 +25,20 @@ export function peutChangerRole(): false {
 }
 
 /**
+ * Téléphone staff : contact uniquement, optionnel, jamais identifiant, jamais
+ * vérifié par SMS (S1 : aucun SMS nulle part — la confiance passe par
+ * l'email). Absent = valide. Présent = format international souple : `+`
+ * optionnel, chiffres, espaces, tirets et points, 7 à 15 chiffres.
+ */
+export function telephoneStaffValide(telephone: string): boolean {
+  const valeur = telephone.trim();
+  if (valeur === "") return true;
+  if (!/^[+]?[\d\s.\-()]{7,24}$/.test(valeur)) return false;
+  const chiffres = valeur.replace(/\D/g, "");
+  return chiffres.length >= 7 && chiffres.length <= 15;
+}
+
+/**
  * Bootstrap : le tout premier compte est l'ADMIN_TECHNIQUE du développeur,
  * sans créateur (creePar NULL). Aucun autre compte ne peut naître sans créateur.
  */
@@ -60,9 +74,69 @@ export function peutInviterAgent(
   return roleCreateur === "ADMIN_PRINCIPAL" && etatCreateur === "VALIDE";
 }
 
-/** Une invitation ne peut cibler que le rôle AGENT. */
+/**
+ * ÉCART ASSUMÉ à S1-spec (« le lien ne peut créer qu'un compte AGENT »),
+ * demandé explicitement : un lien peut aussi créer un ADMIN_PRINCIPAL, pour
+ * que la personne choisisse elle-même son email + mot de passe.
+ * Même règle d'autorisation que la création directe (peutCreerAdminPrincipal) :
+ * ADMIN_TECHNIQUE ou ADMIN_PRINCIPAL, toujours VALIDE.
+ */
+export function peutInviterAdminPrincipal(
+  roleCreateur: string,
+  etatCreateur: string,
+): boolean {
+  return peutCreerAdminPrincipal(roleCreateur, etatCreateur);
+}
+
+/** Une invitation cible AGENT ou ADMIN_PRINCIPAL — jamais CLIENT, jamais
+ * ADMIN_TECHNIQUE (le bootstrap technique reste le seul chemin). Le rôle
+ * effectif est fixé par le lien et vérifié à l'acceptation : un lien AGENT
+ * ne peut pas produire un admin, et inversement.
+ */
 export function roleCibleInvitationValide(roleCible: string): boolean {
-  return roleCible === "AGENT";
+  return roleCible === "AGENT" || roleCible === "ADMIN_PRINCIPAL";
+}
+
+// ---- Réglages métier (/admin/parametres) --------
+// Liste fermée : toute autre clé est refusée. Chaque réglage porte sa valeur
+// par défaut (appliquée quand la ligne est absente) et ses bornes.
+
+/** Clés de réglage existantes. */
+export const CLES_REGLAGES = ["duree_invitation_jours"] as const;
+export type CleReglage = (typeof CLES_REGLAGES)[number];
+
+export function estCleReglage(cle: string): cle is CleReglage {
+  return (CLES_REGLAGES as readonly string[]).includes(cle);
+}
+
+/** Durée par défaut d'un lien d'invitation, en jours. */
+export const DEFAUT_DUREE_INVITATION_JOURS = 7;
+export const MIN_DUREE_INVITATION_JOURS = 1;
+export const MAX_DUREE_INVITATION_JOURS = 30;
+
+/**
+ * Normalise une durée d'invitation en jours : entier borné [1, 30].
+ * Toute valeur illisible retombe sur le défaut — un réglage ne casse jamais
+ * la création d'un lien.
+ */
+export function normaliserDureeInvitationJours(valeur: unknown): number {
+  const nombre = typeof valeur === "string" ? Number(valeur) : Number(valeur);
+  if (!Number.isFinite(nombre)) return DEFAUT_DUREE_INVITATION_JOURS;
+  const entier = Math.floor(nombre);
+  if (entier < MIN_DUREE_INVITATION_JOURS) return MIN_DUREE_INVITATION_JOURS;
+  if (entier > MAX_DUREE_INVITATION_JOURS) return MAX_DUREE_INVITATION_JOURS;
+  return entier;
+}
+
+/**
+ * Modifier un réglage : même autorisation que créer un administrateur
+ * principal — administrateur technique ou principal, toujours VALIDE.
+ */
+export function peutModifierReglage(
+  roleModificateur: string,
+  etatModificateur: string,
+): boolean {
+  return peutCreerAdminPrincipal(roleModificateur, etatModificateur);
 }
 
 // ---- Complément S1 : second facteur, pièces, accès temporaires --------
@@ -71,6 +145,10 @@ export function roleCibleInvitationValide(roleCible: string): boolean {
 
 /** Durée max d'un accès temporaire reset staff : 24 h (courte durée). */
 export const DUREE_MAX_ACCES_TEMPORAIRE_MS = 24 * 60 * 60 * 1000;
+
+/** Durée de validité d'un lien de premier accès : 24 h. Assez pour activer
+ * le lendemain, trop court pour traîner. */
+export const DUREE_PREMIER_ACCES_MS = 24 * 60 * 60 * 1000;
 
 /** Seuls les deux rôles admin portent un second facteur TOTP. */
 export function roleExigeSecondFacteur(role: string): boolean {

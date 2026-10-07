@@ -20,12 +20,13 @@ Socle S1 + ADR-0006. Un compte staff peut exister seul, sans dossier.
 * `id CHAR(36) PK` — UUID généré côté appareil (jamais `AUTO_INCREMENT` comme identité répliquée).
 * `better_auth_user_id VARCHAR(255) UNIQUE NOT NULL FK -> user.id` — lien vers la table `user` de better-auth. C'est better-auth qui hash le mot de passe et gère la session cookie serveur.
 * `email VARCHAR(255) UNIQUE NOT NULL` — identifiant staff. Miroir de `user.email`, contrainte d'unicité répétée ici pour l'audit et les vues métier.
+* `telephone VARCHAR(20) NULL` — contact uniquement, optionnel, jamais identifiant (pas d'UNIQUE), jamais vérifié par SMS : la confiance passe par l'email. Écart assumé à « aucun téléphone ici » (décision produit).
 * `role TEXT CHECK IN ('ADMIN_PRINCIPAL','ADMIN_TECHNIQUE','AGENT') NOT NULL` — immuable après création. Changement = révocation + recréation tracées (S2).
 * `etat TEXT CHECK IN ('VALIDE','REVOQUE')` — staff jamais `EN_ATTENTE_VALIDATION` : créé par admin principal via invitation (agent) ou bootstrap (admin).
 * `cree_par CHAR(36) FK -> comptes_staff.id NULL` — NULL pour le premier admin principal.
 * `created_at, revoked_at NULL`
 
-Contraintes : `UNIQUE(email)`, `UNIQUE(better_auth_user_id)`, index sur `role, etat`. Aucun téléphone ici, aucun client ici.
+Contraintes : `UNIQUE(email)`, `UNIQUE(better_auth_user_id)`, index sur `role, etat`. Téléphone : contact optionnel non unique uniquement (`telephone NULL`), jamais identifiant ; aucun client ici.
 
 ### 2. `facteurs_2fa_admin`
 
@@ -77,6 +78,18 @@ Reset staff par admin principal, sur pièce d'identité. Clients : voir `02-comp
 * `id CHAR(36) PK, compte_staff_id FK, type_piece, reference_image, vue_par FK, vue_le`
 
 Exige pour toute action sensible : aucun chemin sans `piece_id`.
+
+### 7. `premiers_acces_admin`
+
+Lien de premier accès après création directe : la personne choisit elle-même
+son mot de passe (secret initial aléatoire jamais révélé). Jeton à usage
+unique, 24 h. Portée stricte : choix du mot de passe uniquement — aucune
+session, aucun bypass 2FA. Confiance = le créateur (admin VALIDE), pas de
+pièce exigée (contrairement au reset §5).
+
+* `id CHAR(36) PK`
+* `compte_staff_cible FK (ADMIN_PRINCIPAL VALIDE), jeton UNIQUE, expire_le 24 h`
+* `consomme_le NULL, cree_par FK`
 
 ## Liens avec S2 (rappel pour 03-roles-audit)
 

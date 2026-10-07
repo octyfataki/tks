@@ -58,36 +58,32 @@ export const auth = betterAuth({
     // la table append-only.
     session: {
       create: {
-        after: async ({ data }) => {
-          const session = data as { userId?: string };
-          console.log(`[audit] session.created user=${session.userId}`);
+        // Signature better-auth : after(created, context) — pas ({ data }).
+        after: async (session) => {
+          const s = session as { id?: string; userId?: string } | null | undefined;
+          console.log(`[audit] session.created user=${s?.userId}`);
         },
       },
     },
     user: {
       update: {
-        after: async ({ data, oldData }) => {
-          const avant = oldData as { email?: string } | null;
-          const apres = data as { id?: string; email?: string };
-          if (avant?.email !== apres.email) {
-            console.log(
-              `[audit] user.email_changed user=${apres.id} ${avant?.email} -> ${apres.email}`,
-            );
-          }
+        // Signature better-auth : after(updated, context) — pas ({ data, oldData }).
+        after: async (user) => {
+          const apres = user as { id?: string; email?: string } | null | undefined;
+          console.log(`[audit] user.updated user=${apres?.id} email=${apres?.email}`);
         },
       },
     },
     account: {
       create: {
-        after: async (ctx: unknown) => {
-          const enveloppe = ctx as {
-            data?: { userId?: string; providerId?: string };
-            userId?: string;
-            providerId?: string;
-          };
-          const compte = enveloppe.data ?? enveloppe;
+        // Signature better-auth : after(created, context).
+        after: async (account) => {
+          const compte = account as
+            | { userId?: string; providerId?: string }
+            | null
+            | undefined;
           console.log(
-            `[audit] account.linked user=${compte.userId} provider=${compte.providerId}`,
+            `[audit] account.linked user=${compte?.userId} provider=${compte?.providerId}`,
           );
         },
       },

@@ -1,5 +1,9 @@
 "use client"
 
+import * as React from "react"
+import { useRouter } from "next/navigation"
+import { signOut } from "@/lib/auth-client"
+
 import {
   Avatar,
   AvatarFallback,
@@ -20,18 +24,23 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { ChevronsUpDownIcon, SparklesIcon, BadgeCheckIcon, CreditCardIcon, BellIcon, LogOutIcon } from "lucide-react"
+import { ChevronsUpDownIcon, BadgeCheckIcon, BellIcon, LogOutIcon } from "lucide-react"
 
 export function NavUser({
   user,
+  profilUrl,
 }: {
   user: {
     name: string
     email: string
     avatar?: string
   }
+  /** Destination de « Mon compte ». Sans elle, l'entrée reste inerte. */
+  profilUrl?: string
 }) {
   const { isMobile } = useSidebar()
+  const router = useRouter()
+  const [deconnexionEnCours, setDeconnexionEnCours] = React.useState(false)
   const initials = user.name
     .split(" ")
     .map((part) => part[0])
@@ -53,11 +62,11 @@ export function NavUser({
               ) : null}
               <AvatarFallback>{initials}</AvatarFallback>
             </Avatar>
-            <div className="grid flex-1 text-left text-sm leading-tight">
+            <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
               <span className="truncate font-medium">{user.name}</span>
               <span className="truncate text-xs">{user.email}</span>
             </div>
-            <ChevronsUpDownIcon className="ml-auto size-4" />
+            <ChevronsUpDownIcon className="ml-auto size-4 group-data-[collapsible=icon]:hidden" />
           </DropdownMenuTrigger>
           <DropdownMenuContent
             className="min-w-56 rounded-lg"
@@ -74,7 +83,7 @@ export function NavUser({
                     ) : null}
                     <AvatarFallback>{initials}</AvatarFallback>
                   </Avatar>
-                  <div className="grid flex-1 text-left text-sm leading-tight">
+                  <div className="grid flex-1 text-left text-sm leading-tight group-data-[collapsible=icon]:hidden">
                     <span className="truncate font-medium">{user.name}</span>
                     <span className="truncate text-xs">{user.email}</span>
                   </div>
@@ -83,23 +92,15 @@ export function NavUser({
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <SparklesIcon
-                />
-                Upgrade to Pro
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
-              <DropdownMenuItem>
+              <DropdownMenuItem
+                disabled={!profilUrl}
+                onClick={() => {
+                  if (profilUrl) router.push(profilUrl)
+                }}
+              >
                 <BadgeCheckIcon
                 />
-                Account
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <CreditCardIcon
-                />
-                Billing
+                Mon compte
               </DropdownMenuItem>
               <DropdownMenuItem>
                 <BellIcon
@@ -108,10 +109,22 @@ export function NavUser({
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>
+            <DropdownMenuItem
+              disabled={deconnexionEnCours}
+              onClick={async () => {
+                if (deconnexionEnCours) return
+                setDeconnexionEnCours(true)
+                try {
+                  await signOut()
+                } finally {
+                  router.push("/sign-in")
+                  router.refresh()
+                }
+              }}
+            >
               <LogOutIcon
               />
-              Log out
+              {deconnexionEnCours ? "Déconnexion…" : "Se déconnecter"}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

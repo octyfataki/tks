@@ -49,7 +49,7 @@ erDiagram
 ```
 
 Règles verrouillées :
-* Staff = email, jamais téléphone. Client = téléphone, jamais email admin. Deux tableaux, zéro mélange.
+* Staff = email comme identifiant (téléphone = contact optionnel uniquement, jamais vérifié par SMS). Client = téléphone, jamais email admin. Deux tableaux, zéro mélange d'identifiants.
 * Client inscrit `EN_ATTENTE_VALIDATION` ne fait rien : pas dossier, pas solde, pas commande même prépayée.
 * `VALIDE` exige `piece_id NOT NULL`. Aucun chemin sans pièce vue humain.
 * Rôle immuable. Changer = révoquer + recréer, tracé audit.
