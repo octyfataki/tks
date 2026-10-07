@@ -24,6 +24,7 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
+import { toast } from "@/components/ui/toast"
 import { ChevronsUpDownIcon, BadgeCheckIcon, BellIcon, LogOutIcon } from "lucide-react"
 
 export function NavUser({
@@ -116,9 +117,17 @@ export function NavUser({
                 setDeconnexionEnCours(true)
                 try {
                   await signOut()
-                } finally {
+                  toast.add({ type: "success", title: "Déconnexion réussie" })
                   router.push("/sign-in")
                   router.refresh()
+                } catch {
+                  toast.add({
+                    type: "error",
+                    title: "Échec de la déconnexion",
+                    description: "Réessayez.",
+                  })
+                } finally {
+                  setDeconnexionEnCours(false)
                 }
               }}
             >
