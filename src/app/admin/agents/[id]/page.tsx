@@ -4,7 +4,7 @@ import { eq } from "drizzle-orm";
 import { ArrowLeftIcon } from "lucide-react";
 import { db } from "@/lib/db/client";
 import { user } from "@/lib/db/schema/auth-schema";
-import { comptesStaff } from "@/lib/db/schema/s1-comptes";
+import { comptesStaff, peutInviterAgent } from "@/lib/db/schema/s1-comptes";
 import {
   PERMISSIONS_FERMEES,
   peutConsulterJournal,
@@ -19,6 +19,8 @@ import { InterrupteurPermission, ProfilEmbauche } from "./permissions-agent";
 import { InterrupteurAgent } from "../interrupteur-agent";
 import { HistoriqueAgent } from "./historique-agent";
 import { BoutonRevocationAgent } from "./bouton-revocation";
+import { FormulaireCoordonneesAgent } from "./formulaire-coordonnees";
+import { SectionModifiable } from "../../list/[id]/section-modifiable";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 
@@ -91,6 +93,7 @@ export default async function FicheAgentPage({
     : [];
   const moi = lignesMoi[0];
   const puisJeGerer = moi ? peutGererPermissions(moi.role, moi.etat) : false;
+  const puisJeCorriger = moi ? peutInviterAgent(moi.role, moi.etat) : false;
   const puisJeVoirHistorique = moi
     ? peutConsulterJournal(moi.role, moi.etat)
     : false;
@@ -144,19 +147,41 @@ export default async function FicheAgentPage({
         <TabsContent value="compte" className="mt-4">
           <div className="grid items-start gap-4 lg:grid-cols-2">
             <section className="rounded-xl border bg-card p-4">
-              <h2 className="text-sm font-medium">Compte</h2>
-              <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                <Champ etiquette="Adresse email" valeur={compte.email} />
-                <Champ etiquette="Téléphone (contact uniquement)" valeur={compte.telephone || "—"} />
-                <Champ etiquette="Compte créé le" valeur={dateCourte(compte.createdAt)} />
-                <Champ etiquette="Créé par" valeur={createur} />
-                {compte.revokedAt ? (
-                  <Champ etiquette="Révoqué le" valeur={dateCourte(compte.revokedAt)} />
-                ) : null}
-                {compte.suspendedAt && suspendu ? (
-                  <Champ etiquette="Suspendu le" valeur={dateCourte(compte.suspendedAt)} />
-                ) : null}
-              </div>
+              <SectionModifiable
+                titre="Coordonnées"
+                description="Nom et téléphone retouchables par un administrateur principal."
+                peutModifier={puisJeCorriger && valide}
+                motifVerrouille={
+                  !puisJeCorriger
+                    ? "Lecture seule : seul un administrateur principal validé corrige cette fiche."
+                    : suspendu
+                      ? "Compte suspendu : lever la suspension pour corriger."
+                      : "Compte révoqué : définitif, aucune correction."
+                }
+                cleRepli={`${nom}-${compte.telephone ?? ""}`}
+                lecture={
+                  <dl className="mt-3 grid gap-3 sm:grid-cols-2">
+                    <Champ etiquette="Nom affiché" valeur={nom} />
+                    <Champ etiquette="Téléphone (contact uniquement)" valeur={compte.telephone || "—"} />
+                    <Champ etiquette="Adresse email" valeur={compte.email} />
+                    <Champ etiquette="Compte créé le" valeur={dateCourte(compte.createdAt)} />
+                    <Champ etiquette="Créé par" valeur={createur} />
+                    {compte.revokedAt ? (
+                      <Champ etiquette="Révoqué le" valeur={dateCourte(compte.revokedAt)} />
+                    ) : null}
+                    {compte.suspendedAt && suspendu ? (
+                      <Champ etiquette="Suspendu le" valeur={dateCourte(compte.suspendedAt)} />
+                    ) : null}
+                  </dl>
+                }
+                formulaire={
+                  <FormulaireCoordonneesAgent
+                    id={compte.id}
+                    nomInitial={nom}
+                    telephoneInitial={compte.telephone ?? ""}
+                  />
+                }
+              />
               <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
                 Le rôle est immuable : tout changement passe par révocation +
                 recréation tracées (S2). Pas de second facteur pour un agent : la

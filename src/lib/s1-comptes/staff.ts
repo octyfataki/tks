@@ -639,6 +639,82 @@ export async function modifierAdminSupport(
 }
 
 /**
+ * Correction support d'un agent de service (coquille sur le nom,
+ * téléphone de contact oublié). Périmètre : nom + téléphone uniquement,
+ * sur un compte AGENT VALIDE. Rôle, email, état et secrets ne passent
+ * jamais par ici : une erreur d'email se corrige par révocation +
+ * recréation tracées. Seul un administrateur principal VALIDE corrige
+ * (même autorisation que créer / révoquer un agent). Chaque correction
+ * est journalisée (S2, invariant 8 : avant/après, acteur, rôle au moment).
+ */
+export async function modifierAgentSupport(
+  modificateurId: string,
+  cibleId: string,
+  input: { nom: string; telephone?: string },
+) {
+  const modificateurs = await db
+    .select()
+    .from(comptesStaff)
+    .where(eq(comptesStaff.id, modificateurId));
+  const modificateur = modificateurs[0];
+  if (
+    !modificateur ||
+    !peutInviterAgent(modificateur.role, modificateur.etat)
+  ) {
+    throw new StaffError("NON_AUTORISE", "modificateur non autorisé");
+  }
+  const cibles = await db
+    .select()
+    .from(comptesStaff)
+    .where(eq(comptesStaff.id, cibleId));
+  const cible = cibles[0];
+  if (!cible || cible.role !== "AGENT" || cible.etat !== "VALIDE") {
+    throw new StaffError("NON_AUTORISE", "cible non modifiable");
+  }
+  const nom = input.nom.trim();
+  const telephone = (input.telephone ?? "").trim();
+  if (!nom || nom.length > 255) {
+    throw new StaffError("NON_AUTORISE", "nom invalide");
+  }
+  if (!telephoneStaffValide(telephone)) {
+    throw new StaffError("TELEPHONE_INVALIDE", "numéro de téléphone invalide");
+  }
+  const utilisateurs = await db
+    .select()
+    .from(user)
+    .where(eq(user.id, cible.betterAuthUserId));
+  const utilisateur = utilisateurs[0];
+  if (!utilisateur) {
+    throw new StaffError("NON_AUTORISE", "compte auth introuvable");
+  }
+  const avant = { nom: utilisateur.name, telephone: cible.telephone };
+  const telephoneValeur = telephone === "" ? null : telephone;
+  if (avant.nom === nom && (avant.telephone ?? null) === telephoneValeur) {
+    return { id: cible.id, inchange: true as const };
+  }
+  await db.transaction(async (tx) => {
+    await tx
+      .update(user)
+      .set({ name: nom })
+      .where(eq(user.id, cible.betterAuthUserId));
+    await tx
+      .update(comptesStaff)
+      .set({ telephone: telephoneValeur })
+      .where(eq(comptesStaff.id, cible.id));
+  });
+  await enregistrerEvenement({
+    acteurId: modificateurId,
+    roleAuMoment: modificateur.role,
+    typeAction: "agent.modifier",
+    entite: "compte_staff",
+    entiteId: cible.id,
+    avant,
+    apres: { nom, telephone: telephoneValeur },
+  });
+  return { id: cible.id, inchange: false as const };
+}
+
+/**
  * Lien de premier accès : après une création directe, la personne choisit
  * elle-même son mot de passe via un lien à usage unique (24 h). Le créateur
  * doit pouvoir créer un principal ; la cible doit être un ADMIN_PRINCIPAL
