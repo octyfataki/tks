@@ -63,3 +63,5 @@ technique `VALIDE` est protégé, `src/app/admin/list/actions.ts:81-95`).
 - `GLOSSARY.md` (états du compte, invariants 8 et 9)
 
 ## Comments
+
+- GitHub : https://github.com/octyfataki/tks/issues/2 (label `enhancement`).
