@@ -18,12 +18,16 @@ autorise un administrateur principal à révoquer un autre administrateur
 principal, sans garde dernier principal (seul le dernier administrateur
 technique `VALIDE` est protégé, `src/app/admin/list/actions.ts:81-95`).
 
-## Décisions proposées (à confirmer)
+## Décisions
+
+Validées :
 
 1. Compte `SUSPENDU` = connexion totalement refusée (pas de lecture seule).
 2. Suspension = sessions en cours tuées immédiatement.
-3. Lever la suspension = même autorisation que suspendre, interdiction de
-   lever sa propre suspension.
+3. Interdiction de suspendre son propre compte et de lever sa propre suspension.
+
+En attente :
+
 4. Suspension uniquement manuelle (pas d'automatisme 2FA pour l'instant).
 
 ## Comportement attendu
