@@ -25,6 +25,7 @@ import { FormulaireAppareil } from "./formulaire-appareil";
 import { FormulaireCoordonnees } from "./formulaire-coordonnees";
 import { SectionModifiable } from "./section-modifiable";
 import { InterrupteurEtat } from "../interrupteur-etat";
+import { BoutonRevocation } from "./bouton-revocation";
 
 const LIBELLE_ROLE: Record<string, string> = {
   ADMIN_PRINCIPAL: "Administrateur principal",
@@ -417,8 +418,8 @@ export default async function ProfilAdminPage({
             <h2 className="text-sm font-medium">Accès au compte</h2>
             <p className="mt-0.5 text-xs text-muted-foreground">
               {estMoi
-                ? "Votre propre compte : suspension et révocation impossibles."
-                : "La suspension est réversible ; la révocation est définitive : rouvrir un accès exige révocation + recréation."}
+                ? "Votre propre compte : la suspension est impossible."
+                : "La suspension est réversible : le compte ne se connecte plus, la levée reste possible."}
             </p>
             <div className="mt-3 flex items-center justify-between gap-2">
               <p className="text-xs">
@@ -429,12 +430,30 @@ export default async function ProfilAdminPage({
                 nom={nom}
                 etat={suspendu ? "SUSPENDU" : valide ? "VALIDE" : "REVOQUE"}
                 desactive={estMoi}
-                motifDesactive="Vous ne pouvez pas suspendre ni révoquer votre propre compte."
+                motifDesactive="Vous ne pouvez pas suspendre votre propre compte."
+                sansRevocation
               />
             </div>
           </section>
         </div>
       </div>
+
+      <section className="rounded-xl border border-destructive bg-card p-4 sm:p-5">
+        <h2 className="text-sm font-medium text-destructive">Zone dangereuse</h2>
+        <p className="mt-0.5 text-xs text-muted-foreground">
+          La révocation est définitive : rouvrir un accès exige révocation +
+          recréation tracées. Volontairement éloignée des gestes courants.
+        </p>
+        <div className="mt-3 flex items-center justify-end gap-2">
+          <BoutonRevocation
+            id={compte.id}
+            nom={nom}
+            revoque={!valide && !suspendu}
+            desactive={estMoi}
+            motifDesactive="Vous ne pouvez pas révoquer votre propre compte."
+          />
+        </div>
+      </section>
     </div>
   );
 }

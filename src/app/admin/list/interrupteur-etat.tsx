@@ -31,6 +31,7 @@ export function InterrupteurEtat({
   etat,
   desactive,
   motifDesactive,
+  sansRevocation,
 }: {
   id: string;
   nom: string;
@@ -38,6 +39,8 @@ export function InterrupteurEtat({
   /** Switch non cliquable (ex. son propre compte). */
   desactive?: boolean;
   motifDesactive?: string;
+  /** Masque la révocation (reléguée en zone dangereuse en bas de page). */
+  sansRevocation?: boolean;
 }) {
   const [ouvert, setOuvert] = React.useState(false);
   const [erreur, setErreur] = React.useState<string | null>(null);
@@ -80,11 +83,15 @@ export function InterrupteurEtat({
           valide
             ? desactive
               ? (motifDesactive ?? "Action indisponible")
-              : "Cliquer pour suspendre ou révoquer"
+              : sansRevocation
+                ? "Cliquer pour suspendre"
+                : "Cliquer pour suspendre ou révoquer"
             : suspendu
               ? desactive
                 ? (motifDesactive ?? "Action indisponible")
-                : "Suspendu : cliquer pour lever ou révoquer"
+                : sansRevocation
+                  ? "Suspendu : cliquer pour lever"
+                  : "Suspendu : cliquer pour lever ou révoquer"
               : "Révoqué définitivement"
         }
         disabled={!cliquable}
@@ -112,8 +119,12 @@ export function InterrupteurEtat({
           </DialogTitle>
           <DialogDescription>
             {valide
-              ? "Suspendu : le compte ne se connecte plus et ses sessions sont tuées aussitôt, mais la levée reste possible. La révocation, elle, est définitive."
-              : "Le compte retrouve son accès. Sinon, la révocation reste possible — définitive, sans retour."}
+              ? sansRevocation
+                ? "Suspendu : le compte ne se connecte plus et ses sessions sont tuées aussitôt, mais la levée reste possible."
+                : "Suspendu : le compte ne se connecte plus et ses sessions sont tuées aussitôt, mais la levée reste possible. La révocation, elle, est définitive."
+              : sansRevocation
+                ? "Le compte retrouve son accès."
+                : "Le compte retrouve son accès. Sinon, la révocation reste possible — définitive, sans retour."}
           </DialogDescription>
         </DialogHeader>
         {erreur ? (
@@ -142,13 +153,15 @@ export function InterrupteurEtat({
                 {enCours ? "Levée…" : "Lever la suspension"}
               </Button>
             )}
-            <Button
-              variant="destructive"
-              onClick={() => agir(revoquerAdministrateurAction)}
-              disabled={enCours}
-            >
-              {enCours ? "Révocation…" : "Révoquer définitivement"}
-            </Button>
+            {sansRevocation ? null : (
+              <Button
+                variant="destructive"
+                onClick={() => agir(revoquerAdministrateurAction)}
+                disabled={enCours}
+              >
+                {enCours ? "Révocation…" : "Révoquer définitivement"}
+              </Button>
+            )}
           </div>
         </DialogFooter>
       </DialogContent>

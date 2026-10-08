@@ -18,6 +18,7 @@ import { nomAffiche, initiales, dateCourte } from "../../list/affichage-admin";
 import { InterrupteurPermission, ProfilEmbauche } from "./permissions-agent";
 import { InterrupteurAgent } from "../interrupteur-agent";
 import { HistoriqueAgent } from "./historique-agent";
+import { BoutonRevocationAgent } from "./bouton-revocation";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 
@@ -167,8 +168,8 @@ export default async function FicheAgentPage({
               <h2 className="text-sm font-medium">Accès au compte</h2>
               <p className="mt-0.5 text-[11px] text-muted-foreground">
                 {estMoi
-                  ? "Votre propre compte : suspension et révocation impossibles."
-                  : "La suspension est réversible ; la révocation est définitive."}
+                  ? "Votre propre compte : la suspension est impossible."
+                  : "La suspension est réversible : le compte ne se connecte plus, la levée reste possible."}
               </p>
               <div className="mt-3 flex items-center justify-between gap-2">
                 <p className="text-xs">
@@ -179,7 +180,8 @@ export default async function FicheAgentPage({
                   nom={nom}
                   etat={suspendu ? "SUSPENDU" : valide ? "VALIDE" : "REVOQUE"}
                   desactive={estMoi}
-                  motifDesactive="Vous ne pouvez pas suspendre ni révoquer votre propre compte."
+                  motifDesactive="Vous ne pouvez pas suspendre votre propre compte."
+                  sansRevocation
                 />
               </div>
             </section>
@@ -221,6 +223,23 @@ export default async function FicheAgentPage({
           </TabsContent>
         ) : null}
       </Tabs>
+
+      <section className="rounded-xl border border-destructive bg-card p-4">
+        <h2 className="text-sm font-medium text-destructive">Zone dangereuse</h2>
+        <p className="mt-0.5 text-[11px] text-muted-foreground">
+          La révocation est définitive : rouvrir un accès exige révocation +
+          recréation tracées. Volontairement éloignée des gestes courants.
+        </p>
+        <div className="mt-3 flex items-center justify-end gap-2">
+          <BoutonRevocationAgent
+            id={compte.id}
+            nom={nom}
+            revoque={!valide && !suspendu}
+            desactive={estMoi}
+            motifDesactive="Vous ne pouvez pas révoquer votre propre compte."
+          />
+        </div>
+      </section>
     </div>
   );
 }

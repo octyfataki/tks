@@ -30,12 +30,15 @@ export function InterrupteurAgent({
   etat,
   desactive,
   motifDesactive,
+  sansRevocation,
 }: {
   id: string;
   nom: string;
   etat: "VALIDE" | "SUSPENDU" | "REVOQUE";
   desactive?: boolean;
   motifDesactive?: string;
+  /** Masque la révocation (reléguée en zone dangereuse en bas de page). */
+  sansRevocation?: boolean;
 }) {
   const [ouvert, setOuvert] = React.useState(false);
   const [erreur, setErreur] = React.useState<string | null>(null);
@@ -78,11 +81,15 @@ export function InterrupteurAgent({
           valide
             ? desactive
               ? (motifDesactive ?? "Action indisponible")
-              : "Cliquer pour suspendre ou révoquer"
+              : sansRevocation
+                ? "Cliquer pour suspendre"
+                : "Cliquer pour suspendre ou révoquer"
             : suspendu
               ? desactive
                 ? (motifDesactive ?? "Action indisponible")
-                : "Suspendu : cliquer pour lever ou révoquer"
+                : sansRevocation
+                  ? "Suspendu : cliquer pour lever"
+                  : "Suspendu : cliquer pour lever ou révoquer"
               : "Révoqué définitivement"
         }
         disabled={!cliquable}
@@ -108,8 +115,12 @@ export function InterrupteurAgent({
           </DialogTitle>
           <DialogDescription>
             {valide
-              ? "Suspendu : le compte ne se connecte plus et ses sessions sont tuées aussitôt, mais la levée reste possible. La révocation, elle, est définitive."
-              : "L'agent retrouve son accès. Sinon, la révocation reste possible — définitive, sans retour."}
+              ? sansRevocation
+                ? "Suspendu : le compte ne se connecte plus et ses sessions sont tuées aussitôt, mais la levée reste possible."
+                : "Suspendu : le compte ne se connecte plus et ses sessions sont tuées aussitôt, mais la levée reste possible. La révocation, elle, est définitive."
+              : sansRevocation
+                ? "L'agent retrouve son accès."
+                : "L'agent retrouve son accès. Sinon, la révocation reste possible — définitive, sans retour."}
           </DialogDescription>
         </DialogHeader>
         {erreur ? (
@@ -138,9 +149,11 @@ export function InterrupteurAgent({
                 {enCours ? "Levée…" : "Lever la suspension"}
               </Button>
             )}
-            <Button variant="destructive" onClick={() => agir(revoquerAgentAction)} disabled={enCours}>
-              {enCours ? "Révocation…" : "Révoquer définitivement"}
-            </Button>
+            {sansRevocation ? null : (
+              <Button variant="destructive" onClick={() => agir(revoquerAgentAction)} disabled={enCours}>
+                {enCours ? "Révocation…" : "Révoquer définitivement"}
+              </Button>
+            )}
           </div>
         </DialogFooter>
       </DialogContent>
