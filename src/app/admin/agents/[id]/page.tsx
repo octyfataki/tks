@@ -20,6 +20,7 @@ import { InterrupteurAgent } from "../interrupteur-agent";
 import { HistoriqueAgent } from "./historique-agent";
 import { BoutonRevocationAgent } from "./bouton-revocation";
 import { FormulaireCoordonneesAgent } from "./formulaire-coordonnees";
+import { FormulaireEmailAgent } from "./formulaire-email";
 import { SectionModifiable } from "../../list/[id]/section-modifiable";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
@@ -187,6 +188,33 @@ export default async function FicheAgentPage({
                 recréation tracées (S2). Pas de second facteur pour un agent : la
                 confiance passe par l&apos;email.
               </p>
+            </section>
+
+            <section className="rounded-xl border bg-card p-4">
+              <SectionModifiable
+                titre="Identifiant de connexion"
+                description="Adresse email : l'agent s'y connecte. Changement confirmé deux fois."
+                peutModifier={puisJeCorriger && valide}
+                motifVerrouille={
+                  !puisJeCorriger
+                    ? "Lecture seule : seul un administrateur principal validé corrige cette fiche."
+                    : suspendu
+                      ? "Compte suspendu : lever la suspension pour corriger."
+                      : "Compte révoqué : définitif, aucune correction."
+                }
+                cleRepli={compte.email}
+                lecture={
+                  <dl className="mt-3 grid gap-3 sm:grid-cols-2">
+                    <Champ etiquette="Adresse actuelle" valeur={compte.email} />
+                  </dl>
+                }
+                formulaire={
+                  <FormulaireEmailAgent
+                    id={compte.id}
+                    emailInitial={compte.email}
+                  />
+                }
+              />
             </section>
 
             <section className="rounded-xl border border-destructive/30 bg-card p-4">

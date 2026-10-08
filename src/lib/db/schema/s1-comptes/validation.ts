@@ -185,6 +185,18 @@ export function peutInviterAdminPrincipal(
   return peutCreerAdminPrincipal(roleCreateur, etatCreateur);
 }
 
+/**
+ * Normalise un email staff (identifiant de connexion) : minuscules,
+ * sans espaces. Renvoie `null` si invalide (pas de @, trop long).
+ * L'unicité se vérifie en base (contrainte UNIQUE + pré-contrôle).
+ */
+export function normaliserEmailStaff(email: string): string | null {
+  const valeur = email.trim().toLowerCase();
+  if (!valeur.includes("@")) return null;
+  if (valeur.length < 3 || valeur.length > 255) return null;
+  return valeur;
+}
+
 /** Une invitation cible AGENT ou ADMIN_PRINCIPAL — jamais CLIENT, jamais
  * ADMIN_TECHNIQUE (le bootstrap technique reste le seul chemin). Le rôle
  * effectif est fixé par le lien et vérifié à l'acceptation : un lien AGENT

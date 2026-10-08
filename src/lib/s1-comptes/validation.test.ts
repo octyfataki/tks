@@ -7,6 +7,7 @@ import {
   estRoleStaff,
   etatLienInvitation,
   normaliserDureeInvitationJours,
+  normaliserEmailStaff,
   peutChangerRole,
   peutCreerAdminPrincipal,
   peutInviterAdminPrincipal,
@@ -149,6 +150,14 @@ describe("règles staff", () => {
     expect(peutModifierReglage("ADMIN_PRINCIPAL", "VALIDE")).toBe(true);
     expect(peutModifierReglage("AGENT", "VALIDE")).toBe(false);
     expect(peutModifierReglage("ADMIN_PRINCIPAL", "REVOQUE")).toBe(false);
+  });
+
+  it("email staff : normalisé minuscule, invalide rejeté", () => {
+    expect(normaliserEmailStaff("  Agent@Exemple.CD ")).toBe(
+      "agent@exemple.cd",
+    );
+    expect(normaliserEmailStaff("sans-arobase")).toBeNull();
+    expect(normaliserEmailStaff("")).toBeNull();
   });
 
   it("téléphone staff : optionnel, contact uniquement, jamais vérifié par SMS", () => {

@@ -8,6 +8,7 @@ import {
   DUREE_PREMIER_ACCES_MS,
   invitationsAgents,
   normaliserDureeInvitationJours,
+  normaliserEmailStaff,
   peutCreerAdminPrincipal,
   peutInviterAdminPrincipal,
   peutInviterAgent,
@@ -642,8 +643,10 @@ export async function modifierAdminSupport(
  * Correction support d'un agent de service (coquille sur le nom,
  * téléphone de contact oublié). Périmètre : nom + téléphone uniquement,
  * sur un compte AGENT VALIDE. Rôle, email, état et secrets ne passent
- * jamais par ici : une erreur d'email se corrige par révocation +
- * recréation tracées. Seul un administrateur principal VALIDE corrige
+ * jamais par ici : une erreur de rôle se corrige par révocation +
+ * recréation, l'email par la zone « Identifiant de connexion »
+ * (modifierEmailAgentSupport, confirmé deux fois). Seul un
+ * administrateur principal VALIDE corrige
  * (même autorisation que créer / révoquer un agent). Chaque correction
  * est journalisée (S2, invariant 8 : avant/après, acteur, rôle au moment).
  */
@@ -710,6 +713,86 @@ export async function modifierAgentSupport(
     entiteId: cible.id,
     avant,
     apres: { nom, telephone: telephoneValeur },
+  });
+  return { id: cible.id, inchange: false as const };
+}
+
+/**
+ * Change l'email (identifiant de connexion) d'un agent de service.
+ * Opération sensible : l'email est la clé du compte et le canal de
+ * confiance — d'où confirmation explicite côté UI ET normalisation
+ * stricte ici. Périmètre : compte AGENT VALIDE uniquement, jamais
+ * REVOQUE (recréation) ni SUSPENDU (lever d'abord). Seul un
+ * administrateur principal VALIDE agit. Unicité garantie par
+ * pré-contrôle + contrainte UNIQUE (course → EMAIL_DEJA_UTILISE).
+ * Les sessions survivent (clé = userId, pas l'email) ; en cas de doute
+ * sur qui détient l'ancien accès, suspendre d'abord. Journalisée
+ * (S2, invariant 8 : avant/après).
+ */
+export async function modifierEmailAgentSupport(
+  modificateurId: string,
+  cibleId: string,
+  input: { email: string },
+) {
+  const modificateurs = await db
+    .select()
+    .from(comptesStaff)
+    .where(eq(comptesStaff.id, modificateurId));
+  const modificateur = modificateurs[0];
+  if (
+    !modificateur ||
+    !peutInviterAgent(modificateur.role, modificateur.etat)
+  ) {
+    throw new StaffError("NON_AUTORISE", "modificateur non autorisé");
+  }
+  const cibles = await db
+    .select()
+    .from(comptesStaff)
+    .where(eq(comptesStaff.id, cibleId));
+  const cible = cibles[0];
+  if (!cible || cible.role !== "AGENT" || cible.etat !== "VALIDE") {
+    throw new StaffError("NON_AUTORISE", "cible non modifiable");
+  }
+  const email = normaliserEmailStaff(input.email);
+  if (!email) {
+    throw new StaffError("NON_AUTORISE", "email invalide");
+  }
+  if (email === cible.email) {
+    return { id: cible.id, inchange: true as const };
+  }
+  const occupes = await db
+    .select({ id: user.id })
+    .from(user)
+    .where(eq(user.email, email))
+    .limit(1);
+  if (occupes.length > 0) {
+    throw new StaffError("EMAIL_DEJA_UTILISE", "email déjà utilisé");
+  }
+  try {
+    await db.transaction(async (tx) => {
+      await tx
+        .update(user)
+        .set({ email })
+        .where(eq(user.id, cible.betterAuthUserId));
+      await tx
+        .update(comptesStaff)
+        .set({ email })
+        .where(eq(comptesStaff.id, cible.id));
+    });
+  } catch (erreur) {
+    if (estDoublonEmail(erreur)) {
+      throw new StaffError("EMAIL_DEJA_UTILISE", "email déjà utilisé");
+    }
+    throw erreur;
+  }
+  await enregistrerEvenement({
+    acteurId: modificateurId,
+    roleAuMoment: modificateur.role,
+    typeAction: "agent.modifier",
+    entite: "compte_staff",
+    entiteId: cible.id,
+    avant: { email: cible.email },
+    apres: { email },
   });
   return { id: cible.id, inchange: false as const };
 }
