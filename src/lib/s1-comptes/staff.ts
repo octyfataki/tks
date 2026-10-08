@@ -1,9 +1,8 @@
 import { randomBytes, randomUUID } from "node:crypto";
 import { and, count, eq } from "drizzle-orm";
 import { hashPassword } from "better-auth/crypto";
-import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
-import { account, user } from "@/lib/db/schema/auth-schema";
+import { account, session as sessionAuth, user } from "@/lib/db/schema/auth-schema";
 import {
   comptesStaff,
   DUREE_PREMIER_ACCES_MS,
@@ -27,6 +26,7 @@ import { enregistrerEvenement } from "@/lib/s2-autorisations/journal";
 
 export type ErreurStaff =
   | "NON_AUTORISE"
+  | "EMAIL_DEJA_UTILISE"
   | "INVITATION_INTROUVABLE"
   | "INVITATION_EXPIREE"
   | "INVITATION_DEJA_CONSOMMEE"
@@ -49,17 +49,74 @@ export class StaffError extends Error {
 }
 
 async function inscrireUtilisateur(email: string, password: string, name: string) {
-  const res = (await auth.api.signUpEmail({
-    body: { email, password, name },
-    headers: new Headers(),
-  })) as unknown as { user: { id: string; email: string } };
-  if (!res?.user?.id) throw new StaffError("NON_AUTORISE", "inscription impossible");
-  return res.user;
+  // Création directe user + compte credential, SANS ouvrir de session et
+  // sans passer par le endpoint public /sign-up/email (rate-limité à
+  // 3/min, cookies de session, auto-sign-in qui écraserait la session de
+  // l'admin créateur). Le hash reprend le primitif better-auth, même
+  // format qu'à l'inscription — la connexion email + mot de passe
+  // fonctionne à l'identique. Compte credential : providerId
+  // "credential", accountId = id stable de l'utilisateur.
+  const emailNormalise = email.trim().toLowerCase();
+  const existants = await db
+    .select({ id: user.id })
+    .from(user)
+    .where(eq(user.email, emailNormalise))
+    .limit(1);
+  if (existants.length > 0) {
+    throw new StaffError("EMAIL_DEJA_UTILISE", "email déjà utilisé");
+  }
+  const hash = await hashPassword(password);
+  const utilisateurId = randomUUID();
+  try {
+    await db.transaction(async (tx) => {
+      await tx.insert(user).values({
+        id: utilisateurId,
+        name,
+        email: emailNormalise,
+        emailVerified: false,
+      });
+      await tx.insert(account).values({
+        id: randomUUID(),
+        accountId: utilisateurId,
+        providerId: "credential",
+        userId: utilisateurId,
+        password: hash,
+      });
+    });
+  } catch (erreur) {
+    // Course : deux créations concurrentes du même email — la seconde
+    // bute sur l'unicité MySQL (ER_DUP_ENTRY).
+    if (estDoublonEmail(erreur)) {
+      throw new StaffError("EMAIL_DEJA_UTILISE", "email déjà utilisé");
+    }
+    throw erreur;
+  }
+  return { id: utilisateurId, email: emailNormalise };
+}
+
+function estDoublonEmail(erreur: unknown): boolean {
+  const code = (erreur as { code?: unknown })?.code;
+  if (code === "ER_DUP_ENTRY") return true;
+  const message = erreur instanceof Error ? erreur.message : String(erreur);
+  return message.includes("Duplicate entry");
 }
 
 async function nbComptesStaff(): Promise<number> {
   const rows = await db.select({ n: count() }).from(comptesStaff);
   return rows[0]?.n ?? 0;
+}
+
+/**
+ * Tue toutes les sessions better-auth d'un utilisateur (suspension :
+ * effet immédiat sur tous les appareils — la porte de connexion refuse
+ * ensuite toute reconnexion tant que le compte n'est pas VALIDE).
+ */
+export async function tuerSessionsStaff(
+  betterAuthUserId: string,
+): Promise<void> {
+  await db
+    .delete(sessionAuth)
+    .where(eq(sessionAuth.userId, betterAuthUserId));
 }
 
 /**
@@ -164,12 +221,17 @@ export async function creerAgent(
   if (input.password.length < 8) {
     throw new StaffError("MOT_DE_PASSE_INVALIDE", "mot de passe trop court");
   }
-  const user = await inscrireUtilisateur(input.email, input.password, input.name);
+  const emailNormalise = input.email.trim().toLowerCase();
+  const nouvelUtilisateur = await inscrireUtilisateur(
+    emailNormalise,
+    input.password,
+    input.name,
+  );
   const id = randomUUID();
   await db.insert(comptesStaff).values({
     id,
-    betterAuthUserId: user.id,
-    email: input.email,
+    betterAuthUserId: nouvelUtilisateur.id,
+    email: emailNormalise,
     telephone: telephone === "" ? null : telephone,
     role: "AGENT",
     etat: "VALIDE",
@@ -181,9 +243,9 @@ export async function creerAgent(
     typeAction: "agent.creer",
     entite: "compte_staff",
     entiteId: id,
-    apres: { email: input.email, role: "AGENT" },
+    apres: { email: emailNormalise, role: "AGENT" },
   });
-  return { id, betterAuthUserId: user.id };
+  return { id, betterAuthUserId: nouvelUtilisateur.id };
 }
 
 /** Un ADMIN_PRINCIPAL VALIDE crée un lien d'invitation agent (rôle fixé : AGENT). */

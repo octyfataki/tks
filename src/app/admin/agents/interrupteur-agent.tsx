@@ -12,23 +12,28 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
-import { revoquerAgentAction } from "./actions";
+import {
+  leverSuspensionAgentAction,
+  revoquerAgentAction,
+  suspendreAgentAction,
+} from "./actions";
 
 /**
- * Interrupteur d'état d'un agent de service. ON = VALIDE : cliquer ouvre
- * une confirmation, la révocation est définitive (REVOQUE = inutilisable,
- * aucun retour). OFF = révoqué, toujours désactivé.
+ * Interrupteur d'état d'un agent de service. VALIDE (ON) : cliquer
+ * propose suspendre (réversible) ou révoquer (définitif). SUSPENDU :
+ * cliquer propose lever la suspension ou révoquer. REVOQUE (OFF) :
+ * toujours désactivé, aucun retour.
  */
 export function InterrupteurAgent({
   id,
   nom,
-  valide,
+  etat,
   desactive,
   motifDesactive,
 }: {
   id: string;
   nom: string;
-  valide: boolean;
+  etat: "VALIDE" | "SUSPENDU" | "REVOQUE";
   desactive?: boolean;
   motifDesactive?: string;
 }) {
@@ -36,19 +41,25 @@ export function InterrupteurAgent({
   const [erreur, setErreur] = React.useState<string | null>(null);
   const [enCours, demarrer] = React.useTransition();
 
-  function confirmer() {
+  function agir(action: (id: string) => Promise<{ ok: boolean; erreur?: string }>) {
     setErreur(null);
     demarrer(async () => {
-      const resultat = await revoquerAgentAction(id);
+      const resultat = await action(id);
       if (resultat.ok) {
         setOuvert(false);
       } else {
-        setErreur(resultat.erreur);
+        setErreur(
+          "erreur" in resultat && typeof resultat.erreur === "string"
+            ? resultat.erreur
+            : "Opération impossible.",
+        );
       }
     });
   }
 
-  const cliquable = valide && !desactive;
+  const valide = etat === "VALIDE";
+  const suspendu = etat === "SUSPENDU";
+  const cliquable = (valide || suspendu) && !desactive;
 
   return (
     <Dialog
@@ -62,13 +73,17 @@ export function InterrupteurAgent({
         type="button"
         role="switch"
         aria-checked={valide}
-        aria-label={`Agent ${nom} : ${valide ? "validé" : "révoqué"}`}
+        aria-label={`Agent ${nom} : ${valide ? "validé" : suspendu ? "suspendu" : "révoqué"}`}
         title={
-          !valide
-            ? "Révoqué définitivement"
-            : desactive
+          valide
+            ? desactive
               ? (motifDesactive ?? "Action indisponible")
-              : "Cliquer pour révoquer"
+              : "Cliquer pour suspendre ou révoquer"
+            : suspendu
+              ? desactive
+                ? (motifDesactive ?? "Action indisponible")
+                : "Suspendu : cliquer pour lever ou révoquer"
+              : "Révoqué définitivement"
         }
         disabled={!cliquable}
         onClick={() => setOuvert(true)}
@@ -88,11 +103,13 @@ export function InterrupteurAgent({
       </button>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Révoquer {nom} ?</DialogTitle>
+          <DialogTitle>
+            {valide ? `Suspendre ${nom} ?` : `Lever la suspension de ${nom} ?`}
+          </DialogTitle>
           <DialogDescription>
-            Le compte devient définitivement inutilisable (REVOQUE). Rouvrir
-            un accès exigera révocation + recréation tracées. Ses permissions
-            tombent avec le compte. Cette action ne peut pas être annulée.
+            {valide
+              ? "Suspendu : le compte ne se connecte plus et ses sessions sont tuées aussitôt, mais la levée reste possible. La révocation, elle, est définitive."
+              : "L'agent retrouve son accès. Sinon, la révocation reste possible — définitive, sans retour."}
           </DialogDescription>
         </DialogHeader>
         {erreur ? (
@@ -100,13 +117,31 @@ export function InterrupteurAgent({
             {erreur}
           </p>
         ) : null}
-        <DialogFooter>
+        <DialogFooter className="gap-2 sm:justify-between">
           <DialogClose render={<Button variant="outline" disabled={enCours} />}>
             Annuler
           </DialogClose>
-          <Button variant="destructive" onClick={confirmer} disabled={enCours}>
-            {enCours ? "Révocation…" : "Révoquer définitivement"}
-          </Button>
+          <div className="flex gap-2">
+            {valide ? (
+              <Button
+                variant="secondary"
+                onClick={() => agir(suspendreAgentAction)}
+                disabled={enCours}
+              >
+                {enCours ? "Suspension…" : "Suspendre"}
+              </Button>
+            ) : (
+              <Button
+                onClick={() => agir(leverSuspensionAgentAction)}
+                disabled={enCours}
+              >
+                {enCours ? "Levée…" : "Lever la suspension"}
+              </Button>
+            )}
+            <Button variant="destructive" onClick={() => agir(revoquerAgentAction)} disabled={enCours}>
+              {enCours ? "Révocation…" : "Révoquer définitivement"}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

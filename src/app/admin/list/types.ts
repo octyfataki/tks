@@ -6,14 +6,14 @@ export type LigneAdmin = {
   email: string;
   telephone: string | null;
   role: "ADMIN_PRINCIPAL" | "ADMIN_TECHNIQUE";
-  etat: "VALIDE" | "REVOQUE";
+  etat: "VALIDE" | "SUSPENDU" | "REVOQUE";
   creeLe: string;
   creePar: string | null;
 };
 
 export type FiltreAdmin = {
   role?: "ADMIN_PRINCIPAL" | "ADMIN_TECHNIQUE";
-  etat?: "VALIDE" | "REVOQUE";
+  etat?: "VALIDE" | "SUSPENDU" | "REVOQUE";
   q?: string;
   page: number;
 };

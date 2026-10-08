@@ -16,7 +16,7 @@ export type CompteProfil =
   | {
       type: "STAFF";
       role: "ADMIN_PRINCIPAL" | "ADMIN_TECHNIQUE" | "AGENT";
-      etat: "VALIDE" | "REVOQUE";
+      etat: "VALIDE" | "SUSPENDU" | "REVOQUE";
     };
 
 export type DossierRattacheProfil = {
@@ -60,7 +60,7 @@ function libelleRole(compte: CompteProfil): string {
 
 function libelleEtat(compte: CompteProfil): string {
   if (compte.type === "CLIENT") return "Compte client";
-  return compte.etat === "VALIDE" ? "VALIDE" : "REVOQUE";
+  return compte.etat;
 }
 
 function libelleSecondFacteur(actif: boolean | null | undefined): string {

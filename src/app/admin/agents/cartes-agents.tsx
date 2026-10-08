@@ -19,13 +19,15 @@ export type CarteAgent = {
 /**
  * Grille de cartes des agents de service : nom + email en tête, badges
  * état/permissions, traçabilité, puis « Voir la fiche » et l'interrupteur
- * d'état (révocation définitive après confirmation).
+ * d'état (suspension réversible ou révocation définitive, après
+ * confirmation).
  */
 export function CartesAgents({ cartes }: { cartes: CarteAgent[] }) {
   return (
     <div className="grid items-start gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {cartes.map((carte) => {
         const valide = carte.etat === "VALIDE";
+        const suspendu = carte.etat === "SUSPENDU";
         return (
           <article
             key={carte.id}
@@ -49,7 +51,7 @@ export function CartesAgents({ cartes }: { cartes: CarteAgent[] }) {
 
             <div className="flex flex-wrap gap-1.5">
               <Badge variant="outline">Agent de service</Badge>
-              <Badge variant={valide ? "secondary" : "destructive"}>
+              <Badge variant={valide ? "secondary" : suspendu ? "default" : "destructive"}>
                 {carte.etat}
               </Badge>
               {carte.nbPermissions === 0 ? (
@@ -65,7 +67,9 @@ export function CartesAgents({ cartes }: { cartes: CarteAgent[] }) {
               Créé par {carte.creeParNom} · le {dateCourte(carte.creeLe)}.
               {valide
                 ? " Le rôle est immuable (S2)."
-                : " Révoqué définitivement."}
+                : suspendu
+                  ? " Suspendu : connexion refusée, levée possible."
+                  : " Révoqué définitivement."}
             </p>
 
             <div className="mt-auto flex items-center justify-between gap-2 border-t pt-3">
@@ -78,9 +82,9 @@ export function CartesAgents({ cartes }: { cartes: CarteAgent[] }) {
               <InterrupteurAgent
                 id={carte.id}
                 nom={carte.nom}
-                valide={valide}
+                etat={suspendu ? "SUSPENDU" : valide ? "VALIDE" : "REVOQUE"}
                 desactive={carte.estMoi}
-                motifDesactive="Vous ne pouvez pas révoquer votre propre compte."
+                motifDesactive="Vous ne pouvez pas suspendre ni révoquer votre propre compte."
               />
             </div>
           </article>

@@ -28,6 +28,7 @@ const FILTRES = [
   { valeur: "principal", etiquette: "Principaux" },
   { valeur: "technique", etiquette: "Techniques" },
   { valeur: "valide", etiquette: "Validés" },
+  { valeur: "suspendu", etiquette: "Suspendus" },
   { valeur: "revoque", etiquette: "Révoqués" },
   { valeur: "sans-2fa", etiquette: "Sans second facteur" },
 ] as const;

@@ -10,6 +10,8 @@ const tech: Profil = { type: "STAFF", role: "ADMIN_TECHNIQUE", etat: "VALIDE" };
 const agent: Profil = { type: "STAFF", role: "AGENT", etat: "VALIDE" };
 const adminRevoque: Profil = { type: "STAFF", role: "ADMIN_PRINCIPAL", etat: "REVOQUE" };
 const agentRevoque: Profil = { type: "STAFF", role: "AGENT", etat: "REVOQUE" };
+const adminSuspendu: Profil = { type: "STAFF", role: "ADMIN_PRINCIPAL", etat: "SUSPENDU" };
+const agentSuspendu: Profil = { type: "STAFF", role: "AGENT", etat: "SUSPENDU" };
 const client: Profil = { type: "CLIENT" };
 const anonyme: Profil = { type: "ANONYME" };
 const inconnu: Profil = { type: "INCONNU" };
@@ -24,6 +26,8 @@ describe("destinationApresConnexion", () => {
     ["profil illisible", inconnu, "/sign-in"],
     ["administrateur révoqué", adminRevoque, "/sign-in"],
     ["agent révoqué", agentRevoque, "/sign-in"],
+    ["administrateur suspendu", adminSuspendu, "/sign-in"],
+    ["agent suspendu", agentSuspendu, "/sign-in"],
   ];
 
   it.each(cas)("renvoie %s vers la bonne destination", (_label, profil, attendu) => {
@@ -54,6 +58,8 @@ describe("redirectionAcces", () => {
     ["un anonyme ouvre /clients", anonyme, "CLIENTS", "/sign-in"],
     ["un administrateur révoqué ouvre /admin", adminRevoque, "ADMIN", "/sign-in"],
     ["un agent révoqué ouvre /agent", agentRevoque, "AGENT", "/sign-in"],
+    ["un administrateur suspendu ouvre /admin", adminSuspendu, "ADMIN", "/sign-in"],
+    ["un agent suspendu ouvre /agent", agentSuspendu, "AGENT", "/sign-in"],
     ["un profil illisible ouvre /admin", inconnu, "ADMIN", "/sign-in"],
   ];
 

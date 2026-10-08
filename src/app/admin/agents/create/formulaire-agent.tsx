@@ -19,6 +19,7 @@ import {
 import { Button, buttonVariants } from "@/components/ui/button";
 import { FieldDescription } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { toast } from "@/components/ui/toast";
 import { creerAgentAction, type ResultatAction } from "../actions";
 
 const ETAT_INITIAL: ResultatAction | null = null;
@@ -55,6 +56,33 @@ export function FormulaireAgent() {
   const [telephone, setTelephone] = React.useState("");
   const [motDePasse, setMotDePasse] = React.useState("");
   const [motDePasseVisible, setMotDePasseVisible] = React.useState(false);
+  const dernierResultat = React.useRef<ResultatAction | null>(null);
+
+  // Tout le feedback (succès comme refus) passe par les toasts : pas de
+  // message inline. Succès -> formulaire réinitialisé pour enchaîner.
+  React.useEffect(() => {
+    if (!resultat || dernierResultat.current === resultat) return;
+    dernierResultat.current = resultat;
+    if (resultat.ok) {
+      toast.add({
+        type: "success",
+        title: "Agent créé",
+        description: `Compte actif pour ${resultat.email ?? "l'agent"}. Accordez-lui ses permissions depuis sa fiche.`,
+      });
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- réinitialise le formulaire après succès, une fois par résultat
+      setPrenom("");
+      setNom("");
+      setEmail("");
+      setTelephone("");
+      setMotDePasse("");
+    } else {
+      toast.add({
+        type: "error",
+        title: "Création impossible",
+        description: resultat.erreur,
+      });
+    }
+  }, [resultat]);
 
   const nomComplet = `${prenom} ${nom}`.trim() || "Nouvel agent";
   const initiales =
@@ -79,23 +107,6 @@ export function FormulaireAgent() {
           </Button>
         </div>
       </div>
-
-      {resultat && !resultat.ok ? (
-        <p role="alert" className="text-xs font-medium text-destructive">
-          {resultat.erreur}
-        </p>
-      ) : null}
-      {resultat?.ok ? (
-        <div
-          role="status"
-          className="rounded-lg border border-green-600/30 bg-green-600/5 p-3"
-        >
-          <p className="text-xs font-medium text-green-700">
-            Agent créé pour {resultat.email}. Accordez-lui ses permissions depuis
-            sa fiche.
-          </p>
-        </div>
-      ) : null}
 
       <div className="grid items-start gap-4 lg:grid-cols-[1.6fr_1fr]">
         <section className="rounded-xl border bg-card p-4 sm:p-5">

@@ -5,7 +5,9 @@ import { mysqlTable, timestamp, varchar, index } from "drizzle-orm/mysql-core";
 // 02-comptes-clients.md, jamais ici.
 // Règles applicatives (tout applicatif, voir validation.ts) :
 // - role immuable après création (changement = révocation + recréation, S2).
-// - etat VALIDE | REVOQUE uniquement — staff jamais EN_ATTENTE_VALIDATION.
+// - etat VALIDE | SUSPENDU | REVOQUE uniquement — staff jamais EN_ATTENTE_VALIDATION.
+//   SUSPENDU = gel temporaire réversible (connexion refusée, sessions tuées,
+//   retour VALIDE possible) ; REVOQUE = définitif, aucun retour.
 // - creePar NULL uniquement pour le premier ADMIN_TECHNIQUE (bootstrap développeur).
 // - telephone NULL par défaut : contact uniquement, jamais identifiant, jamais
 //   vérifié par SMS — la confiance passe par l'email (décision produit :
@@ -27,6 +29,7 @@ export const comptesStaff = mysqlTable(
     creePar: varchar("cree_par", { length: 36 }),
     createdAt: timestamp("created_at", { fsp: 3 }).defaultNow().notNull(),
     revokedAt: timestamp("revoked_at", { fsp: 3 }),
+    suspendedAt: timestamp("suspended_at", { fsp: 3 }),
   },
   (table) => [
     index("comptes_staff_role_etat_idx").on(table.role, table.etat),

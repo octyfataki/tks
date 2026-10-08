@@ -59,6 +59,12 @@ La **connexion**. Il porte l'identifiant et le mot de passe. Pour un client,
 l'identifiant est son **numéro de téléphone**. Un compte peut exister seul, sans
 dossier.
 
+Un compte staff (administrateur technique, administrateur principal, agent de
+service) est dans un seul de ces états : `VALIDE` (accès normal), `SUSPENDU`
+(gel temporaire : connexion refusée, sessions tuées, retour vers `VALIDE`
+possible), `REVOQUE` (définitivement inutilisable, aucun retour — rouvrir
+passe par recréation).
+
 Un compte client est dans un seul de ces états :
 
 | État | Ce que ça veut dire |

@@ -25,14 +25,17 @@ export function SignInForm() {
 
   async function versSonEspace() {
     const { destination, code } = await demanderDestination();
-    if (code === "REVOQUE") {
+    if (code === "REVOQUE" || code === "SUSPENDU") {
       // Le compte existe mais n'a plus le droit de rien faire : on ferme la
       // session ouverte à l'instant plutôt que de la laisser traîner.
       await authClient.signOut().catch(() => undefined);
       toast.add({
         type: "error",
-        title: "Compte révoqué",
-        description: "Contactez l'administrateur.",
+        title: code === "SUSPENDU" ? "Compte suspendu" : "Compte révoqué",
+        description:
+          code === "SUSPENDU"
+            ? "Accès gelé temporairement. Contactez l'administrateur."
+            : "Contactez l'administrateur.",
       });
       return;
     }

@@ -29,23 +29,34 @@ describe("filtrage de la liste des administrateurs", () => {
       telephone: "+243 810 000 001",
       createdAt: new Date("2026-09-01T10:00:00"),
     }),
+    ligne({
+      email: "gamma@exemple.cd",
+      nom: "Gamma Lelo",
+      role: "ADMIN_PRINCIPAL",
+      etat: "SUSPENDU",
+      createdAt: new Date("2026-09-15T10:00:00"),
+    }),
   ];
 
   it("filtre unique : un seul rôle, un seul état", () => {
     expect(filtrerLignes(lignes, "", "principal").map((l) => l.email)).toEqual([
       "alpha@exemple.cd",
+      "gamma@exemple.cd",
     ]);
     expect(filtrerLignes(lignes, "", "technique").map((l) => l.email)).toEqual([
       "beta@exemple.cd",
     ]);
     expect(filtrerLignes(lignes, "", "valide")).toHaveLength(1);
+    expect(filtrerLignes(lignes, "", "suspendu").map((l) => l.email)).toEqual([
+      "gamma@exemple.cd",
+    ]);
     expect(filtrerLignes(lignes, "", "revoque").map((l) => l.email)).toEqual([
       "beta@exemple.cd",
     ]);
     expect(filtrerLignes(lignes, "", "sans-2fa").map((l) => l.email)).toEqual([
       "beta@exemple.cd",
     ]);
-    expect(filtrerLignes(lignes, "", null)).toHaveLength(2);
+    expect(filtrerLignes(lignes, "", null)).toHaveLength(3);
   });
 
   it("recherche insensible à la casse sur nom, email, téléphone", () => {
@@ -63,17 +74,21 @@ describe("filtrage de la liste des administrateurs", () => {
     const avant = lignes.map((l) => l.email);
     expect(trierLignes(lignes, null).map((l) => l.email)).toEqual([
       "alpha@exemple.cd",
+      "gamma@exemple.cd",
       "beta@exemple.cd",
     ]);
     expect(trierLignes(lignes, "anciens").map((l) => l.email)).toEqual([
       "beta@exemple.cd",
+      "gamma@exemple.cd",
       "alpha@exemple.cd",
     ]);
     expect(trierLignes(lignes, "nom-az").map((l) => l.email)).toEqual([
       "alpha@exemple.cd",
       "beta@exemple.cd",
+      "gamma@exemple.cd",
     ]);
     expect(trierLignes(lignes, "nom-za").map((l) => l.email)).toEqual([
+      "gamma@exemple.cd",
       "beta@exemple.cd",
       "alpha@exemple.cd",
     ]);

@@ -48,6 +48,7 @@ export default async function FicheAgentPage({
       creePar: comptesStaff.creePar,
       createdAt: comptesStaff.createdAt,
       revokedAt: comptesStaff.revokedAt,
+      suspendedAt: comptesStaff.suspendedAt,
       nom: user.name,
     })
     .from(comptesStaff)
@@ -86,6 +87,7 @@ export default async function FicheAgentPage({
   const moi = lignesMoi[0];
   const puisJeGerer = moi ? peutGererPermissions(moi.role, moi.etat) : false;
   const valide = compte.etat === "VALIDE";
+  const suspendu = compte.etat === "SUSPENDU";
   const verrouille = !puisJeGerer || !valide;
 
   return (
@@ -111,7 +113,7 @@ export default async function FicheAgentPage({
         </div>
         <div className="flex shrink-0 flex-wrap justify-end gap-1.5">
           <Badge variant="outline">Agent de service</Badge>
-          <Badge variant={valide ? "secondary" : "destructive"}>{compte.etat}</Badge>
+          <Badge variant={valide ? "secondary" : suspendu ? "default" : "destructive"}>{compte.etat}</Badge>
         </div>
       </div>
 
@@ -125,6 +127,9 @@ export default async function FicheAgentPage({
             <Champ etiquette="Créé par" valeur={createur} />
             {compte.revokedAt ? (
               <Champ etiquette="Révoqué le" valeur={dateCourte(compte.revokedAt)} />
+            ) : null}
+            {compte.suspendedAt && suspendu ? (
+              <Champ etiquette="Suspendu le" valeur={dateCourte(compte.suspendedAt)} />
             ) : null}
           </div>
           <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
@@ -146,7 +151,7 @@ export default async function FicheAgentPage({
         </div>
         <p className="mt-0.5 text-[11px] text-muted-foreground">
           {verrouille
-            ? "Seul un administrateur principal validé modifie les permissions, et jamais sur un compte révoqué."
+            ? "Seul un administrateur principal validé modifie les permissions, et jamais sur un compte suspendu ou révoqué."
             : "Absence = refus. Chaque bascule est tracée au journal."}
         </p>
         <div className="mt-3 grid gap-2 md:grid-cols-2">

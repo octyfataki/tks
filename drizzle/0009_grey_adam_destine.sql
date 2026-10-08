@@ -1,0 +1,1 @@
+ALTER TABLE `comptes_staff` ADD `suspended_at` timestamp(3);

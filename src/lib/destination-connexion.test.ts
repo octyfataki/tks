@@ -26,6 +26,14 @@ describe("demanderDestination", () => {
     });
   });
 
+  it("propage le motif de suspension", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(reponse({ destination: "/sign-in", code: "SUSPENDU" })));
+    await expect(demanderDestination()).resolves.toEqual({
+      destination: "/sign-in",
+      code: "SUSPENDU",
+    });
+  });
+
   it("replie sur le login quand le réseau tombe", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")));
     await expect(demanderDestination()).resolves.toEqual({

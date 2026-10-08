@@ -12,7 +12,7 @@ import { CartesAgents } from "./cartes-agents";
 import { PaginationListe } from "../list/pagination-liste";
 import { nomAffiche } from "../list/affichage-admin";
 
-const FILTRES_VALIDES = ["valide", "revoque", "sans-permission"] as const;
+const FILTRES_VALIDES = ["valide", "suspendu", "revoque", "sans-permission"] as const;
 const TRIS_VALIDES = ["anciens", "nom-az", "nom-za"] as const;
 
 /** Cartes par page de la grille. */
@@ -97,6 +97,7 @@ export default async function ListeAgentsPage({
   const q = recherche;
   const lignesFiltrees = lignesBrutes.filter((ligne) => {
     if (filtreDemande === "valide" && ligne.etat !== "VALIDE") return false;
+    if (filtreDemande === "suspendu" && ligne.etat !== "SUSPENDU") return false;
     if (filtreDemande === "revoque" && ligne.etat !== "REVOQUE") return false;
     if (filtreDemande === "sans-permission" && (nbPermissions.get(ligne.id) ?? 0) > 0)
       return false;

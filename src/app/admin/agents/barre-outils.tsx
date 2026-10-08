@@ -26,6 +26,7 @@ import { Input } from "@/components/ui/input";
 const FILTRES = [
   { valeur: "", etiquette: "Tous les agents" },
   { valeur: "valide", etiquette: "Validés" },
+  { valeur: "suspendu", etiquette: "Suspendus" },
   { valeur: "revoque", etiquette: "Révoqués" },
   { valeur: "sans-permission", etiquette: "Sans permission" },
 ] as const;

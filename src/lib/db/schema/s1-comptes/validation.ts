@@ -8,7 +8,7 @@ export const ROLES_STAFF = [
 ] as const;
 export type RoleStaff = (typeof ROLES_STAFF)[number];
 
-export const ETATS_STAFF = ["VALIDE", "REVOQUE"] as const;
+export const ETATS_STAFF = ["VALIDE", "SUSPENDU", "REVOQUE"] as const;
 export type EtatStaff = (typeof ETATS_STAFF)[number];
 
 export function estRoleStaff(role: string): role is RoleStaff {
@@ -79,12 +79,60 @@ export function peutInviterAgent(
  * création — administrateur technique ou principal, toujours VALIDE.
  * La révocation est définitive (REVOQUE = inutilisable, jamais de
  * retour) : rouvrir un accès passe par révocation + recréation (S2).
+ * Pour un malentendu, voir la suspension (peutSuspendreAdmin) :
+ * réversible, connexion refusée, sessions tuées.
  */
 export function peutRevoquerAdmin(
   roleCreateur: string,
   etatCreateur: string,
 ): boolean {
   return peutCreerAdminPrincipal(roleCreateur, etatCreateur);
+}
+
+/**
+ * Suspendre un compte staff (VALIDE → SUSPENDU) : même autorisation que
+ * la révocation — administrateur technique ou principal, toujours VALIDE.
+ * La suspension est réversible (lever la suspension) : le compte suspendu
+ * ne se connecte plus et ses sessions sont tuées, mais le retour vers
+ * VALIDE existe — contrairement à REVOQUE, définitif. Jamais sur
+ * soi-même (garde côté action), jamais sur un compte REVOQUE.
+ */
+export function peutSuspendreAdmin(
+  roleCreateur: string,
+  etatCreateur: string,
+): boolean {
+  return peutRevoquerAdmin(roleCreateur, etatCreateur);
+}
+
+/**
+ * Lever la suspension d'un compte staff (SUSPENDU → VALIDE) : même
+ * autorisation que suspendre — administrateur technique ou principal,
+ * toujours VALIDE. Jamais sur soi-même (garde côté action) : on ne se
+ * dé-suspend pas tout seul.
+ */
+export function peutLeverSuspension(
+  roleCreateur: string,
+  etatCreateur: string,
+): boolean {
+  return peutSuspendreAdmin(roleCreateur, etatCreateur);
+}
+
+/**
+ * Machine à états d'un compte staff. Transitions autorisées :
+ * VALIDE → SUSPENDU, SUSPENDU → VALIDE, VALIDE → REVOQUE,
+ * SUSPENDU → REVOQUE. Tout le reste est refusé — surtout REVOQUE → *,
+ * définitif, et les auto-transitions (suspendre deux fois = état, pas
+ * d'erreur côté action, mais pas une transition).
+ */
+export function transitionCompteStaffValide(
+  depart: string,
+  arrivee: string,
+): boolean {
+  if (depart === "VALIDE" && arrivee === "SUSPENDU") return true;
+  if (depart === "SUSPENDU" && arrivee === "VALIDE") return true;
+  if (depart === "VALIDE" && arrivee === "REVOQUE") return true;
+  if (depart === "SUSPENDU" && arrivee === "REVOQUE") return true;
+  return false;
 }
 
 /**

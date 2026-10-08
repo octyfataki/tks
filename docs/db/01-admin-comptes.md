@@ -22,9 +22,9 @@ Socle S1 + ADR-0006. Un compte staff peut exister seul, sans dossier.
 * `email VARCHAR(255) UNIQUE NOT NULL` — identifiant staff. Miroir de `user.email`, contrainte d'unicité répétée ici pour l'audit et les vues métier.
 * `telephone VARCHAR(20) NULL` — contact uniquement, optionnel, jamais identifiant (pas d'UNIQUE), jamais vérifié par SMS : la confiance passe par l'email. Écart assumé à « aucun téléphone ici » (décision produit).
 * `role TEXT CHECK IN ('ADMIN_PRINCIPAL','ADMIN_TECHNIQUE','AGENT') NOT NULL` — immuable après création. Changement = révocation + recréation tracées (S2).
-* `etat TEXT CHECK IN ('VALIDE','REVOQUE')` — staff jamais `EN_ATTENTE_VALIDATION` : créé par admin principal via invitation (agent) ou bootstrap (admin).
+* `etat TEXT CHECK IN ('VALIDE','SUSPENDU','REVOQUE')` — staff jamais `EN_ATTENTE_VALIDATION` : créé par admin principal via invitation (agent) ou bootstrap (admin). `SUSPENDU` = gel temporaire réversible (connexion refusée, sessions tuées, retour `VALIDE` possible) ; `REVOQUE` = définitif, aucun retour.
 * `cree_par CHAR(36) FK -> comptes_staff.id NULL` — NULL pour le premier admin principal.
-* `created_at, revoked_at NULL`
+* `created_at, revoked_at NULL, suspended_at NULL`
 
 Contraintes : `UNIQUE(email)`, `UNIQUE(better_auth_user_id)`, index sur `role, etat`. Téléphone : contact optionnel non unique uniquement (`telephone NULL`), jamais identifiant ; aucun client ici.
 

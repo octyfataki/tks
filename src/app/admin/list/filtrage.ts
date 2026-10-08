@@ -4,6 +4,7 @@ export type FiltreDemande =
   | "principal"
   | "technique"
   | "valide"
+  | "suspendu"
   | "revoque"
   | "sans-2fa";
 
@@ -33,6 +34,7 @@ export function filtrerLignes<T extends LigneFiltrable>(
     if (filtre === "technique" && ligne.role !== "ADMIN_TECHNIQUE")
       return false;
     if (filtre === "valide" && ligne.etat !== "VALIDE") return false;
+    if (filtre === "suspendu" && ligne.etat !== "SUSPENDU") return false;
     if (filtre === "revoque" && ligne.etat !== "REVOQUE") return false;
     if (filtre === "sans-2fa" && ligne.facteurActif !== null) return false;
     if (q) {

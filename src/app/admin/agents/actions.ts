@@ -19,6 +19,7 @@ import {
   creerInvitationAgent,
   revoquerInvitation,
   StaffError,
+  tuerSessionsStaff,
 } from "@/lib/s1-comptes/staff";
 
 export type ResultatAction =
@@ -77,9 +78,13 @@ export async function creerAgentAction(
     if (erreur instanceof StaffError && erreur.code === "MOT_DE_PASSE_INVALIDE") {
       return { ok: false, erreur: "Mot de passe d'au moins 8 caractères exigé." };
     }
+    if (erreur instanceof StaffError && erreur.code === "EMAIL_DEJA_UTILISE") {
+      return { ok: false, erreur: "Cet identifiant (email) est déjà utilisé — chaque agent a son propre email." };
+    }
     if (erreur instanceof StaffError) {
       return { ok: false, erreur: "Seul un administrateur principal validé peut créer un agent." };
     }
+    console.error("[creerAgentAction] échec création agent", erreur);
     return { ok: false, erreur: "Création impossible (identifiant déjà utilisé ou données invalides)." };
   }
 }
@@ -122,6 +127,103 @@ export async function revoquerAgentAction(id: string): Promise<ResultatAction> {
     entiteId: cible.id,
     avant: { etat: "VALIDE" },
     apres: { etat: "REVOQUE" },
+  });
+  revalidatePath("/admin/agents");
+  return { ok: true };
+}
+
+/**
+ * Suspend un agent (VALIDE → SUSPENDU, réversible). Le compte ne se
+ * connecte plus et ses sessions sont tuées aussitôt, mais le retour
+ * vers VALIDE existe — pour un malentendu, pas pour un départ.
+ * Garde-fous : même autorisation que la révocation, jamais soi-même,
+ * jamais sur un compte REVOQUE. Journalisée (S2 issue 01).
+ */
+export async function suspendreAgentAction(id: string): Promise<ResultatAction> {
+  const moi = await staffConnecte();
+  if (!moi || !peutInviterAgent(moi.role, moi.etat)) {
+    return { ok: false, erreur: "Seul un administrateur principal validé peut suspendre un agent." };
+  }
+  if (moi.id === id) {
+    return { ok: false, erreur: "Vous ne pouvez pas suspendre votre propre compte." };
+  }
+  const cibles = await db
+    .select({
+      id: comptesStaff.id,
+      role: comptesStaff.role,
+      etat: comptesStaff.etat,
+      betterAuthUserId: comptesStaff.betterAuthUserId,
+    })
+    .from(comptesStaff)
+    .where(eq(comptesStaff.id, id))
+    .limit(1);
+  const cible = cibles[0];
+  if (!cible || cible.role !== "AGENT") {
+    return { ok: false, erreur: "Agent introuvable." };
+  }
+  if (cible.etat === "REVOQUE") {
+    return { ok: false, erreur: "Agent déjà révoqué." };
+  }
+  if (cible.etat === "SUSPENDU") {
+    return { ok: false, erreur: "Agent déjà suspendu." };
+  }
+  const suspenduLe = new Date();
+  await db
+    .update(comptesStaff)
+    .set({ etat: "SUSPENDU", suspendedAt: suspenduLe })
+    .where(eq(comptesStaff.id, cible.id));
+  await tuerSessionsStaff(cible.betterAuthUserId);
+  await enregistrerEvenement({
+    acteurId: moi.id,
+    roleAuMoment: moi.role,
+    typeAction: "agent.suspendre",
+    entite: "compte_staff",
+    entiteId: cible.id,
+    avant: { etat: "VALIDE" },
+    apres: { etat: "SUSPENDU", suspenduLe },
+  });
+  revalidatePath("/admin/agents");
+  return { ok: true };
+}
+
+/**
+ * Lève la suspension d'un agent (SUSPENDU → VALIDE). Même autorisation
+ * que suspendre, jamais soi-même : on ne se dé-suspend pas tout seul.
+ * Seule une suspension se lève — un REVOQUE ne revient jamais.
+ * Journalisée (S2 issue 01).
+ */
+export async function leverSuspensionAgentAction(id: string): Promise<ResultatAction> {
+  const moi = await staffConnecte();
+  if (!moi || !peutInviterAgent(moi.role, moi.etat)) {
+    return { ok: false, erreur: "Seul un administrateur principal validé peut lever une suspension." };
+  }
+  if (moi.id === id) {
+    return { ok: false, erreur: "Vous ne pouvez pas lever votre propre suspension." };
+  }
+  const cibles = await db
+    .select({ id: comptesStaff.id, role: comptesStaff.role, etat: comptesStaff.etat })
+    .from(comptesStaff)
+    .where(eq(comptesStaff.id, id))
+    .limit(1);
+  const cible = cibles[0];
+  if (!cible || cible.role !== "AGENT") {
+    return { ok: false, erreur: "Agent introuvable." };
+  }
+  if (cible.etat !== "SUSPENDU") {
+    return { ok: false, erreur: cible.etat === "REVOQUE" ? "Agent déjà révoqué." : "Agent non suspendu." };
+  }
+  await db
+    .update(comptesStaff)
+    .set({ etat: "VALIDE", suspendedAt: null })
+    .where(eq(comptesStaff.id, cible.id));
+  await enregistrerEvenement({
+    acteurId: moi.id,
+    roleAuMoment: moi.role,
+    typeAction: "agent.lever_suspension",
+    entite: "compte_staff",
+    entiteId: cible.id,
+    avant: { etat: "SUSPENDU" },
+    apres: { etat: "VALIDE" },
   });
   revalidatePath("/admin/agents");
   return { ok: true };

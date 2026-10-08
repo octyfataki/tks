@@ -14,8 +14,11 @@ import {
   peutModifierAdmin,
   peutModifierReglage,
   peutRevoquerAdmin,
+  peutSuspendreAdmin,
+  peutLeverSuspension,
   roleCibleInvitationValide,
   telephoneStaffValide,
+  transitionCompteStaffValide,
 } from "../db/schema/s1-comptes/validation";
 
 describe("règles staff", () => {
@@ -23,6 +26,8 @@ describe("règles staff", () => {
     expect(estRoleStaff("ADMIN_PRINCIPAL")).toBe(true);
     expect(estRoleStaff("CLIENT")).toBe(false);
     expect(estEtatStaff("VALIDE")).toBe(true);
+    expect(estEtatStaff("SUSPENDU")).toBe(true);
+    expect(estEtatStaff("REVOQUE")).toBe(true);
     expect(estEtatStaff("EN_ATTENTE_VALIDATION")).toBe(false);
   });
 
@@ -100,6 +105,27 @@ describe("règles staff", () => {
     expect(peutRevoquerAdmin("ADMIN_PRINCIPAL", "VALIDE")).toBe(true);
     expect(peutRevoquerAdmin("AGENT", "VALIDE")).toBe(false);
     expect(peutRevoquerAdmin("ADMIN_PRINCIPAL", "REVOQUE")).toBe(false);
+    expect(peutRevoquerAdmin("ADMIN_PRINCIPAL", "SUSPENDU")).toBe(false);
+  });
+
+  it("suspension : même autorisation que la révocation, transitions fermées", () => {
+    expect(peutSuspendreAdmin("ADMIN_TECHNIQUE", "VALIDE")).toBe(true);
+    expect(peutSuspendreAdmin("ADMIN_PRINCIPAL", "VALIDE")).toBe(true);
+    expect(peutSuspendreAdmin("AGENT", "VALIDE")).toBe(false);
+    expect(peutSuspendreAdmin("ADMIN_PRINCIPAL", "REVOQUE")).toBe(false);
+    expect(peutSuspendreAdmin("ADMIN_PRINCIPAL", "SUSPENDU")).toBe(false);
+    expect(peutLeverSuspension("ADMIN_TECHNIQUE", "VALIDE")).toBe(true);
+    expect(peutLeverSuspension("ADMIN_PRINCIPAL", "VALIDE")).toBe(true);
+    expect(peutLeverSuspension("AGENT", "VALIDE")).toBe(false);
+    expect(peutLeverSuspension("ADMIN_PRINCIPAL", "SUSPENDU")).toBe(false);
+    expect(transitionCompteStaffValide("VALIDE", "SUSPENDU")).toBe(true);
+    expect(transitionCompteStaffValide("SUSPENDU", "VALIDE")).toBe(true);
+    expect(transitionCompteStaffValide("VALIDE", "REVOQUE")).toBe(true);
+    expect(transitionCompteStaffValide("SUSPENDU", "REVOQUE")).toBe(true);
+    expect(transitionCompteStaffValide("REVOQUE", "VALIDE")).toBe(false);
+    expect(transitionCompteStaffValide("REVOQUE", "SUSPENDU")).toBe(false);
+    expect(transitionCompteStaffValide("VALIDE", "VALIDE")).toBe(false);
+    expect(transitionCompteStaffValide("SUSPENDU", "SUSPENDU")).toBe(false);
   });
 
   it("correction admin (support) : même autorisation, jamais l'agent ni un révoqué", () => {

@@ -19,6 +19,7 @@ const FILTRES_VALIDES = [
   "principal",
   "technique",
   "valide",
+  "suspendu",
   "revoque",
   "sans-2fa",
 ] as const;
@@ -35,8 +36,9 @@ const CARTES_PAR_PAGE = 9;
  *
  * Filtrage (?q=, ?filtre=), tri (?tri=) et pagination (?page=)
  * appliqués côté serveur — le volume d'administrateurs reste dérisoire,
- * une seule lecture suffit. L'interrupteur de chaque carte révoque
- * (définitif, après confirmation), jamais le titulaire lui-même.
+ * une seule lecture suffit. L'interrupteur de chaque carte suspend
+ * (réversible, après confirmation) ou révoque (définitif, après
+ * confirmation), jamais le titulaire lui-même.
  */
 export default async function ListeAdminsPage({
   searchParams,

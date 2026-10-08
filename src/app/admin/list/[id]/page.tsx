@@ -121,6 +121,7 @@ export default async function ProfilAdminPage({
       creePar: comptesStaff.creePar,
       createdAt: comptesStaff.createdAt,
       revokedAt: comptesStaff.revokedAt,
+      suspendedAt: comptesStaff.suspendedAt,
       betterAuthUserId: comptesStaff.betterAuthUserId,
       nom: user.name,
     })
@@ -191,10 +192,13 @@ export default async function ProfilAdminPage({
   const moi = lignesMoi[0];
   const autorise = !!moi && peutModifierAdmin(moi.role, moi.etat);
   const valide = compte.etat === "VALIDE";
+  const suspendu = compte.etat === "SUSPENDU";
   const peutModifier = autorise && valide;
   const motifFiche = !autorise
     ? "Lecture seule : votre compte ne peut pas modifier cette fiche."
-    : "Compte révoqué : définitif, aucune correction.";
+    : suspendu
+      ? "Compte suspendu : lever la suspension pour corriger."
+      : "Compte révoqué : définitif, aucune correction.";
   const estMoi = !!moi && moi.id === compte.id;
 
   const lectureSecurite = (
@@ -279,7 +283,7 @@ export default async function ProfilAdminPage({
             <Badge variant="outline">
               {LIBELLE_ROLE[compte.role] ?? compte.role}
             </Badge>
-            <Badge variant={valide ? "secondary" : "destructive"}>
+            <Badge variant={valide ? "secondary" : suspendu ? "default" : "destructive"}>
               {compte.etat}
             </Badge>
           </div>
@@ -387,6 +391,16 @@ export default async function ProfilAdminPage({
                   </dd>
                 </div>
               ) : null}
+              {compte.suspendedAt && suspendu ? (
+                <div>
+                  <dt className="text-xs font-medium text-muted-foreground">
+                    Suspendu le
+                  </dt>
+                  <dd className="mt-0.5 text-sm">
+                    {dateLongue(compte.suspendedAt)}
+                  </dd>
+                </div>
+              ) : null}
               <div>
                 <dt className="flex items-center gap-1 text-xs font-medium text-muted-foreground">
                   <PhoneIcon className="size-3" />
@@ -403,8 +417,8 @@ export default async function ProfilAdminPage({
             <h2 className="text-sm font-medium">Accès au compte</h2>
             <p className="mt-0.5 text-xs text-muted-foreground">
               {estMoi
-                ? "Votre propre compte : la révocation est impossible."
-                : "La révocation est définitive : rouvrir un accès exige révocation + recréation."}
+                ? "Votre propre compte : suspension et révocation impossibles."
+                : "La suspension est réversible ; la révocation est définitive : rouvrir un accès exige révocation + recréation."}
             </p>
             <div className="mt-3 flex items-center justify-between gap-2">
               <p className="text-xs">
@@ -413,9 +427,9 @@ export default async function ProfilAdminPage({
               <InterrupteurEtat
                 id={compte.id}
                 nom={nom}
-                valide={valide}
+                etat={suspendu ? "SUSPENDU" : valide ? "VALIDE" : "REVOQUE"}
                 desactive={estMoi}
-                motifDesactive="Vous ne pouvez pas révoquer votre propre compte."
+                motifDesactive="Vous ne pouvez pas suspendre ni révoquer votre propre compte."
               />
             </div>
           </section>

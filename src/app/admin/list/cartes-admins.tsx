@@ -21,14 +21,15 @@ export type CarteAdmin = {
 /**
  * Grille de cartes des comptes d'administration : nom + email en tête,
  * initiales en logo, badges rôle/état/second facteur, traçabilité, puis
- * « Voir le profil » et l'interrupteur d'état (révocation définitive
- * après confirmation).
+ * « Voir le profil » et l'interrupteur d'état (suspension réversible ou
+ * révocation définitive, après confirmation).
  */
 export function CartesAdmins({ cartes }: { cartes: CarteAdmin[] }) {
   return (
     <div className="grid items-start gap-4 sm:grid-cols-2 xl:grid-cols-3">
       {cartes.map((carte) => {
         const valide = carte.etat === "VALIDE";
+        const suspendu = carte.etat === "SUSPENDU";
         return (
           <article
             key={carte.id}
@@ -52,7 +53,9 @@ export function CartesAdmins({ cartes }: { cartes: CarteAdmin[] }) {
 
             <div className="flex flex-wrap gap-1.5">
               <Badge variant="outline">{libelleRole(carte.role)}</Badge>
-              <Badge variant={valide ? "secondary" : "destructive"}>
+              <Badge
+                variant={valide ? "secondary" : suspendu ? "default" : "destructive"}
+              >
                 {carte.etat}
               </Badge>
               {carte.facteurActif === null ? (
@@ -68,7 +71,9 @@ export function CartesAdmins({ cartes }: { cartes: CarteAdmin[] }) {
               Créé par {carte.creeParNom} · le {dateCourte(carte.creeLe)}.
               {valide
                 ? " Le rôle est immuable (S2)."
-                : " Révoqué définitivement."}
+                : suspendu
+                  ? " Suspendu : connexion refusée, levée possible."
+                  : " Révoqué définitivement."}
             </p>
 
             <div className="mt-auto flex items-center justify-between gap-2 border-t pt-3">
@@ -81,9 +86,9 @@ export function CartesAdmins({ cartes }: { cartes: CarteAdmin[] }) {
               <InterrupteurEtat
                 id={carte.id}
                 nom={carte.nom}
-                valide={valide}
+                etat={suspendu ? "SUSPENDU" : valide ? "VALIDE" : "REVOQUE"}
                 desactive={carte.estMoi}
-                motifDesactive="Vous ne pouvez pas révoquer votre propre compte."
+                motifDesactive="Vous ne pouvez pas suspendre ni révoquer votre propre compte."
               />
             </div>
           </article>
