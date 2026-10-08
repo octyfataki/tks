@@ -3,7 +3,7 @@ import { and, count, eq } from "drizzle-orm";
 import { hashPassword } from "better-auth/crypto";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
-import { account } from "@/lib/db/schema/auth-schema";
+import { account, user } from "@/lib/db/schema/auth-schema";
 import {
   comptesStaff,
   DUREE_PREMIER_ACCES_MS,
@@ -12,11 +12,13 @@ import {
   peutCreerAdminPrincipal,
   peutInviterAdminPrincipal,
   peutInviterAgent,
+  peutModifierAdmin,
   premiersAccesAdmin,
   reglages,
   roleCibleInvitationValide,
   telephoneStaffValide,
 } from "@/lib/db/schema/s1-comptes";
+import { enregistrerEvenement } from "@/lib/s2-autorisations/journal";
 
 // Couche applicative staff minimal (S1) : bootstrap technique, création du
 // principal, invitation / acceptation agent. Tout le métier non couvert
@@ -129,6 +131,55 @@ export async function creerAdminPrincipal(
     role: "ADMIN_PRINCIPAL",
     etat: "VALIDE",
     creePar: createurId,
+  });
+  return { id, betterAuthUserId: user.id };
+}
+
+/**
+ * Création directe d'un agent de service par l'administrateur principal
+ * (comptoir : l'agent est présent, fiche remplie ensemble, mot de passe
+ * initial transmis une seule fois). Même autorisation que l'invitation
+ * (peutInviterAgent : seul un ADMIN_PRINCIPAL VALIDE). Zéro permission par
+ * défaut (S2) : le compte s'authentifie mais ne peut rien faire tant que le
+ * distributeur n'accorde rien. Création journalisée (S2 issue 01).
+ */
+export async function creerAgent(
+  createurId: string,
+  input: { email: string; password: string; name: string; telephone?: string },
+) {
+  const createurs = await db
+    .select()
+    .from(comptesStaff)
+    .where(eq(comptesStaff.id, createurId));
+  const createur = createurs[0];
+  if (!createur || !peutInviterAgent(createur.role, createur.etat)) {
+    throw new StaffError("NON_AUTORISE", "seul un ADMIN_PRINCIPAL valide crée un agent");
+  }
+  const telephone = (input.telephone ?? "").trim();
+  if (!telephoneStaffValide(telephone)) {
+    throw new StaffError("TELEPHONE_INVALIDE", "numéro de téléphone invalide");
+  }
+  if (input.password.length < 8) {
+    throw new StaffError("MOT_DE_PASSE_INVALIDE", "mot de passe trop court");
+  }
+  const user = await inscrireUtilisateur(input.email, input.password, input.name);
+  const id = randomUUID();
+  await db.insert(comptesStaff).values({
+    id,
+    betterAuthUserId: user.id,
+    email: input.email,
+    telephone: telephone === "" ? null : telephone,
+    role: "AGENT",
+    etat: "VALIDE",
+    creePar: createurId,
+  });
+  await enregistrerEvenement({
+    acteurId: createurId,
+    roleAuMoment: createur.role,
+    typeAction: "agent.creer",
+    entite: "compte_staff",
+    entiteId: id,
+    apres: { email: input.email, role: "AGENT" },
   });
   return { id, betterAuthUserId: user.id };
 }
@@ -304,7 +355,97 @@ export async function accepterInvitationAgent(input: {
       .set({ consommeLe: new Date(), consommePar: id })
       .where(eq(invitationsAgents.id, invitation.id));
   });
+  await enregistrerEvenement({
+    acteurId: id,
+    roleAuMoment: "AGENT",
+    typeAction: "agent.inscrire",
+    entite: "compte_staff",
+    entiteId: id,
+    apres: { email: input.email, invitation: invitation.id },
+  });
   return { id, betterAuthUserId: user.id };
+}
+
+/**
+ * Correction support d'un compte d'administration (le « côté sombre »
+ * livraison : coquille sur le nom, téléphone de contact oublié).
+ * Périmètre : nom + téléphone uniquement, sur un compte ADMIN_* VALIDE.
+ * Rôle, email, état et secrets ne passent jamais par ici (voir
+ * peutModifierAdmin) : une erreur de rôle ou d'email se corrige par
+ * révocation + recréation tracées. L'auto-correction de son propre
+ * nom / téléphone est autorisée. Chaque correction est journalisée
+ * (S2, invariant 8 : avant/après, acteur, rôle au moment).
+ */
+export async function modifierAdminSupport(
+  modificateurId: string,
+  cibleId: string,
+  input: { nom: string; telephone?: string },
+) {
+  const modificateurs = await db
+    .select()
+    .from(comptesStaff)
+    .where(eq(comptesStaff.id, modificateurId));
+  const modificateur = modificateurs[0];
+  if (
+    !modificateur ||
+    !peutModifierAdmin(modificateur.role, modificateur.etat)
+  ) {
+    throw new StaffError("NON_AUTORISE", "modificateur non autorisé");
+  }
+  const cibles = await db
+    .select()
+    .from(comptesStaff)
+    .where(eq(comptesStaff.id, cibleId));
+  const cible = cibles[0];
+  if (
+    !cible ||
+    (cible.role !== "ADMIN_PRINCIPAL" &&
+      cible.role !== "ADMIN_TECHNIQUE") ||
+    cible.etat !== "VALIDE"
+  ) {
+    throw new StaffError("NON_AUTORISE", "cible non modifiable");
+  }
+  const nom = input.nom.trim();
+  const telephone = (input.telephone ?? "").trim();
+  if (!nom || nom.length > 255) {
+    throw new StaffError("NON_AUTORISE", "nom invalide");
+  }
+  if (!telephoneStaffValide(telephone)) {
+    throw new StaffError("TELEPHONE_INVALIDE", "numéro de téléphone invalide");
+  }
+  const utilisateurs = await db
+    .select()
+    .from(user)
+    .where(eq(user.id, cible.betterAuthUserId));
+  const utilisateur = utilisateurs[0];
+  if (!utilisateur) {
+    throw new StaffError("NON_AUTORISE", "compte auth introuvable");
+  }
+  const avant = { nom: utilisateur.name, telephone: cible.telephone };
+  const telephoneValeur = telephone === "" ? null : telephone;
+  if (avant.nom === nom && (avant.telephone ?? null) === telephoneValeur) {
+    return { id: cible.id, inchange: true as const };
+  }
+  await db.transaction(async (tx) => {
+    await tx
+      .update(user)
+      .set({ name: nom })
+      .where(eq(user.id, cible.betterAuthUserId));
+    await tx
+      .update(comptesStaff)
+      .set({ telephone: telephoneValeur })
+      .where(eq(comptesStaff.id, cible.id));
+  });
+  await enregistrerEvenement({
+    acteurId: modificateurId,
+    roleAuMoment: modificateur.role,
+    typeAction: "admin.modifier",
+    entite: "compte_staff",
+    entiteId: cible.id,
+    avant,
+    apres: { nom, telephone: telephoneValeur },
+  });
+  return { id: cible.id, inchange: false as const };
 }
 
 /**

@@ -75,6 +75,55 @@ export function peutInviterAgent(
 }
 
 /**
+ * Révoquer un compte d'administration : même autorisation que la
+ * création — administrateur technique ou principal, toujours VALIDE.
+ * La révocation est définitive (REVOQUE = inutilisable, jamais de
+ * retour) : rouvrir un accès passe par révocation + recréation (S2).
+ */
+export function peutRevoquerAdmin(
+  roleCreateur: string,
+  etatCreateur: string,
+): boolean {
+  return peutCreerAdminPrincipal(roleCreateur, etatCreateur);
+}
+
+/**
+ * Corriger un compte d'administration (support / livraison : coquille sur
+ * le nom, téléphone de contact). Même autorisation que la création et la
+ * révocation — administrateur technique ou principal, toujours VALIDE.
+ * Périmètre volontairement étroit, S2 §Frontière :
+ * - nom + téléphone uniquement (contact, jamais identifiant) ;
+ * - rôle immuable (peutChangerRole = false) : une erreur de rôle se
+ *   corrige par révocation + recréation tracées, jamais par update ;
+ * - email intouchable ici (identifiant better-auth, sync + vérification
+ *   dédiées) : une coquille d'email se corrige aussi par
+ *   révocation + recréation ;
+ * - jamais de secret (mot de passe, TOTP) ;
+ * - jamais sur un compte REVOQUE (définitif).
+ * L'auto-correction de son propre nom / téléphone est autorisée (sans
+ * risque de verrouillage) ; l'auto-révocation reste interdite côté action.
+ */
+export function peutModifierAdmin(
+  roleModificateur: string,
+  etatModificateur: string,
+): boolean {
+  return peutCreerAdminPrincipal(roleModificateur, etatModificateur);
+}
+
+/**
+ * Renommer l'étiquette d'appareil du second facteur (« téléphone du chef »).
+ * Même autorisation que la correction nom + téléphone : seul le libellé
+ * est écrit, jamais le secret TOTP (S2-04 : un administrateur technique ne
+ * voit ni ne modifie aucun secret). Jamais sur un compte REVOQUE.
+ */
+export function peutRenommerAppareil2fa(
+  roleModificateur: string,
+  etatModificateur: string,
+): boolean {
+  return peutModifierAdmin(roleModificateur, etatModificateur);
+}
+
+/**
  * ÉCART ASSUMÉ à S1-spec (« le lien ne peut créer qu'un compte AGENT »),
  * demandé explicitement : un lien peut aussi créer un ADMIN_PRINCIPAL, pour
  * que la personne choisisse elle-même son email + mot de passe.

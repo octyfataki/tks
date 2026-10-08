@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
 import { comptesStaff } from "@/lib/db/schema/s1-comptes";
 import { peutCreerAdminPrincipal } from "@/lib/db/schema/s1-comptes";
+import { PermissionRefusee } from "@/components/permission-refusee";
 import { FormulaireAdministrateurPrincipal } from "../administrateurs/formulaire";
 
 /**
@@ -29,10 +30,11 @@ export default async function NouveauAdministrateurPage() {
       {peutCreer ? (
         <FormulaireAdministrateurPrincipal />
       ) : (
-        <p className="p-4 text-xs text-muted-foreground">
-          Seul un administrateur technique ou un administrateur principal
-          validé peut créer ce compte.
-        </p>
+        <PermissionRefusee
+          titre="Créer un administrateur principal"
+          detail="Seul un administrateur technique ou un administrateur principal validé peut créer ce compte."
+          action="Votre rôle ne permet pas de créer des administrateurs."
+        />
       )}
     </div>
   );

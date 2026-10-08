@@ -28,7 +28,7 @@ function PaginationContent({
   return (
     <ul
       data-slot="pagination-content"
-      className={cn("flex items-center gap-1", className)}
+      className={cn("flex max-w-full items-center gap-1 overflow-x-auto", className)}
       {...props}
     />
   );

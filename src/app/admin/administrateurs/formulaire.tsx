@@ -18,7 +18,7 @@ import {
   UserIcon,
   UserPlusIcon,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { FieldDescription } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import {
@@ -135,9 +135,12 @@ export function FormulaireAdministrateurPrincipal() {
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" render={<Link href="/admin/list" />}>
+          <Link
+            href="/admin/list"
+            className={buttonVariants({ variant: "outline" })}
+          >
             Annuler
-          </Button>
+          </Link>
           <Button type="submit" disabled={enCours}>
             {enCours ? "Création…" : "Enregistrer"}
           </Button>

@@ -26,22 +26,20 @@ export default function InvitationAgentChargement() {
 
       <div className="grid items-start gap-4 lg:grid-cols-[1.6fr_1fr]">
         <div className="rounded-xl border bg-card p-4 sm:p-5">
-          <div className="flex items-center gap-2">
-            <Skeleton className="size-5 rounded-md" />
-            <Skeleton className="h-4 w-24" />
-            <Skeleton className="h-px flex-1" />
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="mt-1.5 h-3.5 w-full" />
+          <div className="mt-4 mb-1 flex items-center justify-between">
+            <Skeleton className="h-3.5 w-24" />
+            <Skeleton className="h-3.5 w-32" />
           </div>
-          <div className="mt-4 flex flex-col gap-4">
-            <Skeleton className="h-7 w-full" />
+          <Skeleton className="h-1.5 w-full rounded-full" />
+          <div className="mt-1.5 flex justify-between">
+            <Skeleton className="h-3 w-10" />
+            <Skeleton className="h-3 w-12" />
           </div>
-          <div className="mt-6 flex items-center gap-2">
-            <Skeleton className="size-5 rounded-md" />
-            <Skeleton className="h-4 w-20" />
-            <Skeleton className="h-px flex-1" />
-          </div>
-          <div className="mt-4 flex flex-col gap-4">
-            <Skeleton className="h-[68px] w-full" />
-          </div>
+          <Skeleton className="my-5 h-px w-full" />
+          <Skeleton className="h-4 w-28" />
+          <Skeleton className="mt-3 h-[68px] w-full rounded-lg" />
         </div>
 
         <div className="flex flex-col gap-4">

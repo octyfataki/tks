@@ -4,6 +4,7 @@ export default defineConfig({
   schema: [
     "./src/lib/db/schema/auth-schema.ts",
     "./src/lib/db/schema/s1-comptes/index.ts",
+    "./src/lib/db/schema/s2-autorisations/index.ts",
   ],
   out: "./drizzle",
   dialect: "mysql",

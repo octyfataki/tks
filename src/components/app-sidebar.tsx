@@ -74,7 +74,11 @@ const groups: { label: string; items: NavItem[] }[] = [
           },
           {
             title: "Inviter un administrateur principal",
-            url: "/admin/invites",
+            url: "/admin/invites?cible=admin",
+          },
+          {
+            title: "Invitations envoyées",
+            url: "/admin/invitations",
           },
         ],
       },
@@ -86,18 +90,20 @@ const groups: { label: string; items: NavItem[] }[] = [
       },
       {
         title: "Agents de service",
-        url: "/agent/invites",
+        url: "/admin/agents",
         icon: <UserPlusIcon />,
         items: [
+          { title: "Liste des agents", url: "/admin/agents" },
+          { title: "Créer un agent", url: "/admin/agents/create" },
           { title: "Inviter un agent", url: "/admin/invites" },
-          { title: "Liste des agents", soon: true },
+          { title: "Invitations agents", url: "/admin/agents/invitations" },
+          { title: "Permissions des agents", url: "/admin/agents/permissions" },
         ],
       },
       {
         title: "Journal d'audit",
-        url: "#",
+        url: "/admin/journal",
         icon: <ScrollTextIcon />,
-        soon: true,
       },
     ],
   },

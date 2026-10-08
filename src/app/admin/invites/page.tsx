@@ -14,6 +14,7 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
+import { PermissionRefusee } from "@/components/permission-refusee";
 import { FormulaireInvitationAdmin } from "../administrateurs/formulaire-invitation";
 import { FormulaireInvitationAgent } from "./formulaire";
 
@@ -50,10 +51,11 @@ export default async function InviterPage({
 
   if (!peutInviterAdmin && !peutInviterAgentRole) {
     return (
-      <p className="p-4 text-xs text-muted-foreground">
-        Seul un administrateur principal ou technique validé peut inviter un
-        membre du personnel.
-      </p>
+      <PermissionRefusee
+        titre="Inviter un membre du personnel"
+        detail="Seul un administrateur principal ou technique validé peut inviter un membre du personnel."
+        action="Votre rôle ne permet pas d'envoyer des invitations."
+      />
     );
   }
 

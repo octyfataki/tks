@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import {
   Field,
   FieldDescription,
@@ -49,9 +49,12 @@ export function PremierAccesForm({ jeton }: { jeton: string }) {
           </p>
         </Field>
         <Field>
-          <Button size="lg" className="w-full" render={<Link href="/sign-in" />}>
+          <Link
+            href="/sign-in"
+            className={buttonVariants({ size: "lg", className: "w-full" })}
+          >
             Aller à la connexion
-          </Button>
+          </Link>
         </Field>
       </FieldGroup>
     );

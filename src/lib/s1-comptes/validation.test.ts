@@ -10,7 +10,9 @@ import {
   peutCreerAdminPrincipal,
   peutInviterAdminPrincipal,
   peutInviterAgent,
+  peutModifierAdmin,
   peutModifierReglage,
+  peutRevoquerAdmin,
   roleCibleInvitationValide,
   telephoneStaffValide,
 } from "../db/schema/s1-comptes/validation";
@@ -59,6 +61,20 @@ describe("règles staff", () => {
     expect(peutInviterAdminPrincipal("ADMIN_PRINCIPAL", "VALIDE")).toBe(true);
     expect(peutInviterAdminPrincipal("AGENT", "VALIDE")).toBe(false);
     expect(peutInviterAdminPrincipal("ADMIN_TECHNIQUE", "REVOQUE")).toBe(false);
+  });
+
+  it("révocation admin : même autorisation que la création, définitive", () => {
+    expect(peutRevoquerAdmin("ADMIN_TECHNIQUE", "VALIDE")).toBe(true);
+    expect(peutRevoquerAdmin("ADMIN_PRINCIPAL", "VALIDE")).toBe(true);
+    expect(peutRevoquerAdmin("AGENT", "VALIDE")).toBe(false);
+    expect(peutRevoquerAdmin("ADMIN_PRINCIPAL", "REVOQUE")).toBe(false);
+  });
+
+  it("correction admin (support) : même autorisation, jamais l'agent ni un révoqué", () => {
+    expect(peutModifierAdmin("ADMIN_TECHNIQUE", "VALIDE")).toBe(true);
+    expect(peutModifierAdmin("ADMIN_PRINCIPAL", "VALIDE")).toBe(true);
+    expect(peutModifierAdmin("AGENT", "VALIDE")).toBe(false);
+    expect(peutModifierAdmin("ADMIN_TECHNIQUE", "REVOQUE")).toBe(false);
   });
 
   it("réglages : clés fermées, durée bornée, même autorisation", () => {

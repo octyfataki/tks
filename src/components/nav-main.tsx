@@ -1,5 +1,6 @@
 "use client"
 
+import { useState } from "react"
 import { usePathname } from "next/navigation"
 import Link from "next/link"
 import {
@@ -39,6 +40,36 @@ function SoonBadge() {
     <span className="ml-auto shrink-0 rounded-full border px-1.5 py-px text-[10px] font-medium text-muted-foreground group-data-[collapsible=icon]:hidden">
       Bientôt
     </span>
+  )
+}
+
+/**
+ * Collapsible contrôlé : l'état d'ouverture est initialisé une seule fois au
+ * montage (via `defaultOpen`) puis géré localement. Cela évite l'avertissement
+ * Base UI « changing the default open state of an uncontrolled Collapsible »
+ * qui survient quand `defaultOpen` est recalculé à chaque rendu (ex. dépendance
+ * à `usePathname()`).
+ */
+function NavCollapsibleItem({
+  item,
+  defaultOpen,
+  children,
+}: {
+  item: NavItem
+  defaultOpen: boolean
+  children: React.ReactNode
+}) {
+  const [open, setOpen] = useState(defaultOpen)
+
+  return (
+    <Collapsible
+      open={open}
+      onOpenChange={setOpen}
+      className="group/collapsible"
+      render={<SidebarMenuItem />}
+    >
+      {children}
+    </Collapsible>
   )
 }
 
@@ -90,11 +121,10 @@ export function NavMain({
           // Groupe « Bientôt » (sans destination) : simple déplieur, aucun lien.
           if (item.soon) {
             return (
-              <Collapsible
+              <NavCollapsibleItem
                 key={item.title}
-                defaultOpen={item.isActive}
-                className="group/collapsible"
-                render={<SidebarMenuItem />}
+                item={item}
+                defaultOpen={item.isActive ?? false}
               >
                 <CollapsibleTrigger
                   render={<SidebarMenuButton tooltip={item.title} />}
@@ -117,18 +147,17 @@ export function NavMain({
                     ))}
                   </SidebarMenuSub>
                 </CollapsibleContent>
-              </Collapsible>
+              </NavCollapsibleItem>
             )
           }
           // Groupe avec destination : le libellé navigue vers item.url, le
           // chevron déplie le sous-menu. Avant, tout le parent n'était qu'un
           // déplieur et son url était ignorée (clic sans redirection).
           return (
-            <Collapsible
+            <NavCollapsibleItem
               key={item.title}
-              defaultOpen={item.isActive || groupeActif}
-              className="group/collapsible"
-              render={<SidebarMenuItem />}
+              item={item}
+              defaultOpen={(item.isActive ?? false) || groupeActif}
             >
               <div className="flex w-full items-center gap-1">
                 <SidebarMenuButton
@@ -170,7 +199,7 @@ export function NavMain({
                   ))}
                 </SidebarMenuSub>
               </CollapsibleContent>
-            </Collapsible>
+            </NavCollapsibleItem>
           )
         })}
       </SidebarMenu>

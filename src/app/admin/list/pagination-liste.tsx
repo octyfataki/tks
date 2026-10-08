@@ -25,9 +25,9 @@ function pagesAutour(page: number, totalPages: number): (number | "…")[] {
 }
 
 /**
- * Pied du tableau /admin/list : Précédent | numéros | Suivant.
- * `hrefBase` porte déjà les filtres (?q=, ?role=, …), la page s'ajoute
- * en ?page=. Rendu serveur : que des liens, aucun état client.
+ * Pied de la grille /admin/list : Précédent | numéros | Suivant.
+ * `hrefBase` porte déjà les choix (?q=, ?filtre=, ?tri=), la page
+ * s'ajoute en ?page=. Rendu serveur : que des liens, aucun état client.
  */
 export function PaginationListe({
   page,

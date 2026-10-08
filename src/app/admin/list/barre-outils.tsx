@@ -14,6 +14,7 @@ import {
   UserPlusIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -141,8 +142,10 @@ export function BarreOutilsListe({
   }
 
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <div className="relative min-w-52 flex-1 sm:max-w-xs">
+    <Card size="sm">
+      <CardContent>
+        <div className="flex flex-wrap items-center gap-2">
+      <div className="relative min-w-0 flex-1 basis-52 sm:max-w-xs">
         <SearchIcon className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
         <Input
           type="search"
@@ -242,6 +245,8 @@ export function BarreOutilsListe({
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-    </div>
+      </div>
+      </CardContent>
+    </Card>
   );
 }

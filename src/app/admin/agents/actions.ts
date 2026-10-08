@@ -1,0 +1,216 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
+import { eq } from "drizzle-orm";
+import { auth } from "@/lib/auth";
+import { db } from "@/lib/db/client";
+import { comptesStaff, peutInviterAgent } from "@/lib/db/schema/s1-comptes";
+import { peutGererPermissions } from "@/lib/db/schema/s2-autorisations";
+import {
+  accorderPermission,
+  appliquerProfilAgent,
+  AutorisationError,
+  retirerPermission,
+} from "@/lib/s2-autorisations/autorisations";
+import { enregistrerEvenement } from "@/lib/s2-autorisations/journal";
+import { creerAgent, creerInvitationAgent, StaffError } from "@/lib/s1-comptes/staff";
+
+export type ResultatAction =
+  | { ok: true; lien?: string; email?: string }
+  | { ok: false; erreur: string };
+
+async function staffConnecte() {
+  const session = await auth.api.getSession({ headers: await headers() });
+  const userId = session?.user?.id;
+  if (!userId) return null;
+  const lignes = await db
+    .select({ id: comptesStaff.id, role: comptesStaff.role, etat: comptesStaff.etat })
+    .from(comptesStaff)
+    .where(eq(comptesStaff.betterAuthUserId, userId));
+  return lignes[0] ?? null;
+}
+
+/**
+ * Crée un agent de service en direct (comptoir). Seul un administrateur
+ * principal VALIDE (S1 : peutInviterAgent). Zéro permission par défaut —
+ * le compte s'authentifie mais ne fait rien tant que le distributeur
+ * n'accorde rien (S2). Le contrôle réel est dans creerAgent.
+ */
+export async function creerAgentAction(
+  _precedent: ResultatAction | null,
+  donnees: FormData,
+): Promise<ResultatAction> {
+  const email = String(donnees.get("email") ?? "").trim().toLowerCase();
+  const prenom = String(donnees.get("prenom") ?? "").trim();
+  const nom = String(donnees.get("nom") ?? "").trim();
+  const motDePasse = String(donnees.get("motDePasse") ?? "");
+  const telephone = String(donnees.get("telephone") ?? "").trim();
+  if (!email.includes("@") || !prenom || !nom || motDePasse.length < 8) {
+    return {
+      ok: false,
+      erreur: "Email valide, prénom, nom et mot de passe d'au moins 8 caractères exigés.",
+    };
+  }
+  const moi = await staffConnecte();
+  if (!moi) {
+    return { ok: false, erreur: "Seul un administrateur principal validé peut créer un agent." };
+  }
+  try {
+    await creerAgent(moi.id, {
+      email,
+      password: motDePasse,
+      name: `${prenom} ${nom}`.trim(),
+      telephone,
+    });
+    revalidatePath("/admin/agents");
+    return { ok: true, email };
+  } catch (erreur) {
+    if (erreur instanceof StaffError && erreur.code === "TELEPHONE_INVALIDE") {
+      return { ok: false, erreur: "Numéro de téléphone invalide (chiffres, espaces et + uniquement)." };
+    }
+    if (erreur instanceof StaffError && erreur.code === "MOT_DE_PASSE_INVALIDE") {
+      return { ok: false, erreur: "Mot de passe d'au moins 8 caractères exigé." };
+    }
+    if (erreur instanceof StaffError) {
+      return { ok: false, erreur: "Seul un administrateur principal validé peut créer un agent." };
+    }
+    return { ok: false, erreur: "Création impossible (identifiant déjà utilisé ou données invalides)." };
+  }
+}
+
+/**
+ * Révoque un agent (VALIDE → REVOQUE, définitif : aucun retour — rouvrir
+ * un accès passe par révocation + recréation, S2). Garde-fous : même
+ * autorisation que la création, jamais soi-même, jamais deux fois.
+ * Journalisée (S2 issue 01).
+ */
+export async function revoquerAgentAction(id: string): Promise<ResultatAction> {
+  const moi = await staffConnecte();
+  if (!moi || !peutInviterAgent(moi.role, moi.etat)) {
+    return { ok: false, erreur: "Seul un administrateur principal validé peut révoquer un agent." };
+  }
+  if (moi.id === id) {
+    return { ok: false, erreur: "Vous ne pouvez pas révoquer votre propre compte." };
+  }
+  const cibles = await db
+    .select({ id: comptesStaff.id, role: comptesStaff.role, etat: comptesStaff.etat })
+    .from(comptesStaff)
+    .where(eq(comptesStaff.id, id))
+    .limit(1);
+  const cible = cibles[0];
+  if (!cible || cible.role !== "AGENT") {
+    return { ok: false, erreur: "Agent introuvable." };
+  }
+  if (cible.etat !== "VALIDE") {
+    return { ok: false, erreur: "Agent déjà révoqué." };
+  }
+  await db
+    .update(comptesStaff)
+    .set({ etat: "REVOQUE", revokedAt: new Date() })
+    .where(eq(comptesStaff.id, cible.id));
+  await enregistrerEvenement({
+    acteurId: moi.id,
+    roleAuMoment: moi.role,
+    typeAction: "agent.revoquer",
+    entite: "compte_staff",
+    entiteId: cible.id,
+    avant: { etat: "VALIDE" },
+    apres: { etat: "REVOQUE" },
+  });
+  revalidatePath("/admin/agents");
+  return { ok: true };
+}
+
+/**
+ * Renvoie une invitation agent : génère un NOUVEAU lien (on ne réactive
+ * jamais un lien expiré ou consommé). Même autorisation que l'invitation.
+ */
+export async function renvoyerInvitationAgentAction(): Promise<ResultatAction> {
+  const moi = await staffConnecte();
+  if (!moi) {
+    return { ok: false, erreur: "Seul un administrateur principal validé peut inviter un agent." };
+  }
+  try {
+    const invitation = await creerInvitationAgent(moi.id, {});
+    revalidatePath("/admin/agents/invitations");
+    return { ok: true, lien: `/invite/${invitation.jeton}` };
+  } catch (erreur) {
+    if (erreur instanceof StaffError) {
+      return { ok: false, erreur: "Seul un administrateur principal validé peut inviter un agent." };
+    }
+    return { ok: false, erreur: "Invitation impossible." };
+  }
+}
+
+function erreurAutorisation(erreur: unknown): string {
+  if (erreur instanceof AutorisationError) {
+    switch (erreur.code) {
+      case "NON_AUTORISE":
+        return "Seul un administrateur principal validé gère les permissions.";
+      case "PERMISSION_INCONNUE":
+        return "Permission inconnue — refus par défaut.";
+      case "AGENT_INTROUVABLE":
+        return "Agent introuvable.";
+      case "DEJA_ACCORDEE":
+        return "Permission déjà accordée.";
+      case "NON_ACCORDEE":
+        return "Permission non accordée.";
+    }
+  }
+  return "Opération impossible.";
+}
+
+/** Accorde une permission à un agent (S2 issue 03). */
+export async function accorderPermissionAction(
+  agentId: string,
+  permission: string,
+): Promise<ResultatAction> {
+  const moi = await staffConnecte();
+  if (!moi || !peutGererPermissions(moi.role, moi.etat)) {
+    return { ok: false, erreur: erreurAutorisation(new AutorisationError("NON_AUTORISE", "")) };
+  }
+  try {
+    await accorderPermission(moi.id, agentId, permission);
+    revalidatePath("/admin/agents");
+    revalidatePath("/admin/agents/permissions");
+    return { ok: true };
+  } catch (erreur) {
+    return { ok: false, erreur: erreurAutorisation(erreur) };
+  }
+}
+
+/** Retire une permission à un agent. Le retrait fait foi. */
+export async function retirerPermissionAction(
+  agentId: string,
+  permission: string,
+): Promise<ResultatAction> {
+  const moi = await staffConnecte();
+  if (!moi || !peutGererPermissions(moi.role, moi.etat)) {
+    return { ok: false, erreur: erreurAutorisation(new AutorisationError("NON_AUTORISE", "")) };
+  }
+  try {
+    await retirerPermission(moi.id, agentId, permission);
+    revalidatePath("/admin/agents");
+    revalidatePath("/admin/agents/permissions");
+    return { ok: true };
+  } catch (erreur) {
+    return { ok: false, erreur: erreurAutorisation(erreur) };
+  }
+}
+
+/** Applique le profil d'embauche (raccourci : ajoute les manquantes). */
+export async function appliquerProfilAction(agentId: string): Promise<ResultatAction> {
+  const moi = await staffConnecte();
+  if (!moi || !peutGererPermissions(moi.role, moi.etat)) {
+    return { ok: false, erreur: erreurAutorisation(new AutorisationError("NON_AUTORISE", "")) };
+  }
+  try {
+    await appliquerProfilAgent(moi.id, agentId);
+    revalidatePath("/admin/agents");
+    revalidatePath("/admin/agents/permissions");
+    return { ok: true };
+  } catch (erreur) {
+    return { ok: false, erreur: erreurAutorisation(erreur) };
+  }
+}

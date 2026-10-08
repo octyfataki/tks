@@ -98,6 +98,7 @@ export async function creerAdministrateurPrincipalAction(
     }
     const acces = await ouvrirPremierAccesAdmin(createurId, cree.id);
     revalidatePath("/admin/list");
+    revalidatePath("/admin/invitations");
     return {
       ok: true,
       email,
@@ -136,9 +137,8 @@ export async function creerLienInvitationAdminAction(
     const invitation = await creerInvitationAdminPrincipal(createurId, {
       dureeJours,
     });
-    // Aucune page /admin/invitation n'existe (le formulaire admin est
-    // inutilisé) : on révalide la liste, seul écran qui affiche des comptes.
-    revalidatePath("/admin/list");
+    revalidatePath("/admin/invites");
+    revalidatePath("/admin/invitations");
     return { ok: true, lien: `/invite/${invitation.jeton}` };
   } catch (erreur) {
     if (erreur instanceof StaffError) {

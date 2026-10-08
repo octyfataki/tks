@@ -1,4 +1,5 @@
 import { headers } from "next/headers";
+import Link from "next/link";
 import { desc, eq, inArray } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
@@ -9,6 +10,7 @@ import {
   peutInviterAdminPrincipal,
   premiersAccesAdmin,
 } from "@/lib/db/schema/s1-comptes";
+import { PermissionRefusee } from "@/components/permission-refusee";
 import { RegistreInvitations, type LigneRegistre } from "./registre-invitations";
 
 /**
@@ -40,10 +42,11 @@ export default async function InvitationsEnvoyeesPage() {
 
   if (!autorise) {
     return (
-      <p className="p-4 text-xs text-muted-foreground">
-        Seul un administrateur technique ou un administrateur principal validé
-        peut voir les invitations envoyées.
-      </p>
+      <PermissionRefusee
+        titre="Invitations envoyées"
+        detail="Seul un administrateur technique ou un administrateur principal validé peut voir les invitations envoyées."
+        action="Votre rôle ne permet pas de consulter ce registre."
+      />
     );
   }
 
@@ -161,6 +164,14 @@ export default async function InvitationsEnvoyeesPage() {
           Tout l&apos;embarquement en cours des administrateurs principaux :
           les liens à faire suivre et les fiches déjà remplies qui attendent
           encore leur mot de passe.
+        </p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Ici, seuls les liens administrateurs principaux. Les liens agents
+          vivent dans{" "}
+          <Link href="/admin/agents/invitations" className="underline-offset-4 hover:underline">
+            Invitations agents
+          </Link>
+          .
         </p>
       </div>
       <RegistreInvitations lignes={lignes} />

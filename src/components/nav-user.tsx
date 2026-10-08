@@ -1,6 +1,7 @@
 "use client"
 
-import * as React from "react"
+import { useState } from "react"
+import { createPortal } from "react-dom"
 import { useRouter } from "next/navigation"
 import { signOut } from "@/lib/auth-client"
 
@@ -25,7 +26,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 import { toast } from "@/components/ui/toast"
-import { ChevronsUpDownIcon, BadgeCheckIcon, BellIcon, LogOutIcon } from "lucide-react"
+import { ChevronsUpDownIcon, BadgeCheckIcon, BellIcon, LogOutIcon, Loader2Icon } from "lucide-react"
 
 export function NavUser({
   user,
@@ -41,7 +42,7 @@ export function NavUser({
 }) {
   const { isMobile } = useSidebar()
   const router = useRouter()
-  const [deconnexionEnCours, setDeconnexionEnCours] = React.useState(false)
+  const [deconnexionEnCours, setDeconnexionEnCours] = useState(false)
   const initials = user.name
     .split(" ")
     .map((part) => part[0])
@@ -49,6 +50,7 @@ export function NavUser({
     .slice(0, 2)
     .toUpperCase()
   return (
+    <>
     <SidebarMenu>
       <SidebarMenuItem>
         <DropdownMenu>
@@ -126,7 +128,6 @@ export function NavUser({
                     title: "Échec de la déconnexion",
                     description: "Réessayez.",
                   })
-                } finally {
                   setDeconnexionEnCours(false)
                 }
               }}
@@ -139,5 +140,20 @@ export function NavUser({
         </DropdownMenu>
       </SidebarMenuItem>
     </SidebarMenu>
+
+    {deconnexionEnCours ? (
+      createPortal(
+        <div
+          role="status"
+          aria-live="polite"
+          aria-label="Déconnexion en cours"
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-background/40 backdrop-blur-sm"
+        >
+          <Loader2Icon className="size-10 animate-spin text-primary" aria-hidden="true" />
+        </div>,
+        document.body
+      )
+    ) : null}
+    </>
   )
 }

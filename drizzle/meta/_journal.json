@@ -43,6 +43,13 @@
       "when": 1791332413985,
       "tag": "0005_shallow_ultron",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1791424066099,
+      "tag": "0006_careless_daimon_hellstrom",
+      "breakpoints": true
     }
   ]
 }
