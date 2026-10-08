@@ -1,16 +1,21 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { ArrowLeftIcon } from "lucide-react";
 import { db } from "@/lib/db/client";
-import { user } from "@/lib/db/schema/auth-schema";
-import { comptesStaff, peutInviterAgent } from "@/lib/db/schema/s1-comptes";
+import { session as sessionAuth, user } from "@/lib/db/schema/auth-schema";
+import {
+  comptesStaff,
+  invitationsAgents,
+  peutInviterAgent,
+} from "@/lib/db/schema/s1-comptes";
+import { journalAudit } from "@/lib/db/schema/s2-autorisations";
 import {
   PERMISSIONS_FERMEES,
   peutConsulterJournal,
   peutGererPermissions,
 } from "@/lib/db/schema/s2-autorisations";
-import { listerPermissions } from "@/lib/s2-autorisations/autorisations";
+import { listerPermissions, listerSocle } from "@/lib/s2-autorisations/autorisations";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -22,6 +27,8 @@ import { BoutonRevocationAgent } from "./bouton-revocation";
 import { FormulaireCoordonneesAgent } from "./formulaire-coordonnees";
 import { FormulaireEmailAgent } from "./formulaire-email";
 import { FormulaireLienMotDePasse } from "./formulaire-lien-mdp";
+import { LienMotDePasseEnAttente } from "./lien-mdp-en-attente";
+import { SessionsAgent } from "./sessions-agent";
 import { SectionModifiable } from "../../list/[id]/section-modifiable";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
@@ -58,6 +65,7 @@ export default async function FicheAgentPage({
       createdAt: comptesStaff.createdAt,
       revokedAt: comptesStaff.revokedAt,
       suspendedAt: comptesStaff.suspendedAt,
+      betterAuthUserId: comptesStaff.betterAuthUserId,
       nom: user.name,
     })
     .from(comptesStaff)
@@ -84,6 +92,48 @@ export default async function FicheAgentPage({
 
   const detenues = await listerPermissions(compte.id);
   const ensemble = new Set(detenues);
+
+  // Origine : le lien d'invitation qui a créé l'agent (journal
+  // agent.inscrire), sinon création directe au comptoir.
+  const inscriptions = await db
+    .select({ apres: journalAudit.apres })
+    .from(journalAudit)
+    .where(
+      and(
+        eq(journalAudit.entiteId, compte.id),
+        eq(journalAudit.typeAction, "agent.inscrire"),
+      ),
+    )
+    .orderBy(desc(journalAudit.recuLe))
+    .limit(1);
+  const invitationId = (
+    inscriptions[0]?.apres as { invitation?: string } | null
+  )?.invitation;
+  const invitations = invitationId
+    ? await db
+        .select({
+          jeton: invitationsAgents.jeton,
+          createdAt: invitationsAgents.createdAt,
+        })
+        .from(invitationsAgents)
+        .where(eq(invitationsAgents.id, invitationId))
+        .limit(1)
+    : [];
+  const invitation = invitations[0];
+  const origine = invitation
+    ? `Lien d'invitation du ${dateCourte(invitation.createdAt)}`
+    : "Création directe au comptoir";
+
+  // Dernière connexion : session la plus récente, tous appareils.
+  const dernieres = await db
+    .select({ creeLe: sessionAuth.createdAt })
+    .from(sessionAuth)
+    .where(eq(sessionAuth.userId, compte.betterAuthUserId))
+    .orderBy(desc(sessionAuth.createdAt))
+    .limit(1);
+  const derniereConnexion = dernieres[0]?.creeLe ?? null;
+  const socle = await listerSocle();
+  const ensembleSocle = new Set(socle);
 
   const session = await auth.api.getSession({ headers: await headers() });
   const lignesMoi = session?.user?.id
@@ -127,6 +177,9 @@ export default async function FicheAgentPage({
         </div>
         <div className="flex shrink-0 flex-wrap justify-end gap-1.5">
           <Badge variant="outline">Agent de service</Badge>
+          <Badge variant="outline">
+            {detenues.length} permission{detenues.length > 1 ? "s" : ""}
+          </Badge>
           <Badge variant={valide ? "secondary" : suspendu ? "default" : "destructive"}>{compte.etat}</Badge>
         </div>
       </div>
@@ -172,6 +225,11 @@ export default async function FicheAgentPage({
                     <Champ etiquette="Adresse email" valeur={compte.email} />
                     <Champ etiquette="Compte créé le" valeur={dateCourte(compte.createdAt)} />
                     <Champ etiquette="Créé par" valeur={createur} />
+                    <Champ etiquette="Origine" valeur={origine} />
+                    <Champ
+                      etiquette="Dernière connexion"
+                      valeur={derniereConnexion ? dateCourte(derniereConnexion) : "Jamais connecté"}
+                    />
                     {compte.revokedAt ? (
                       <Champ etiquette="Révoqué le" valeur={dateCourte(compte.revokedAt)} />
                     ) : null}
@@ -228,6 +286,7 @@ export default async function FicheAgentPage({
                 Mot de passe oublié : générez un lien à usage unique (24 h),
                 l&apos;agent choisit lui-même son nouveau mot de passe.
               </p>
+              <LienMotDePasseEnAttente agentId={compte.id} />
               {puisJeCorriger && valide ? (
                 <FormulaireLienMotDePasse id={compte.id} />
               ) : (
@@ -267,6 +326,12 @@ export default async function FicheAgentPage({
             </section>
 
             <ProfilEmbauche agentId={compte.id} detenues={detenues} desactive={verrouille} />
+
+            <SessionsAgent
+              betterAuthUserId={compte.betterAuthUserId}
+              agentId={compte.id}
+              peutGerer={puisJeCorriger}
+            />
             </div>
           </div>
         </TabsContent>
@@ -282,7 +347,7 @@ export default async function FicheAgentPage({
             <p className="mt-0.5 text-[11px] text-muted-foreground">
               {verrouille
                 ? "Seul un administrateur principal validé modifie les permissions, et jamais sur un compte suspendu ou révoqué."
-                : "Absence = refus. Chaque bascule est tracée au journal."}
+                : "Exceptions individuelles : s'ajoutent au socle de base. Le socle (badge « Socle ») s'applique à tous."}
             </p>
             <div className="mt-3 grid gap-2 md:grid-cols-2">
               {PERMISSIONS_FERMEES.map((permission) => (
@@ -292,6 +357,7 @@ export default async function FicheAgentPage({
                   permission={permission}
                   accordee={ensemble.has(permission)}
                   desactive={verrouille}
+                  heriteeSocle={ensembleSocle.has(permission)}
                 />
               ))}
             </div>

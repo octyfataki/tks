@@ -5,8 +5,10 @@ import { headers } from "next/headers";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
+import { session as sessionAuth } from "@/lib/db/schema/auth-schema";
 import { comptesStaff } from "@/lib/db/schema/s1-comptes";
-import { modifierAgentSupport, modifierEmailAgentSupport, ouvrirLienMotDePasseAgent, StaffError } from "@/lib/s1-comptes/staff";
+import { modifierAgentSupport, modifierEmailAgentSupport, ouvrirLienMotDePasseAgent, revoquerPremierAccesAdmin, tuerSessionsStaff, StaffError } from "@/lib/s1-comptes/staff";
+import { enregistrerEvenement } from "@/lib/s2-autorisations/journal";
 
 export type ResultatModificationCoordonneesAgent =
   | { ok: true; inchange: boolean }
@@ -157,5 +159,99 @@ export async function genererLienMotDePasseAgentAction(
       return { ok: false, erreur: "Lien impossible : compte non éligible (agent validé exigé)." };
     }
     return { ok: false, erreur: "Lien impossible." };
+  }
+}
+
+export type ResultatOperationSimple =
+  | { ok: true }
+  | { ok: false; erreur: string };
+
+async function idPrincipalConnecte(): Promise<string | null> {
+  const session = await auth.api.getSession({ headers: await headers() });
+  const userId = session?.user?.id;
+  if (!userId) return null;
+  const lignes = await db
+    .select({ id: comptesStaff.id, role: comptesStaff.role, etat: comptesStaff.etat })
+    .from(comptesStaff)
+    .where(eq(comptesStaff.betterAuthUserId, userId))
+    .limit(1);
+  const moi = lignes[0];
+  if (!moi || moi.role !== "ADMIN_PRINCIPAL" || moi.etat !== "VALIDE") {
+    return null;
+  }
+  return moi.id;
+}
+
+/**
+ * Coupe toutes les sessions d'un agent, partout, tout de suite
+ * (appareil volé, doute sur qui détient l'accès). Seul un
+ * administrateur principal validé agit, cible AGENT. Tracé
+ * (agent.deconnecter, nombre de sessions coupées).
+ */
+export async function deconnecterPartoutAgentAction(
+  id: string,
+): Promise<ResultatOperationSimple> {
+  const modificateurId = await idPrincipalConnecte();
+  if (!modificateurId) {
+    return { ok: false, erreur: "Seul un administrateur principal validé peut déconnecter." };
+  }
+  const cibles = await db
+    .select({
+      id: comptesStaff.id,
+      role: comptesStaff.role,
+      betterAuthUserId: comptesStaff.betterAuthUserId,
+    })
+    .from(comptesStaff)
+    .where(eq(comptesStaff.id, id))
+    .limit(1);
+  const cible = cibles[0];
+  if (!cible || cible.role !== "AGENT") {
+    return { ok: false, erreur: "Agent introuvable." };
+  }
+  const avant = await db
+    .select({ id: sessionAuth.id })
+    .from(sessionAuth)
+    .where(eq(sessionAuth.userId, cible.betterAuthUserId));
+  await tuerSessionsStaff(cible.betterAuthUserId);
+  const demandeurs = await db
+    .select({ role: comptesStaff.role })
+    .from(comptesStaff)
+    .where(eq(comptesStaff.id, modificateurId))
+    .limit(1);
+  await enregistrerEvenement({
+    acteurId: modificateurId,
+    roleAuMoment: demandeurs[0]?.role ?? "ADMIN_PRINCIPAL",
+    typeAction: "agent.deconnecter",
+    entite: "compte_staff",
+    entiteId: cible.id,
+    avant: { sessions: avant.length },
+    apres: { sessions: 0 },
+  });
+  revalidatePath(`/admin/agents/${id}`);
+  return { ok: true };
+}
+
+/**
+ * Révoque un lien de réinitialisation encore en attente (fuite,
+ * erreur de destinataire). Même autorisation que la génération :
+ * seul un administrateur principal validé. Journalisé
+ * (invitation.revoquer, comme tout lien).
+ */
+export async function revoquerLienMotDePasseAgentAction(
+  accesId: string,
+): Promise<ResultatOperationSimple> {
+  const modificateurId = await idPrincipalConnecte();
+  if (!modificateurId) {
+    return { ok: false, erreur: "Seul un administrateur principal validé peut révoquer un lien." };
+  }
+  try {
+    await revoquerPremierAccesAdmin(modificateurId, accesId);
+    revalidatePath("/admin/agents");
+    return { ok: true };
+  } catch (erreur) {
+    if (erreur instanceof StaffError) {
+      return { ok: false, erreur: "Lien déjà utilisé, expiré ou introuvable." };
+    }
+    return { ok: false, erreur: "Révocation impossible." };
   }
 }
