@@ -69,3 +69,14 @@ En attente :
 ## Comments
 
 - GitHub : https://github.com/octyfataki/tks/issues/2 (label `enhancement`).
+- Implémenté dans `1e8e6e8` (branche `off-admin-agents`, poussé) : état
+  `SUSPENDU` (`VALIDE ⇄ SUSPENDU`, jamais `REVOQUE → *`), connexion
+  refusée + code `SUSPENDU` distinct, sessions tuées à la suspension,
+  jamais soi-même, gardes dernier technique ET dernier principal
+  ( révocation comprise), audit `admin.suspendre` /
+  `admin.lever_suspension` / `agent.suspendre` / `agent.lever_suspension`,
+  filtres et badges UI, migration `drizzle/0009_*` appliquée en local.
+  Vérifié : `tsc` propre, `eslint` propre, vitest 120/120.
+- Note : le commit embarque aussi deux retouches déjà présentes dans
+  l'arbre non commité (toasts création agent, `inscrireUtilisateur` sans
+  session + `EMAIL_DEJA_UTILISE`) — relire avant PR vers `off-admin`.
