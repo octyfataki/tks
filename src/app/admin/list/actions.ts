@@ -104,7 +104,7 @@ export async function revoquerAdministrateurAction(
   ) {
     return { ok: false, erreur: messageErreur("INTROUVABLE") };
   }
-  if (cible.etat !== "VALIDE") {
+  if (cible.etat !== "VALIDE" && cible.etat !== "SUSPENDU") {
     return { ok: false, erreur: messageErreur("DEJA_REVOQUE") };
   }
 
@@ -130,7 +130,7 @@ export async function revoquerAdministrateurAction(
     typeAction: "admin.revoquer",
     entite: "compte_staff",
     entiteId: cible.id,
-    avant: { etat: "VALIDE", role: cible.role },
+    avant: { etat: cible.etat, role: cible.role },
     apres: { etat: "REVOQUE" },
   });
   revalidatePath("/admin/list");

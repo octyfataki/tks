@@ -112,7 +112,7 @@ export async function revoquerAgentAction(id: string): Promise<ResultatAction> {
   if (!cible || cible.role !== "AGENT") {
     return { ok: false, erreur: "Agent introuvable." };
   }
-  if (cible.etat !== "VALIDE") {
+  if (cible.etat !== "VALIDE" && cible.etat !== "SUSPENDU") {
     return { ok: false, erreur: "Agent déjà révoqué." };
   }
   await db
@@ -125,7 +125,7 @@ export async function revoquerAgentAction(id: string): Promise<ResultatAction> {
     typeAction: "agent.revoquer",
     entite: "compte_staff",
     entiteId: cible.id,
-    avant: { etat: "VALIDE" },
+    avant: { etat: cible.etat },
     apres: { etat: "REVOQUE" },
   });
   revalidatePath("/admin/agents");
