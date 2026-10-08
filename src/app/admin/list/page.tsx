@@ -220,7 +220,7 @@ export default async function ListeAdminsPage({
                 href="/admin/list"
                 className="underline-offset-4 hover:underline"
               >
-                Tout effacer
+                Réinitialiser les filtres
               </Link>
             ) : (
               "Créez le premier compte administrateur principal pour démarrer."

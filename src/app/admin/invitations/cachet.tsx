@@ -2,14 +2,15 @@ import { cn } from "@/lib/utils";
 
 /**
  * Cachet tamponné portant un statut. L'élément mémorable du registre :
- * une encre par état (ambre = en attente, vert = fait, neutre = expiré),
- * légèrement de travers comme un vrai tampon administratif.
+ * une encre par état (ambre = en attente, vert = fait, neutre = expiré,
+ * rouge = révoqué), légèrement de travers comme un vrai tampon
+ * administratif.
  */
 export function Cachet({
   encre,
   children,
 }: {
-  encre: "attente" | "fait" | "expire";
+  encre: "attente" | "fait" | "expire" | "revoque";
   children: React.ReactNode;
 }) {
   return (
@@ -22,6 +23,7 @@ export function Cachet({
           "border-green-700/50 text-green-700 dark:text-green-400",
         encre === "expire" &&
           "border-muted-foreground/40 text-muted-foreground",
+        encre === "revoque" && "border-destructive/60 text-destructive",
       )}
     >
       {children}

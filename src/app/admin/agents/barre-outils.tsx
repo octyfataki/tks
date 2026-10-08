@@ -219,7 +219,7 @@ export function BarreOutilsAgents({
                     </span>
                   </span>
                 </DropdownMenuItem>
-                <DropdownMenuItem render={<Link href="/admin/invites" />}>
+                <DropdownMenuItem render={<Link href="/admin/invites?cible=agent" />}>
                   <LinkIcon />
                   <span className="flex min-w-0 flex-col">
                     <span className="text-xs font-medium">Inviter par lien</span>

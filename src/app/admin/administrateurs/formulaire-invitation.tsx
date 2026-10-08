@@ -46,6 +46,7 @@ export type InvitationAdminLigne = {
   jeton: string;
   expireLe: Date;
   consommeLe: Date | null;
+  revoqueLe?: Date | null;
 };
 
 /**
@@ -299,6 +300,7 @@ export function FormulaireInvitationAdmin({
                 {invitations.map((invitation) => {
                   const expiree =
                     !invitation.consommeLe &&
+                    !invitation.revoqueLe &&
                     maintenant > 0 &&
                     invitation.expireLe.getTime() < maintenant;
                   return (
@@ -315,9 +317,11 @@ export function FormulaireInvitationAdmin({
                       <span className="text-[11px] text-muted-foreground">
                         {invitation.consommeLe
                           ? "Déjà utilisé — refusé"
-                          : expiree
-                            ? `Expiré le ${invitation.expireLe.toLocaleDateString("fr-FR")} — envoyez un nouveau lien`
-                            : `Expire le ${invitation.expireLe.toLocaleDateString("fr-FR")}`}
+                          : invitation.revoqueLe
+                            ? "Révoqué — aucun compte ne peut naître de ce lien"
+                            : expiree
+                              ? `Expiré le ${invitation.expireLe.toLocaleDateString("fr-FR")} — envoyez un nouveau lien`
+                              : `Expire le ${invitation.expireLe.toLocaleDateString("fr-FR")}`}
                       </span>
                     </li>
                   );

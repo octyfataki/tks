@@ -4,6 +4,7 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
 import { user } from "@/lib/db/schema/auth-schema";
 import { comptesStaff, invitationsAgents, peutInviterAgent } from "@/lib/db/schema/s1-comptes";
+import { etatLienInvitation } from "@/lib/db/schema/s1-comptes/validation";
 import { Badge } from "@/components/ui/badge";
 import {
   RegistreInvitationsAgents,
@@ -37,6 +38,7 @@ export default async function InvitationsAgentsPage() {
       jeton: invitationsAgents.jeton,
       expireLe: invitationsAgents.expireLe,
       consommeLe: invitationsAgents.consommeLe,
+      revoqueLe: invitationsAgents.revoqueLe,
       creePar: invitationsAgents.creePar,
       createdAt: invitationsAgents.createdAt,
     })
@@ -62,12 +64,14 @@ export default async function InvitationsAgentsPage() {
     jeton: ligne.jeton,
     envoyeLe: ligne.createdAt.toISOString(),
     expireLe: ligne.expireLe.toISOString(),
-    etat:
-      ligne.consommeLe !== null
-        ? "termine"
-        : ligne.expireLe.getTime() < maintenant
-          ? "expire"
-          : "en-attente",
+    etat: etatLienInvitation(
+      {
+        consommeLe: ligne.consommeLe,
+        revoqueLe: ligne.revoqueLe,
+        expireLe: ligne.expireLe,
+      },
+      maintenant,
+    ),
     envoyePar: nomCreateur.get(ligne.creePar) ?? "Système",
   }));
 

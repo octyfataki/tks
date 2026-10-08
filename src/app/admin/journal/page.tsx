@@ -106,7 +106,7 @@ export default async function JournalPage({
         </button>
         {fActeur || fType || fEntite ? (
           <a href="/admin/journal" className="inline-flex h-9 items-center text-xs underline-offset-4 hover:underline">
-            Tout effacer
+            Réinitialiser les filtres
           </a>
         ) : null}
       </form>

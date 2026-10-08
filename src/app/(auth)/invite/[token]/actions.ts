@@ -41,6 +41,8 @@ export async function accepterInvitation(input: {
           return { ok: false, message: "lien expiré — demandez-en un nouveau" };
         case "INVITATION_DEJA_CONSOMMEE":
           return { ok: false, message: "lien déjà utilisé" };
+        case "INVITATION_REVOQUEE":
+          return { ok: false, message: "lien révoqué — demandez-en un nouveau" };
         case "INVITATION_INTROUVABLE":
           return { ok: false, message: "lien inconnu" };
         case "NON_AUTORISE":

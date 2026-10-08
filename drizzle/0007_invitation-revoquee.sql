@@ -1,0 +1,1 @@
+ALTER TABLE `invitations_agents` ADD `revoque_le` timestamp(3);

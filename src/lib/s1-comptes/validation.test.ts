@@ -5,6 +5,7 @@ import {
   estCleReglage,
   estEtatStaff,
   estRoleStaff,
+  etatLienInvitation,
   normaliserDureeInvitationJours,
   peutChangerRole,
   peutCreerAdminPrincipal,
@@ -61,6 +62,37 @@ describe("règles staff", () => {
     expect(peutInviterAdminPrincipal("ADMIN_PRINCIPAL", "VALIDE")).toBe(true);
     expect(peutInviterAdminPrincipal("AGENT", "VALIDE")).toBe(false);
     expect(peutInviterAdminPrincipal("ADMIN_TECHNIQUE", "REVOQUE")).toBe(false);
+  });
+
+  it("état d'un lien d'invitation : consommé > révoqué > expiré > en attente", () => {
+    const maintenant = new Date("2026-06-01T12:00:00Z").getTime();
+    const futur = new Date("2026-06-10T12:00:00Z");
+    const passe = new Date("2026-05-20T12:00:00Z");
+    expect(
+      etatLienInvitation(
+        { consommeLe: null, revoqueLe: null, expireLe: futur },
+        maintenant,
+      ),
+    ).toBe("en-attente");
+    expect(
+      etatLienInvitation(
+        { consommeLe: null, revoqueLe: null, expireLe: passe },
+        maintenant,
+      ),
+    ).toBe("expire");
+    // La décision humaine fait foi : révoqué reste révoqué après expiration.
+    expect(
+      etatLienInvitation(
+        { consommeLe: null, revoqueLe: passe, expireLe: passe },
+        maintenant,
+      ),
+    ).toBe("revoque");
+    expect(
+      etatLienInvitation(
+        { consommeLe: passe, revoqueLe: null, expireLe: futur },
+        maintenant,
+      ),
+    ).toBe("termine");
   });
 
   it("révocation admin : même autorisation que la création, définitive", () => {

@@ -12,6 +12,7 @@ import {
 } from "@/lib/db/schema/s1-comptes";
 import { PermissionRefusee } from "@/components/permission-refusee";
 import { RegistreInvitations, type LigneRegistre } from "./registre-invitations";
+import { etatLienInvitation } from "@/lib/db/schema/s1-comptes/validation";
 
 /**
  * /admin/invitations — Registre unique des invitations envoyées pour un
@@ -56,6 +57,7 @@ export default async function InvitationsEnvoyeesPage() {
       jeton: invitationsAgents.jeton,
       expireLe: invitationsAgents.expireLe,
       consommeLe: invitationsAgents.consommeLe,
+      revoqueLe: invitationsAgents.revoqueLe,
       creePar: invitationsAgents.creePar,
       createdAt: invitationsAgents.createdAt,
     })
@@ -69,6 +71,7 @@ export default async function InvitationsEnvoyeesPage() {
       jeton: premiersAccesAdmin.jeton,
       expireLe: premiersAccesAdmin.expireLe,
       consommeLe: premiersAccesAdmin.consommeLe,
+      revoqueLe: premiersAccesAdmin.revoqueLe,
       creePar: premiersAccesAdmin.creePar,
       createdAt: premiersAccesAdmin.createdAt,
       cibleId: comptesStaff.id,
@@ -120,12 +123,14 @@ export default async function InvitationsEnvoyeesPage() {
         jeton: ligne.jeton,
         envoyeLe: ligne.createdAt.toISOString(),
         expireLe: ligne.expireLe.toISOString(),
-        etat:
-          ligne.consommeLe !== null
-            ? "termine"
-            : ligne.expireLe.getTime() < maintenant
-              ? "expire"
-              : "en-attente",
+        etat: etatLienInvitation(
+          {
+            consommeLe: ligne.consommeLe,
+            revoqueLe: ligne.revoqueLe,
+            expireLe: ligne.expireLe,
+          },
+          maintenant,
+        ),
         envoyePar: nomCreateur.get(ligne.creePar) ?? "Système (bootstrap)",
       }),
     ),
@@ -143,12 +148,14 @@ export default async function InvitationsEnvoyeesPage() {
         jeton: ligne.jeton,
         envoyeLe: ligne.createdAt.toISOString(),
         expireLe: ligne.expireLe.toISOString(),
-        etat:
-          ligne.consommeLe !== null
-            ? "termine"
-            : ligne.expireLe.getTime() < maintenant
-              ? "expire"
-              : "en-attente",
+        etat: etatLienInvitation(
+          {
+            consommeLe: ligne.consommeLe,
+            revoqueLe: ligne.revoqueLe,
+            expireLe: ligne.expireLe,
+          },
+          maintenant,
+        ),
         envoyePar: nomCreateur.get(ligne.creePar) ?? "Système (bootstrap)",
       }),
     ),

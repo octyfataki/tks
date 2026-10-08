@@ -17,6 +17,7 @@ export const invitationsAgents = mysqlTable(
     expireLe: timestamp("expire_le", { fsp: 3 }).notNull(),
     consommeLe: timestamp("consomme_le", { fsp: 3 }),
     consommePar: varchar("consomme_par", { length: 36 }),
+    revoqueLe: timestamp("revoque_le", { fsp: 3 }),
     creePar: varchar("cree_par", { length: 36 }).notNull(),
     createdAt: timestamp("created_at", { fsp: 3 }).defaultNow().notNull(),
   },

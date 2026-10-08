@@ -66,6 +66,7 @@ export default async function InviterPage({
           jeton: invitationsAgents.jeton,
           expireLe: invitationsAgents.expireLe,
           consommeLe: invitationsAgents.consommeLe,
+          revoqueLe: invitationsAgents.revoqueLe,
         })
         .from(invitationsAgents)
         .where(eq(invitationsAgents.roleCible, "AGENT"))
@@ -79,6 +80,7 @@ export default async function InviterPage({
           jeton: invitationsAgents.jeton,
           expireLe: invitationsAgents.expireLe,
           consommeLe: invitationsAgents.consommeLe,
+          revoqueLe: invitationsAgents.revoqueLe,
         })
         .from(invitationsAgents)
         .where(eq(invitationsAgents.roleCible, "ADMIN_PRINCIPAL"))

@@ -1,0 +1,1 @@
+ALTER TABLE `premiers_acces_admin` ADD `revoque_le` timestamp(3);

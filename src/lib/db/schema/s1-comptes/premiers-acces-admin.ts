@@ -16,6 +16,7 @@ export const premiersAccesAdmin = mysqlTable(
     jeton: varchar("jeton", { length: 255 }).notNull().unique(),
     expireLe: timestamp("expire_le", { fsp: 3 }).notNull(),
     consommeLe: timestamp("consomme_le", { fsp: 3 }),
+    revoqueLe: timestamp("revoque_le", { fsp: 3 }),
     creePar: varchar("cree_par", { length: 36 }).notNull(),
     createdAt: timestamp("created_at", { fsp: 3 }).defaultNow().notNull(),
   },

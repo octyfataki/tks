@@ -17,6 +17,7 @@ import {
   reglages,
   roleCibleInvitationValide,
   telephoneStaffValide,
+  verdictRevocationLien,
 } from "@/lib/db/schema/s1-comptes";
 import { enregistrerEvenement } from "@/lib/s2-autorisations/journal";
 
@@ -29,6 +30,7 @@ export type ErreurStaff =
   | "INVITATION_INTROUVABLE"
   | "INVITATION_EXPIREE"
   | "INVITATION_DEJA_CONSOMMEE"
+  | "INVITATION_REVOQUEE"
   | "TELEPHONE_INVALIDE"
   | "MOT_DE_PASSE_INVALIDE"
   | "SECOND_FACTEUR_NON_REQUIS"
@@ -248,6 +250,126 @@ export async function creerInvitationAdminPrincipal(
 }
 
 /**
+ * Révoque un lien d'invitation encore en attente : le lien devient
+ * définitivement inutilisable (présenté deux fois = refusé, comme un lien
+ * consommé). L'autorisation suit le rôle cible — AGENT : seul un
+ * ADMIN_PRINCIPAL VALIDE (peutInviterAgent) ; ADMIN_PRINCIPAL : même règle
+ * que la création (peutInviterAdminPrincipal). Idempotente : révoquer deux
+ * fois = même état, pas d'erreur, pas de seconde écriture au journal.
+ * Définitive, comme toute révocation du projet : rouvrir la voie passe par
+ * un nouveau lien. Journalisée (S2, invariant 8).
+ */
+export async function revoquerInvitation(
+  revoqueurId: string,
+  invitationId: string,
+) {
+  const invitations = await db
+    .select()
+    .from(invitationsAgents)
+    .where(eq(invitationsAgents.id, invitationId));
+  const invitation = invitations[0];
+  if (!invitation) {
+    throw new StaffError("INVITATION_INTROUVABLE", "lien inconnu");
+  }
+  const revoqueurs = await db
+    .select()
+    .from(comptesStaff)
+    .where(eq(comptesStaff.id, revoqueurId));
+  const revoqueur = revoqueurs[0];
+  const autorise =
+    invitation.roleCible === "AGENT"
+      ? revoqueur && peutInviterAgent(revoqueur.role, revoqueur.etat)
+      : revoqueur &&
+        peutInviterAdminPrincipal(revoqueur.role, revoqueur.etat);
+  if (!autorise) {
+    throw new StaffError("NON_AUTORISE", "révoqueur non autorisé");
+  }
+  switch (verdictRevocationLien(invitation)) {
+    case "DEJA_REVOQUE":
+      return { id: invitation.id, dejaRevoque: true as const };
+    case "DEJA_CONSOMME":
+      throw new StaffError("INVITATION_DEJA_CONSOMMEE", "lien déjà utilisé");
+    case "EXPIRE":
+      throw new StaffError("INVITATION_EXPIREE", "lien expiré");
+    case "A_REVOQUER":
+      break;
+  }
+  const revoqueLe = new Date();
+  await db
+    .update(invitationsAgents)
+    .set({ revoqueLe })
+    .where(eq(invitationsAgents.id, invitation.id));
+  await enregistrerEvenement({
+    acteurId: revoqueurId,
+    roleAuMoment: revoqueur.role,
+    typeAction: "invitation.revoquer",
+    entite: "invitation_agent",
+    entiteId: invitation.id,
+    avant: { expireLe: invitation.expireLe },
+    apres: { revoqueLe },
+  });
+  return { id: invitation.id };
+}
+
+/**
+ * Révoque un lien de premier accès (voie `fiche`) encore en attente : le
+ * lien devient définitivement inutilisable pour choisir le mot de passe.
+ * Même autorisation que la création et l'invitation d'un administrateur
+ * principal (peutInviterAdminPrincipal : administrateur technique ou
+ * principal VALIDE). Idempotente comme la révocation d'un lien : révoquer
+ * deux fois = même état, pas d'erreur. Journalisée (S2, invariant 8).
+ */
+export async function revoquerPremierAccesAdmin(
+  revoqueurId: string,
+  accesId: string,
+) {
+  const lignes = await db
+    .select()
+    .from(premiersAccesAdmin)
+    .where(eq(premiersAccesAdmin.id, accesId));
+  const acces = lignes[0];
+  if (!acces) {
+    throw new StaffError("INVITATION_INTROUVABLE", "lien inconnu");
+  }
+  const revoqueurs = await db
+    .select()
+    .from(comptesStaff)
+    .where(eq(comptesStaff.id, revoqueurId));
+  const revoqueur = revoqueurs[0];
+  if (
+    !revoqueur ||
+    !peutInviterAdminPrincipal(revoqueur.role, revoqueur.etat)
+  ) {
+    throw new StaffError("NON_AUTORISE", "révoqueur non autorisé");
+  }
+  switch (verdictRevocationLien(acces)) {
+    case "DEJA_REVOQUE":
+      return { id: acces.id, dejaRevoque: true as const };
+    case "DEJA_CONSOMME":
+      throw new StaffError("INVITATION_DEJA_CONSOMMEE", "lien déjà utilisé");
+    case "EXPIRE":
+      throw new StaffError("INVITATION_EXPIREE", "lien expiré");
+    case "A_REVOQUER":
+      break;
+  }
+  const revoqueLe = new Date();
+  await db
+    .update(premiersAccesAdmin)
+    .set({ revoqueLe })
+    .where(eq(premiersAccesAdmin.id, acces.id));
+  await enregistrerEvenement({
+    acteurId: revoqueurId,
+    roleAuMoment: revoqueur.role,
+    typeAction: "invitation.revoquer",
+    entite: "premier_acces_admin",
+    entiteId: acces.id,
+    avant: { expireLe: acces.expireLe },
+    apres: { revoqueLe },
+  });
+  return { id: acces.id };
+}
+
+/**
  * La personne invitée crée elle-même son compte administrateur principal par
  * le lien : choisit email + mot de passe, le rôle ADMIN_PRINCIPAL vient du
  * lien. Usage unique, expiré ou consommé = refus. Un lien AGENT est refusé
@@ -276,6 +398,9 @@ export async function accepterInvitationAdminPrincipal(input: {
   }
   if (invitation.consommeLe !== null) {
     throw new StaffError("INVITATION_DEJA_CONSOMMEE", "lien déjà utilisé");
+  }
+  if (invitation.revoqueLe !== null) {
+    throw new StaffError("INVITATION_REVOQUEE", "lien révoqué");
   }
   if (invitation.expireLe.getTime() < Date.now()) {
     throw new StaffError("INVITATION_EXPIREE", "lien expiré");
@@ -330,6 +455,9 @@ export async function accepterInvitationAgent(input: {
   }
   if (invitation.consommeLe !== null) {
     throw new StaffError("INVITATION_DEJA_CONSOMMEE", "lien déjà utilisé");
+  }
+  if (invitation.revoqueLe !== null) {
+    throw new StaffError("INVITATION_REVOQUEE", "lien révoqué");
   }
   if (invitation.expireLe.getTime() < Date.now()) {
     throw new StaffError("INVITATION_EXPIREE", "lien expiré");
@@ -496,20 +624,21 @@ export async function ouvrirPremierAccesAdmin(
 
 /**
  * Lecture d'un lien de premier accès pour l'écran public : ne révèle que le
- * statut (inconnu / déjà utilisé / expiré / valide). L'email du compte n'est
- * montré que si le lien est encore valide — jamais sur un lien consommé ou
- * expiré (un identifiant de connexion ne se divulgue pas).
- * Toute l'horloge vit ici, pas dans le rendu.
+ * statut (inconnu / déjà utilisé / expiré / révoqué / valide). L'email du
+ * compte n'est montré que si le lien est encore valide — jamais sur un lien
+ * consommé, expiré ou révoqué (un identifiant de connexion ne se divulgue
+ * pas). Toute l'horloge vit ici, pas dans le rendu.
  */
 export async function lirePremierAcces(jeton: string): Promise<
   | { statut: "VALIDE"; email: string }
-  | { statut: "INCONNU" | "CONSOMME" | "EXPIRE"; email: null }
+  | { statut: "INCONNU" | "CONSOMME" | "EXPIRE" | "REVOQUE"; email: null }
 > {
   const lignes = await db
     .select({
       email: comptesStaff.email,
       expireLe: premiersAccesAdmin.expireLe,
       consommeLe: premiersAccesAdmin.consommeLe,
+      revoqueLe: premiersAccesAdmin.revoqueLe,
     })
     .from(premiersAccesAdmin)
     .innerJoin(
@@ -521,6 +650,7 @@ export async function lirePremierAcces(jeton: string): Promise<
   if (!acces) return { statut: "INCONNU", email: null };
   if (acces.consommeLe !== null)
     return { statut: "CONSOMME", email: null };
+  if (acces.revoqueLe !== null) return { statut: "REVOQUE", email: null };
   if (acces.expireLe.getTime() < Date.now())
     return { statut: "EXPIRE", email: null };
   return { statut: "VALIDE", email: acces.email };
@@ -549,6 +679,9 @@ export async function definirMotDePassePremierAcces(input: {
   }
   if (acces.consommeLe !== null) {
     throw new StaffError("INVITATION_DEJA_CONSOMMEE", "lien déjà utilisé");
+  }
+  if (acces.revoqueLe !== null) {
+    throw new StaffError("INVITATION_REVOQUEE", "lien révoqué");
   }
   if (acces.expireLe.getTime() < Date.now()) {
     throw new StaffError("INVITATION_EXPIREE", "lien expiré");

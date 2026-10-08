@@ -146,6 +146,61 @@ export function roleCibleInvitationValide(roleCible: string): boolean {
   return roleCible === "AGENT" || roleCible === "ADMIN_PRINCIPAL";
 }
 
+export const ETATS_LIEN_INVITATION = [
+  "en-attente",
+  "termine",
+  "expire",
+  "revoque",
+] as const;
+export type EtatLienInvitation = (typeof ETATS_LIEN_INVITATION)[number];
+
+/**
+ * État d'affichage d'un lien d'invitation : consommé > révoqué > expiré >
+ * en attente. Un lien révoqué reste « révoqué » même après son expiration :
+ * c'est la décision humaine qui fait foi, pas l'horloge.
+ * Vaut pour les deux voies : lien d'invitation (invitations_agents) et
+ * fiche de premier accès (premiers_acces_admin).
+ */
+export function etatLienInvitation(
+  lien: {
+    consommeLe: Date | null;
+    revoqueLe: Date | null;
+    expireLe: Date;
+  },
+  maintenant: number = Date.now(),
+): EtatLienInvitation {
+  if (lien.consommeLe !== null) return "termine";
+  if (lien.revoqueLe !== null) return "revoque";
+  if (lien.expireLe.getTime() < maintenant) return "expire";
+  return "en-attente";
+}
+
+/**
+ * Verdict pur d'une demande de révocation d'un lien (voie `lien` ou voie
+ * `fiche`) : consommé et expiré sont non révoquables (message explicite),
+ * déjà révoqué est idempotent (même état, pas d'erreur — la révocation ne
+ * s'écrit qu'une fois).
+ */
+export type VerdictRevocationLien =
+  | "A_REVOQUER"
+  | "DEJA_REVOQUE"
+  | "DEJA_CONSOMME"
+  | "EXPIRE";
+
+export function verdictRevocationLien(
+  lien: {
+    consommeLe: Date | null;
+    revoqueLe: Date | null;
+    expireLe: Date;
+  },
+  maintenant: number = Date.now(),
+): VerdictRevocationLien {
+  if (lien.consommeLe !== null) return "DEJA_CONSOMME";
+  if (lien.revoqueLe !== null) return "DEJA_REVOQUE";
+  if (lien.expireLe.getTime() < maintenant) return "EXPIRE";
+  return "A_REVOQUER";
+}
+
 // ---- Réglages métier (/admin/parametres) --------
 // Liste fermée : toute autre clé est refusée. Chaque réglage porte sa valeur
 // par défaut (appliquée quand la ligne est absente) et ses bornes.

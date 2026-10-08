@@ -82,3 +82,23 @@ Aucun coupe-circuit. Quiconque détient le lien crée un compte
 ## Comments
 
 - GitHub : https://github.com/octyfataki/tks/issues/1 (labels `security`, `critical`, `bug`).
+- Correctif (2026-10-08) : révocation implémentée pour les deux voies de
+  `/admin/invitations`. Voie `lien` : `revoquerInvitation` rendue idempotente
+  (double révocation = même état, pas d'erreur) + `revoquerInvitationAdminAction`
+  + bouton « Révoquer » sur les lignes `en-attente` + `GET /invite/<jeton>`
+  refuse les liens révoqués. Voie `fiche` : colonne `revoque_le` ajoutée à
+  `premiers_acces_admin` (migration `drizzle/0008_bitter_sentry.sql`) +
+  `revoquerPremierAccesAdmin` / `revoquerPremierAccesAdminAction` +
+  `lirePremierAcces` / `definirMotDePassePremierAcces` refusent les liens
+  révoqués (`REVOQUE` / `INVITATION_REVOQUEE`). Audit `invitation.revoquer`
+  (acteur, rôle au moment, avant/après). Idempotence aussi appliquée à
+  `revoquerInvitationAgentAction`. Tests :
+  `src/lib/s1-comptes/revocation-invitations.test.ts` (6 cas). Suite complète
+  : 20 fichiers, 114 tests, `tsc --noEmit` et `eslint` sans erreur.
+- Vérification finale (2026-10-08) : `pnpm db:migrate` appliquée
+  (`revoque_le` présent sur `invitations_agents` et `premiers_acces_admin`),
+  `pnpm build` OK, script fonctionnel contre la base réelle : 9/9
+  (révocation lien + fiche, double révocation idempotente, acceptation et
+  choix mot de passe refusés `INVITATION_REVOQUEE`, un seul événement
+  `invitation.revoquer`, agent refusé `NON_AUTORISE`, lecture publique
+  `REVOQUE`). Lignes de test nettoyées.

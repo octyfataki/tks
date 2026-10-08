@@ -332,7 +332,7 @@ export function MatricePermissions({ initiales }: { initiales: LigneMatrice[] })
       <div className="rounded-xl border bg-card p-6 text-center">
         <p className="text-sm font-medium">Aucun agent validé</p>
         <p className="mt-1 text-xs text-muted-foreground">
-          <Link href="/admin/agents/nouveau" className="underline-offset-4 hover:underline">
+          <Link href="/admin/agents/create" className="underline-offset-4 hover:underline">
             Créez la première fiche
           </Link>{" "}
           ou envoyez un lien d&apos;invitation.
@@ -373,7 +373,7 @@ export function MatricePermissions({ initiales }: { initiales: LigneMatrice[] })
             onClick={() => setRecherche("")}
             className="mt-1 text-xs text-muted-foreground underline-offset-4 hover:underline"
           >
-            Tout effacer
+            Réinitialiser les filtres
           </button>
         </div>
       ) : (

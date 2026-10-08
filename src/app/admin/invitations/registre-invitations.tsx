@@ -16,6 +16,15 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -26,6 +35,10 @@ import { cn } from "@/lib/utils";
 import { BoutonCopierLien } from "./bouton-copier";
 import { Cachet } from "./cachet";
 import { FormulaireRenvoiAcces } from "./formulaire-renvoi";
+import {
+  revoquerInvitationAdminAction,
+  revoquerPremierAccesAdminAction,
+} from "./actions";
 
 /** Une ligne du registre, sérialisée par la page (dates ISO, état figé). */
 export type LigneRegistre =
@@ -35,7 +48,7 @@ export type LigneRegistre =
       jeton: string;
       envoyeLe: string;
       expireLe: string;
-      etat: "en-attente" | "termine" | "expire";
+      etat: "en-attente" | "termine" | "expire" | "revoque";
       envoyePar: string;
     }
   | {
@@ -48,7 +61,7 @@ export type LigneRegistre =
       jeton: string;
       envoyeLe: string;
       expireLe: string;
-      etat: "en-attente" | "termine" | "expire";
+      etat: "en-attente" | "termine" | "expire" | "revoque";
       envoyePar: string;
     };
 
@@ -63,6 +76,7 @@ const ETATS = [
   { valeur: "en-attente", etiquette: "En attente" },
   { valeur: "termine", etiquette: "Terminés" },
   { valeur: "expire", etiquette: "Expirés" },
+  { valeur: "revoque", etiquette: "Révoqués" },
 ] as const;
 
 const TRIS = [
@@ -100,7 +114,9 @@ function exporterCSV(lignes: LigneRegistre[]) {
           ? ligne.voie === "lien"
             ? "Compte créé"
             : "Mot de passe choisi"
-          : "Expiré";
+          : ligne.etat === "revoque"
+            ? "Révoqué"
+            : "Expiré";
     return [
       cellule(ligne.voie === "lien" ? "Lien" : "Fiche"),
       cellule(ligne.voie === "fiche" ? ligne.nom : "—"),
@@ -141,6 +157,7 @@ function CachetEtat({ ligne }: { ligne: LigneRegistre }) {
         {ligne.voie === "lien" ? "Compte créé" : "Mot de passe choisi"}
       </Cachet>
     );
+  if (ligne.etat === "revoque") return <Cachet encre="revoque">Révoqué</Cachet>;
   if (ligne.etat === "expire")
     return (
       <Cachet encre="expire">
@@ -151,6 +168,81 @@ function CachetEtat({ ligne }: { ligne: LigneRegistre }) {
     <Cachet encre="attente">
       {ligne.voie === "lien" ? "En attente" : "Attend son mot de passe"}
     </Cachet>
+  );
+}
+
+/**
+ * Bouton « Révoquer » d'un lien en attente (voie `lien` ou voie `fiche`) :
+ * confirmation obligatoire, la révocation est définitive (le lien ne
+ * servira plus — un nouveau lien passe par une nouvelle génération ou un
+ * renvoi). Même dessin que la révocation d'un lien agent.
+ */
+function BoutonRevoquerLien({
+  voie,
+  id,
+}: {
+  voie: "lien" | "fiche";
+  id: string;
+}) {
+  const [ouvert, setOuvert] = React.useState(false);
+  const [erreur, setErreur] = React.useState<string | null>(null);
+  const [enCours, demarrer] = React.useTransition();
+
+  function confirmer() {
+    setErreur(null);
+    demarrer(async () => {
+      const resultat =
+        voie === "lien"
+          ? await revoquerInvitationAdminAction(id)
+          : await revoquerPremierAccesAdminAction(id);
+      if (resultat.ok) {
+        setOuvert(false);
+      } else {
+        setErreur(resultat.erreur);
+      }
+    });
+  }
+
+  return (
+    <Dialog
+      open={ouvert}
+      onOpenChange={(nouveau) => {
+        setOuvert(nouveau);
+        if (!nouveau) setErreur(null);
+      }}
+    >
+      <button
+        type="button"
+        onClick={() => setOuvert(true)}
+        className="text-[11px] font-medium text-destructive underline-offset-4 hover:underline"
+      >
+        Révoquer
+      </button>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Révoquer ce lien d&apos;invitation ?</DialogTitle>
+          <DialogDescription>
+            Le lien devient définitivement inutilisable : plus aucun compte
+            administrateur principal ne pourra être créé avec, et plus aucun
+            mot de passe ne pourra être choisi avec. Cette révocation ne peut
+            pas être annulée.
+          </DialogDescription>
+        </DialogHeader>
+        {erreur ? (
+          <p role="alert" className="text-xs font-medium text-destructive">
+            {erreur}
+          </p>
+        ) : null}
+        <DialogFooter>
+          <DialogClose render={<Button variant="outline" disabled={enCours} />}>
+            Annuler
+          </DialogClose>
+          <Button variant="destructive" onClick={confirmer} disabled={enCours}>
+            {enCours ? "Révocation…" : "Révoquer définitivement"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
@@ -377,7 +469,7 @@ export function RegistreInvitations({ lignes }: { lignes: LigneRegistre[] }) {
                 }}
                 className="underline-offset-4 hover:underline"
               >
-                Tout effacer
+                Réinitialiser les filtres
               </button>
             )}
           </p>
@@ -498,11 +590,18 @@ export function RegistreInvitations({ lignes }: { lignes: LigneRegistre[] }) {
                       </td>
                       <td className="px-3 py-2.5 whitespace-nowrap">
                         {ligne.etat === "en-attente" ? (
-                          <BoutonCopierLien lien={chemin} />
+                          <span className="inline-flex items-center gap-2">
+                            <BoutonCopierLien lien={chemin} />
+                            <BoutonRevoquerLien voie={ligne.voie} id={ligne.id} />
+                          </span>
                         ) : ligne.etat === "termine" ? (
                           <span className="inline-flex items-center gap-1 text-[11px] text-muted-foreground">
                             <CheckIcon className="size-3.5 text-green-700 dark:text-green-400" />
                             Faite
+                          </span>
+                        ) : ligne.etat === "revoque" ? (
+                          <span className="text-[11px] text-muted-foreground">
+                            Révoquée
                           </span>
                         ) : estFiche ? (
                           <FormulaireRenvoiAcces

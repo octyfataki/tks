@@ -50,6 +50,20 @@
       "when": 1791424066099,
       "tag": "0006_careless_daimon_hellstrom",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1791491694540,
+      "tag": "0007_invitation-revoquee",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "5",
+      "when": 1791492902613,
+      "tag": "0008_bitter_sentry",
+      "breakpoints": true
     }
   ]
 }

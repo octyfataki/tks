@@ -70,6 +70,24 @@ export default async function PremierAccesPage({
     );
   }
 
+  if (acces.statut === "REVOQUE") {
+    return (
+      <AuthShell
+        title="Lien révoqué"
+        description="Ce lien de premier accès a été révoqué par un administrateur : plus aucun mot de passe ne peut être choisi avec. Demandez un nouveau lien."
+      >
+        <FieldGroup>
+          <Field>
+            <p className="text-xs text-muted-foreground">
+              Seul un administrateur technique ou un administrateur principal
+              validé peut générer un nouveau lien.
+            </p>
+          </Field>
+        </FieldGroup>
+      </AuthShell>
+    );
+  }
+
   return (
     <AuthShell
       title="Choisissez votre mot de passe"

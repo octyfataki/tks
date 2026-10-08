@@ -209,7 +209,7 @@ export default async function ListeAgentsPage({
           <p className="mt-1 text-xs text-muted-foreground">
             {estFiltre ? (
               <Link href="/admin/agents" className="underline-offset-4 hover:underline">
-                Tout effacer
+                Réinitialiser les filtres
               </Link>
             ) : (
               "Créez la première fiche ou envoyez un lien d'invitation."

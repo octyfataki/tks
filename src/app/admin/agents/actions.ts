@@ -14,7 +14,12 @@ import {
   retirerPermission,
 } from "@/lib/s2-autorisations/autorisations";
 import { enregistrerEvenement } from "@/lib/s2-autorisations/journal";
-import { creerAgent, creerInvitationAgent, StaffError } from "@/lib/s1-comptes/staff";
+import {
+  creerAgent,
+  creerInvitationAgent,
+  revoquerInvitation,
+  StaffError,
+} from "@/lib/s1-comptes/staff";
 
 export type ResultatAction =
   | { ok: true; lien?: string; email?: string }
@@ -140,6 +145,47 @@ export async function renvoyerInvitationAgentAction(): Promise<ResultatAction> {
       return { ok: false, erreur: "Seul un administrateur principal validé peut inviter un agent." };
     }
     return { ok: false, erreur: "Invitation impossible." };
+  }
+}
+
+/**
+ * Révoque un lien d'invitation agent encore en attente (définitif : le lien
+ * ne servira plus, un nouveau lien passe par une nouvelle génération).
+ * Même autorisation que l'invitation (S1 : peutInviterAgent — le contrôle
+ * réel, y compris l'état du lien, est dans revoquerInvitation).
+ * Journalisée (S2).
+ */
+export async function revoquerInvitationAgentAction(
+  invitationId: string,
+): Promise<ResultatAction> {
+  const moi = await staffConnecte();
+  if (!moi || !peutInviterAgent(moi.role, moi.etat)) {
+    return { ok: false, erreur: "Seul un administrateur principal validé peut révoquer une invitation." };
+  }
+  try {
+    await revoquerInvitation(moi.id, invitationId);
+    revalidatePath("/admin/agents/invitations");
+    return { ok: true };
+  } catch (erreur) {
+    if (erreur instanceof StaffError) {
+      switch (erreur.code) {
+        case "NON_AUTORISE":
+          return { ok: false, erreur: "Seul un administrateur principal validé peut révoquer une invitation." };
+        case "INVITATION_INTROUVABLE":
+          return { ok: false, erreur: "Invitation introuvable." };
+        case "INVITATION_DEJA_CONSOMMEE":
+          return { ok: false, erreur: "Lien déjà utilisé — rien à révoquer." };
+        case "INVITATION_REVOQUEE":
+          // Idempotence : révoquer deux fois = même état, pas d'erreur.
+          revalidatePath("/admin/agents/invitations");
+          return { ok: true };
+        case "INVITATION_EXPIREE":
+          return { ok: false, erreur: "Lien expiré — générez-en un nouveau." };
+        default:
+          return { ok: false, erreur: "Révocation impossible." };
+      }
+    }
+    return { ok: false, erreur: "Révocation impossible." };
   }
 }
 

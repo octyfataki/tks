@@ -46,6 +46,7 @@ export type InvitationAgentLigne = {
   jeton: string;
   expireLe: Date;
   consommeLe: Date | null;
+  revoqueLe: Date | null;
 };
 
 /**
@@ -106,7 +107,7 @@ export function FormulaireInvitationAgent({
           </p>
         </div>
         <div className="flex gap-2">
-          <Button variant="outline" render={<Link href="/admin/dashboard" />}>
+          <Button variant="outline" render={<Link href="/admin/agents" />}>
             Annuler
           </Button>
           <Button type="submit" disabled={enCours}>
@@ -314,9 +315,11 @@ export function FormulaireInvitationAgent({
                       <span className="text-[11px] text-muted-foreground">
                         {invitation.consommeLe
                           ? "Déjà utilisé — refusé"
-                          : expiree
-                            ? `Expiré le ${invitation.expireLe.toLocaleDateString("fr-FR")} — envoyez un nouveau lien`
-                            : `Expire le ${invitation.expireLe.toLocaleDateString("fr-FR")}`}
+                          : invitation.revoqueLe
+                            ? "Révoqué — envoyez un nouveau lien"
+                            : expiree
+                              ? `Expiré le ${invitation.expireLe.toLocaleDateString("fr-FR")} — envoyez un nouveau lien`
+                              : `Expire le ${invitation.expireLe.toLocaleDateString("fr-FR")}`}
                       </span>
                     </li>
                   );
