@@ -80,3 +80,5 @@ Aucun coupe-circuit. Quiconque détient le lien crée un compte
 - `src/lib/db/schema/s1-comptes/invitations-agents.ts:12-24` (pas d'état révoqué)
 
 ## Comments
+
+- GitHub : https://github.com/octyfataki/tks/issues/1 (labels `security`, `critical`, `bug`).
