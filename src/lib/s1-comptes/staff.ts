@@ -844,19 +844,69 @@ export async function ouvrirPremierAccesAdmin(
 }
 
 /**
+ * Ouvre un lien de réinitialisation de mot de passe pour un agent de
+ * service (mot de passe oublié) : même mécanique que le premier accès
+ * (jeton unique, 24 h, choix du mot de passe uniquement, aucune session).
+ * Seul un administrateur principal VALIDE génère (peutInviterAgent :
+ * celui qui gère les agents), cible AGENT VALIDE uniquement — jamais
+ * REVOQUE (recréation), jamais SUSPENDU (lever d'abord). Journalisé
+ * (agent.lien_mdp, S2) : un lien de mot de passe se trace.
+ */
+export async function ouvrirLienMotDePasseAgent(
+  createurId: string,
+  agentId: string,
+) {
+  const createurs = await db
+    .select()
+    .from(comptesStaff)
+    .where(eq(comptesStaff.id, createurId));
+  const createur = createurs[0];
+  if (!createur || !peutInviterAgent(createur.role, createur.etat)) {
+    throw new StaffError("NON_AUTORISE", "créateur non autorisé");
+  }
+  const cibles = await db
+    .select()
+    .from(comptesStaff)
+    .where(eq(comptesStaff.id, agentId));
+  const cible = cibles[0];
+  if (!cible || cible.role !== "AGENT" || cible.etat !== "VALIDE") {
+    throw new StaffError("NON_AUTORISE", "cible non éligible");
+  }
+  const acces = {
+    id: randomUUID(),
+    compteStaffCible: agentId,
+    jeton: randomBytes(32).toString("base64url"),
+    expireLe: new Date(Date.now() + DUREE_PREMIER_ACCES_MS),
+    creePar: createurId,
+  };
+  await db.insert(premiersAccesAdmin).values(acces);
+  await enregistrerEvenement({
+    acteurId: createurId,
+    roleAuMoment: createur.role,
+    typeAction: "agent.lien_mdp",
+    entite: "compte_staff",
+    entiteId: agentId,
+    apres: { lien: acces.id, expireLe: acces.expireLe },
+  });
+  return acces;
+}
+
+/**
  * Lecture d'un lien de premier accès pour l'écran public : ne révèle que le
  * statut (inconnu / déjà utilisé / expiré / révoqué / valide). L'email du
  * compte n'est montré que si le lien est encore valide — jamais sur un lien
  * consommé, expiré ou révoqué (un identifiant de connexion ne se divulgue
- * pas). Toute l'horloge vit ici, pas dans le rendu.
+ * pas). Le rôle suit pour adapter le texte (un agent n'a pas de 2FA).
+ * Toute l'horloge vit ici, pas dans le rendu.
  */
 export async function lirePremierAcces(jeton: string): Promise<
-  | { statut: "VALIDE"; email: string }
+  | { statut: "VALIDE"; email: string; role: string }
   | { statut: "INCONNU" | "CONSOMME" | "EXPIRE" | "REVOQUE"; email: null }
 > {
   const lignes = await db
     .select({
       email: comptesStaff.email,
+      role: comptesStaff.role,
       expireLe: premiersAccesAdmin.expireLe,
       consommeLe: premiersAccesAdmin.consommeLe,
       revoqueLe: premiersAccesAdmin.revoqueLe,
@@ -874,7 +924,7 @@ export async function lirePremierAcces(jeton: string): Promise<
   if (acces.revoqueLe !== null) return { statut: "REVOQUE", email: null };
   if (acces.expireLe.getTime() < Date.now())
     return { statut: "EXPIRE", email: null };
-  return { statut: "VALIDE", email: acces.email };
+  return { statut: "VALIDE", email: acces.email, role: acces.role };
 }
 
 /**
@@ -912,7 +962,11 @@ export async function definirMotDePassePremierAcces(input: {
     .from(comptesStaff)
     .where(eq(comptesStaff.id, acces.compteStaffCible));
   const cible = cibles[0];
-  if (!cible || cible.role !== "ADMIN_PRINCIPAL" || cible.etat !== "VALIDE") {
+  if (
+    !cible ||
+    (cible.role !== "ADMIN_PRINCIPAL" && cible.role !== "AGENT") ||
+    cible.etat !== "VALIDE"
+  ) {
     throw new StaffError("NON_AUTORISE", "compte non éligible");
   }
   const hash = await hashPassword(input.password);

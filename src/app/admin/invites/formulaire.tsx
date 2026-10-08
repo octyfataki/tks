@@ -41,30 +41,21 @@ const ETAPES_APRES = [
   },
 ];
 
-export type InvitationAgentLigne = {
-  id: string;
-  jeton: string;
-  expireLe: Date;
-  consommeLe: Date | null;
-  revoqueLe: Date | null;
-};
-
 /**
  * Invitation d'un agent de service : même coquille visuelle que
  * l'invitation d'un administrateur principal (titre + actions, carte à
  * gauche, aperçu + étapes à droite). À gauche, la durée du lien (presets
  * + saisie libre) et le rôle fixé AGENT. À droite, l'aperçu vivant du lien
- * et les liens récents. Rien d'inventé côté métier : usage unique,
- * expiration choisie [1, 30], rôle fixé par le lien (anti-escalade).
+ * et les étapes. L'historique complet vit dans /admin/agents/invitations
+ * (recherche, filtres, pagination) : ce formulaire ne liste plus les liens
+ * passés. Rien d'inventé côté métier : usage unique, expiration choisie
+ * [1, 30], rôle fixé par le lien (anti-escalade).
  */
 export function FormulaireInvitationAgent({
   defautJours,
-  invitations,
 }: {
   /** Durée pré-remplie : le réglage en vigueur (/admin/parametres). */
   defautJours: number;
-  /** Derniers liens AGENT, plus récents d'abord. */
-  invitations: InvitationAgentLigne[];
 }) {
   const [resultat, action, enCours] = useActionState(
     creerLienInvitationAgentAction,
@@ -76,7 +67,6 @@ export function FormulaireInvitationAgent({
   const dureeAffichee =
     Number.isFinite(duree) && duree >= 1 ? Math.min(Math.floor(duree), 30) : 7;
   const [expirationEstimee, setExpirationEstimee] = React.useState("");
-  const [maintenant, setMaintenant] = React.useState(0);
   const lienCree = resultat && resultat.ok ? resultat.lien : null;
   React.useEffect(() => {
     // Aperçu vivant : date dérivée de la durée saisie (effet = lecture
@@ -87,7 +77,6 @@ export function FormulaireInvitationAgent({
         Date.now() + dureeAffichee * 24 * 60 * 60 * 1000,
       ).toLocaleDateString("fr-FR"),
     );
-    setMaintenant(Date.now());
   }, [dureeAffichee]);
   React.useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- réarme l'indicateur « Copié » à chaque nouveau lien

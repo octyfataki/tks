@@ -2,12 +2,16 @@ import { mysqlTable, timestamp, varchar, index } from "drizzle-orm/mysql-core";
 
 // Lien de premier accès : après une création directe, la personne choisit
 // elle-même son mot de passe via un lien à usage unique, durée 24 h.
+// EXTENSION : sert aussi de lien de réinitialisation pour un agent de
+// service (mot de passe oublié) — ouvrirLienMotDePasseAgent, cible AGENT
+// VALIDE, même mécanique, journalisé agent.lien_mdp.
 // Portée STRICTE : uniquement le choix du mot de passe — jamais une session,
 // jamais un contournement du second facteur (la connexion suivante exige
-// email + mot de passe + TOTP). Même modèle que invitations_agents : jeton
+// email + mot de passe + TOTP pour un admin, email + mot de passe pour
+// un agent qui n'a pas de 2FA). Même modèle que invitations_agents : jeton
 // aléatoire unique, usage unique, expiration visible.
-// La confiance vient du créateur (admin VALIDE qui crée le compte), pas
-// d'une pièce : contrairement au reset, aucune pièce n'est exigée ici.
+// La confiance vient du créateur (staff VALIDE), pas d'une pièce :
+// contrairement au reset, aucune pièce n'est exigée ici.
 export const premiersAccesAdmin = mysqlTable(
   "premiers_acces_admin",
   {

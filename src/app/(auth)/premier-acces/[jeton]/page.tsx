@@ -91,7 +91,11 @@ export default async function PremierAccesPage({
   return (
     <AuthShell
       title="Choisissez votre mot de passe"
-      description={`Compte ${acces.email} — ce lien à usage unique ne sert qu'à choisir votre mot de passe. Ensuite, connectez-vous : le second facteur sera exigé.`}
+      description={
+        acces.role === "AGENT"
+          ? `Compte ${acces.email} — ce lien à usage unique ne sert qu'à choisir votre mot de passe. Ensuite, connectez-vous avec votre email et ce mot de passe.`
+          : `Compte ${acces.email} — ce lien à usage unique ne sert qu'à choisir votre mot de passe. Ensuite, connectez-vous : le second facteur sera exigé.`
+      }
     >
       <PremierAccesForm jeton={jeton} />
     </AuthShell>

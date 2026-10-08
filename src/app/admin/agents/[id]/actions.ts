@@ -6,7 +6,7 @@ import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
 import { comptesStaff } from "@/lib/db/schema/s1-comptes";
-import { modifierAgentSupport, modifierEmailAgentSupport, StaffError } from "@/lib/s1-comptes/staff";
+import { modifierAgentSupport, modifierEmailAgentSupport, ouvrirLienMotDePasseAgent, StaffError } from "@/lib/s1-comptes/staff";
 
 export type ResultatModificationCoordonneesAgent =
   | { ok: true; inchange: boolean }
@@ -119,5 +119,43 @@ export async function modifierEmailAgentAction(
       return { ok: false, erreur: messageErreur(erreur.code) };
     }
     return { ok: false, erreur: messageErreur("INCONNU") };
+  }
+}
+
+export type ResultatLienMotDePasse =
+  | { ok: true; lien: string }
+  | { ok: false; erreur: string };
+
+/**
+ * Génère un lien de réinitialisation de mot de passe pour un agent
+ * (mot de passe oublié) : jeton unique, 24 h, choix du mot de passe
+ * uniquement, aucune session ouverte. Le lien s'affiche une seule fois,
+ * à transmettre à l'agent. Journalisé (agent.lien_mdp).
+ */
+export async function genererLienMotDePasseAgentAction(
+  id: string,
+): Promise<ResultatLienMotDePasse> {
+  const session = await auth.api.getSession({ headers: await headers() });
+  const userId = session?.user?.id;
+  if (!userId) {
+    return { ok: false, erreur: "Seul un administrateur principal validé peut générer un lien." };
+  }
+  const lignes = await db
+    .select({ id: comptesStaff.id })
+    .from(comptesStaff)
+    .where(eq(comptesStaff.betterAuthUserId, userId));
+  const createurId = lignes[0]?.id ?? null;
+  if (!createurId) {
+    return { ok: false, erreur: "Seul un administrateur principal validé peut générer un lien." };
+  }
+  try {
+    const acces = await ouvrirLienMotDePasseAgent(createurId, id);
+    revalidatePath(`/admin/agents/${id}`);
+    return { ok: true, lien: `/premier-acces/${acces.jeton}` };
+  } catch (erreur) {
+    if (erreur instanceof StaffError) {
+      return { ok: false, erreur: "Lien impossible : compte non éligible (agent validé exigé)." };
+    }
+    return { ok: false, erreur: "Lien impossible." };
   }
 }

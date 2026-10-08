@@ -21,6 +21,7 @@ import { HistoriqueAgent } from "./historique-agent";
 import { BoutonRevocationAgent } from "./bouton-revocation";
 import { FormulaireCoordonneesAgent } from "./formulaire-coordonnees";
 import { FormulaireEmailAgent } from "./formulaire-email";
+import { FormulaireLienMotDePasse } from "./formulaire-lien-mdp";
 import { SectionModifiable } from "../../list/[id]/section-modifiable";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
@@ -215,6 +216,23 @@ export default async function FicheAgentPage({
                   />
                 }
               />
+            </section>
+
+            <section className="rounded-xl border bg-card p-4">
+              <h2 className="text-sm font-medium">Mot de passe</h2>
+              <p className="mt-0.5 text-xs text-muted-foreground">
+                Mot de passe oublié : générez un lien à usage unique (24 h),
+                l&apos;agent choisit lui-même son nouveau mot de passe.
+              </p>
+              {puisJeCorriger && valide ? (
+                <FormulaireLienMotDePasse id={compte.id} />
+              ) : (
+                <p className="mt-3 text-xs text-muted-foreground">
+                  {!puisJeCorriger
+                    ? "Lecture seule : seul un administrateur principal validé génère un lien."
+                    : "Compte non validé : aucun lien possible."}
+                </p>
+              )}
             </section>
 
             <section className="rounded-xl border border-destructive/30 bg-card p-4">
