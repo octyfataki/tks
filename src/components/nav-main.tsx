@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { usePathname } from "next/navigation"
+import { usePathname, useSearchParams } from "next/navigation"
 import Link from "next/link"
 import {
   Collapsible,
@@ -81,6 +81,13 @@ export function NavMain({
   items: NavItem[]
 }) {
   const pathname = usePathname()
+  // usePathname ignore les paramètres (?cible=…) : les deux entrées
+  // « Inviter » partagent /admin/invites. On compare l'URL complète pour
+  // surligner la bonne (administrateur principal vs agent de service).
+  const parametres = useSearchParams()
+  const actuel = parametres.toString()
+    ? `${pathname}?${parametres}`
+    : pathname
 
   return (
     <SidebarGroup>
@@ -105,7 +112,7 @@ export function NavMain({
                 ) : (
                   <SidebarMenuButton
                     tooltip={item.title}
-                    isActive={pathname === item.url}
+                    isActive={actuel === item.url}
                     render={<Link href={item.url} />}
                   >
                     {item.icon}
@@ -116,8 +123,8 @@ export function NavMain({
             )
           }
           const groupeActif =
-            pathname === item.url ||
-            item.items.some((subItem) => subItem.url === pathname)
+            actuel === item.url ||
+            item.items.some((subItem) => subItem.url === actuel)
           // Groupe « Bientôt » (sans destination) : simple déplieur, aucun lien.
           if (item.soon) {
             return (
@@ -162,7 +169,7 @@ export function NavMain({
               <div className="flex w-full items-center gap-1">
                 <SidebarMenuButton
                   tooltip={item.title}
-                  isActive={pathname === item.url}
+                  isActive={actuel === item.url}
                   render={<Link href={item.url} />}
                   className="min-w-0 flex-1"
                 >
@@ -189,7 +196,7 @@ export function NavMain({
                         </span>
                       ) : (
                         <SidebarMenuSubButton
-                          isActive={pathname === subItem.url}
+                          isActive={actuel === subItem.url}
                           render={<Link href={subItem.url} />}
                         >
                           <span>{subItem.title}</span>
