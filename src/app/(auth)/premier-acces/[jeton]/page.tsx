@@ -17,6 +17,7 @@ export default async function PremierAccesPage({
 }) {
   const { jeton } = await params;
   const acces = await lirePremierAcces(jeton);
+  const estAgent = acces.statut === "VALIDE" && acces.role === "AGENT";
 
   if (acces.statut === "INCONNU") {
     return (
@@ -92,7 +93,7 @@ export default async function PremierAccesPage({
     <AuthShell
       title="Choisissez votre mot de passe"
       description={
-        acces.role === "AGENT"
+        estAgent
           ? `Compte ${acces.email} — ce lien à usage unique ne sert qu'à choisir votre mot de passe. Ensuite, connectez-vous avec votre email et ce mot de passe.`
           : `Compte ${acces.email} — ce lien à usage unique ne sert qu'à choisir votre mot de passe. Ensuite, connectez-vous : le second facteur sera exigé.`
       }
