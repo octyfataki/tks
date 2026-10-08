@@ -41,30 +41,21 @@ const ETAPES_APRES = [
   },
 ];
 
-export type InvitationAdminLigne = {
-  id: string;
-  jeton: string;
-  expireLe: Date;
-  consommeLe: Date | null;
-  revoqueLe?: Date | null;
-};
-
 /**
  * Invitation d'un administrateur principal : même coquille visuelle que
  * l'invitation agent (titre + actions, carte à gauche, aperçu + étapes à
  * droite). À gauche, la durée du lien (presets + saisie libre) et le rôle
- * fixé ADMIN_PRINCIPAL. À droite, l'aperçu vivant du lien et les liens
- * récents. Rien d'inventé côté métier : usage unique, expiration choisie
- * [1, 30], rôle fixé par le lien (anti-escalade).
+ * fixé ADMIN_PRINCIPAL. À droite, l'aperçu vivant du lien et les étapes.
+ * L'historique complet vit dans /admin/invitations (recherche, filtres,
+ * pagination) : ce formulaire ne liste plus les liens passés. Rien
+ * d'inventé côté métier : usage unique, expiration choisie [1, 30], rôle
+ * fixé par le lien (anti-escalade).
  */
 export function FormulaireInvitationAdmin({
   defautJours,
-  invitations = [],
 }: {
   /** Durée pré-remplie : le réglage en vigueur (/admin/parametres). */
   defautJours: number;
-  /** Derniers liens ADMIN_PRINCIPAL, plus récents d'abord. */
-  invitations?: InvitationAdminLigne[];
 }) {
   const [resultat, action, enCours] = useActionState(
     creerLienInvitationAdminAction,
@@ -76,7 +67,6 @@ export function FormulaireInvitationAdmin({
   const dureeAffichee =
     Number.isFinite(duree) && duree >= 1 ? Math.min(Math.floor(duree), 30) : 7;
   const [expirationEstimee, setExpirationEstimee] = React.useState("");
-  const [maintenant, setMaintenant] = React.useState(0);
   const lienCree = resultat && resultat.ok ? resultat.lien : null;
   React.useEffect(() => {
     // Aperçu vivant : date dérivée de la durée saisie (effet = lecture
@@ -87,7 +77,6 @@ export function FormulaireInvitationAdmin({
         Date.now() + dureeAffichee * 24 * 60 * 60 * 1000,
       ).toLocaleDateString("fr-FR"),
     );
-    setMaintenant(Date.now());
   }, [dureeAffichee]);
   React.useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- réarme l'indicateur « Copié » à chaque nouveau lien
@@ -288,46 +277,17 @@ export function FormulaireInvitationAdmin({
           </section>
 
           <section className="rounded-xl border bg-card p-4">
-            <h2 className="text-sm font-medium">
-              Liens administrateur ({invitations.length})
-            </h2>
-            {invitations.length === 0 ? (
-              <p className="mt-2 text-[11px] text-muted-foreground">
-                Aucun lien généré pour l&apos;instant.
-              </p>
-            ) : (
-              <ul className="mt-3 flex flex-col gap-1.5">
-                {invitations.map((invitation) => {
-                  const expiree =
-                    !invitation.consommeLe &&
-                    !invitation.revoqueLe &&
-                    maintenant > 0 &&
-                    invitation.expireLe.getTime() < maintenant;
-                  return (
-                    <li
-                      key={invitation.id}
-                      className="flex flex-col gap-1 rounded-md border p-2"
-                    >
-                      <span
-                        title={`/invite/${invitation.jeton}`}
-                        className="font-mono text-[11px] break-all select-all"
-                      >
-                        /invite/{invitation.jeton}
-                      </span>
-                      <span className="text-[11px] text-muted-foreground">
-                        {invitation.consommeLe
-                          ? "Déjà utilisé — refusé"
-                          : invitation.revoqueLe
-                            ? "Révoqué — aucun compte ne peut naître de ce lien"
-                            : expiree
-                              ? `Expiré le ${invitation.expireLe.toLocaleDateString("fr-FR")} — envoyez un nouveau lien`
-                              : `Expire le ${invitation.expireLe.toLocaleDateString("fr-FR")}`}
-                      </span>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
+            <h2 className="text-sm font-medium">Liens déjà envoyés</h2>
+            <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
+              L&apos;historique complet vit dans{" "}
+              <Link
+                href="/admin/invitations"
+                className="underline-offset-4 hover:underline"
+              >
+                Invitations envoyées
+              </Link>{" "}
+              : recherche, états, révocation.
+            </p>
           </section>
         </div>
       </div>

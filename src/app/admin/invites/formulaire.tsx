@@ -276,45 +276,17 @@ export function FormulaireInvitationAgent({
           </section>
 
           <section className="rounded-xl border bg-card p-4">
-            <h2 className="text-sm font-medium">
-              Liens agent ({invitations.length})
-            </h2>
-            {invitations.length === 0 ? (
-              <p className="mt-2 text-[11px] text-muted-foreground">
-                Aucun lien généré pour l&apos;instant.
-              </p>
-            ) : (
-              <ul className="mt-3 flex flex-col gap-1.5">
-                {invitations.map((invitation) => {
-                  const expiree =
-                    !invitation.consommeLe &&
-                    maintenant > 0 &&
-                    invitation.expireLe.getTime() < maintenant;
-                  return (
-                    <li
-                      key={invitation.id}
-                      className="flex flex-col gap-1 rounded-md border p-2"
-                    >
-                      <span
-                        title={`/invite/${invitation.jeton}`}
-                        className="font-mono text-[11px] break-all select-all"
-                      >
-                        /invite/{invitation.jeton}
-                      </span>
-                      <span className="text-[11px] text-muted-foreground">
-                        {invitation.consommeLe
-                          ? "Déjà utilisé — refusé"
-                          : invitation.revoqueLe
-                            ? "Révoqué — envoyez un nouveau lien"
-                            : expiree
-                              ? `Expiré le ${invitation.expireLe.toLocaleDateString("fr-FR")} — envoyez un nouveau lien`
-                              : `Expire le ${invitation.expireLe.toLocaleDateString("fr-FR")}`}
-                      </span>
-                    </li>
-                  );
-                })}
-              </ul>
-            )}
+            <h2 className="text-sm font-medium">Liens déjà envoyés</h2>
+            <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
+              L&apos;historique complet vit dans{" "}
+              <Link
+                href="/admin/agents/invitations"
+                className="underline-offset-4 hover:underline"
+              >
+                Invitations agents
+              </Link>{" "}
+              : recherche, états, révocation.
+            </p>
           </section>
         </div>
       </div>

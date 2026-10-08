@@ -1,8 +1,8 @@
 import { headers } from "next/headers";
-import { desc, eq } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
-import { comptesStaff, invitationsAgents } from "@/lib/db/schema/s1-comptes";
+import { comptesStaff } from "@/lib/db/schema/s1-comptes";
 import {
   peutInviterAdminPrincipal,
   peutInviterAgent,
@@ -59,40 +59,7 @@ export default async function InviterPage({
     );
   }
 
-  const invitationsPromise = peutInviterAgentRole
-    ? db
-        .select({
-          id: invitationsAgents.id,
-          jeton: invitationsAgents.jeton,
-          expireLe: invitationsAgents.expireLe,
-          consommeLe: invitationsAgents.consommeLe,
-          revoqueLe: invitationsAgents.revoqueLe,
-        })
-        .from(invitationsAgents)
-        .where(eq(invitationsAgents.roleCible, "AGENT"))
-        .orderBy(desc(invitationsAgents.createdAt))
-    : Promise.resolve([]);
-
-  const invitationsAdminPromise = peutInviterAdmin
-    ? db
-        .select({
-          id: invitationsAgents.id,
-          jeton: invitationsAgents.jeton,
-          expireLe: invitationsAgents.expireLe,
-          consommeLe: invitationsAgents.consommeLe,
-          revoqueLe: invitationsAgents.revoqueLe,
-        })
-        .from(invitationsAgents)
-        .where(eq(invitationsAgents.roleCible, "ADMIN_PRINCIPAL"))
-        .orderBy(desc(invitationsAgents.createdAt))
-    : Promise.resolve([]);
-
-  const [invitations, invitationsAdmin, defautDureeInvitation] =
-    await Promise.all([
-      invitationsPromise,
-      invitationsAdminPromise,
-      lireDureeInvitationJours(),
-    ]);
+  const defautDureeInvitation = await lireDureeInvitationJours();
 
   const seulOnglet = peutInviterAdmin && !peutInviterAgentRole ? "admin" : null;
 
@@ -103,7 +70,6 @@ export default async function InviterPage({
       <div className="flex flex-1 flex-col">
         <FormulaireInvitationAdmin
           defautJours={defautDureeInvitation}
-          invitations={invitationsAdmin}
         />
       </div>
     );
@@ -138,7 +104,6 @@ export default async function InviterPage({
           <TabsContent value="admin">
             <FormulaireInvitationAdmin
               defautJours={defautDureeInvitation}
-              invitations={invitationsAdmin}
             />
           </TabsContent>
         ) : null}
@@ -146,7 +111,6 @@ export default async function InviterPage({
           <TabsContent value="agent">
             <FormulaireInvitationAgent
               defautJours={defautDureeInvitation}
-              invitations={invitations}
             />
           </TabsContent>
         ) : null}
