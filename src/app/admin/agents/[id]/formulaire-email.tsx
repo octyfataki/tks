@@ -41,8 +41,8 @@ export function FormulaireEmailAgent({
   const sale = email.trim().toLowerCase() !== emailInitial.trim().toLowerCase();
 
   React.useEffect(() => {
-    if (resultat?.ok) setConfirme(false);
     // eslint-disable-next-line react-hooks/set-state-in-effect -- referme le dialogue après succès, une fois par résultat
+    if (resultat?.ok) setConfirme(false);
   }, [resultat]);
 
   return (
