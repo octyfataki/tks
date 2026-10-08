@@ -95,7 +95,7 @@ const groups: { label: string; items: NavItem[] }[] = [
         items: [
           { title: "Liste des agents", url: "/admin/agents" },
           { title: "Créer un agent", url: "/admin/agents/create" },
-          { title: "Inviter un agent", url: "/admin/invites" },
+          { title: "Inviter un agent", url: "/admin/invites?cible=agent" },
           { title: "Invitations agents", url: "/admin/agents/invitations" },
           { title: "Permissions des agents", url: "/admin/agents/permissions" },
         ],

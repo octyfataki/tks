@@ -274,20 +274,6 @@ export function FormulaireInvitationAgent({
               ))}
             </ol>
           </section>
-
-          <section className="rounded-xl border bg-card p-4">
-            <h2 className="text-sm font-medium">Liens déjà envoyés</h2>
-            <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
-              L&apos;historique complet vit dans{" "}
-              <Link
-                href="/admin/agents/invitations"
-                className="underline-offset-4 hover:underline"
-              >
-                Invitations agents
-              </Link>{" "}
-              : recherche, états, révocation.
-            </p>
-          </section>
         </div>
       </div>
     </form>
