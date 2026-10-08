@@ -148,7 +148,11 @@ export default async function FicheAgentPage({
 
         <TabsContent value="compte" className="mt-4">
           <div className="grid items-start gap-4 lg:grid-cols-2">
-            <section className="rounded-xl border bg-card p-4">
+            <div className="flex min-w-0 flex-col gap-4">
+              <p className="text-[11px] font-semibold tracking-widest text-muted-foreground uppercase">
+                Identité
+              </p>
+              <section className="rounded-xl border bg-card p-4">
               <SectionModifiable
                 titre="Coordonnées"
                 description="Nom et téléphone retouchables par un administrateur principal."
@@ -234,8 +238,13 @@ export default async function FicheAgentPage({
                 </p>
               )}
             </section>
+            </div>
 
-            <section className="rounded-xl border border-destructive/30 bg-card p-4">
+            <div className="flex min-w-0 flex-col gap-4">
+              <p className="text-[11px] font-semibold tracking-widest text-muted-foreground uppercase">
+                Accès et mission
+              </p>
+              <section className="rounded-xl border border-destructive/30 bg-card p-4">
               <h2 className="text-sm font-medium">Accès au compte</h2>
               <p className="mt-0.5 text-[11px] text-muted-foreground">
                 {estMoi
@@ -258,6 +267,7 @@ export default async function FicheAgentPage({
             </section>
 
             <ProfilEmbauche agentId={compte.id} detenues={detenues} desactive={verrouille} />
+            </div>
           </div>
         </TabsContent>
 
