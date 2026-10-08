@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { nomAffiche, initiales, dateCourte } from "../../list/affichage-admin";
 import { InterrupteurPermission, ProfilEmbauche } from "./permissions-agent";
+import { InterrupteurAgent } from "../interrupteur-agent";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 
@@ -89,6 +90,7 @@ export default async function FicheAgentPage({
   const valide = compte.etat === "VALIDE";
   const suspendu = compte.etat === "SUSPENDU";
   const verrouille = !puisJeGerer || !valide;
+  const estMoi = !!moi && moi.id === compte.id;
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 pt-4">
@@ -141,6 +143,27 @@ export default async function FicheAgentPage({
 
         <ProfilEmbauche agentId={compte.id} detenues={detenues} desactive={verrouille} />
       </div>
+
+      <section className="rounded-xl border border-destructive/30 bg-card p-4">
+        <h2 className="text-sm font-medium">Accès au compte</h2>
+        <p className="mt-0.5 text-[11px] text-muted-foreground">
+          {estMoi
+            ? "Votre propre compte : suspension et révocation impossibles."
+            : "La suspension est réversible ; la révocation est définitive."}
+        </p>
+        <div className="mt-3 flex items-center justify-between gap-2">
+          <p className="text-xs">
+            État actuel : <span className="font-medium">{compte.etat}</span>
+          </p>
+          <InterrupteurAgent
+            id={compte.id}
+            nom={nom}
+            etat={suspendu ? "SUSPENDU" : valide ? "VALIDE" : "REVOQUE"}
+            desactive={estMoi}
+            motifDesactive="Vous ne pouvez pas suspendre ni révoquer votre propre compte."
+          />
+        </div>
+      </section>
 
       <section className="rounded-xl border bg-card p-4">
         <div className="flex items-start justify-between gap-3">
