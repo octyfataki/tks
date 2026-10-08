@@ -1,40 +1,19 @@
 import Link from "next/link";
 import { Suspense } from "react";
+import { headers } from "next/headers";
 import { desc, eq, inArray } from "drizzle-orm";
-import { EyeIcon } from "lucide-react";
+import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
 import { user } from "@/lib/db/schema/auth-schema";
 import {
   comptesStaff,
   facteurs2faAdmin,
 } from "@/lib/db/schema/s1-comptes";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { BarreOutilsListe } from "./barre-outils";
+import { CartesAdmins } from "./cartes-admins";
 import { PaginationListe } from "./pagination-liste";
-
-const LIBELLE_ROLE: Record<string, string> = {
-  ADMIN_PRINCIPAL: "Administrateur principal",
-  ADMIN_TECHNIQUE: "Administrateur technique",
-};
-
-function initiales(nom: string): string {
-  const lettres = nom
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((mot) => mot.charAt(0).toUpperCase())
-    .join("");
-  return lettres || "AD";
-}
-
-function dateCourte(valeur: Date): string {
-  return valeur.toLocaleDateString("fr-FR", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  });
-}
+import { libelleRole, nomAffiche } from "./affichage-admin";
+import { filtrerLignes, trierLignes } from "./filtrage";
 
 const FILTRES_VALIDES = [
   "principal",
@@ -45,19 +24,19 @@ const FILTRES_VALIDES = [
 ] as const;
 const TRIS_VALIDES = ["anciens", "nom-az", "nom-za"] as const;
 
-/** Lignes par page du tableau. */
-const LIGNES_PAR_PAGE = 10;
+/** Cartes par page de la grille. */
+const CARTES_PAR_PAGE = 9;
 
 /**
- * /admin/list — Liste des comptes d'administration : administrateurs
+ * /admin/list — Comptes d'administration en cartes : administrateurs
  * principaux (le distributeur) et administrateurs techniques (diagnostic
  * et déblocage, aucun pouvoir métier). Les agents de service ont leur
- * propre liste. Lecture seule : le rôle est immuable (S2 : révocation +
- * recréation), l'état ne connaît que VALIDE et REVOQUE.
+ * propre liste.
  *
- * Filtrage (?q=, ?du=, ?au=, ?role=, ?etat=, ?facteur=) appliqué côté
- * serveur sur les lignes lues — le volume d'administrateurs reste
- * dérisoire, une seule lecture suffit.
+ * Filtrage (?q=, ?filtre=), tri (?tri=) et pagination (?page=)
+ * appliqués côté serveur — le volume d'administrateurs reste dérisoire,
+ * une seule lecture suffit. L'interrupteur de chaque carte révoque
+ * (définitif, après confirmation), jamais le titulaire lui-même.
  */
 export default async function ListeAdminsPage({
   searchParams,
@@ -86,7 +65,9 @@ export default async function ListeAdminsPage({
   // Le nom vit dans better-auth (table user), le second facteur dans
   // facteurs_2fa_admin. Le créateur se résout en seconde requête : les
   // jointures aliasées sur la même table font s'effondrer le typage
-  // Drizzle en never[].
+  // Drizzle en never[]. La session démarre tôt (requêtes indépendantes).
+  const entetes = await headers();
+  const sessionPromise = auth.api.getSession({ headers: entetes });
   const lignesBrutes = await db
     .select({
       id: comptesStaff.id,
@@ -125,52 +106,22 @@ export default async function ListeAdminsPage({
     createurs.map((c) => [c.id, c.nom?.trim() || c.email]),
   );
 
-  const lignesFiltrees = lignesBrutes.filter((ligne) => {
-    if (filtreDemande === "principal" && ligne.role !== "ADMIN_PRINCIPAL")
-      return false;
-    if (filtreDemande === "technique" && ligne.role !== "ADMIN_TECHNIQUE")
-      return false;
-    if (filtreDemande === "valide" && ligne.etat !== "VALIDE") return false;
-    if (filtreDemande === "revoque" && ligne.etat !== "REVOQUE") return false;
-    if (filtreDemande === "sans-2fa" && ligne.facteurActif !== null)
-      return false;
-    if (recherche) {
-      const nom = (ligne.nom?.trim() || ligne.email).toLowerCase();
-      const telephone = (ligne.telephone || "").toLowerCase();
-      if (
-        !nom.includes(recherche) &&
-        !ligne.email.toLowerCase().includes(recherche) &&
-        !telephone.includes(recherche)
-      )
-        return false;
-    }
-    return true;
-  });
+  const lignesFiltrees = filtrerLignes(lignesBrutes, recherche, filtreDemande);
 
-  const nomAffiche = (ligne: (typeof lignesBrutes)[number]) =>
-    ligne.nom?.trim() || ligne.email.split("@")[0] || "Administrateur";
-  const lignesTriees = [...lignesFiltrees].sort((a, b) => {
-    if (triDemande === "anciens")
-      return a.createdAt.getTime() - b.createdAt.getTime();
-    if (triDemande === "nom-az")
-      return nomAffiche(a).localeCompare(nomAffiche(b), "fr");
-    if (triDemande === "nom-za")
-      return nomAffiche(b).localeCompare(nomAffiche(a), "fr");
-    return b.createdAt.getTime() - a.createdAt.getTime();
-  });
+  const lignesTriees = trierLignes(lignesFiltrees, triDemande);
   const total = lignesBrutes.length;
 
-  // Pagination (?page=) sur les lignes filtrées et triées : page
-  // validée puis bornée, hrefBase reconstruit sans ?page=.
-  const totalPages = Math.max(1, Math.ceil(lignesTriees.length / LIGNES_PAR_PAGE));
+  // Pagination (?page=) : page validée puis bornée, hrefBase reconstruit
+  // sans ?page= pour les liens du pied.
+  const totalPages = Math.max(1, Math.ceil(lignesTriees.length / CARTES_PAR_PAGE));
   const pageDemandee = Math.floor(Number(filtres.page));
   const page =
     Number.isFinite(pageDemandee) && pageDemandee >= 1
       ? Math.min(pageDemandee, totalPages)
       : 1;
   const lignes = lignesTriees.slice(
-    (page - 1) * LIGNES_PAR_PAGE,
-    page * LIGNES_PAR_PAGE,
+    (page - 1) * CARTES_PAR_PAGE,
+    page * CARTES_PAR_PAGE,
   );
   const conserves = new URLSearchParams();
   if (recherche) conserves.set("q", filtres.q?.trim() ?? "");
@@ -181,13 +132,12 @@ export default async function ListeAdminsPage({
 
   // Export CSV : toutes les lignes filtrées (pas seulement la page).
   const exportLignes = lignesTriees.map((ligne) => {
-    const nom =
-      ligne.nom?.trim() || ligne.email.split("@")[0] || "Administrateur";
+    const nom = nomAffiche(ligne);
     return {
       nom,
       email: ligne.email,
       telephone: ligne.telephone || "",
-      role: LIBELLE_ROLE[ligne.role] ?? ligne.role,
+      role: libelleRole(ligne.role),
       etat: ligne.etat,
       facteur:
         ligne.facteurActif === null
@@ -199,6 +149,36 @@ export default async function ListeAdminsPage({
         (ligne.creePar ? nomCreateur.get(ligne.creePar) : null) ||
         "Système (bootstrap)",
       creeLe: ligne.createdAt.toLocaleDateString("fr-FR"),
+    };
+  });
+
+  // Interrupteur d'état : le titulaire ne révoque jamais son propre
+  // compte — son identifiant staff est résolu depuis la session.
+  const session = await sessionPromise;
+  const lignesMoi = session?.user?.id
+    ? await db
+        .select({ id: comptesStaff.id })
+        .from(comptesStaff)
+        .where(eq(comptesStaff.betterAuthUserId, session.user.id))
+        .limit(1)
+    : [];
+  const moiId = lignesMoi[0]?.id ?? null;
+
+  const cartes = lignes.map((ligne) => {
+    const nom = nomAffiche(ligne);
+    return {
+      id: ligne.id,
+      nom,
+      email: ligne.email,
+      telephone: ligne.telephone,
+      role: ligne.role,
+      etat: ligne.etat,
+      facteurActif: ligne.facteurActif,
+      creeParNom:
+        (ligne.creePar ? nomCreateur.get(ligne.creePar) : null) ||
+        "Système (bootstrap)",
+      creeLe: ligne.createdAt,
+      estMoi: moiId !== null && ligne.id === moiId,
     };
   });
 
@@ -248,115 +228,7 @@ export default async function ListeAdminsPage({
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-xl border bg-card">
-          <table className="w-full min-w-200 text-left text-xs">
-            <thead>
-              <tr className="border-b bg-muted/50 text-muted-foreground">
-                <th scope="col" className="px-4 py-2.5 font-medium">
-                  Administrateur
-                </th>
-                <th scope="col" className="px-4 py-2.5 font-medium">
-                  Téléphone
-                </th>
-                <th scope="col" className="px-4 py-2.5 font-medium">
-                  Rôle
-                </th>
-                <th scope="col" className="px-4 py-2.5 font-medium">
-                  État
-                </th>
-                <th scope="col" className="px-4 py-2.5 font-medium">
-                  Second facteur
-                </th>
-                <th scope="col" className="px-4 py-2.5 font-medium">
-                  Créé par
-                </th>
-                <th scope="col" className="px-4 py-2.5 font-medium">
-                  Créé le
-                </th>
-                <th scope="col" className="px-4 py-2.5 font-medium">
-                  <span className="sr-only">Actions</span>
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {lignes.map((ligne) => {
-                const nom =
-                  ligne.nom?.trim() ||
-                  ligne.email.split("@")[0] ||
-                  "Administrateur";
-                const createur =
-                  (ligne.creePar ? nomCreateur.get(ligne.creePar) : null) ||
-                  "Système (bootstrap)";
-                return (
-                  <tr
-                    key={ligne.id}
-                    className="border-b transition-colors last:border-0 hover:bg-muted/40"
-                  >
-                    <td className="px-4 py-2.5">
-                      <div className="flex items-center gap-2.5">
-                        <span
-                          aria-hidden
-                          className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-semibold text-primary"
-                        >
-                          {initiales(nom)}
-                        </span>
-                        <div className="min-w-0">
-                          <p className="truncate font-medium">{nom}</p>
-                          <p className="truncate text-muted-foreground">
-                            {ligne.email}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-4 py-2.5 whitespace-nowrap text-muted-foreground">
-                      {ligne.telephone || "—"}
-                    </td>
-                    <td className="px-4 py-2.5 whitespace-nowrap">
-                      <Badge variant="outline">
-                        {LIBELLE_ROLE[ligne.role] ?? ligne.role}
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-2.5 whitespace-nowrap">
-                      <Badge
-                        variant={
-                          ligne.etat === "VALIDE" ? "secondary" : "destructive"
-                        }
-                      >
-                        {ligne.etat}
-                      </Badge>
-                    </td>
-                    <td className="px-4 py-2.5 whitespace-nowrap">
-                      {ligne.facteurActif === null ? (
-                        <Badge variant="outline">Non configuré</Badge>
-                      ) : ligne.facteurActif ? (
-                        <Badge variant="secondary">Actif</Badge>
-                      ) : (
-                        <Badge variant="destructive">Remplacé</Badge>
-                      )}
-                    </td>
-                    <td className="max-w-44 truncate px-4 py-2.5 text-muted-foreground">
-                      {createur}
-                    </td>
-                    <td className="px-4 py-2.5 whitespace-nowrap text-muted-foreground">
-                      {dateCourte(ligne.createdAt)}
-                    </td>
-                    <td className="px-4 py-2.5 whitespace-nowrap">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        render={<Link href={`/admin/list/${ligne.id}`} />}
-                        aria-label={`Voir le profil de ${nom}`}
-                      >
-                        <EyeIcon />
-                        Voir
-                      </Button>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+        <CartesAdmins cartes={cartes} />
       )}
       <PaginationListe page={page} totalPages={totalPages} hrefBase={hrefBase} />
     </div>

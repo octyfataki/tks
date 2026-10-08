@@ -14,12 +14,12 @@ import { FormulaireAdministrateurPrincipal } from "../administrateurs/formulaire
  */
 export default async function NouveauAdministrateurPage() {
   const session = await auth.api.getSession({ headers: await headers() });
-  const email = session?.user?.email ?? "";
-  const lignes = email
+  const userId = session?.user?.id ?? "";
+  const lignes = userId
     ? await db
         .select({ role: comptesStaff.role, etat: comptesStaff.etat })
         .from(comptesStaff)
-        .where(eq(comptesStaff.email, email))
+        .where(eq(comptesStaff.betterAuthUserId, userId))
     : [];
   const moi = lignes[0];
   const peutCreer = moi ? peutCreerAdminPrincipal(moi.role, moi.etat) : false;

@@ -35,12 +35,12 @@ export default async function InviterPage({
 }) {
   const { cible } = await searchParams;
   const session = await auth.api.getSession({ headers: await headers() });
-  const email = session?.user?.email ?? "";
-  const lignes = email
+  const userId = session?.user?.id ?? "";
+  const lignes = userId
     ? await db
         .select({ role: comptesStaff.role, etat: comptesStaff.etat })
         .from(comptesStaff)
-        .where(eq(comptesStaff.email, email))
+        .where(eq(comptesStaff.betterAuthUserId, userId))
     : [];
   const moi = lignes[0];
   const peutInviterAdmin = moi
@@ -57,24 +57,38 @@ export default async function InviterPage({
     );
   }
 
-  const invitations =
-    peutInviterAgentRole
-      ? await db
-          .select({
-            id: invitationsAgents.id,
-            jeton: invitationsAgents.jeton,
-            expireLe: invitationsAgents.expireLe,
-            consommeLe: invitationsAgents.consommeLe,
-          })
-          .from(invitationsAgents)
-          .where(eq(invitationsAgents.roleCible, "AGENT"))
-          .orderBy(desc(invitationsAgents.createdAt))
-      : [];
+  const invitationsPromise = peutInviterAgentRole
+    ? db
+        .select({
+          id: invitationsAgents.id,
+          jeton: invitationsAgents.jeton,
+          expireLe: invitationsAgents.expireLe,
+          consommeLe: invitationsAgents.consommeLe,
+        })
+        .from(invitationsAgents)
+        .where(eq(invitationsAgents.roleCible, "AGENT"))
+        .orderBy(desc(invitationsAgents.createdAt))
+    : Promise.resolve([]);
 
-  const defautDureeInvitation =
-    peutInviterAdmin || peutInviterAgentRole
-      ? await lireDureeInvitationJours()
-      : 7;
+  const invitationsAdminPromise = peutInviterAdmin
+    ? db
+        .select({
+          id: invitationsAgents.id,
+          jeton: invitationsAgents.jeton,
+          expireLe: invitationsAgents.expireLe,
+          consommeLe: invitationsAgents.consommeLe,
+        })
+        .from(invitationsAgents)
+        .where(eq(invitationsAgents.roleCible, "ADMIN_PRINCIPAL"))
+        .orderBy(desc(invitationsAgents.createdAt))
+    : Promise.resolve([]);
+
+  const [invitations, invitationsAdmin, defautDureeInvitation] =
+    await Promise.all([
+      invitationsPromise,
+      invitationsAdminPromise,
+      lireDureeInvitationJours(),
+    ]);
 
   const seulOnglet = peutInviterAdmin && !peutInviterAgentRole ? "admin" : null;
 
@@ -83,7 +97,10 @@ export default async function InviterPage({
   if (seulOnglet) {
     return (
       <div className="flex flex-1 flex-col">
-        <FormulaireInvitationAdmin defautJours={defautDureeInvitation} />
+        <FormulaireInvitationAdmin
+          defautJours={defautDureeInvitation}
+          invitations={invitationsAdmin}
+        />
       </div>
     );
   }
@@ -93,7 +110,14 @@ export default async function InviterPage({
 
   return (
     <div className="flex flex-1 flex-col">
-      <Tabs defaultValue={ongletDefaut} className="flex flex-1 flex-col">
+      {/* key = remonte l'onglet quand ?cible change : defaultValue seul est
+          ignoré après le premier montage en navigation client (sidebar
+          « Inviter un administrateur principal » ↔ « Inviter un agent »). */}
+      <Tabs
+        key={ongletDefaut}
+        defaultValue={ongletDefaut}
+        className="flex flex-1 flex-col"
+      >
         <div className="px-4 pt-4">
           <TabsList aria-label="Qui inviter">
             {peutInviterAdmin ? (
@@ -108,7 +132,10 @@ export default async function InviterPage({
         </div>
         {peutInviterAdmin ? (
           <TabsContent value="admin">
-            <FormulaireInvitationAdmin defautJours={defautDureeInvitation} />
+            <FormulaireInvitationAdmin
+              defautJours={defautDureeInvitation}
+              invitations={invitationsAdmin}
+            />
           </TabsContent>
         ) : null}
         {peutInviterAgentRole ? (
