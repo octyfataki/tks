@@ -7,14 +7,17 @@ import { user } from "@/lib/db/schema/auth-schema";
 import { comptesStaff } from "@/lib/db/schema/s1-comptes";
 import {
   PERMISSIONS_FERMEES,
+  peutConsulterJournal,
   peutGererPermissions,
 } from "@/lib/db/schema/s2-autorisations";
 import { listerPermissions } from "@/lib/s2-autorisations/autorisations";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { nomAffiche, initiales, dateCourte } from "../../list/affichage-admin";
 import { InterrupteurPermission, ProfilEmbauche } from "./permissions-agent";
 import { InterrupteurAgent } from "../interrupteur-agent";
+import { HistoriqueAgent } from "./historique-agent";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 
@@ -87,6 +90,9 @@ export default async function FicheAgentPage({
     : [];
   const moi = lignesMoi[0];
   const puisJeGerer = moi ? peutGererPermissions(moi.role, moi.etat) : false;
+  const puisJeVoirHistorique = moi
+    ? peutConsulterJournal(moi.role, moi.etat)
+    : false;
   const valide = compte.etat === "VALIDE";
   const suspendu = compte.etat === "SUSPENDU";
   const verrouille = !puisJeGerer || !valide;
@@ -119,76 +125,102 @@ export default async function FicheAgentPage({
         </div>
       </div>
 
-      <div className="grid items-start gap-4 lg:grid-cols-2">
-        <section className="rounded-xl border bg-card p-4">
-          <h2 className="text-sm font-medium">Compte</h2>
-          <div className="mt-3 grid gap-3 sm:grid-cols-2">
-            <Champ etiquette="Adresse email" valeur={compte.email} />
-            <Champ etiquette="Téléphone (contact uniquement)" valeur={compte.telephone || "—"} />
-            <Champ etiquette="Compte créé le" valeur={dateCourte(compte.createdAt)} />
-            <Champ etiquette="Créé par" valeur={createur} />
-            {compte.revokedAt ? (
-              <Champ etiquette="Révoqué le" valeur={dateCourte(compte.revokedAt)} />
-            ) : null}
-            {compte.suspendedAt && suspendu ? (
-              <Champ etiquette="Suspendu le" valeur={dateCourte(compte.suspendedAt)} />
-            ) : null}
-          </div>
-          <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
-            Le rôle est immuable : tout changement passe par révocation +
-            recréation tracées (S2). Pas de second facteur pour un agent : la
-            confiance passe par l&apos;email.
-          </p>
-        </section>
-
-        <ProfilEmbauche agentId={compte.id} detenues={detenues} desactive={verrouille} />
-      </div>
-
-      <section className="rounded-xl border border-destructive/30 bg-card p-4">
-        <h2 className="text-sm font-medium">Accès au compte</h2>
-        <p className="mt-0.5 text-[11px] text-muted-foreground">
-          {estMoi
-            ? "Votre propre compte : suspension et révocation impossibles."
-            : "La suspension est réversible ; la révocation est définitive."}
-        </p>
-        <div className="mt-3 flex items-center justify-between gap-2">
-          <p className="text-xs">
-            État actuel : <span className="font-medium">{compte.etat}</span>
-          </p>
-          <InterrupteurAgent
-            id={compte.id}
-            nom={nom}
-            etat={suspendu ? "SUSPENDU" : valide ? "VALIDE" : "REVOQUE"}
-            desactive={estMoi}
-            motifDesactive="Vous ne pouvez pas suspendre ni révoquer votre propre compte."
-          />
-        </div>
-      </section>
-
-      <section className="rounded-xl border bg-card p-4">
-        <div className="flex items-start justify-between gap-3">
-          <h2 className="text-sm font-medium">Permissions, une par une</h2>
-          {verrouille ? (
-            <Badge variant="outline" className="shrink-0">Lecture seule</Badge>
+      <Tabs defaultValue="compte" className="mt-0 w-full">
+        <TabsList aria-label="Sections de la fiche agent" className="inline-flex h-auto w-fit max-w-full flex-wrap items-center gap-1 p-1">
+          <TabsTrigger value="compte" className="flex-none px-3 py-1.5 text-sm">
+            Compte
+          </TabsTrigger>
+          <TabsTrigger value="permissions" className="flex-none px-3 py-1.5 text-sm">
+            Permissions
+          </TabsTrigger>
+          {puisJeVoirHistorique ? (
+            <TabsTrigger value="historique" className="flex-none px-3 py-1.5 text-sm">
+              Historique
+            </TabsTrigger>
           ) : null}
-        </div>
-        <p className="mt-0.5 text-[11px] text-muted-foreground">
-          {verrouille
-            ? "Seul un administrateur principal validé modifie les permissions, et jamais sur un compte suspendu ou révoqué."
-            : "Absence = refus. Chaque bascule est tracée au journal."}
-        </p>
-        <div className="mt-3 grid gap-2 md:grid-cols-2">
-          {PERMISSIONS_FERMEES.map((permission) => (
-            <InterrupteurPermission
-              key={permission}
-              agentId={compte.id}
-              permission={permission}
-              accordee={ensemble.has(permission)}
-              desactive={verrouille}
-            />
-          ))}
-        </div>
-      </section>
+        </TabsList>
+
+        <TabsContent value="compte" className="mt-4">
+          <div className="grid items-start gap-4 lg:grid-cols-2">
+            <section className="rounded-xl border bg-card p-4">
+              <h2 className="text-sm font-medium">Compte</h2>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <Champ etiquette="Adresse email" valeur={compte.email} />
+                <Champ etiquette="Téléphone (contact uniquement)" valeur={compte.telephone || "—"} />
+                <Champ etiquette="Compte créé le" valeur={dateCourte(compte.createdAt)} />
+                <Champ etiquette="Créé par" valeur={createur} />
+                {compte.revokedAt ? (
+                  <Champ etiquette="Révoqué le" valeur={dateCourte(compte.revokedAt)} />
+                ) : null}
+                {compte.suspendedAt && suspendu ? (
+                  <Champ etiquette="Suspendu le" valeur={dateCourte(compte.suspendedAt)} />
+                ) : null}
+              </div>
+              <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
+                Le rôle est immuable : tout changement passe par révocation +
+                recréation tracées (S2). Pas de second facteur pour un agent : la
+                confiance passe par l&apos;email.
+              </p>
+            </section>
+
+            <section className="rounded-xl border border-destructive/30 bg-card p-4">
+              <h2 className="text-sm font-medium">Accès au compte</h2>
+              <p className="mt-0.5 text-[11px] text-muted-foreground">
+                {estMoi
+                  ? "Votre propre compte : suspension et révocation impossibles."
+                  : "La suspension est réversible ; la révocation est définitive."}
+              </p>
+              <div className="mt-3 flex items-center justify-between gap-2">
+                <p className="text-xs">
+                  État actuel : <span className="font-medium">{compte.etat}</span>
+                </p>
+                <InterrupteurAgent
+                  id={compte.id}
+                  nom={nom}
+                  etat={suspendu ? "SUSPENDU" : valide ? "VALIDE" : "REVOQUE"}
+                  desactive={estMoi}
+                  motifDesactive="Vous ne pouvez pas suspendre ni révoquer votre propre compte."
+                />
+              </div>
+            </section>
+
+            <ProfilEmbauche agentId={compte.id} detenues={detenues} desactive={verrouille} />
+          </div>
+        </TabsContent>
+
+        <TabsContent value="permissions" className="mt-4">
+          <section className="rounded-xl border bg-card p-4">
+            <div className="flex items-start justify-between gap-3">
+              <h2 className="text-sm font-medium">Permissions, une par une</h2>
+              {verrouille ? (
+                <Badge variant="outline" className="shrink-0">Lecture seule</Badge>
+              ) : null}
+            </div>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">
+              {verrouille
+                ? "Seul un administrateur principal validé modifie les permissions, et jamais sur un compte suspendu ou révoqué."
+                : "Absence = refus. Chaque bascule est tracée au journal."}
+            </p>
+            <div className="mt-3 grid gap-2 md:grid-cols-2">
+              {PERMISSIONS_FERMEES.map((permission) => (
+                <InterrupteurPermission
+                  key={permission}
+                  agentId={compte.id}
+                  permission={permission}
+                  accordee={ensemble.has(permission)}
+                  desactive={verrouille}
+                />
+              ))}
+            </div>
+          </section>
+        </TabsContent>
+
+        {puisJeVoirHistorique ? (
+          <TabsContent value="historique" className="mt-4">
+            <HistoriqueAgent agentId={compte.id} />
+          </TabsContent>
+        ) : null}
+      </Tabs>
     </div>
   );
 }
