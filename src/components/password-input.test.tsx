@@ -28,15 +28,16 @@ describe("PasswordInput", () => {
     expect(champ()).toHaveAttribute("type", "password");
   });
 
-  it("garde le centrage vertical à l'état actif (pas de saut au clic)", () => {
+  it("ne bouge pas au clic : bouton natif, centrage intact, sans translate actif", () => {
     render(<PasswordInput id="mot-de-passe" name="password" />);
     const bouton = screen.getByRole("button", {
       name: "Afficher le mot de passe",
     });
-    // tailwind-merge résout les conflits en faveur de ces classes : le
-    // centrage survit à l'état actif, sans transition.
+    // Pas le bouton générique (dont l'enfoncement `active:translate-y-px`
+    // écrasait le centrage) : un <button> natif centré une fois pour toutes.
+    expect(bouton.tagName).toBe("BUTTON");
+    expect(bouton.getAttribute("data-slot")).toBeNull();
     expect(bouton.className).toMatch(/-translate-y-1\/2/);
-    expect(bouton.className).toMatch(/active:-translate-y-1\/2/);
-    expect(bouton.className).toMatch(/transition-none/);
+    expect(bouton.className).not.toMatch(/active:translate/);
   });
 });
