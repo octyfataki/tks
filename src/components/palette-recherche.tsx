@@ -18,7 +18,6 @@ import {
   SearchIcon,
   ShieldCheckIcon,
   TagsIcon,
-  UserCheckIcon,
   UserPlusIcon,
   WalletIcon,
   ZapIcon,
@@ -80,12 +79,6 @@ const GROUPES: GroupeSuggestions[] = [
   {
     titre: "Accès",
     elements: [
-      {
-        etiquette: "Comptes à valider",
-        motsCles: ["compte", "validation", "pièce", "identité"],
-        icone: UserCheckIcon,
-        href: "/admin/pending",
-      },
       {
         etiquette: "Inviter un agent",
         motsCles: ["agent", "inviter", "service"],

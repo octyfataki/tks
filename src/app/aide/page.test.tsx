@@ -21,7 +21,6 @@ const ROUTES_EXISTANTES = new Set([
   "/agent/profil",
   "/agent/aide",
   "/admin/dashboard",
-  "/admin/pending",
   "/admin/invites",
   "/admin/notifications",
   "/admin/list",

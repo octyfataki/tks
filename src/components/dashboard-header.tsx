@@ -7,7 +7,6 @@ import {
   BellIcon,
   CircleHelpIcon,
   FileCheckIcon,
-  UserCheckIcon,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import {
@@ -31,7 +30,7 @@ import { cn } from "@/lib/utils"
 export type DashboardHeaderProps = {
   /** Fil d'Ariane de la page visitée, à gauche. Chaque page fournit ses segments. */
   filAriane?: React.ReactNode
-  /** Action métier principale, à droite (ex. lien « Comptes à valider »). */
+  /** Action métier principale, à droite (ex. lien vers une file à traiter). */
   action?: React.ReactNode
   /** Taux en vigueur. Absent tant que la tranche S3 ne le fournit pas. */
   taux?: TauxEnVigueur | null
@@ -72,14 +71,6 @@ function HeaderNotifications() {
           <Button variant="ghost" disabled className="justify-start gap-2">
             <AlertTriangleIcon />
             Conflits ouverts
-          </Button>
-          <Button
-            variant="ghost"
-            className="justify-start gap-2"
-            onClick={() => router.push("/admin/pending")}
-          >
-            <UserCheckIcon />
-            Comptes à valider
           </Button>
           <div className="mt-auto pt-4">
             <Button

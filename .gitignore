@@ -40,6 +40,9 @@ yarn-error.log*
 .inspiration-design/
 .playwright-mcp/
 
+# avatars dev (option C : fichiers locaux, jamais commités)
+/public/avatars/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

@@ -28,8 +28,8 @@ import {
   SettingsIcon,
   ShieldCheckIcon,
   TagsIcon,
-  UserCheckIcon,
   UserPlusIcon,
+  UsersIcon,
   WalletIcon,
 } from "lucide-react"
 
@@ -74,30 +74,39 @@ const groups: { label: string; items: NavItem[] }[] = [
           },
           {
             title: "Inviter un administrateur principal",
-            url: "/admin/invites",
+            url: "/admin/invites?cible=admin",
+          },
+          {
+            title: "Invitations envoyées",
+            url: "/admin/invitations",
           },
         ],
       },
       {
-        title: "Comptes à valider",
-        url: "/admin/pending",
-        icon: <UserCheckIcon />,
-        items: [{ title: "File d'attente", url: "/admin/pending" }],
-      },
-      {
         title: "Agents de service",
-        url: "/agent/invites",
+        url: "/admin/agents",
         icon: <UserPlusIcon />,
         items: [
-          { title: "Inviter un agent", url: "/admin/invites" },
-          { title: "Liste des agents", soon: true },
+          { title: "Liste des agents", url: "/admin/agents" },
+          { title: "Créer un agent", url: "/admin/agents/create" },
+          { title: "Inviter un agent", url: "/admin/invites?cible=agent" },
+          { title: "Invitations agents", url: "/admin/agents/invitations" },
+          { title: "Permissions des agents", url: "/admin/agents/permissions" },
+        ],
+      },
+      {
+        title: "Comptes clients",
+        url: "/admin/clients",
+        icon: <UsersIcon />,
+        items: [
+          { title: "Liste des comptes", url: "/admin/clients" },
+          { title: "Validation", url: "/admin/clients/validation" },
         ],
       },
       {
         title: "Journal d'audit",
-        url: "#",
+        url: "/admin/journal",
         icon: <ScrollTextIcon />,
-        soon: true,
       },
     ],
   },
@@ -198,6 +207,7 @@ const groups: { label: string; items: NavItem[] }[] = [
 export type UtilisateurSidebar = {
   nom: string
   email: string
+  avatar?: string
 }
 
 export function AppSidebar({
@@ -243,6 +253,7 @@ export function AppSidebar({
           user={{
             name: utilisateur?.nom ?? "Administrateur",
             email: utilisateur?.email ?? "Espace distributeur",
+            avatar: utilisateur?.avatar,
           }}
           profilUrl={profilUrl}
         />
