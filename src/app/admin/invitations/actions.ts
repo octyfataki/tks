@@ -1,5 +1,9 @@
 "use server";
 
+// Voie ADMIN : /admin/invitations — liens à rôle cible ADMIN_PRINCIPAL et
+// premiers accès. Les liens AGENT vivent dans ../invites/actions.ts et
+// ../agents/actions.ts (voie AGENTS).
+
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { eq } from "drizzle-orm";
@@ -12,25 +16,11 @@ import {
   revoquerPremierAccesAdmin,
   StaffError,
 } from "@/lib/s1-comptes/staff";
+import type { ResultatAction } from "@/lib/resultat-action";
 
-export type ResultatRenvoiAcces =
-  | { ok: true; lien: string }
-  | { ok: false; erreur: string };
+export type ResultatRenvoiAcces = ResultatAction<{ lien: string }>;
 
-export type ResultatRevocation =
-  | { ok: true }
-  | { ok: false; erreur: string };
-
-async function idStaffConnecte(): Promise<string | null> {
-  const session = await auth.api.getSession({ headers: await headers() });
-  const userId = session?.user?.id;
-  if (!userId) return null;
-  const lignes = await db
-    .select({ id: comptesStaff.id })
-    .from(comptesStaff)
-    .where(eq(comptesStaff.betterAuthUserId, userId));
-  return lignes[0]?.id ?? null;
-}
+export type ResultatRevocation = ResultatAction;
 
 async function staffConnecteAutorise(): Promise<{ id: string } | null> {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -60,8 +50,10 @@ export async function rouvrirPremierAccesAction(
   if (!cibleId) {
     return { ok: false, erreur: "Compte introuvable." };
   }
-  const createurId = await idStaffConnecte();
-  if (!createurId) {
+  // Pré-contrôle explicite (même prédicat que ouvrirPremierAccesAdmin
+  // côté lib : peutInviterAdminPrincipal ≡ peutCreerAdminPrincipal).
+  const moi = await staffConnecteAutorise();
+  if (!moi) {
     return {
       ok: false,
       erreur:
@@ -69,7 +61,7 @@ export async function rouvrirPremierAccesAction(
     };
   }
   try {
-    const acces = await ouvrirPremierAccesAdmin(createurId, cibleId);
+    const acces = await ouvrirPremierAccesAdmin(moi.id, cibleId);
     revalidatePath("/admin/invitations");
     return { ok: true, lien: `/premier-acces/${acces.jeton}` };
   } catch (erreur) {
@@ -98,8 +90,12 @@ export async function revoquerInvitationAdminAction(
         "Seul un administrateur technique ou un administrateur principal validé peut révoquer un lien d'invitation.",
     };
   }
+  const cible = invitationId.trim();
+  if (!cible) {
+    return { ok: false, erreur: "Lien d'invitation introuvable." };
+  }
   try {
-    await revoquerInvitation(moi.id, invitationId);
+    await revoquerInvitation(moi.id, cible);
     revalidatePath("/admin/invitations");
     return { ok: true };
   } catch (erreur) {
@@ -146,8 +142,12 @@ export async function revoquerPremierAccesAdminAction(
         "Seul un administrateur technique ou un administrateur principal validé peut révoquer un lien d'invitation.",
     };
   }
+  const cible = accesId.trim();
+  if (!cible) {
+    return { ok: false, erreur: "Lien d'invitation introuvable." };
+  }
   try {
-    await revoquerPremierAccesAdmin(moi.id, accesId);
+    await revoquerPremierAccesAdmin(moi.id, cible);
     revalidatePath("/admin/invitations");
     return { ok: true };
   } catch (erreur) {
@@ -164,7 +164,7 @@ export async function revoquerPremierAccesAdminAction(
         case "INVITATION_DEJA_CONSOMMEE":
           return { ok: false, erreur: "Lien déjà utilisé — rien à révoquer." };
         case "INVITATION_EXPIREE":
-          return { ok: false, erreur: "Lien expiré — renvoyez un nouveau lien." };
+          return { ok: false, erreur: "Lien expiré — générez-en un nouveau." };
         case "INVITATION_REVOQUEE":
           revalidatePath("/admin/invitations");
           return { ok: true };

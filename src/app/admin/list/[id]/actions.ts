@@ -12,21 +12,23 @@ import {
 } from "@/lib/db/schema/s1-comptes";
 import { enregistrerEvenement } from "@/lib/s2-autorisations/journal";
 import { modifierAdminSupport, StaffError } from "@/lib/s1-comptes/staff";
+import type { ErreurStaff } from "@/lib/s1-comptes/staff";
+import type { ResultatAction } from "@/lib/resultat-action";
 
-export type ResultatModificationCoordonnees =
-  | { ok: true; inchange: boolean }
-  | { ok: false; erreur: string };
+export type ResultatModificationCoordonnees = ResultatAction<{
+  inchange: boolean;
+}>;
 
-export type ResultatModificationAppareil =
-  | { ok: true; inchange: boolean }
-  | { ok: false; erreur: string };
+export type ResultatModificationAppareil = ResultatAction<{
+  inchange: boolean;
+}>;
 
-function messageErreur(code: string): string {
+function messageErreur(code: ErreurStaff): string {
   switch (code) {
     case "NON_AUTORISE":
       return "Seul un administrateur principal ou technique validé peut corriger ce compte, et uniquement sur un compte d'administration validé.";
     case "TELEPHONE_INVALIDE":
-      return "Numéro de téléphone invalide (chiffres, espaces et + uniquement).";
+      return "Numéro de téléphone invalide (format international : + optionnel, chiffres, espaces, tirets, points, parenthèses).";
     default:
       return "Correction impossible (données invalides ou compte introuvable).";
   }
@@ -78,7 +80,7 @@ export async function modifierCoordonneesAdminAction(
     if (erreur instanceof StaffError) {
       return { ok: false, erreur: messageErreur(erreur.code) };
     }
-    return { ok: false, erreur: messageErreur("INCONNU") };
+    return { ok: false, erreur: "Correction impossible (données invalides ou compte introuvable)." };
   }
 }
 

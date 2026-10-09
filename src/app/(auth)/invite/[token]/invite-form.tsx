@@ -40,7 +40,7 @@ export function InviteForm({
           String(form.get("name") ?? "").trim() ||
           (estAdmin ? "Administrateur principal" : "Agent de service"),
       });
-      if (!res.ok) throw new Error(res.message);
+      if (!res.ok) throw new Error(res.erreur);
       router.push("/sign-in");
     } catch (e) {
       setErreur(e instanceof Error ? e.message : "invitation refusée");

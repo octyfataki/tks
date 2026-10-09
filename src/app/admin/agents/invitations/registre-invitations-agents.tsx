@@ -31,7 +31,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { BoutonCopierLien } from "../../invitations/bouton-copier";
 import { Cachet } from "../../invitations/cachet";
-import { revoquerInvitationAgentAction, renvoyerInvitationAgentAction } from "../actions";
+import { revoquerInvitationAgentAction, creerInvitationAgentAction } from "../actions";
 
 export type LigneInvitationAgent = {
   id: string;
@@ -208,7 +208,7 @@ export function RegistreInvitationsAgents({
     setErreur(null);
     setLienCree(null);
     demarrer(async () => {
-      const resultat = await renvoyerInvitationAgentAction();
+      const resultat = await creerInvitationAgentAction();
       if (resultat.ok && resultat.lien) setLienCree(resultat.lien);
       else setErreur(resultat.ok ? "Invitation impossible." : resultat.erreur);
     });

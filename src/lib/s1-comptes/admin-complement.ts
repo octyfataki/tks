@@ -16,6 +16,22 @@ import { StaffError, type ErreurStaff } from "./staff";
 // Complément S1 (stories 2-4, 11-13) : second facteur admin, pièces staff,
 // accès temporaires reset. IDs générés côté appareil (offline-first, ADR-0006).
 // Le secret TOTP vit dans better-auth `two_factor` ; ici seule la traçabilité.
+// NON EXPOSÉ : aucune server action ne les appelle encore. Le contrôle du
+// demandeur vit quand même ici (comme staff.ts) pour que le câblage futur
+// ne puisse pas oublier l'autorisation.
+
+/** Le demandeur gère le second facteur / les resets (ADMIN_PRINCIPAL VALIDE). */
+async function demandeurFacteurValide(demandeurId: string) {
+  const demandeurs = await db
+    .select()
+    .from(comptesStaff)
+    .where(eq(comptesStaff.id, demandeurId));
+  const demandeur = demandeurs[0];
+  if (!demandeur || !peutRemplacerFacteur2fa(demandeur.role, demandeur.etat)) {
+    throw erreur("NON_AUTORISE", "seul un ADMIN_PRINCIPAL valide gère les accès");
+  }
+  return demandeur;
+}
 
 function erreur(code: ErreurStaff, message: string): StaffError {
   return new StaffError(code, message);
@@ -27,6 +43,7 @@ export async function declarerFacteur2faAdmin(input: {
   nomAppareil: string;
   creePar: string;
 }) {
+  await demandeurFacteurValide(input.creePar);
   const titulaires = await db
     .select()
     .from(comptesStaff)
@@ -107,6 +124,13 @@ export async function deposerPieceIdentiteStaff(input: {
   referenceImage: string;
   vuePar: string;
 }) {
+  await demandeurFacteurValide(input.vuePar);
+  const titulaires = await db
+    .select({ id: comptesStaff.id })
+    .from(comptesStaff)
+    .where(eq(comptesStaff.id, input.compteStaffId))
+    .limit(1);
+  if (!titulaires[0]) throw erreur("NON_AUTORISE", "compte staff inconnu");
   if (!input.referenceImage) throw erreur("PIECE_REQUISE", "pièce requise");
   const id = randomUUID();
   await db.insert(piecesIdentiteStaff).values({
@@ -126,6 +150,19 @@ export async function ouvrirAccesTemporaireResetStaff(input: {
   pieceId: string;
   dureeMinutes?: number;
 }) {
+  await demandeurFacteurValide(input.ouvertPar);
+  const cibles = await db
+    .select({ id: comptesStaff.id })
+    .from(comptesStaff)
+    .where(eq(comptesStaff.id, input.compteStaffCible))
+    .limit(1);
+  if (!cibles[0]) throw erreur("NON_AUTORISE", "compte staff inconnu");
+  const pieces = await db
+    .select({ id: piecesIdentiteStaff.id })
+    .from(piecesIdentiteStaff)
+    .where(eq(piecesIdentiteStaff.id, input.pieceId))
+    .limit(1);
+  if (!pieces[0]) throw erreur("PIECE_REQUISE", "pièce inconnue");
   const expireLe = new Date(
     Date.now() + (input.dureeMinutes ?? 60) * 60 * 1000,
   );

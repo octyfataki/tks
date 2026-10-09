@@ -1,5 +1,9 @@
 "use server";
 
+// Voie AGENTS : /admin/invites + /admin/agents/invitations — liens à rôle
+// cible AGENT uniquement. Les liens ADMIN_PRINCIPAL et premiers accès
+// vivent dans ../invitations/actions.ts (voie ADMIN).
+
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { eq } from "drizzle-orm";
@@ -7,10 +11,10 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
 import { comptesStaff } from "@/lib/db/schema/s1-comptes";
 import { creerInvitationAgent, StaffError } from "@/lib/s1-comptes/staff";
+import type { ErreurStaff } from "@/lib/s1-comptes/staff";
+import type { ResultatAction } from "@/lib/resultat-action";
 
-export type ResultatInvitationAgent =
-  | { ok: true; lien: string }
-  | { ok: false; erreur: string };
+export type ResultatInvitationAgent = ResultatAction<{ lien: string }>;
 
 async function idStaffConnecte(): Promise<string | null> {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -23,7 +27,7 @@ async function idStaffConnecte(): Promise<string | null> {
   return lignes[0]?.id ?? null;
 }
 
-function messageErreur(code: string): string {
+function messageErreur(code: ErreurStaff): string {
   switch (code) {
     case "NON_AUTORISE":
       return "Seul un administrateur principal validé peut inviter un agent de service.";
@@ -61,6 +65,6 @@ export async function creerLienInvitationAgentAction(
     if (erreur instanceof StaffError) {
       return { ok: false, erreur: messageErreur(erreur.code) };
     }
-    return { ok: false, erreur: messageErreur("INCONNU") };
+    return { ok: false, erreur: "Invitation impossible (données invalides)." };
   }
 }

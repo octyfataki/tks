@@ -8,22 +8,29 @@ import { db } from "@/lib/db/client";
 import { session as sessionAuth } from "@/lib/db/schema/auth-schema";
 import { comptesStaff } from "@/lib/db/schema/s1-comptes";
 import { modifierAgentSupport, modifierEmailAgentSupport, ouvrirLienMotDePasseAgent, revoquerPremierAccesAdmin, tuerSessionsStaff, StaffError } from "@/lib/s1-comptes/staff";
+import type { ErreurStaff } from "@/lib/s1-comptes/staff";
 import { enregistrerEvenement } from "@/lib/s2-autorisations/journal";
+import type { ResultatAction } from "@/lib/resultat-action";
 
-export type ResultatModificationCoordonneesAgent =
-  | { ok: true; inchange: boolean }
-  | { ok: false; erreur: string };
+export type ResultatModificationCoordonneesAgent = ResultatAction<{
+  inchange: boolean;
+}>;
 
-function messageErreur(code: string): string {
+const ERREUR_CORRECTION_DEFAUT =
+  "Correction impossible (données invalides ou compte introuvable).";
+
+function messageErreur(code: ErreurStaff): string {
   switch (code) {
     case "NON_AUTORISE":
       return "Seul un administrateur principal validé peut corriger cet agent, et uniquement sur un compte agent validé.";
     case "TELEPHONE_INVALIDE":
-      return "Numéro de téléphone invalide (chiffres, espaces et + uniquement).";
+      return "Numéro de téléphone invalide (format international : + optionnel, chiffres, espaces, tirets, points, parenthèses).";
     case "EMAIL_DEJA_UTILISE":
       return "Adresse déjà utilisée par un autre compte.";
+    case "EMAIL_INVALIDE":
+      return "Adresse email invalide.";
     default:
-      return "Correction impossible (données invalides ou compte introuvable).";
+      return ERREUR_CORRECTION_DEFAUT;
   }
 }
 
@@ -72,7 +79,7 @@ export async function modifierCoordonneesAgentAction(
     if (erreur instanceof StaffError) {
       return { ok: false, erreur: messageErreur(erreur.code) };
     }
-    return { ok: false, erreur: messageErreur("INCONNU") };
+    return { ok: false, erreur: ERREUR_CORRECTION_DEFAUT };
   }
 }
 
@@ -104,9 +111,9 @@ export async function modifierEmailAgentAction(
   if (String(donnees.get("confirmation") ?? "") !== "oui") {
     return { ok: false, erreur: "Confirmez le changement dans le dialogue." };
   }
-  const email = String(donnees.get("email") ?? "").trim();
-  if (!email) {
-    return { ok: false, erreur: "L'adresse email est exigée." };
+  const email = String(donnees.get("email") ?? "").trim().toLowerCase();
+  if (!email || !email.includes("@")) {
+    return { ok: false, erreur: "Adresse email invalide." };
   }
 
   try {
@@ -120,13 +127,11 @@ export async function modifierEmailAgentAction(
     if (erreur instanceof StaffError) {
       return { ok: false, erreur: messageErreur(erreur.code) };
     }
-    return { ok: false, erreur: messageErreur("INCONNU") };
+    return { ok: false, erreur: ERREUR_CORRECTION_DEFAUT };
   }
 }
 
-export type ResultatLienMotDePasse =
-  | { ok: true; lien: string }
-  | { ok: false; erreur: string };
+export type ResultatLienMotDePasse = ResultatAction<{ lien: string }>;
 
 /**
  * Génère un lien de réinitialisation de mot de passe pour un agent
@@ -155,16 +160,17 @@ export async function genererLienMotDePasseAgentAction(
     revalidatePath(`/admin/agents/${id}`);
     return { ok: true, lien: `/premier-acces/${acces.jeton}` };
   } catch (erreur) {
-    if (erreur instanceof StaffError) {
+    // ouvrirLienMotDePasseAgent ne jette que NON_AUTORISE (acteur non
+    // autorisé ou cible non éligible) : mappé explicitement, le reste est
+    // une panne inconnue.
+    if (erreur instanceof StaffError && erreur.code === "NON_AUTORISE") {
       return { ok: false, erreur: "Lien impossible : compte non éligible (agent validé exigé)." };
     }
     return { ok: false, erreur: "Lien impossible." };
   }
 }
 
-export type ResultatOperationSimple =
-  | { ok: true }
-  | { ok: false; erreur: string };
+export type ResultatOperationSimple = ResultatAction;
 
 async function idPrincipalConnecte(): Promise<string | null> {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -212,21 +218,31 @@ export async function deconnecterPartoutAgentAction(
     .select({ id: sessionAuth.id })
     .from(sessionAuth)
     .where(eq(sessionAuth.userId, cible.betterAuthUserId));
-  await tuerSessionsStaff(cible.betterAuthUserId);
-  const demandeurs = await db
-    .select({ role: comptesStaff.role })
-    .from(comptesStaff)
-    .where(eq(comptesStaff.id, modificateurId))
-    .limit(1);
-  await enregistrerEvenement({
-    acteurId: modificateurId,
-    roleAuMoment: demandeurs[0]?.role ?? "ADMIN_PRINCIPAL",
-    typeAction: "agent.deconnecter",
-    entite: "compte_staff",
-    entiteId: cible.id,
-    avant: { sessions: avant.length },
-    apres: { sessions: 0 },
-  });
+  try {
+    await db.transaction(async (tx) => {
+      await tuerSessionsStaff(cible.betterAuthUserId, tx);
+      const demandeurs = await tx
+        .select({ role: comptesStaff.role })
+        .from(comptesStaff)
+        .where(eq(comptesStaff.id, modificateurId))
+        .limit(1);
+      const trace = await enregistrerEvenement(
+        {
+          acteurId: modificateurId,
+          roleAuMoment: demandeurs[0]?.role ?? "ADMIN_PRINCIPAL",
+          typeAction: "agent.deconnecter",
+          entite: "compte_staff",
+          entiteId: cible.id,
+          avant: { sessions: avant.length },
+          apres: { sessions: 0 },
+        },
+        tx,
+      );
+      if (!trace.ok) throw new Error("journal indisponible");
+    });
+  } catch {
+    return { ok: false, erreur: "Déconnexion impossible." };
+  }
   revalidatePath(`/admin/agents/${id}`);
   return { ok: true };
 }
@@ -244,12 +260,22 @@ export async function revoquerLienMotDePasseAgentAction(
   if (!modificateurId) {
     return { ok: false, erreur: "Seul un administrateur principal validé peut révoquer un lien." };
   }
+  const cible = accesId.trim();
+  if (!cible) {
+    return { ok: false, erreur: "Lien déjà utilisé, expiré ou introuvable." };
+  }
   try {
-    await revoquerPremierAccesAdmin(modificateurId, accesId);
+    await revoquerPremierAccesAdmin(modificateurId, cible);
     revalidatePath("/admin/agents");
     return { ok: true };
   } catch (erreur) {
     if (erreur instanceof StaffError) {
+      if (erreur.code === "INVITATION_REVOQUEE") {
+        // Idempotence : révoquer deux fois = même état, pas d'erreur
+        // (même contrat que les autres révocations de lien).
+        revalidatePath("/admin/agents");
+        return { ok: true };
+      }
       return { ok: false, erreur: "Lien déjà utilisé, expiré ou introuvable." };
     }
     return { ok: false, erreur: "Révocation impossible." };

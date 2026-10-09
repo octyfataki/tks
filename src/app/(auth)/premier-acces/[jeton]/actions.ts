@@ -1,6 +1,7 @@
 "use server";
 
 import { z } from "zod";
+import type { ResultatAction } from "@/lib/resultat-action";
 import {
   StaffError,
   definirMotDePassePremierAcces,
@@ -21,10 +22,10 @@ const SchemaPremierAcces = z.object({
 export async function choisirMotDePassePremierAcces(input: {
   jeton: string;
   password: string;
-}): Promise<{ ok: true } | { ok: false; message: string }> {
+}): Promise<ResultatAction> {
   const parse = SchemaPremierAcces.safeParse(input);
   if (!parse.success) {
-    return { ok: false, message: parse.error.issues[0]?.message ?? "lien refusé" };
+    return { ok: false, erreur: parse.error.issues[0]?.message ?? "lien refusé" };
   }
   try {
     await definirMotDePassePremierAcces(parse.data);
@@ -35,22 +36,22 @@ export async function choisirMotDePassePremierAcces(input: {
         case "MOT_DE_PASSE_INVALIDE":
           return {
             ok: false,
-            message: "mot de passe d'au moins 8 caractères exigé",
+            erreur: "mot de passe d'au moins 8 caractères exigé",
           };
         case "INVITATION_EXPIREE":
-          return { ok: false, message: "lien expiré — demandez-en un nouveau" };
+          return { ok: false, erreur: "lien expiré — demandez-en un nouveau" };
         case "INVITATION_DEJA_CONSOMMEE":
-          return { ok: false, message: "lien déjà utilisé" };
+          return { ok: false, erreur: "lien déjà utilisé" };
         case "INVITATION_REVOQUEE":
-          return { ok: false, message: "lien révoqué — demandez-en un nouveau" };
+          return { ok: false, erreur: "lien révoqué — demandez-en un nouveau" };
         case "INVITATION_INTROUVABLE":
-          return { ok: false, message: "lien inconnu" };
+          return { ok: false, erreur: "lien inconnu" };
         case "NON_AUTORISE":
-          return { ok: false, message: "ce lien ne peut plus être utilisé" };
+          return { ok: false, erreur: "ce lien ne peut plus être utilisé" };
         default:
-          return { ok: false, message: "lien refusé" };
+          return { ok: false, erreur: "lien refusé" };
       }
     }
-    return { ok: false, message: "lien refusé" };
+    return { ok: false, erreur: "lien refusé" };
   }
 }

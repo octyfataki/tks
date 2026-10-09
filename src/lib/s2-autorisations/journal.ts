@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { db } from "@/lib/db/client";
+import { db, type ExecuteurDb } from "@/lib/db/client";
 import { journalAudit } from "@/lib/db/schema/s2-autorisations";
 
 // S2 issue 01 — écriture append-only. Appelée par chaque action métier.
@@ -10,23 +10,26 @@ export type ResultatJournal =
   | { ok: true; id: string }
   | { ok: false; erreur: string };
 
-export async function enregistrerEvenement(input: {
-  acteurId?: string | null;
-  roleAuMoment: string;
-  typeAction: string;
-  entite: string;
-  entiteId?: string | null;
-  avant?: unknown;
-  apres?: unknown;
-  appareilId?: string | null;
-  /** Horloge de l'appareil ; défaut = maintenant (action en ligne). */
-  horodatageLocal?: Date;
-  statut?: "REUSSIE" | "ECHOUEE";
-  motif?: string | null;
-}): Promise<ResultatJournal> {
+export async function enregistrerEvenement(
+  input: {
+    acteurId?: string | null;
+    roleAuMoment: string;
+    typeAction: string;
+    entite: string;
+    entiteId?: string | null;
+    avant?: unknown;
+    apres?: unknown;
+    appareilId?: string | null;
+    /** Horloge de l'appareil ; défaut = maintenant (action en ligne). */
+    horodatageLocal?: Date;
+    statut?: "REUSSIE" | "ECHOUEE";
+    motif?: string | null;
+  },
+  ex: ExecuteurDb = db,
+): Promise<ResultatJournal> {
   try {
     const id = randomUUID();
-    await db.insert(journalAudit).values({
+    await ex.insert(journalAudit).values({
       id,
       acteurId: input.acteurId ?? null,
       roleAuMoment: input.roleAuMoment,

@@ -6,39 +6,55 @@ import { headers } from "next/headers";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
-import { comptesStaff, telephoneStaffValide } from "@/lib/db/schema/s1-comptes";
+import { comptesStaff, peutCreerAdminPrincipal, telephoneStaffValide } from "@/lib/db/schema/s1-comptes";
 import {
   creerAdminPrincipal,
   creerInvitationAdminPrincipal,
   ouvrirPremierAccesAdmin,
   StaffError,
 } from "@/lib/s1-comptes/staff";
+import type { ErreurStaff } from "@/lib/s1-comptes/staff";
+import type { ResultatAction } from "@/lib/resultat-action";
 
-export type ResultatCreationAdmin =
-  | { ok: true; email: string; lienPremierAcces?: string; expireLe?: string }
-  | { ok: false; erreur: string };
+export type ResultatCreationAdmin = ResultatAction<{
+  email: string;
+  lienPremierAcces?: string;
+  expireLe?: string;
+}>;
 
-export type ResultatInvitationAdmin =
-  | { ok: true; lien: string }
-  | { ok: false; erreur: string };
+export type ResultatInvitationAdmin = ResultatAction<{ lien: string }>;
 
-async function idStaffConnecte(): Promise<string | null> {
+/**
+ * Créateur autorisé explicite : administrateur technique ou principal
+ * VALIDE (même prédicat que creerAdminPrincipal / ouvrirPremierAccesAdmin
+ * côté lib — défense en profondeur, refus tôt avec message clair).
+ */
+async function createurPrincipalConnecte(): Promise<string | null> {
   const session = await auth.api.getSession({ headers: await headers() });
   const userId = session?.user?.id;
   if (!userId) return null;
   const lignes = await db
-    .select({ id: comptesStaff.id })
+    .select({ id: comptesStaff.id, role: comptesStaff.role, etat: comptesStaff.etat })
     .from(comptesStaff)
-    .where(eq(comptesStaff.betterAuthUserId, userId));
-  return lignes[0]?.id ?? null;
+    .where(eq(comptesStaff.betterAuthUserId, userId))
+    .limit(1);
+  const moi = lignes[0];
+  if (!moi || !peutCreerAdminPrincipal(moi.role, moi.etat)) return null;
+  return moi.id;
 }
 
-function messageErreur(code: string): string {
+function messageErreur(code: ErreurStaff): string {
   switch (code) {
     case "NON_AUTORISE":
       return "Seul un administrateur principal ou un administrateur technique validé peut créer ce compte.";
     case "TELEPHONE_INVALIDE":
-      return "Numéro de téléphone invalide (chiffres, espaces et + uniquement).";
+      return "Numéro de téléphone invalide (format international : + optionnel, chiffres, espaces, tirets, points, parenthèses).";
+    case "EMAIL_DEJA_UTILISE":
+      return "Cet identifiant (email) est déjà utilisé — chaque compte a son propre email.";
+    case "EMAIL_INVALIDE":
+      return "Adresse email invalide.";
+    case "MOT_DE_PASSE_INVALIDE":
+      return "Mot de passe d'au moins 8 caractères exigé.";
     default:
       return "Création impossible (identifiant déjà utilisé ou données invalides).";
   }
@@ -80,7 +96,7 @@ export async function creerAdministrateurPrincipalAction(
     return { ok: false, erreur: messageErreur("TELEPHONE_INVALIDE") };
   }
 
-  const createurId = await idStaffConnecte();
+  const createurId = await createurPrincipalConnecte();
   if (!createurId) {
     return { ok: false, erreur: messageErreur("NON_AUTORISE") };
   }
@@ -109,7 +125,7 @@ export async function creerAdministrateurPrincipalAction(
     if (erreur instanceof StaffError) {
       return { ok: false, erreur: messageErreur(erreur.code) };
     }
-    return { ok: false, erreur: messageErreur("INCONNU") };
+    return { ok: false, erreur: "Création impossible (identifiant déjà utilisé ou données invalides)." };
   }
 }
 
@@ -128,7 +144,7 @@ export async function creerLienInvitationAdminAction(
     30,
   );
 
-  const createurId = await idStaffConnecte();
+  const createurId = await createurPrincipalConnecte();
   if (!createurId) {
     return { ok: false, erreur: messageErreur("NON_AUTORISE") };
   }
@@ -144,6 +160,6 @@ export async function creerLienInvitationAdminAction(
     if (erreur instanceof StaffError) {
       return { ok: false, erreur: messageErreur(erreur.code) };
     }
-    return { ok: false, erreur: messageErreur("INCONNU") };
+    return { ok: false, erreur: "Invitation impossible." };
   }
 }

@@ -30,7 +30,7 @@ export function PremierAccesForm({ jeton }: { jeton: string }) {
     setChargement(true);
     try {
       const res = await choisirMotDePassePremierAcces({ jeton, password });
-      if (!res.ok) throw new Error(res.message);
+      if (!res.ok) throw new Error(res.erreur);
       setTermine(true);
     } catch (e) {
       setErreur(e instanceof Error ? e.message : "lien refusé");

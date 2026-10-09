@@ -24,13 +24,23 @@ export const auth = betterAuth({
     resetPasswordTokenExpiresIn: 30 * 60,
     sendResetPassword: async ({ user, url }) => {
       // S1 : aucune réinitialisation automatique. Mock conservé pour le câblage.
-      console.log(`[auth] reset password demandé pour ${user.email} : ${url}`);
+      // Le jeton ne sort jamais dans les logs de production (quiconque lit
+      // les logs réinitialiserait le mot de passe).
+      if (process.env.NODE_ENV === "production") {
+        console.log(`[auth] reset password demandé pour ${user.email}`);
+      } else {
+        console.log(`[auth] reset password demandé pour ${user.email} : ${url}`);
+      }
     },
   },
   emailVerification: {
     sendVerificationEmail: async ({ user, url }) => {
       // S1 : la validation est humaine sur pièce d'identité, pas par email.
-      console.log(`[auth] vérification email pour ${user.email} : ${url}`);
+      if (process.env.NODE_ENV === "production") {
+        console.log(`[auth] vérification email pour ${user.email}`);
+      } else {
+        console.log(`[auth] vérification email pour ${user.email} : ${url}`);
+      }
     },
   },
   session: {

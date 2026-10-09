@@ -1,7 +1,7 @@
 import { randomBytes, randomUUID } from "node:crypto";
 import { and, count, eq } from "drizzle-orm";
 import { hashPassword } from "better-auth/crypto";
-import { db } from "@/lib/db/client";
+import { db, type ExecuteurDb, type TransactionDb } from "@/lib/db/client";
 import { account, session as sessionAuth, user } from "@/lib/db/schema/auth-schema";
 import {
   comptesStaff,
@@ -28,6 +28,7 @@ import { enregistrerEvenement } from "@/lib/s2-autorisations/journal";
 export type ErreurStaff =
   | "NON_AUTORISE"
   | "EMAIL_DEJA_UTILISE"
+  | "EMAIL_INVALIDE"
   | "INVITATION_INTROUVABLE"
   | "INVITATION_EXPIREE"
   | "INVITATION_DEJA_CONSOMMEE"
@@ -39,7 +40,8 @@ export type ErreurStaff =
   | "FACTEUR_INTROUVABLE"
   | "PIECE_REQUISE"
   | "ACCES_EXPIRE"
-  | "ACCES_CONSOMME";
+  | "ACCES_CONSOMME"
+  | "JOURNAL_INDISPONIBLE";
 
 export class StaffError extends Error {
   code: ErreurStaff;
@@ -49,7 +51,34 @@ export class StaffError extends Error {
   }
 }
 
-async function inscrireUtilisateur(email: string, password: string, name: string) {
+/**
+ * Exécuteur de requêtes : la base ou une transaction en cours. Permet
+ * d'englober plusieurs écritures (utilisateur auth + compte staff) dans
+ * une seule transaction appelante au lieu d'empiler des transactions.
+ */
+type TransactionStaff = TransactionDb;
+
+/**
+ * Trace d'audit dans la transaction en cours : si le journal échoue,
+ * l'opération entière est annulée — jamais de mutation sans trace
+ * (échec fermé, invariant S2).
+ */
+async function tracer(
+  ex: ExecuteurDb,
+  evenement: Parameters<typeof enregistrerEvenement>[0],
+): Promise<void> {
+  const trace = await enregistrerEvenement(evenement, ex);
+  if (!trace.ok) {
+    throw new StaffError("JOURNAL_INDISPONIBLE", "journal indisponible");
+  }
+}
+
+async function inscrireUtilisateur(
+  email: string,
+  password: string,
+  name: string,
+  ex?: TransactionStaff,
+) {
   // Création directe user + compte credential, SANS ouvrir de session et
   // sans passer par le endpoint public /sign-up/email (rate-limité à
   // 3/min, cookies de session, auto-sign-in qui écraserait la session de
@@ -58,7 +87,8 @@ async function inscrireUtilisateur(email: string, password: string, name: string
   // fonctionne à l'identique. Compte credential : providerId
   // "credential", accountId = id stable de l'utilisateur.
   const emailNormalise = email.trim().toLowerCase();
-  const existants = await db
+  const cible: ExecuteurDb = ex ?? db;
+  const existants = await cible
     .select({ id: user.id })
     .from(user)
     .where(eq(user.email, emailNormalise))
@@ -68,22 +98,29 @@ async function inscrireUtilisateur(email: string, password: string, name: string
   }
   const hash = await hashPassword(password);
   const utilisateurId = randomUUID();
-  try {
-    await db.transaction(async (tx) => {
-      await tx.insert(user).values({
-        id: utilisateurId,
-        name,
-        email: emailNormalise,
-        emailVerified: false,
-      });
-      await tx.insert(account).values({
-        id: randomUUID(),
-        accountId: utilisateurId,
-        providerId: "credential",
-        userId: utilisateurId,
-        password: hash,
-      });
+  const ecrire = async (w: ExecuteurDb) => {
+    await w.insert(user).values({
+      id: utilisateurId,
+      name,
+      email: emailNormalise,
+      emailVerified: false,
     });
+    await w.insert(account).values({
+      id: randomUUID(),
+      accountId: utilisateurId,
+      providerId: "credential",
+      userId: utilisateurId,
+      password: hash,
+    });
+  };
+  try {
+    if (ex) {
+      // Déjà dans la transaction de l'appelant : pas de transaction
+      // imbriquée, on écrit directement.
+      await ecrire(ex);
+    } else {
+      await db.transaction(ecrire);
+    }
   } catch (erreur) {
     // Course : deux créations concurrentes du même email — la seconde
     // bute sur l'unicité MySQL (ER_DUP_ENTRY).
@@ -114,8 +151,9 @@ async function nbComptesStaff(): Promise<number> {
  */
 export async function tuerSessionsStaff(
   betterAuthUserId: string,
+  ex: ExecuteurDb = db,
 ): Promise<void> {
-  await db
+  await ex
     .delete(sessionAuth)
     .where(eq(sessionAuth.userId, betterAuthUserId));
 }
@@ -134,8 +172,16 @@ async function dureeInvitationDefaut(): Promise<number> {
 }
 
 /**
+ * Identifiant stable du compte technique initial : deux bootstraps
+ * concurrents tentent la même clé primaire — un seul gagne (garde
+ * anti-double-bootstrap atomique, pas de TOCTOU).
+ */
+const ID_ADMIN_TECHNIQUE_INITIAL = "00000000-0000-4000-8000-000000000000";
+
+/**
  * Bootstrap : crée le TOUT PREMIER compte — l'ADMIN_TECHNIQUE du développeur,
- * sans créateur. Refusé dès qu'un compte staff existe.
+ * sans créateur. Refusé dès qu'un compte staff existe. Utilisateur auth +
+ * compte staff sont créés dans une seule transaction : jamais d'orphelin.
  */
 export async function bootstrapAdminTechnique(input: {
   email: string;
@@ -145,17 +191,42 @@ export async function bootstrapAdminTechnique(input: {
   if ((await nbComptesStaff()) > 0) {
     throw new StaffError("NON_AUTORISE", "bootstrap déjà effectué");
   }
-  const user = await inscrireUtilisateur(input.email, input.password, input.name);
-  const id = randomUUID();
-  await db.insert(comptesStaff).values({
-    id,
-    betterAuthUserId: user.id,
-    email: input.email,
-    role: "ADMIN_TECHNIQUE",
-    etat: "VALIDE",
-    creePar: null,
-  });
-  return { id, betterAuthUserId: user.id };
+  if (input.password.length < 8) {
+    throw new StaffError("MOT_DE_PASSE_INVALIDE", "mot de passe trop court");
+  }
+  const emailNormalise = normaliserEmailStaff(input.email);
+  if (!emailNormalise) {
+    throw new StaffError("EMAIL_INVALIDE", "email invalide");
+  }
+  try {
+    return await db.transaction(async (tx) => {
+      const lignes = await tx.select({ n: count() }).from(comptesStaff);
+      if ((lignes[0]?.n ?? 0) > 0) {
+        throw new StaffError("NON_AUTORISE", "bootstrap déjà effectué");
+      }
+      const utilisateur = await inscrireUtilisateur(
+        emailNormalise,
+        input.password,
+        input.name,
+        tx,
+      );
+      await tx.insert(comptesStaff).values({
+        id: ID_ADMIN_TECHNIQUE_INITIAL,
+        betterAuthUserId: utilisateur.id,
+        email: emailNormalise,
+        role: "ADMIN_TECHNIQUE",
+        etat: "VALIDE",
+        creePar: null,
+      });
+      return { id: ID_ADMIN_TECHNIQUE_INITIAL, betterAuthUserId: utilisateur.id };
+    });
+  } catch (erreur) {
+    // Collision sur l'id stable = bootstrap concurrent : un seul gagne.
+    if (estDoublonEmail(erreur)) {
+      throw new StaffError("NON_AUTORISE", "bootstrap déjà effectué");
+    }
+    throw erreur;
+  }
 }
 
 /**
@@ -181,18 +252,32 @@ export async function creerAdminPrincipal(
   if (!telephoneStaffValide(telephone)) {
     throw new StaffError("TELEPHONE_INVALIDE", "numéro de téléphone invalide");
   }
-  const user = await inscrireUtilisateur(input.email, input.password, input.name);
-  const id = randomUUID();
-  await db.insert(comptesStaff).values({
-    id,
-    betterAuthUserId: user.id,
-    email: input.email,
-    telephone: telephone === "" ? null : telephone,
-    role: "ADMIN_PRINCIPAL",
-    etat: "VALIDE",
-    creePar: createurId,
+  if (input.password.length < 8) {
+    throw new StaffError("MOT_DE_PASSE_INVALIDE", "mot de passe trop court");
+  }
+  const emailNormalise = normaliserEmailStaff(input.email);
+  if (!emailNormalise) {
+    throw new StaffError("EMAIL_INVALIDE", "email invalide");
+  }
+  return db.transaction(async (tx) => {
+    const utilisateur = await inscrireUtilisateur(
+      emailNormalise,
+      input.password,
+      input.name,
+      tx,
+    );
+    const id = randomUUID();
+    await tx.insert(comptesStaff).values({
+      id,
+      betterAuthUserId: utilisateur.id,
+      email: emailNormalise,
+      telephone: telephone === "" ? null : telephone,
+      role: "ADMIN_PRINCIPAL",
+      etat: "VALIDE",
+      creePar: createurId,
+    });
+    return { id, betterAuthUserId: utilisateur.id };
   });
-  return { id, betterAuthUserId: user.id };
 }
 
 /**
@@ -222,29 +307,36 @@ export async function creerAgent(
   if (input.password.length < 8) {
     throw new StaffError("MOT_DE_PASSE_INVALIDE", "mot de passe trop court");
   }
-  const emailNormalise = input.email.trim().toLowerCase();
-  const nouvelUtilisateur = await inscrireUtilisateur(
-    emailNormalise,
-    input.password,
-    input.name,
-  );
+  const emailNormalise = normaliserEmailStaff(input.email);
+  if (!emailNormalise) {
+    throw new StaffError("EMAIL_INVALIDE", "email invalide");
+  }
   const id = randomUUID();
-  await db.insert(comptesStaff).values({
-    id,
-    betterAuthUserId: nouvelUtilisateur.id,
-    email: emailNormalise,
-    telephone: telephone === "" ? null : telephone,
-    role: "AGENT",
-    etat: "VALIDE",
-    creePar: createurId,
-  });
-  await enregistrerEvenement({
-    acteurId: createurId,
-    roleAuMoment: createur.role,
-    typeAction: "agent.creer",
-    entite: "compte_staff",
-    entiteId: id,
-    apres: { email: emailNormalise, role: "AGENT" },
+  const nouvelUtilisateur = await db.transaction(async (tx) => {
+    const utilisateur = await inscrireUtilisateur(
+      emailNormalise,
+      input.password,
+      input.name,
+      tx,
+    );
+    await tx.insert(comptesStaff).values({
+      id,
+      betterAuthUserId: utilisateur.id,
+      email: emailNormalise,
+      telephone: telephone === "" ? null : telephone,
+      role: "AGENT",
+      etat: "VALIDE",
+      creePar: createurId,
+    });
+    await tracer(tx, {
+      acteurId: createurId,
+      roleAuMoment: createur.role,
+      typeAction: "agent.creer",
+      entite: "compte_staff",
+      entiteId: id,
+      apres: { email: emailNormalise, role: "AGENT" },
+    });
+    return utilisateur;
   });
   return { id, betterAuthUserId: nouvelUtilisateur.id };
 }
@@ -358,18 +450,20 @@ export async function revoquerInvitation(
       break;
   }
   const revoqueLe = new Date();
-  await db
-    .update(invitationsAgents)
-    .set({ revoqueLe })
-    .where(eq(invitationsAgents.id, invitation.id));
-  await enregistrerEvenement({
-    acteurId: revoqueurId,
-    roleAuMoment: revoqueur.role,
-    typeAction: "invitation.revoquer",
-    entite: "invitation_agent",
-    entiteId: invitation.id,
-    avant: { expireLe: invitation.expireLe },
-    apres: { revoqueLe },
+  await db.transaction(async (tx) => {
+    await tx
+      .update(invitationsAgents)
+      .set({ revoqueLe })
+      .where(eq(invitationsAgents.id, invitation.id));
+    await tracer(tx, {
+      acteurId: revoqueurId,
+      roleAuMoment: revoqueur.role,
+      typeAction: "invitation.revoquer",
+      entite: "invitation_agent",
+      entiteId: invitation.id,
+      avant: { expireLe: invitation.expireLe },
+      apres: { revoqueLe },
+    });
   });
   return { id: invitation.id };
 }
@@ -416,18 +510,20 @@ export async function revoquerPremierAccesAdmin(
       break;
   }
   const revoqueLe = new Date();
-  await db
-    .update(premiersAccesAdmin)
-    .set({ revoqueLe })
-    .where(eq(premiersAccesAdmin.id, acces.id));
-  await enregistrerEvenement({
-    acteurId: revoqueurId,
-    roleAuMoment: revoqueur.role,
-    typeAction: "invitation.revoquer",
-    entite: "premier_acces_admin",
-    entiteId: acces.id,
-    avant: { expireLe: acces.expireLe },
-    apres: { revoqueLe },
+  await db.transaction(async (tx) => {
+    await tx
+      .update(premiersAccesAdmin)
+      .set({ revoqueLe })
+      .where(eq(premiersAccesAdmin.id, acces.id));
+    await tracer(tx, {
+      acteurId: revoqueurId,
+      roleAuMoment: revoqueur.role,
+      typeAction: "invitation.revoquer",
+      entite: "premier_acces_admin",
+      entiteId: acces.id,
+      avant: { expireLe: acces.expireLe },
+      apres: { revoqueLe },
+    });
   });
   return { id: acces.id };
 }
@@ -468,17 +564,29 @@ export async function accepterInvitationAdminPrincipal(input: {
   if (invitation.expireLe.getTime() < Date.now()) {
     throw new StaffError("INVITATION_EXPIREE", "lien expiré");
   }
+  if (input.password.length < 8) {
+    throw new StaffError("MOT_DE_PASSE_INVALIDE", "mot de passe trop court");
+  }
+  const emailNormalise = normaliserEmailStaff(input.email);
+  if (!emailNormalise) {
+    throw new StaffError("EMAIL_INVALIDE", "email invalide");
+  }
   const telephoneAdmin = (input.telephone ?? "").trim();
   if (!telephoneStaffValide(telephoneAdmin)) {
     throw new StaffError("TELEPHONE_INVALIDE", "numéro de téléphone invalide");
   }
-  const user = await inscrireUtilisateur(input.email, input.password, input.name);
   const id = randomUUID();
-  await db.transaction(async (tx) => {
+  const user = await db.transaction(async (tx) => {
+    const utilisateur = await inscrireUtilisateur(
+      emailNormalise,
+      input.password,
+      input.name,
+      tx,
+    );
     await tx.insert(comptesStaff).values({
       id,
-      betterAuthUserId: user.id,
-      email: input.email,
+      betterAuthUserId: utilisateur.id,
+      email: emailNormalise,
       telephone: telephoneAdmin === "" ? null : telephoneAdmin,
       role: "ADMIN_PRINCIPAL",
       etat: "VALIDE",
@@ -488,13 +596,15 @@ export async function accepterInvitationAdminPrincipal(input: {
       .update(invitationsAgents)
       .set({ consommeLe: new Date(), consommePar: id })
       .where(eq(invitationsAgents.id, invitation.id));
+    return utilisateur;
   });
   return { id, betterAuthUserId: user.id };
 }
 
 /**
  * L'agent s'inscrit par le lien : choisit email + mot de passe, le rôle AGENT
- * vient du lien. Usage unique — même jeton deux fois = un seul compte.
+ * vient du lien. Usage unique : rejouer le même jeton est refusé
+ * explicitement (INVITATION_DEJA_CONSOMMEE), jamais de double compte.
  * Le lien doit cibler AGENT : un lien ADMIN_PRINCIPAL est refusé ici
  * (anti-escalade : chaque rôle a son chemin d'acceptation).
  */
@@ -525,17 +635,29 @@ export async function accepterInvitationAgent(input: {
   if (invitation.expireLe.getTime() < Date.now()) {
     throw new StaffError("INVITATION_EXPIREE", "lien expiré");
   }
+  if (input.password.length < 8) {
+    throw new StaffError("MOT_DE_PASSE_INVALIDE", "mot de passe trop court");
+  }
+  const emailNormalise = normaliserEmailStaff(input.email);
+  if (!emailNormalise) {
+    throw new StaffError("EMAIL_INVALIDE", "email invalide");
+  }
   const telephoneAgent = (input.telephone ?? "").trim();
   if (!telephoneStaffValide(telephoneAgent)) {
     throw new StaffError("TELEPHONE_INVALIDE", "numéro de téléphone invalide");
   }
-  const user = await inscrireUtilisateur(input.email, input.password, input.name);
   const id = randomUUID();
-  await db.transaction(async (tx) => {
+  const user = await db.transaction(async (tx) => {
+    const utilisateur = await inscrireUtilisateur(
+      emailNormalise,
+      input.password,
+      input.name,
+      tx,
+    );
     await tx.insert(comptesStaff).values({
       id,
-      betterAuthUserId: user.id,
-      email: input.email,
+      betterAuthUserId: utilisateur.id,
+      email: emailNormalise,
       telephone: telephoneAgent === "" ? null : telephoneAgent,
       role: "AGENT",
       etat: "VALIDE",
@@ -545,14 +667,15 @@ export async function accepterInvitationAgent(input: {
       .update(invitationsAgents)
       .set({ consommeLe: new Date(), consommePar: id })
       .where(eq(invitationsAgents.id, invitation.id));
-  });
-  await enregistrerEvenement({
-    acteurId: id,
-    roleAuMoment: "AGENT",
-    typeAction: "agent.inscrire",
-    entite: "compte_staff",
-    entiteId: id,
-    apres: { email: input.email, invitation: invitation.id },
+    await tracer(tx, {
+      acteurId: id,
+      roleAuMoment: "AGENT",
+      typeAction: "agent.inscrire",
+      entite: "compte_staff",
+      entiteId: id,
+      apres: { email: emailNormalise, invitation: invitation.id },
+    });
+    return utilisateur;
   });
   return { id, betterAuthUserId: user.id };
 }
@@ -626,15 +749,15 @@ export async function modifierAdminSupport(
       .update(comptesStaff)
       .set({ telephone: telephoneValeur })
       .where(eq(comptesStaff.id, cible.id));
-  });
-  await enregistrerEvenement({
-    acteurId: modificateurId,
-    roleAuMoment: modificateur.role,
-    typeAction: "admin.modifier",
-    entite: "compte_staff",
-    entiteId: cible.id,
-    avant,
-    apres: { nom, telephone: telephoneValeur },
+    await tracer(tx, {
+      acteurId: modificateurId,
+      roleAuMoment: modificateur.role,
+      typeAction: "admin.modifier",
+      entite: "compte_staff",
+      entiteId: cible.id,
+      avant,
+      apres: { nom, telephone: telephoneValeur },
+    });
   });
   return { id: cible.id, inchange: false as const };
 }
@@ -704,15 +827,15 @@ export async function modifierAgentSupport(
       .update(comptesStaff)
       .set({ telephone: telephoneValeur })
       .where(eq(comptesStaff.id, cible.id));
-  });
-  await enregistrerEvenement({
-    acteurId: modificateurId,
-    roleAuMoment: modificateur.role,
-    typeAction: "agent.modifier",
-    entite: "compte_staff",
-    entiteId: cible.id,
-    avant,
-    apres: { nom, telephone: telephoneValeur },
+    await tracer(tx, {
+      acteurId: modificateurId,
+      roleAuMoment: modificateur.role,
+      typeAction: "agent.modifier",
+      entite: "compte_staff",
+      entiteId: cible.id,
+      avant,
+      apres: { nom, telephone: telephoneValeur },
+    });
   });
   return { id: cible.id, inchange: false as const };
 }
@@ -755,7 +878,7 @@ export async function modifierEmailAgentSupport(
   }
   const email = normaliserEmailStaff(input.email);
   if (!email) {
-    throw new StaffError("NON_AUTORISE", "email invalide");
+    throw new StaffError("EMAIL_INVALIDE", "email invalide");
   }
   if (email === cible.email) {
     return { id: cible.id, inchange: true as const };
@@ -778,6 +901,15 @@ export async function modifierEmailAgentSupport(
         .update(comptesStaff)
         .set({ email })
         .where(eq(comptesStaff.id, cible.id));
+      await tracer(tx, {
+        acteurId: modificateurId,
+        roleAuMoment: modificateur.role,
+        typeAction: "agent.modifier",
+        entite: "compte_staff",
+        entiteId: cible.id,
+        avant: { email: cible.email },
+        apres: { email },
+      });
     });
   } catch (erreur) {
     if (estDoublonEmail(erreur)) {
@@ -785,15 +917,6 @@ export async function modifierEmailAgentSupport(
     }
     throw erreur;
   }
-  await enregistrerEvenement({
-    acteurId: modificateurId,
-    roleAuMoment: modificateur.role,
-    typeAction: "agent.modifier",
-    entite: "compte_staff",
-    entiteId: cible.id,
-    avant: { email: cible.email },
-    apres: { email },
-  });
   return { id: cible.id, inchange: false as const };
 }
 
@@ -879,14 +1002,16 @@ export async function ouvrirLienMotDePasseAgent(
     expireLe: new Date(Date.now() + DUREE_PREMIER_ACCES_MS),
     creePar: createurId,
   };
-  await db.insert(premiersAccesAdmin).values(acces);
-  await enregistrerEvenement({
-    acteurId: createurId,
-    roleAuMoment: createur.role,
-    typeAction: "agent.lien_mdp",
-    entite: "compte_staff",
-    entiteId: agentId,
-    apres: { lien: acces.id, expireLe: acces.expireLe },
+  await db.transaction(async (tx) => {
+    await tx.insert(premiersAccesAdmin).values(acces);
+    await tracer(tx, {
+      acteurId: createurId,
+      roleAuMoment: createur.role,
+      typeAction: "agent.lien_mdp",
+      entite: "compte_staff",
+      entiteId: agentId,
+      apres: { lien: acces.id, expireLe: acces.expireLe },
+    });
   });
   return acces;
 }

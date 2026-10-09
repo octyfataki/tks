@@ -5,7 +5,7 @@ import { headers } from "next/headers";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
-import { comptesStaff, peutInviterAgent } from "@/lib/db/schema/s1-comptes";
+import { comptesStaff, peutInviterAgent, telephoneStaffValide } from "@/lib/db/schema/s1-comptes";
 import { peutGererPermissions } from "@/lib/db/schema/s2-autorisations";
 import {
   accorderPermission,
@@ -17,6 +17,7 @@ import {
   retirerSocle,
 } from "@/lib/s2-autorisations/autorisations";
 import { enregistrerEvenement } from "@/lib/s2-autorisations/journal";
+import type { ResultatAction as ResultatStandard } from "@/lib/resultat-action";
 import {
   creerAgent,
   creerInvitationAgent,
@@ -29,9 +30,10 @@ import {
   PROFIL_AGENT_SERVICE_DEFAUT,
 } from "@/lib/db/schema/s2-autorisations/validation";
 
-export type ResultatAction =
-  | { ok: true; lien?: string; email?: string }
-  | { ok: false; erreur: string };
+export type ResultatAction = ResultatStandard<{
+  lien?: string;
+  email?: string;
+}>;
 
 async function staffConnecte() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -65,8 +67,11 @@ export async function creerAgentAction(
       erreur: "Email valide, prénom, nom et mot de passe d'au moins 8 caractères exigés.",
     };
   }
+  if (!telephoneStaffValide(telephone)) {
+    return { ok: false, erreur: "Numéro de téléphone invalide (format international : + optionnel, chiffres, espaces, tirets, points, parenthèses)." };
+  }
   const moi = await staffConnecte();
-  if (!moi) {
+  if (!moi || !peutInviterAgent(moi.role, moi.etat)) {
     return { ok: false, erreur: "Seul un administrateur principal validé peut créer un agent." };
   }
   try {
@@ -80,13 +85,16 @@ export async function creerAgentAction(
     return { ok: true, email };
   } catch (erreur) {
     if (erreur instanceof StaffError && erreur.code === "TELEPHONE_INVALIDE") {
-      return { ok: false, erreur: "Numéro de téléphone invalide (chiffres, espaces et + uniquement)." };
+      return { ok: false, erreur: "Numéro de téléphone invalide (format international : + optionnel, chiffres, espaces, tirets, points, parenthèses)." };
     }
     if (erreur instanceof StaffError && erreur.code === "MOT_DE_PASSE_INVALIDE") {
       return { ok: false, erreur: "Mot de passe d'au moins 8 caractères exigé." };
     }
     if (erreur instanceof StaffError && erreur.code === "EMAIL_DEJA_UTILISE") {
       return { ok: false, erreur: "Cet identifiant (email) est déjà utilisé — chaque agent a son propre email." };
+    }
+    if (erreur instanceof StaffError && erreur.code === "EMAIL_INVALIDE") {
+      return { ok: false, erreur: "Adresse email invalide." };
     }
     if (erreur instanceof StaffError) {
       return { ok: false, erreur: "Seul un administrateur principal validé peut créer un agent." };
@@ -122,19 +130,29 @@ export async function revoquerAgentAction(id: string): Promise<ResultatAction> {
   if (cible.etat !== "VALIDE" && cible.etat !== "SUSPENDU") {
     return { ok: false, erreur: "Agent déjà révoqué." };
   }
-  await db
-    .update(comptesStaff)
-    .set({ etat: "REVOQUE", revokedAt: new Date() })
-    .where(eq(comptesStaff.id, cible.id));
-  await enregistrerEvenement({
-    acteurId: moi.id,
-    roleAuMoment: moi.role,
-    typeAction: "agent.revoquer",
-    entite: "compte_staff",
-    entiteId: cible.id,
-    avant: { etat: cible.etat },
-    apres: { etat: "REVOQUE" },
-  });
+  try {
+    await db.transaction(async (tx) => {
+      await tx
+        .update(comptesStaff)
+        .set({ etat: "REVOQUE", revokedAt: new Date() })
+        .where(eq(comptesStaff.id, cible.id));
+      const trace = await enregistrerEvenement(
+        {
+          acteurId: moi.id,
+          roleAuMoment: moi.role,
+          typeAction: "agent.revoquer",
+          entite: "compte_staff",
+          entiteId: cible.id,
+          avant: { etat: cible.etat },
+          apres: { etat: "REVOQUE" },
+        },
+        tx,
+      );
+      if (!trace.ok) throw new Error("journal indisponible");
+    });
+  } catch {
+    return { ok: false, erreur: "Révocation impossible." };
+  }
   revalidatePath("/admin/agents");
   return { ok: true };
 }
@@ -175,20 +193,30 @@ export async function suspendreAgentAction(id: string): Promise<ResultatAction> 
     return { ok: false, erreur: "Agent déjà suspendu." };
   }
   const suspenduLe = new Date();
-  await db
-    .update(comptesStaff)
-    .set({ etat: "SUSPENDU", suspendedAt: suspenduLe })
-    .where(eq(comptesStaff.id, cible.id));
-  await tuerSessionsStaff(cible.betterAuthUserId);
-  await enregistrerEvenement({
-    acteurId: moi.id,
-    roleAuMoment: moi.role,
-    typeAction: "agent.suspendre",
-    entite: "compte_staff",
-    entiteId: cible.id,
-    avant: { etat: "VALIDE" },
-    apres: { etat: "SUSPENDU", suspenduLe },
-  });
+  try {
+    await db.transaction(async (tx) => {
+      await tx
+        .update(comptesStaff)
+        .set({ etat: "SUSPENDU", suspendedAt: suspenduLe })
+        .where(eq(comptesStaff.id, cible.id));
+      await tuerSessionsStaff(cible.betterAuthUserId, tx);
+      const trace = await enregistrerEvenement(
+        {
+          acteurId: moi.id,
+          roleAuMoment: moi.role,
+          typeAction: "agent.suspendre",
+          entite: "compte_staff",
+          entiteId: cible.id,
+          avant: { etat: "VALIDE" },
+          apres: { etat: "SUSPENDU", suspenduLe },
+        },
+        tx,
+      );
+      if (!trace.ok) throw new Error("journal indisponible");
+    });
+  } catch {
+    return { ok: false, erreur: "Suspension impossible." };
+  }
   revalidatePath("/admin/agents");
   return { ok: true };
 }
@@ -219,30 +247,41 @@ export async function leverSuspensionAgentAction(id: string): Promise<ResultatAc
   if (cible.etat !== "SUSPENDU") {
     return { ok: false, erreur: cible.etat === "REVOQUE" ? "Agent déjà révoqué." : "Agent non suspendu." };
   }
-  await db
-    .update(comptesStaff)
-    .set({ etat: "VALIDE", suspendedAt: null })
-    .where(eq(comptesStaff.id, cible.id));
-  await enregistrerEvenement({
-    acteurId: moi.id,
-    roleAuMoment: moi.role,
-    typeAction: "agent.lever_suspension",
-    entite: "compte_staff",
-    entiteId: cible.id,
-    avant: { etat: "SUSPENDU" },
-    apres: { etat: "VALIDE" },
-  });
+  try {
+    await db.transaction(async (tx) => {
+      await tx
+        .update(comptesStaff)
+        .set({ etat: "VALIDE", suspendedAt: null })
+        .where(eq(comptesStaff.id, cible.id));
+      const trace = await enregistrerEvenement(
+        {
+          acteurId: moi.id,
+          roleAuMoment: moi.role,
+          typeAction: "agent.lever_suspension",
+          entite: "compte_staff",
+          entiteId: cible.id,
+          avant: { etat: "SUSPENDU" },
+          apres: { etat: "VALIDE" },
+        },
+        tx,
+      );
+      if (!trace.ok) throw new Error("journal indisponible");
+    });
+  } catch {
+    return { ok: false, erreur: "Levée de suspension impossible." };
+  }
   revalidatePath("/admin/agents");
   return { ok: true };
 }
 
 /**
- * Renvoie une invitation agent : génère un NOUVEAU lien (on ne réactive
- * jamais un lien expiré ou consommé). Même autorisation que l'invitation.
+ * Crée un NOUVEAU lien d'invitation agent (jamais de réactivation d'un
+ * lien expiré ou consommé — « renvoyer » = générer). Même autorisation
+ * que l'invitation.
  */
-export async function renvoyerInvitationAgentAction(): Promise<ResultatAction> {
+export async function creerInvitationAgentAction(): Promise<ResultatAction> {
   const moi = await staffConnecte();
-  if (!moi) {
+  if (!moi || !peutInviterAgent(moi.role, moi.etat)) {
     return { ok: false, erreur: "Seul un administrateur principal validé peut inviter un agent." };
   }
   try {
@@ -271,8 +310,12 @@ export async function revoquerInvitationAgentAction(
   if (!moi || !peutInviterAgent(moi.role, moi.etat)) {
     return { ok: false, erreur: "Seul un administrateur principal validé peut révoquer une invitation." };
   }
+  const cible = invitationId.trim();
+  if (!cible) {
+    return { ok: false, erreur: "Invitation introuvable." };
+  }
   try {
-    await revoquerInvitation(moi.id, invitationId);
+    await revoquerInvitation(moi.id, cible);
     revalidatePath("/admin/agents/invitations");
     return { ok: true };
   } catch (erreur) {
@@ -311,6 +354,14 @@ function erreurAutorisation(erreur: unknown): string {
         return erreur.message || "Permission déjà accordée.";
       case "NON_ACCORDEE":
         return erreur.message || "Permission non accordée.";
+      case "JOURNAL_INDISPONIBLE":
+        return "Opération impossible : journal d'audit indisponible.";
+      default: {
+        // Exhaustivité : si un code est ajouté à ErreurAutorisation,
+        // la compilation casse ici jusqu'au mapping explicite.
+        const _exhaustif: never = erreur.code;
+        return _exhaustif;
+      }
     }
   }
   return "Opération impossible.";
@@ -426,8 +477,13 @@ export async function appliquerSocleLotAction(
         try {
           await retirerSocle(moi.id, permission);
           retirees.push(permission);
-        } catch {
-          // Déjà retirée entre-temps : on continue le lot.
+        } catch (erreur) {
+          // Déjà retirée entre-temps : on continue. Toute autre panne
+          // annule le lot (aucun succès partiel annoncé à tort).
+          if (erreur instanceof AutorisationError && erreur.code === "NON_ACCORDEE") {
+            continue;
+          }
+          throw erreur;
         }
       }
     } else {
@@ -436,8 +492,12 @@ export async function appliquerSocleLotAction(
         try {
           await accorderSocle(moi.id, permission);
           ajoutees.push(permission);
-        } catch {
-          // Déjà au socle : on continue le lot.
+        } catch (erreur) {
+          // Déjà au socle : on continue. Toute autre panne annule le lot.
+          if (erreur instanceof AutorisationError && erreur.code === "DEJA_ACCORDEE") {
+            continue;
+          }
+          throw erreur;
         }
       }
     }

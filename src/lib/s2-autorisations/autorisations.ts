@@ -1,5 +1,5 @@
 import { and, eq } from "drizzle-orm";
-import { db } from "@/lib/db/client";
+import { db, type ExecuteurDb } from "@/lib/db/client";
 import { comptesStaff } from "@/lib/db/schema/s1-comptes";
 import {
   permissionsAgents,
@@ -20,7 +20,8 @@ export type ErreurAutorisation =
   | "PERMISSION_INCONNUE"
   | "AGENT_INTROUVABLE"
   | "DEJA_ACCORDEE"
-  | "NON_ACCORDEE";
+  | "NON_ACCORDEE"
+  | "JOURNAL_INDISPONIBLE";
 
 export class AutorisationError extends Error {
   code: ErreurAutorisation;
@@ -28,6 +29,29 @@ export class AutorisationError extends Error {
     super(message);
     this.code = code;
   }
+}
+
+/**
+ * Trace d'audit dans la transaction en cours : si le journal échoue,
+ * l'opération entière est annulée — jamais de mutation sans trace
+ * (échec fermé, invariant S2).
+ */
+async function tracer(
+  ex: ExecuteurDb,
+  evenement: Parameters<typeof enregistrerEvenement>[0],
+): Promise<void> {
+  const trace = await enregistrerEvenement(evenement, ex);
+  if (!trace.ok) {
+    throw new AutorisationError("JOURNAL_INDISPONIBLE", "journal indisponible");
+  }
+}
+
+/** Doublon d'insertion concurrent (contrainte d'unicité MySQL). */
+function estDoublon(erreur: unknown): boolean {
+  const code = (erreur as { code?: unknown })?.code;
+  if (code === "ER_DUP_ENTRY") return true;
+  const message = erreur instanceof Error ? erreur.message : String(erreur);
+  return message.includes("Duplicate entry");
 }
 
 async function staffParId(id: string) {
@@ -147,18 +171,20 @@ export async function accorderPermission(
       "déjà accordée par le socle à tous les agents",
     );
   }
-  await db.insert(permissionsAgents).values({
-    agentId,
-    permission,
-    accordePar: gestionnaireId,
-  });
-  await enregistrerEvenement({
-    acteurId: gestionnaireId,
-    roleAuMoment: gerant.role,
-    typeAction: "permission.accorder",
-    entite: "permission",
-    entiteId: `${agentId}:${permission}`,
-    apres: { agentId, permission },
+  await db.transaction(async (tx) => {
+    await tx.insert(permissionsAgents).values({
+      agentId,
+      permission,
+      accordePar: gestionnaireId,
+    });
+    await tracer(tx, {
+      acteurId: gestionnaireId,
+      roleAuMoment: gerant.role,
+      typeAction: "permission.accorder",
+      entite: "permission",
+      entiteId: `${agentId}:${permission}`,
+      apres: { agentId, permission },
+    });
   });
 }
 
@@ -186,21 +212,23 @@ export async function retirerPermission(
     }
     throw new AutorisationError("NON_ACCORDEE", "permission non accordée");
   }
-  await db
-    .delete(permissionsAgents)
-    .where(
-      and(
-        eq(permissionsAgents.agentId, agentId),
-        eq(permissionsAgents.permission, permission),
-      ),
-    );
-  await enregistrerEvenement({
-    acteurId: gestionnaireId,
-    roleAuMoment: gerant.role,
-    typeAction: "permission.retirer",
-    entite: "permission",
-    entiteId: `${agentId}:${permission}`,
-    avant: { agentId, permission },
+  await db.transaction(async (tx) => {
+    await tx
+      .delete(permissionsAgents)
+      .where(
+        and(
+          eq(permissionsAgents.agentId, agentId),
+          eq(permissionsAgents.permission, permission),
+        ),
+      );
+    await tracer(tx, {
+      acteurId: gestionnaireId,
+      roleAuMoment: gerant.role,
+      typeAction: "permission.retirer",
+      entite: "permission",
+      entiteId: `${agentId}:${permission}`,
+      avant: { agentId, permission },
+    });
   });
 }
 
@@ -216,17 +244,19 @@ export async function accorderSocle(
   if (await aPermissionSocle(permission)) {
     throw new AutorisationError("DEJA_ACCORDEE", "déjà au socle");
   }
-  await db.insert(permissionsSocleAgents).values({
-    permission,
-    accordePar: gestionnaireId,
-  });
-  await enregistrerEvenement({
-    acteurId: gestionnaireId,
-    roleAuMoment: gerant.role,
-    typeAction: "permission.socle.accorder",
-    entite: "permission_socle",
-    entiteId: permission,
-    apres: { permission },
+  await db.transaction(async (tx) => {
+    await tx.insert(permissionsSocleAgents).values({
+      permission,
+      accordePar: gestionnaireId,
+    });
+    await tracer(tx, {
+      acteurId: gestionnaireId,
+      roleAuMoment: gerant.role,
+      typeAction: "permission.socle.accorder",
+      entite: "permission_socle",
+      entiteId: permission,
+      apres: { permission },
+    });
   });
 }
 
@@ -242,23 +272,27 @@ export async function retirerSocle(
   if (!(await aPermissionSocle(permission))) {
     throw new AutorisationError("NON_ACCORDEE", "permission hors socle");
   }
-  await db
-    .delete(permissionsSocleAgents)
-    .where(eq(permissionsSocleAgents.permission, permission));
-  await enregistrerEvenement({
-    acteurId: gestionnaireId,
-    roleAuMoment: gerant.role,
-    typeAction: "permission.socle.retirer",
-    entite: "permission_socle",
-    entiteId: permission,
-    avant: { permission },
+  await db.transaction(async (tx) => {
+    await tx
+      .delete(permissionsSocleAgents)
+      .where(eq(permissionsSocleAgents.permission, permission));
+    await tracer(tx, {
+      acteurId: gestionnaireId,
+      roleAuMoment: gerant.role,
+      typeAction: "permission.socle.retirer",
+      entite: "permission_socle",
+      entiteId: permission,
+      avant: { permission },
+    });
   });
 }
 
 /**
  * Applique le profil prédéfini d'embauche : insère les permissions
  * manquantes à l'effectif (socle ∪ individuel), sans toucher aux autres.
- * Raccourci, pas contrainte.
+ * Raccourci, pas contrainte. Tout-ou-rien : un doublon concurrent est
+ * ignoré (déjà accordée entre-temps), toute autre panne annule le lot —
+ * `ajoutees` reflète ce qui a persisté.
  */
 export async function appliquerProfilAgent(
   gestionnaireId: string,
@@ -267,21 +301,30 @@ export async function appliquerProfilAgent(
   const gerant = await gerantValide(gestionnaireId);
   await agentValide(agentId);
   const detenues = new Set(await listerPermissionsEffectives(agentId));
-  const ajoutees = PROFIL_AGENT_SERVICE_DEFAUT.filter((p) => !detenues.has(p));
-  for (const permission of ajoutees) {
-    await db.insert(permissionsAgents).values({
-      agentId,
-      permission,
-      accordePar: gestionnaireId,
+  const manquantes = PROFIL_AGENT_SERVICE_DEFAUT.filter((p) => !detenues.has(p));
+  const ajoutees = await db.transaction(async (tx) => {
+    const persistees: Permission[] = [];
+    for (const permission of manquantes) {
+      try {
+        await tx.insert(permissionsAgents).values({
+          agentId,
+          permission,
+          accordePar: gestionnaireId,
+        });
+        persistees.push(permission);
+      } catch (erreur) {
+        if (!estDoublon(erreur)) throw erreur;
+      }
+    }
+    await tracer(tx, {
+      acteurId: gestionnaireId,
+      roleAuMoment: gerant.role,
+      typeAction: "permission.profil",
+      entite: "permission",
+      entiteId: agentId,
+      apres: { agentId, ajoutees: persistees },
     });
-  }
-  await enregistrerEvenement({
-    acteurId: gestionnaireId,
-    roleAuMoment: gerant.role,
-    typeAction: "permission.profil",
-    entite: "permission",
-    entiteId: agentId,
-    apres: { agentId, ajoutees },
+    return persistees;
   });
   return { ajoutees };
 }

@@ -13,12 +13,22 @@ import {
 } from "@/lib/db/schema/s1-comptes";
 import { enregistrerEvenement } from "@/lib/s2-autorisations/journal";
 import { tuerSessionsStaff } from "@/lib/s1-comptes/staff";
+import type { ResultatAction } from "@/lib/resultat-action";
 
-export type ResultatRevocation =
-  | { ok: true }
-  | { ok: false; erreur: string };
+export type ResultatRevocation = ResultatAction;
 
-function messageErreur(code: string): string {
+/** Codes de présentation locaux des actions sur comptes d'administration. */
+type CodeListAction =
+  | "NON_AUTORISE"
+  | "SOI_MEME"
+  | "DERNIER_TECHNIQUE"
+  | "DERNIER_PRINCIPAL"
+  | "DEJA_REVOQUE"
+  | "DEJA_SUSPENDU"
+  | "NON_SUSPENDU"
+  | "INTROUVABLE";
+
+function messageErreur(code: CodeListAction): string {
   switch (code) {
     case "SOI_MEME":
       return "Vous ne pouvez pas suspendre, lever ni révoquer votre propre compte.";
@@ -120,19 +130,29 @@ export async function revoquerAdministrateurAction(
     }
   }
 
-  await db
-    .update(comptesStaff)
-    .set({ etat: "REVOQUE", revokedAt: new Date() })
-    .where(eq(comptesStaff.id, cible.id));
-  await enregistrerEvenement({
-    acteurId: demandeur.id,
-    roleAuMoment: demandeur.role,
-    typeAction: "admin.revoquer",
-    entite: "compte_staff",
-    entiteId: cible.id,
-    avant: { etat: cible.etat, role: cible.role },
-    apres: { etat: "REVOQUE" },
-  });
+  try {
+    await db.transaction(async (tx) => {
+      await tx
+        .update(comptesStaff)
+        .set({ etat: "REVOQUE", revokedAt: new Date() })
+        .where(eq(comptesStaff.id, cible.id));
+      const trace = await enregistrerEvenement(
+        {
+          acteurId: demandeur.id,
+          roleAuMoment: demandeur.role,
+          typeAction: "admin.revoquer",
+          entite: "compte_staff",
+          entiteId: cible.id,
+          avant: { etat: cible.etat, role: cible.role },
+          apres: { etat: "REVOQUE" },
+        },
+        tx,
+      );
+      if (!trace.ok) throw new Error("journal indisponible");
+    });
+  } catch {
+    return { ok: false, erreur: "Révocation impossible." };
+  }
   revalidatePath("/admin/list");
   return { ok: true };
 }
@@ -206,20 +226,30 @@ export async function suspendreAdministrateurAction(
   }
 
   const suspenduLe = new Date();
-  await db
-    .update(comptesStaff)
-    .set({ etat: "SUSPENDU", suspendedAt: suspenduLe })
-    .where(eq(comptesStaff.id, cible.id));
-  await tuerSessionsStaff(cible.betterAuthUserId);
-  await enregistrerEvenement({
-    acteurId: demandeur.id,
-    roleAuMoment: demandeur.role,
-    typeAction: "admin.suspendre",
-    entite: "compte_staff",
-    entiteId: cible.id,
-    avant: { etat: "VALIDE", role: cible.role },
-    apres: { etat: "SUSPENDU", suspenduLe },
-  });
+  try {
+    await db.transaction(async (tx) => {
+      await tx
+        .update(comptesStaff)
+        .set({ etat: "SUSPENDU", suspendedAt: suspenduLe })
+        .where(eq(comptesStaff.id, cible.id));
+      await tuerSessionsStaff(cible.betterAuthUserId, tx);
+      const trace = await enregistrerEvenement(
+        {
+          acteurId: demandeur.id,
+          roleAuMoment: demandeur.role,
+          typeAction: "admin.suspendre",
+          entite: "compte_staff",
+          entiteId: cible.id,
+          avant: { etat: "VALIDE", role: cible.role },
+          apres: { etat: "SUSPENDU", suspenduLe },
+        },
+        tx,
+      );
+      if (!trace.ok) throw new Error("journal indisponible");
+    });
+  } catch {
+    return { ok: false, erreur: "Suspension impossible." };
+  }
   revalidatePath("/admin/list");
   return { ok: true };
 }
@@ -280,19 +310,29 @@ export async function leverSuspensionAdministrateurAction(
     };
   }
 
-  await db
-    .update(comptesStaff)
-    .set({ etat: "VALIDE", suspendedAt: null })
-    .where(eq(comptesStaff.id, cible.id));
-  await enregistrerEvenement({
-    acteurId: demandeur.id,
-    roleAuMoment: demandeur.role,
-    typeAction: "admin.lever_suspension",
-    entite: "compte_staff",
-    entiteId: cible.id,
-    avant: { etat: "SUSPENDU", role: cible.role },
-    apres: { etat: "VALIDE" },
-  });
+  try {
+    await db.transaction(async (tx) => {
+      await tx
+        .update(comptesStaff)
+        .set({ etat: "VALIDE", suspendedAt: null })
+        .where(eq(comptesStaff.id, cible.id));
+      const trace = await enregistrerEvenement(
+        {
+          acteurId: demandeur.id,
+          roleAuMoment: demandeur.role,
+          typeAction: "admin.lever_suspension",
+          entite: "compte_staff",
+          entiteId: cible.id,
+          avant: { etat: "SUSPENDU", role: cible.role },
+          apres: { etat: "VALIDE" },
+        },
+        tx,
+      );
+      if (!trace.ok) throw new Error("journal indisponible");
+    });
+  } catch {
+    return { ok: false, erreur: "Levée de suspension impossible." };
+  }
   revalidatePath("/admin/list");
   return { ok: true };
 }
