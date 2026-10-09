@@ -32,7 +32,15 @@ describe("page d'accueil", () => {
     ).toContain("/agent");
   });
 
-  it("atterrit un client dans l'espace client", async () => {
-    expect(await destinationDe({ type: "CLIENT" })).toContain("/clients");
+  it("atterrit un client validé dans l'espace client", async () => {
+    expect(
+      await destinationDe({ type: "CLIENT", etat: "VALIDE" }),
+    ).toContain("/clients");
+  });
+
+  it("atterrit un client en attente sur /pending", async () => {
+    expect(
+      await destinationDe({ type: "CLIENT", etat: "EN_ATTENTE_VALIDATION" }),
+    ).toContain("/pending");
   });
 });

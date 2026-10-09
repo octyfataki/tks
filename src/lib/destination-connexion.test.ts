@@ -34,6 +34,22 @@ describe("demanderDestination", () => {
     });
   });
 
+  it("propage l'attente de validation vers /pending", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(reponse({ destination: "/pending", code: "EN_ATTENTE" })));
+    await expect(demanderDestination()).resolves.toEqual({
+      destination: "/pending",
+      code: "EN_ATTENTE",
+    });
+  });
+
+  it("propage le refus vers /pending", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(reponse({ destination: "/pending", code: "REFUSE" })));
+    await expect(demanderDestination()).resolves.toEqual({
+      destination: "/pending",
+      code: "REFUSE",
+    });
+  });
+
   it("replie sur le login quand le réseau tombe", async () => {
     vi.stubGlobal("fetch", vi.fn().mockRejectedValue(new Error("offline")));
     await expect(demanderDestination()).resolves.toEqual({

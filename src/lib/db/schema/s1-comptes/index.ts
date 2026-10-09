@@ -1,4 +1,5 @@
 export * from "./comptes-staff";
+export * from "./comptes-clients";
 export * from "./invitations-agents";
 export * from "./premiers-acces-admin";
 export * from "./reglages";

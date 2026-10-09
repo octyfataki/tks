@@ -129,6 +129,26 @@
   }
 }
 
+/* Ticket d'attente (/pending) : une seule entrée en fondu, jamais rejouée. */
+@keyframes tks-ticket-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.tks-ticket-enter {
+  animation: tks-ticket-enter 0.45s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tks-ticket-enter {
+    animation: none;
+  }
+}
+
 /* Chargeur générique (AppLoader) : 100 % CSS, sans JS client. */
 @keyframes tks-loader-orbit {
   to {

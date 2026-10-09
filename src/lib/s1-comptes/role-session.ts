@@ -1,4 +1,8 @@
-import type { EtatStaff, RoleStaff } from "@/lib/db/schema/s1-comptes";
+import type {
+  EtatClient,
+  EtatStaff,
+  RoleStaff,
+} from "@/lib/db/schema/s1-comptes";
 // S1 — Routage par rôle. Logique pure : ni BDD, ni framework, ni session.
 // Le rôle n'est PAS dans la session better-auth, il vient de comptes_staff
 // (résolution dans profil-session.ts). Vocabulaire : GLOSSARY, rôles et
@@ -10,6 +14,8 @@ export const DESTINATION_ADMIN = "/admin";
 export const DESTINATION_AGENT = "/agent";
 /** Où atterrit un client. */
 export const DESTINATION_CLIENTS = "/clients";
+/** Où atterrit un client en attente ou refusé : il voit son état avancer. */
+export const DESTINATION_ATTENTE = "/pending";
 /** Repli : anonyme, révocation, profil illisible. */
 export const DESTINATION_CONNEXION = "/sign-in";
 
@@ -19,14 +25,16 @@ export type Espace = "ADMIN" | "AGENT" | "CLIENTS";
 /**
  * Profil résolu depuis la session.
  *
- * - `CLIENT` : aucune ligne dans comptes_staff. S4 ajoutera l'état du compte
- *   client (`EN_ATTENTE_VALIDATION` → `/pending`) — table inexistante aujourd'hui.
- * - `INCONNU` : ligne staff illisible (rôle ou état hors valeurs fermées).
- *   On ne devine pas : ce profil n'ouvre aucune porte.
+ * - `CLIENT` : aucune ligne dans comptes_staff, état lu dans
+ *   comptes_clients. `EN_ATTENTE_VALIDATION` → `/pending` et aucun espace :
+ *   le compte ne peut rien faire (S1-01). `REFUSE` → `/pending` (le motif
+ *   s'y affichera en S1-03). `REVOQUE` → `/sign-in`, définitif.
+ * - `INCONNU` : ligne staff illisible, ou utilisateur auth sans ligne
+ *   métier d'aucune sorte. On ne devine pas : ce profil n'ouvre aucune porte.
  */
 export type Profil =
   | { type: "ANONYME" }
-  | { type: "CLIENT" }
+  | { type: "CLIENT"; etat: EtatClient }
   | { type: "STAFF"; role: RoleStaff; etat: EtatStaff }
   | { type: "INCONNU" };
 
@@ -38,7 +46,10 @@ export type Profil =
 export function destinationApresConnexion(profil: Profil): string {
   switch (profil.type) {
     case "CLIENT":
-      return DESTINATION_CLIENTS;
+      // La barrière S1-01 : un compte non validé ne franchit jamais /clients.
+      if (profil.etat === "VALIDE") return DESTINATION_CLIENTS;
+      if (profil.etat === "REVOQUE") return DESTINATION_CONNEXION;
+      return DESTINATION_ATTENTE;
     case "STAFF":
       if (profil.etat !== "VALIDE") return DESTINATION_CONNEXION;
       return profil.role === "AGENT" ? DESTINATION_AGENT : DESTINATION_ADMIN;
@@ -53,7 +64,13 @@ function espaceDuProfil(profil: Profil): Espace | null {
   if (profil.type === "STAFF" && profil.etat === "VALIDE") {
     return profil.role === "AGENT" ? "AGENT" : "ADMIN";
   }
-  if (profil.type === "CLIENT") return "CLIENTS";
+  if (profil.type === "CLIENT") {
+    // Seul un compte validé entre dans l'espace CLIENTS. Un compte en
+    // attente ou refusé n'a droit nulle part : la garde le renvoie vers
+    // /pending via destinationApresConnexion — jamais de boucle, /pending
+    // n'est pas un espace gardé.
+    return profil.etat === "VALIDE" ? "CLIENTS" : null;
+  }
   return null;
 }
 

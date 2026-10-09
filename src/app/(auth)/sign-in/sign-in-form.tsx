@@ -16,7 +16,8 @@ import { toast } from "@/components/ui/toast";
 // on envoie vers /verify-2fa. Pas d'écran d'attente : le bouton porte l'état
 // (« Connexion… », désactivé) pendant l'appel.
 // Après connexion, la destination n'est pas devinée : le serveur relit
-// comptes_staff et renvoie /admin, /agent ou /clients.
+// comptes_staff et comptes_clients et renvoie /admin, /agent, /clients ou
+// /pending (compte client en attente ou refusé, qui reste connecté).
 // Tout le feedback (succès, refus, 2FA) passe par les toasts : pas de
 // message inline sous les champs.
 export function SignInForm() {
@@ -37,6 +38,21 @@ export function SignInForm() {
             ? "Accès gelé temporairement. Contactez l'administrateur."
             : "Contactez l'administrateur.",
       });
+      return;
+    }
+    if (code === "EN_ATTENTE" || code === "REFUSE") {
+      // Compte client non validé : il reste connecté et voit son état
+      // avancer sur /pending — sans se réinscrire (S1-01, S1-03).
+      toast.add({
+        type: "info",
+        title:
+          code === "REFUSE" ? "Compte refusé" : "Compte en attente",
+        description:
+          code === "REFUSE"
+            ? "Lisez le motif et corrigez votre demande."
+            : "Votre demande attend sa validation.",
+      });
+      router.push(destination);
       return;
     }
     if (code === "INCONNU") {

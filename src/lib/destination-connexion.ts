@@ -2,7 +2,13 @@
 // rôle, c'est le serveur qui résout la destination. Repli sur /sign-in si le
 // réseau lâche — on ne devine jamais un espace à l'aveugle.
 
-export type CodeDestination = "OK" | "REVOQUE" | "SUSPENDU" | "INCONNU";
+export type CodeDestination =
+  | "OK"
+  | "REVOQUE"
+  | "SUSPENDU"
+  | "EN_ATTENTE"
+  | "REFUSE"
+  | "INCONNU";
 
 export type ReponseDestination = {
   destination: string;
@@ -26,7 +32,11 @@ export async function demanderDestination(): Promise<ReponseDestination> {
     return {
       destination,
       code:
-        code === "OK" || code === "REVOQUE" || code === "SUSPENDU"
+        code === "OK" ||
+        code === "REVOQUE" ||
+        code === "SUSPENDU" ||
+        code === "EN_ATTENTE" ||
+        code === "REFUSE"
           ? code
           : "INCONNU",
     };

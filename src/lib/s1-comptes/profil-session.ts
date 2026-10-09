@@ -3,7 +3,9 @@ import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
 import {
+  comptesClients,
   comptesStaff,
+  estEtatClient,
   estEtatStaff,
   estRoleStaff,
 } from "@/lib/db/schema/s1-comptes";
@@ -29,10 +31,17 @@ export async function profilSession(): Promise<Profil> {
   const compte = comptes[0];
 
   if (!compte) {
-    // Aucune ligne staff : compte client. L'état du compte client
-    // (EN_ATTENTE_VALIDATION → /pending) viendra avec la table
-    // comptes_clients en S4.
-    return { type: "CLIENT" };
+    // Aucune ligne staff : compte client. L'état est lu dans
+    // comptes_clients (S1-01) : EN_ATTENTE_VALIDATION → /pending, aucun
+    // espace. Utilisateur sans ligne métier d'aucune sorte : INCONNU,
+    // fail-closed — on ne devine jamais un espace à l'aveugle.
+    const clients = await db
+      .select({ etat: comptesClients.etat })
+      .from(comptesClients)
+      .where(eq(comptesClients.betterAuthUserId, userId));
+    const client = clients[0];
+    if (!client || !estEtatClient(client.etat)) return { type: "INCONNU" };
+    return { type: "CLIENT", etat: client.etat };
   }
   if (!estRoleStaff(compte.role) || !estEtatStaff(compte.etat)) {
     return { type: "INCONNU" };

@@ -351,3 +351,58 @@ export function ouvertureAccesTemporaireValide(
   const duree = expireLe.getTime() - ouvertLe;
   return duree > 0 && duree <= DUREE_MAX_ACCES_TEMPORAIRE_MS;
 }
+
+// ---- Comptes clients (S1-01, S1-03) --------
+// docs/db/02-comptes-clients.md, GLOSSARY « Compte ». Règles purement
+// applicatives (pas de CHECK en base), comme le staff ci-dessus.
+
+/** Les quatre états d'un compte client, et rien d'autre. */
+export const ETATS_CLIENT = [
+  "EN_ATTENTE_VALIDATION",
+  "VALIDE",
+  "REFUSE",
+  "REVOQUE",
+] as const;
+export type EtatClient = (typeof ETATS_CLIENT)[number];
+
+export function estEtatClient(etat: string): etat is EtatClient {
+  return (ETATS_CLIENT as readonly string[]).includes(etat);
+}
+
+/**
+ * Machine à états d'un compte client. Transitions autorisées :
+ * EN_ATTENTE_VALIDATION → VALIDE | REFUSE | REVOQUE,
+ * REFUSE → VALIDE | REVOQUE (le distributeur valide plus tard, sans
+ * ressaisie), VALIDE → REVOQUE. Tout le reste est refusé — surtout
+ * REVOQUE → *, définitif, et VALIDE → EN_ATTENTE_VALIDATION (on ne
+ * rebloque jamais un compte validé).
+ */
+export function transitionCompteClientValide(
+  depart: string,
+  arrivee: string,
+): boolean {
+  if (depart === "EN_ATTENTE_VALIDATION") {
+    return (
+      arrivee === "VALIDE" || arrivee === "REFUSE" || arrivee === "REVOQUE"
+    );
+  }
+  if (depart === "REFUSE") {
+    return arrivee === "VALIDE" || arrivee === "REVOQUE";
+  }
+  if (depart === "VALIDE") {
+    return arrivee === "REVOQUE";
+  }
+  return false;
+}
+
+/**
+ * Téléphone du compte client : clé métier du compte (GLOSSARY, invariant
+ * de séparation), UNIQUE en base. Même format souple que le staff, mais
+ * obligatoire ici : un compte sans téléphone ne peut pas être rappelé au
+ * comptoir.
+ */
+export function telephoneClientValide(telephone: string): boolean {
+  const valeur = telephone.trim();
+  if (valeur === "") return false;
+  return telephoneStaffValide(valeur);
+}

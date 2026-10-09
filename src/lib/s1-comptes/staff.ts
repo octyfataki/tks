@@ -73,7 +73,7 @@ async function tracer(
   }
 }
 
-async function inscrireUtilisateur(
+export async function inscrireUtilisateur(
   email: string,
   password: string,
   name: string,
@@ -82,7 +82,9 @@ async function inscrireUtilisateur(
   // Création directe user + compte credential, SANS ouvrir de session et
   // sans passer par le endpoint public /sign-up/email (rate-limité à
   // 3/min, cookies de session, auto-sign-in qui écraserait la session de
-  // l'admin créateur). Le hash reprend le primitif better-auth, même
+  // l'admin créateur). Réutilisée par la couche clients (S1-01) : même
+  // garanties pour l'inscription publique, via la server action dédiée.
+  // Le hash reprend le primitif better-auth, même
   // format qu'à l'inscription — la connexion email + mot de passe
   // fonctionne à l'identique. Compte credential : providerId
   // "credential", accountId = id stable de l'utilisateur.
@@ -133,10 +135,27 @@ async function inscrireUtilisateur(
 }
 
 function estDoublonEmail(erreur: unknown): boolean {
-  const code = (erreur as { code?: unknown })?.code;
-  if (code === "ER_DUP_ENTRY") return true;
-  const message = erreur instanceof Error ? erreur.message : String(erreur);
-  return message.includes("Duplicate entry");
+  // Drizzle enveloppe l'erreur driver dans DrizzleQueryError (« Failed
+  // query: … », cause en dessous) : on lit toute la chaîne.
+  const textes: string[] = [];
+  let courante: unknown = erreur;
+  for (let profondeur = 0; profondeur < 4; profondeur++) {
+    if (!courante || typeof courante !== "object") break;
+    const e = courante as {
+      message?: unknown;
+      sqlMessage?: unknown;
+      code?: unknown;
+      cause?: unknown;
+    };
+    if (typeof e.message === "string") textes.push(e.message);
+    if (typeof e.sqlMessage === "string") textes.push(e.sqlMessage);
+    if (typeof e.code === "string") textes.push(e.code);
+    courante = e.cause;
+  }
+  return textes.some(
+    (texte) =>
+      texte.includes("ER_DUP_ENTRY") || texte.includes("Duplicate entry"),
+  );
 }
 
 async function nbComptesStaff(): Promise<number> {

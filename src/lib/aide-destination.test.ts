@@ -13,7 +13,7 @@ describe("destinationAide", () => {
   });
 
   it("envoie le client sur l'aide client", () => {
-    const profil: Profil = { type: "CLIENT" };
+    const profil: Profil = { type: "CLIENT", etat: "VALIDE" };
     expect(destinationAide(profil)).toBe("/clients/aide");
   });
 

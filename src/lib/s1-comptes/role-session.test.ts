@@ -12,7 +12,10 @@ const adminRevoque: Profil = { type: "STAFF", role: "ADMIN_PRINCIPAL", etat: "RE
 const agentRevoque: Profil = { type: "STAFF", role: "AGENT", etat: "REVOQUE" };
 const adminSuspendu: Profil = { type: "STAFF", role: "ADMIN_PRINCIPAL", etat: "SUSPENDU" };
 const agentSuspendu: Profil = { type: "STAFF", role: "AGENT", etat: "SUSPENDU" };
-const client: Profil = { type: "CLIENT" };
+const client: Profil = { type: "CLIENT", etat: "VALIDE" };
+const clientEnAttente: Profil = { type: "CLIENT", etat: "EN_ATTENTE_VALIDATION" };
+const clientRefuse: Profil = { type: "CLIENT", etat: "REFUSE" };
+const clientRevoque: Profil = { type: "CLIENT", etat: "REVOQUE" };
 const anonyme: Profil = { type: "ANONYME" };
 const inconnu: Profil = { type: "INCONNU" };
 
@@ -21,7 +24,11 @@ describe("destinationApresConnexion", () => {
     ["administrateur principal", admin, "/admin"],
     ["administrateur technique", tech, "/admin"],
     ["agent de service", agent, "/agent"],
-    ["client", client, "/clients"],
+    ["client validé", client, "/clients"],
+    // La barrière S1-01 : un compte non validé ne franchit jamais /clients.
+    ["client en attente", clientEnAttente, "/pending"],
+    ["client refusé", clientRefuse, "/pending"],
+    ["client révoqué", clientRevoque, "/sign-in"],
     ["anonyme", anonyme, "/sign-in"],
     ["profil illisible", inconnu, "/sign-in"],
     ["administrateur révoqué", adminRevoque, "/sign-in"],
@@ -40,7 +47,7 @@ describe("redirectionAcces", () => {
     ["l'administrateur principal", admin, "ADMIN"],
     ["l'administrateur technique", tech, "ADMIN"],
     ["l'agent de service", agent, "AGENT"],
-    ["le client", client, "CLIENTS"],
+    ["le client validé", client, "CLIENTS"],
   ];
 
   it.each(autorises)("laisse entrer %s dans son espace", (_label, profil, espace) => {
@@ -50,6 +57,9 @@ describe("redirectionAcces", () => {
   const refus: Array<[string, Profil, "ADMIN" | "AGENT" | "CLIENTS", string]> = [
     ["un client force /admin", client, "ADMIN", "/clients"],
     ["un client force /agent", client, "AGENT", "/clients"],
+    ["un client en attente ouvre /clients", clientEnAttente, "CLIENTS", "/pending"],
+    ["un client refusé ouvre /clients", clientRefuse, "CLIENTS", "/pending"],
+    ["un client révoqué ouvre /clients", clientRevoque, "CLIENTS", "/sign-in"],
     ["un agent entre chez les administrateurs", agent, "ADMIN", "/agent"],
     ["un administrateur entre chez les agents", admin, "AGENT", "/admin"],
     ["un administrateur entre chez les clients", admin, "CLIENTS", "/admin"],
@@ -81,7 +91,7 @@ describe("redirectionAcces", () => {
           : destination === "/agent" ? "AGENT"
           : destination === "/clients" ? "CLIENTS"
           : null;
-        if (espaceVise === null) continue; // /sign-in n'est pas un espace gardé
+        if (espaceVise === null) continue; // /sign-in et /pending ne sont pas des espaces gardés
         expect(redirectionAcces(profil, espaceVise)).toBeNull();
       }
     }
