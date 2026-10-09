@@ -12,6 +12,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { PasswordInput } from "@/components/password-input";
+import { RedirigerConnecte } from "@/components/rediriger-connecte";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/toast";
 import { inscrireCompteClient } from "./actions";
@@ -121,6 +122,7 @@ export default function SignUpPage() {
         title="Pièce d'identité"
         description="Dernière étape : déposez votre pièce d'identité, ou présentez-la au comptoir. Sans pièce vue par un humain, le compte ne sera pas validé."
       >
+        <RedirigerConnecte />
         <form action="#" method="post" onSubmit={soumettrePiece}>
           <FieldGroup>
             <Field>
@@ -171,6 +173,7 @@ export default function SignUpPage() {
       title="Inscription client"
       description="Tout se remplit ici, sur cette page. La pièce d'identité vous sera demandée juste après l'envoi du formulaire."
     >
+      <RedirigerConnecte />
       <form action="#" method="post" onSubmit={soumettreInfos}>
         <FieldGroup>
           <Field>

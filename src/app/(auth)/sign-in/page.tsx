@@ -1,9 +1,18 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import { AuthShell } from "@/components/auth-shell";
 import { Field, FieldGroup } from "@/components/ui/field";
+import { profilSession } from "@/lib/s1-comptes/profil-session";
+import { destinationApresConnexion } from "@/lib/s1-comptes/role-session";
 import { SignInForm } from "./sign-in-form";
 
-export default function SignInPage() {
+// Déjà connecté → son espace (le bouton retour ne doit pas rouvrir le
+// formulaire). Comparaison stricte comme /pending : un profil INCONNU reste
+// sur place au lieu de boucler vers /sign-in.
+export default async function SignInPage() {
+  const profil = await profilSession();
+  const destination = destinationApresConnexion(profil);
+  if (destination !== "/sign-in") redirect(destination);
   return (
     <AuthShell
       title="Connexion"
