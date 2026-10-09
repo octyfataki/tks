@@ -1,11 +1,19 @@
 import { describe, expect, it, vi } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { ProfilUtilisateur } from "./profil-utilisateur";
+import { FormulaireMonProfil } from "@/app/admin/profil/formulaire-mon-profil";
+import { ActivationSecondFacteur } from "./activation-second-facteur";
 
 vi.mock("@/app/admin/profil/actions", () => ({
   modifierPhotoProfilAction: vi.fn(),
   supprimerPhotoProfilAction: vi.fn(),
   deconnecterAutresSessionsAction: vi.fn(),
+  modifierMonProfilAction: vi.fn(),
+  confirmerSecondFacteurAction: vi.fn(),
+}));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
 }));
 
 // Mon compte, sans onglets : tout est visible en lecture seule, dans le même
@@ -155,6 +163,70 @@ describe("ProfilUtilisateur", () => {
       />,
     );
     expect(screen.queryByText("Sessions en cours")).not.toBeInTheDocument();
+  });
+
+  it("ouvre la correction des coordonnées au crayon quand elle est autorisée", () => {
+    render(
+      <ProfilUtilisateur
+        nom="Chef Distributeur"
+        email="chef@example.com"
+        compte={{ type: "STAFF", role: "ADMIN_PRINCIPAL", etat: "VALIDE" }}
+        peutModifierCoordonnees
+        formulaireCoordonnees={
+          <FormulaireMonProfil nomInitial="Chef Distributeur" telephoneInitial="" />
+        }
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Corriger : Coordonnées" }));
+    expect(screen.getByRole("button", { name: "Enregistrer" })).toBeInTheDocument();
+  });
+
+  it("verrouille le crayon avec son motif quand la correction est indisponible", () => {
+    render(
+      <ProfilUtilisateur
+        nom="Chef Distributeur"
+        email="chef@example.com"
+        compte={{ type: "STAFF", role: "ADMIN_PRINCIPAL", etat: "VALIDE" }}
+        peutModifierCoordonnees={false}
+        motifCoordonneesVerrouillees="Lecture seule : compte suspendu."
+        formulaireCoordonnees={null}
+      />,
+    );
+    expect(
+      screen.getByRole("button", { name: "Coordonnées : non modifiable" }),
+    ).toBeInTheDocument();
+  });
+
+  it("propose d'activer le second facteur quand il est à activer", () => {
+    render(
+      <ProfilUtilisateur
+        nom="Chef Distributeur"
+        email="chef@example.com"
+        compte={{ type: "STAFF", role: "ADMIN_PRINCIPAL", etat: "VALIDE" }}
+        secondFacteurActif={false}
+        formulaireSecondFacteur={<ActivationSecondFacteur />}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Activer le second facteur" }));
+    expect(screen.getByLabelText("Confirmez votre mot de passe")).toBeInTheDocument();
+    expect(screen.queryByLabelText("Nom de l'appareil")).not.toBeInTheDocument();
+  });
+
+  it("propose le code par email comme méthode alternative", () => {
+    render(
+      <ProfilUtilisateur
+        nom="Chef Distributeur"
+        email="chef@example.com"
+        compte={{ type: "STAFF", role: "ADMIN_PRINCIPAL", etat: "VALIDE" }}
+        secondFacteurActif={false}
+        formulaireSecondFacteur={<ActivationSecondFacteur />}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Activer le second facteur" }));
+    const optionEmail = screen.getByRole("button", { name: /Email/ });
+    expect(optionEmail).toHaveAttribute("aria-pressed", "false");
+    fireEvent.click(optionEmail);
+    expect(optionEmail).toHaveAttribute("aria-pressed", "true");
   });
 
   it("n'emploie aucun terme interdit du glossaire", () => {

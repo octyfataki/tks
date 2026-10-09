@@ -45,7 +45,7 @@ export async function definirReglage(input: {
     throw new StaffError("NON_AUTORISE", "réglage inconnu");
   }
   if (
-    !peutModifierReglage(input.modifieParRole, input.modifieParEtat)
+    !peutModifierReglage(input.cle, input.modifieParRole, input.modifieParEtat)
   ) {
     throw new StaffError("NON_AUTORISE", "modificateur non autorisé");
   }

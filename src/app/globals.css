@@ -129,6 +129,45 @@
   }
 }
 
+/* Ticket d'attente (/pending) : une seule entrée en fondu, jamais rejouée. */@keyframes tks-ticket-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.tks-ticket-enter {
+  animation: tks-ticket-enter 0.45s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tks-ticket-enter {
+    animation: none;
+  }
+}
+
+/* Écrans d'échec (404, erreur) : une seule entrée en fondu, jamais rejouée. */
+@keyframes tks-erreur-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.tks-erreur-enter {
+  animation: tks-erreur-enter 0.45s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tks-erreur-enter {
+    animation: none;
+  }
+}
+
 /* Chargeur générique (AppLoader) : 100 % CSS, sans JS client. */
 @keyframes tks-loader-orbit {
   to {
@@ -179,4 +218,56 @@
   .tks-loader-dots::after {
     animation: none;
   }
+}
+
+/* Curseur de durée (invitations) : piste remplie jusqu'à la valeur,
+   pouce fond uni + anneau primary, lisible en clair comme en sombre.
+   Le remplissage webkit passe par --tks-range-track (style inline) ;
+   Firefox utilise range-progress. */
+.tks-range {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+  height: 1.25rem;
+}
+.tks-range::-webkit-slider-runnable-track {
+  height: 0.375rem;
+  border-radius: 9999px;
+  background: var(--tks-range-track, var(--muted));
+}
+.tks-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  margin-top: -0.3125rem;
+  height: 1rem;
+  width: 1rem;
+  border-radius: 9999px;
+  background: var(--background);
+  border: 2px solid var(--primary);
+}
+.tks-range::-moz-range-track {
+  height: 0.375rem;
+  border-radius: 9999px;
+  background: var(--muted);
+}
+.tks-range::-moz-range-progress {
+  height: 0.375rem;
+  border-radius: 9999px;
+  background: var(--primary);
+}
+.tks-range::-moz-range-thumb {
+  height: 0.75rem;
+  width: 0.75rem;
+  border-radius: 9999px;
+  background: var(--background);
+  border: 2px solid var(--primary);
+}
+.tks-range:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+.tks-range:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }

@@ -5,6 +5,9 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
 import { session as tableSession, user } from "@/lib/db/schema/auth-schema";
 import { comptesStaff, facteurs2faAdmin } from "@/lib/db/schema/s1-comptes";
+import { peutModifierAdmin } from "@/lib/db/schema/s1-comptes";
+import { FormulaireMonProfil } from "./formulaire-mon-profil";
+import { ActivationSecondFacteur } from "@/components/profil";
 import { and, desc, eq, gt } from "drizzle-orm";
 import { headers } from "next/headers";
 
@@ -105,6 +108,9 @@ export default async function AdminProfilPage() {
     sessions = lignesSessions;
   }
 
+  const peutModifierCoordonnees =
+    profil.type === "STAFF" && peutModifierAdmin(profil.role, profil.etat);
+
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 pt-4">
       <ProfilUtilisateur
@@ -120,7 +126,18 @@ export default async function AdminProfilPage() {
         creeLe={creeLe}
         creePar={creePar}
         sessions={sessions}
+        peutModifierCoordonnees={peutModifierCoordonnees}
+        motifCoordonneesVerrouillees="Lecture seule : votre compte ne permet pas la correction."
+        cleCoordonnees={`${nom}-${telephone ?? ""}`}
+        formulaireCoordonnees={
+          <FormulaireMonProfil nomInitial={nom} telephoneInitial={telephone ?? ""} />
+        }
         sessionActuelleId={sessionActuelleId}
+        formulaireSecondFacteur={
+          profil.type === "STAFF" && profil.role !== "AGENT" && secondFacteurActif !== true ? (
+            <ActivationSecondFacteur email={email} />
+          ) : undefined
+        }
       />
     </div>
   );

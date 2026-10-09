@@ -5,14 +5,21 @@ import {
   estCleReglage,
   estEtatStaff,
   estRoleStaff,
+  etatLienInvitation,
   normaliserDureeInvitationJours,
+  normaliserEmailStaff,
   peutChangerRole,
   peutCreerAdminPrincipal,
   peutInviterAdminPrincipal,
   peutInviterAgent,
+  peutModifierAdmin,
   peutModifierReglage,
+  peutRevoquerAdmin,
+  peutSuspendreAdmin,
+  peutLeverSuspension,
   roleCibleInvitationValide,
   telephoneStaffValide,
+  transitionCompteStaffValide,
 } from "../db/schema/s1-comptes/validation";
 
 describe("règles staff", () => {
@@ -20,6 +27,8 @@ describe("règles staff", () => {
     expect(estRoleStaff("ADMIN_PRINCIPAL")).toBe(true);
     expect(estRoleStaff("CLIENT")).toBe(false);
     expect(estEtatStaff("VALIDE")).toBe(true);
+    expect(estEtatStaff("SUSPENDU")).toBe(true);
+    expect(estEtatStaff("REVOQUE")).toBe(true);
     expect(estEtatStaff("EN_ATTENTE_VALIDATION")).toBe(false);
   });
 
@@ -61,6 +70,72 @@ describe("règles staff", () => {
     expect(peutInviterAdminPrincipal("ADMIN_TECHNIQUE", "REVOQUE")).toBe(false);
   });
 
+  it("état d'un lien d'invitation : consommé > révoqué > expiré > en attente", () => {
+    const maintenant = new Date("2026-06-01T12:00:00Z").getTime();
+    const futur = new Date("2026-06-10T12:00:00Z");
+    const passe = new Date("2026-05-20T12:00:00Z");
+    expect(
+      etatLienInvitation(
+        { consommeLe: null, revoqueLe: null, expireLe: futur },
+        maintenant,
+      ),
+    ).toBe("en-attente");
+    expect(
+      etatLienInvitation(
+        { consommeLe: null, revoqueLe: null, expireLe: passe },
+        maintenant,
+      ),
+    ).toBe("expire");
+    // La décision humaine fait foi : révoqué reste révoqué après expiration.
+    expect(
+      etatLienInvitation(
+        { consommeLe: null, revoqueLe: passe, expireLe: passe },
+        maintenant,
+      ),
+    ).toBe("revoque");
+    expect(
+      etatLienInvitation(
+        { consommeLe: passe, revoqueLe: null, expireLe: futur },
+        maintenant,
+      ),
+    ).toBe("termine");
+  });
+
+  it("révocation admin : même autorisation que la création, définitive", () => {
+    expect(peutRevoquerAdmin("ADMIN_TECHNIQUE", "VALIDE")).toBe(true);
+    expect(peutRevoquerAdmin("ADMIN_PRINCIPAL", "VALIDE")).toBe(true);
+    expect(peutRevoquerAdmin("AGENT", "VALIDE")).toBe(false);
+    expect(peutRevoquerAdmin("ADMIN_PRINCIPAL", "REVOQUE")).toBe(false);
+    expect(peutRevoquerAdmin("ADMIN_PRINCIPAL", "SUSPENDU")).toBe(false);
+  });
+
+  it("suspension : même autorisation que la révocation, transitions fermées", () => {
+    expect(peutSuspendreAdmin("ADMIN_TECHNIQUE", "VALIDE")).toBe(true);
+    expect(peutSuspendreAdmin("ADMIN_PRINCIPAL", "VALIDE")).toBe(true);
+    expect(peutSuspendreAdmin("AGENT", "VALIDE")).toBe(false);
+    expect(peutSuspendreAdmin("ADMIN_PRINCIPAL", "REVOQUE")).toBe(false);
+    expect(peutSuspendreAdmin("ADMIN_PRINCIPAL", "SUSPENDU")).toBe(false);
+    expect(peutLeverSuspension("ADMIN_TECHNIQUE", "VALIDE")).toBe(true);
+    expect(peutLeverSuspension("ADMIN_PRINCIPAL", "VALIDE")).toBe(true);
+    expect(peutLeverSuspension("AGENT", "VALIDE")).toBe(false);
+    expect(peutLeverSuspension("ADMIN_PRINCIPAL", "SUSPENDU")).toBe(false);
+    expect(transitionCompteStaffValide("VALIDE", "SUSPENDU")).toBe(true);
+    expect(transitionCompteStaffValide("SUSPENDU", "VALIDE")).toBe(true);
+    expect(transitionCompteStaffValide("VALIDE", "REVOQUE")).toBe(true);
+    expect(transitionCompteStaffValide("SUSPENDU", "REVOQUE")).toBe(true);
+    expect(transitionCompteStaffValide("REVOQUE", "VALIDE")).toBe(false);
+    expect(transitionCompteStaffValide("REVOQUE", "SUSPENDU")).toBe(false);
+    expect(transitionCompteStaffValide("VALIDE", "VALIDE")).toBe(false);
+    expect(transitionCompteStaffValide("SUSPENDU", "SUSPENDU")).toBe(false);
+  });
+
+  it("correction admin (support) : même autorisation, jamais l'agent ni un révoqué", () => {
+    expect(peutModifierAdmin("ADMIN_TECHNIQUE", "VALIDE")).toBe(true);
+    expect(peutModifierAdmin("ADMIN_PRINCIPAL", "VALIDE")).toBe(true);
+    expect(peutModifierAdmin("AGENT", "VALIDE")).toBe(false);
+    expect(peutModifierAdmin("ADMIN_TECHNIQUE", "REVOQUE")).toBe(false);
+  });
+
   it("réglages : clés fermées, durée bornée, même autorisation", () => {
     expect(estCleReglage("duree_invitation_jours")).toBe(true);
     expect(estCleReglage("taux_change")).toBe(false);
@@ -71,10 +146,19 @@ describe("règles staff", () => {
     expect(normaliserDureeInvitationJours("illisible")).toBe(
       DEFAUT_DUREE_INVITATION_JOURS,
     );
-    expect(peutModifierReglage("ADMIN_TECHNIQUE", "VALIDE")).toBe(true);
-    expect(peutModifierReglage("ADMIN_PRINCIPAL", "VALIDE")).toBe(true);
-    expect(peutModifierReglage("AGENT", "VALIDE")).toBe(false);
-    expect(peutModifierReglage("ADMIN_PRINCIPAL", "REVOQUE")).toBe(false);
+    expect(peutModifierReglage("duree_invitation_jours", "ADMIN_TECHNIQUE", "VALIDE")).toBe(true);
+    expect(peutModifierReglage("duree_invitation_jours", "ADMIN_PRINCIPAL", "VALIDE")).toBe(true);
+    expect(peutModifierReglage("duree_invitation_jours", "AGENT", "VALIDE")).toBe(false);
+    expect(peutModifierReglage("duree_invitation_jours", "ADMIN_PRINCIPAL", "REVOQUE")).toBe(false);
+    expect(peutModifierReglage("cle_inconnue", "ADMIN_PRINCIPAL", "VALIDE")).toBe(false);
+  });
+
+  it("email staff : normalisé minuscule, invalide rejeté", () => {
+    expect(normaliserEmailStaff("  Agent@Exemple.CD ")).toBe(
+      "agent@exemple.cd",
+    );
+    expect(normaliserEmailStaff("sans-arobase")).toBeNull();
+    expect(normaliserEmailStaff("")).toBeNull();
   });
 
   it("téléphone staff : optionnel, contact uniquement, jamais vérifié par SMS", () => {

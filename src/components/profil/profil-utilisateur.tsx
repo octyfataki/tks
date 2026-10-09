@@ -1,10 +1,12 @@
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
+import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
 import { FingerprintIcon, LockIcon, MailIcon, PencilIcon, PhoneIcon, ShieldCheckIcon } from "lucide-react";
 import { BoutonCopierMatricule } from "./bouton-copier-matricule";
 import { BoutonDeconnexionAutres } from "./bouton-deconnexion-autres";
 import { PhotoProfilModifiable } from "./photo-profil-modifiable";
+import { SectionModifiable } from "@/app/admin/list/[id]/section-modifiable";
 
 // Mon compte : affichage seul, piloté par la session.
 // Parti pris (maquettes Hang Minh + Sara Smith) :
@@ -61,6 +63,16 @@ export type ProfilUtilisateurProps = {
   sessions?: SessionEnCoursProfil[] | null;
   /** Identifiant de la session courante (marquée « Cet appareil »). */
   sessionActuelleId?: string | null;
+  /** Zone de correction nom + téléphone (son propre compte, espace admin). */
+  formulaireCoordonnees?: ReactNode;
+  /** Correction autorisée (compte VALIDE, droits suffisants) ? */
+  peutModifierCoordonnees?: boolean;
+  /** Motif affiché quand le crayon est désactivé. */
+  motifCoordonneesVerrouillees?: string;
+  /** Change à chaque enregistrement : le formulaire repart des valeurs fraîches. */
+  cleCoordonnees?: string;
+  /** Activation du second facteur (carte Sécurité, espace admin). */
+  formulaireSecondFacteur?: ReactNode;
   className?: string;
 };
 
@@ -203,6 +215,11 @@ export function ProfilUtilisateur({
   creePar,
   sessions,
   sessionActuelleId,
+  formulaireCoordonnees,
+  peutModifierCoordonnees,
+  motifCoordonneesVerrouillees,
+  cleCoordonnees,
+  formulaireSecondFacteur,
   className,
 }: ProfilUtilisateurProps) {
   const estStaff = compte.type === "STAFF";
@@ -269,38 +286,48 @@ export function ProfilUtilisateur({
       <div className="mt-4 grid items-start gap-4 lg:grid-cols-3">
         <div className="flex flex-col gap-4 lg:col-span-2">
           <section aria-label="Coordonnées" className="rounded-xl border bg-card p-4 sm:p-5">
-            <TitreCarte
+            <SectionModifiable
               titre="Coordonnées"
-              verrou="lecture seule : l'identifiant et le rôle ne se changent pas ici"
+              description="Nom et téléphone retouchables. L'identifiant et le rôle ne se changent pas ici."
+              peutModifier={peutModifierCoordonnees ?? false}
+              motifVerrouille={
+                motifCoordonneesVerrouillees ?? "Lecture seule : la correction est indisponible."
+              }
+              cleRepli={cleCoordonnees}
+              lecture={
+                <>
+    <dl className="mt-4 grid gap-x-8 gap-y-4 sm:grid-cols-2">
+                  <Champ etiquette="Nom affiché" valeur={nom} />
+                  <div className="min-w-0">
+                    <dt className="flex items-center gap-1 text-xs text-muted-foreground">
+                      <PhoneIcon className="size-3" aria-hidden />
+                      Téléphone contact
+                    </dt>
+                    <dd className="mt-0.5 text-sm font-medium">{telephoneAffiche ?? "Non renseigné"}</dd>
+                  </div>
+                </dl>
+                <div className="mt-4 flex flex-col gap-2">
+                  <LigneVerrouillee
+                    icone={MailIcon}
+                    etiquette="Adresse email"
+                    valeur={email}
+                    aide="Identifiant de connexion : la confiance passe par l'email, il ne se change pas ici."
+                  />
+                  <LigneVerrouillee
+                    icone={ShieldCheckIcon}
+                    etiquette="Rôle"
+                    valeur={libelleRole(compte)}
+                    aide={
+                      estStaff
+                        ? "Immuable : tout changement passe par révocation + recréation tracées."
+                        : "Le compte client ne porte aucun pouvoir de distribution."
+                    }
+                  />
+                </div>
+                </>
+              }
+              formulaire={formulaireCoordonnees}
             />
-            <dl className="mt-4 grid gap-x-8 gap-y-4 sm:grid-cols-2">
-              <Champ etiquette="Nom affiché" valeur={nom} />
-              <div className="min-w-0">
-                <dt className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <PhoneIcon className="size-3" aria-hidden />
-                  Téléphone contact
-                </dt>
-                <dd className="mt-0.5 text-sm font-medium">{telephoneAffiche ?? "Non renseigné"}</dd>
-              </div>
-            </dl>
-            <div className="mt-4 flex flex-col gap-2">
-              <LigneVerrouillee
-                icone={MailIcon}
-                etiquette="Adresse email"
-                valeur={email}
-                aide="Identifiant de connexion : la confiance passe par l'email, il ne se change pas ici."
-              />
-              <LigneVerrouillee
-                icone={ShieldCheckIcon}
-                etiquette="Rôle"
-                valeur={libelleRole(compte)}
-                aide={
-                  estStaff
-                    ? "Immuable : tout changement passe par révocation + recréation tracées."
-                    : "Le compte client ne porte aucun pouvoir de distribution."
-                }
-              />
-            </div>
           </section>
 
           {compte.type === "CLIENT" ? (
@@ -384,6 +411,9 @@ export function ProfilUtilisateur({
                 Obligatoire pour un administrateur principal ou technique, jamais par SMS. Le secret
                 n&apos;est jamais affiché.
               </p>
+            ) : null}
+            {formulaireSecondFacteur ? (
+              <div className="mt-3">{formulaireSecondFacteur}</div>
             ) : null}
             <p className="mt-3 flex items-center gap-1.5 text-[11px] text-muted-foreground">
               <FingerprintIcon className="size-3.5" aria-hidden />
