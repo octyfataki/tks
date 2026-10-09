@@ -14,7 +14,11 @@ type PasswordInputProps = {
   placeholder?: string;
 };
 
-/** Champ mot de passe avec bascule afficher/masquer (icône œil). */
+/** Champ mot de passe avec bascule afficher/masquer (icône œil). Sans
+ * animation au clic : le bouton générique ajoute `active:translate-y-px`
+ * (effet d'enfoncement) qui écraserait le centrage `-translate-y-1/2` et
+ * ferait sauter l'œil à chaque clic — ici l'état actif garde le centrage et
+ * les transitions sont coupées. */
 export function PasswordInput({
   id,
   name,
@@ -43,7 +47,7 @@ export function PasswordInput({
         onClick={() => setVisible((v) => !v)}
         aria-label={visible ? "Masquer le mot de passe" : "Afficher le mot de passe"}
         aria-pressed={visible}
-        className="absolute top-1/2 right-1 -translate-y-1/2"
+        className="absolute top-1/2 right-1 -translate-y-1/2 transition-none active:-translate-y-1/2"
       >
         {visible ? <Eye /> : <EyeOff />}
       </Button>
