@@ -38,3 +38,20 @@ et il faudra la réécrire six fois.
       en couche applicative.
 - [ ] La CI passe : migration, build, tests. Aucun mock de persistance n'existe
       dans le dépôt.
+
+## Comments
+
+- Correctif création (2026-10-09, `feat/s1-01-inscription-client`) : normalisation
+  canonique du téléphone (`normaliserTelephoneClient` — espaces/tirets/points/
+  parenthèses retirés, `00` → `+`) appliquée à la vérification, au pré-contrôle
+  et au stockage — deux écritures du même numéro sont le même compte, la
+  seconde inscription est refusée. Idempotence reprise : `id` UUID généré sur
+  l'appareil (`sessionStorage`, clé `tks-inscription`), transmis à la server
+  action (`inscrireCompteClient`), réutilisé en cas de rejeu. Audit
+  `client.inscrire` enrichi (email + téléphone + état). Tests :
+  `validation-client.test.ts` (normalisation). Vérifié : 145/145 vitest,
+  `tsc --noEmit` et `eslint` sans erreur.
+- Reste hors création : test d'intégration contre vraie base (couture spec),
+  anti-force brute sur la server action, test navigateur mince, file hors-ligne
+  S8/outbox. Écart assumé inchangé : email technique exigé (socle
+  `emailAndPassword`), téléphone = clé métier unique.

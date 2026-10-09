@@ -4,7 +4,7 @@ import { db } from "@/lib/db/client";
 import {
   comptesClients,
   normaliserEmailStaff,
-  telephoneClientValide,
+  normaliserTelephoneClient,
 } from "@/lib/db/schema/s1-comptes";
 import { enregistrerEvenement } from "@/lib/s2-autorisations/journal";
 import { inscrireUtilisateur, StaffError } from "./staff";
@@ -101,13 +101,14 @@ export async function inscrireClient(input: {
   if (!emailNormalise) {
     throw new ClientError("EMAIL_INVALIDE", "adresse email invalide");
   }
-  const telephone = input.telephone.trim();
-  if (!telephoneClientValide(telephone)) {
+  const telephone = normaliserTelephoneClient(input.telephone);
+  if (!telephone) {
     throw new ClientError("TELEPHONE_INVALIDE", "numéro de téléphone invalide");
   }
   // Pré-contrôle : une seconde inscription avec le même numéro est refusée
-  // avec un motif lisible (S1-01). La course résiduelle bute sur l'unicité
-  // MySQL et est reconvertie ci-dessous.
+  // avec un motif lisible (S1-01). La comparaison porte sur la forme
+  // canonique — deux écritures du même numéro sont le même compte.
+  // La course résiduelle bute sur l'unicité MySQL et est reconvertie ci-dessous.
   const telephonesPris = await db
     .select({ id: comptesClients.id })
     .from(comptesClients)
@@ -142,7 +143,11 @@ export async function inscrireClient(input: {
           typeAction: "client.inscrire",
           entite: "compte_client",
           entiteId: id,
-          apres: { email: emailNormalise, etat: "EN_ATTENTE_VALIDATION" },
+          apres: {
+            email: emailNormalise,
+            telephone,
+            etat: "EN_ATTENTE_VALIDATION",
+          },
         },
         tx,
       );

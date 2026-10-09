@@ -15,19 +15,21 @@ décision est juste, et la conception doit faire le reste.
 
 **Status:** ready-for-agent
 
-- [ ] La file des comptes en attente existe, triée par **ancienneté**, avec la date
+- [x] La file des comptes en attente existe, triée par **ancienneté**, avec la date
       d'inscription. Sans elle, personne ne sait qui attend.
-- [ ] **Valider exige une pièce d'identité.** Aucun chemin dans l'application ne
+- [x] **Valider exige une pièce d'identité.** Aucun chemin dans l'application ne
       produit un compte `VALIDE` sans qu'un document ait été vu. Le test tente la
       validation par tous les chemins disponibles — écran, puis appel direct de la
       couche applicative — et attend un refus dans les deux cas. La validation sans
       document doit être **impossible à produire**, pas seulement masquée.
-- [ ] Le client dépose sa pièce d'identité **depuis l'application**. L'artefact est
+      Nuance actée : la pièce peut être *vue au comptoir* (attestation de
+      l'administrateur, type en liste fermée, journalisée) sans dépôt numérique.
+- [x] Le client dépose sa pièce d'identité **depuis l'application**. L'artefact est
       compressé, conservé, et sa référence est celle que porte la validation.
-- [ ] Valider et refuser sont deux actions distinctes. Le refus exige un **motif**,
+- [x] Valider et refuser sont deux actions distinctes. Le refus exige un **motif**,
       le motif est affiché au client, et le compte peut être validé plus tard sans
       ressaisir quoi que ce soit.
-- [ ] La validation est journalisée : qui, quand, quel compte, sur quelle pièce.
+- [x] La validation est journalisée : qui, quand, quel compte, sur quelle pièce.
 - [ ] Un compte validé franchit la barrière que les autres ne franchissent pas. La
       barrière est **une seule vérification nommée**, celle que tous les écrans
       métier réutiliseront — c'est elle que S5 viendra consommer.

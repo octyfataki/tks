@@ -293,14 +293,57 @@ export function normaliserDureeInvitationJours(valeur: unknown): number {
 }
 
 /**
- * Modifier un réglage : même autorisation que créer un administrateur
- * principal — administrateur technique ou principal, toujours VALIDE.
+ * Nature d'un réglage : ce qui sépare le technique du métier (S2
+ * §Frontière — « ni taux, ni plafond » pour l'administrateur technique).
+ * - `TECHNIQUE` : mécanique interne, sans portée financière directe
+ *   (ex. durée d'un lien d'invitation). Les deux administrateurs VALIDE
+ *   peuvent modifier.
+ * - `METIER` : décision du distributeur qui touche l'argent ou le crédit
+ *   (ex. plafond par défaut, seuil de retard). Seul l'administrateur
+ *   principal VALIDE peut modifier. Aucune clé METIER n'existe encore :
+ *   les classer ici suffit à appliquer la règle le jour où elles arrivent.
  */
-export function peutModifierReglage(
+export type NatureReglage = "TECHNIQUE" | "METIER";
+
+/** Nature de chaque clé de réglage existante. */
+export const NATURE_REGLAGE: Record<CleReglage, NatureReglage> = {
+  duree_invitation_jours: "TECHNIQUE",
+};
+
+/**
+ * Modifier un réglage de la nature donnée : un réglage métier est réservé
+ * à l'administrateur principal VALIDE ; un réglage technique suit la même
+ * autorisation que créer un administrateur principal (technique ou
+ * principal, toujours VALIDE).
+ */
+export function peutModifierReglageNature(
+  nature: NatureReglage,
   roleModificateur: string,
   etatModificateur: string,
 ): boolean {
+  if (nature === "METIER") {
+    return (
+      roleModificateur === "ADMIN_PRINCIPAL" && etatModificateur === "VALIDE"
+    );
+  }
   return peutCreerAdminPrincipal(roleModificateur, etatModificateur);
+}
+
+/**
+ * Modifier le réglage de la clé donnée : la nature de la clé décide.
+ * Clé inconnue = refus (liste fermée, comme les permissions S2).
+ */
+export function peutModifierReglage(
+  cle: string,
+  roleModificateur: string,
+  etatModificateur: string,
+): boolean {
+  if (!estCleReglage(cle)) return false;
+  return peutModifierReglageNature(
+    NATURE_REGLAGE[cle],
+    roleModificateur,
+    etatModificateur,
+  );
 }
 
 // ---- Complément S1 : second facteur, pièces, accès temporaires --------
@@ -396,13 +439,32 @@ export function transitionCompteClientValide(
 }
 
 /**
+ * Normalise un téléphone de compte client en forme canonique : espaces,
+ * points, tirets et parenthèses retirés, `00` initial converti en `+`.
+ * Renvoie `null` si le numéro est invalide — même règle souple que le
+ * staff (7 à 15 chiffres). La forme canonique est celle stockée et
+ * comparée : deux écritures du même numéro (`+243 815 000 000` et
+ * `+243815000000`) sont le même compte, et la seconde inscription est
+ * refusée (S1-01, unicité).
+ */
+export function normaliserTelephoneClient(telephone: string): string | null {
+  const brut = telephone.trim();
+  if (brut === "") return null;
+  let canonique = brut.replace(/[\s.\-()]/g, "");
+  if (canonique.startsWith("00")) canonique = `+${canonique.slice(2)}`;
+  if (!telephoneStaffValide(canonique)) return null;
+  // Revalide la forme canonique elle-même : le stockage ne contient que
+  // des chiffres avec un `+` initial optionnel, jamais de séparateurs.
+  if (!/^[+]?\d+$/.test(canonique)) return null;
+  return canonique;
+}
+
+/**
  * Téléphone du compte client : clé métier du compte (GLOSSARY, invariant
  * de séparation), UNIQUE en base. Même format souple que le staff, mais
  * obligatoire ici : un compte sans téléphone ne peut pas être rappelé au
  * comptoir.
  */
 export function telephoneClientValide(telephone: string): boolean {
-  const valeur = telephone.trim();
-  if (valeur === "") return false;
-  return telephoneStaffValide(valeur);
+  return normaliserTelephoneClient(telephone) !== null;
 }

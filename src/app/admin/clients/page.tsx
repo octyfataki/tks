@@ -1,8 +1,15 @@
 import Link from "next/link";
+import { Suspense } from "react";
 import { desc, eq } from "drizzle-orm";
+import { ArrowUpRightIcon } from "lucide-react";
 import { db } from "@/lib/db/client";
 import { user } from "@/lib/db/schema/auth-schema";
 import { comptesClients } from "@/lib/db/schema/s1-comptes";
+import { nomAffiche } from "../list/affichage-admin";
+import { PaginationListe } from "../list/pagination-liste";
+import { BarreOutilsClients } from "./barre-outils-clients";
+import { RegistreComptesClients } from "./registre-comptes-clients";
+import { joursAttente } from "./affichage-client";
 
 const FILTRES_VALIDES = [
   "en-attente",
@@ -10,15 +17,12 @@ const FILTRES_VALIDES = [
   "refuse",
   "revoque",
 ] as const;
+const TRIS_VALIDES = ["anciens", "nom-az"] as const;
+
+/** Lignes par page du registre. */
+const LIGNES_PAR_PAGE = 10;
 
 type FiltreCompte = (typeof FILTRES_VALIDES)[number];
-
-const ETIQUETTES: Record<FiltreCompte, string> = {
-  "en-attente": "En attente",
-  valide: "Validés",
-  refuse: "Refusés",
-  revoque: "Révoqués",
-};
 
 const ETAT_PAR_FILTRE: Record<FiltreCompte, string> = {
   "en-attente": "EN_ATTENTE_VALIDATION",
@@ -28,16 +32,17 @@ const ETAT_PAR_FILTRE: Record<FiltreCompte, string> = {
 };
 
 /**
- * /admin/clients — Liste des comptes clients (connexions).
+ * /admin/clients — Registre des comptes clients (connexions).
  *
- * S1-01 : la table `comptes_clients` existe — on liste les comptes réels,
- * avec leur état. Le dossier financier vit ailleurs (Clients et crédit) :
- * ici on n'affiche aucun solde, aucun nom de dossier.
+ * Un compte est une connexion (email + téléphone, le téléphone est la
+ * clé). Le dossier financier vit ailleurs : ici aucun solde, aucune
+ * dette, aucun plafond. Le bandeau de tête rappelle la file des comptes
+ * en attente — un compte non validé ne peut rien faire.
  */
 export default async function ListeComptesClientsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ q?: string; filtre?: string }>;
+  searchParams: Promise<{ q?: string; filtre?: string; tri?: string; page?: string }>;
 }) {
   const filtres = await searchParams;
   const recherche = (filtres.q ?? "").trim().toLowerCase();
@@ -46,15 +51,10 @@ export default async function ListeComptesClientsPage({
   )
     ? (filtres.filtre as FiltreCompte)
     : null;
-
-  const conserve = new URLSearchParams();
-  if (recherche) conserve.set("q", filtres.q?.trim() ?? "");
-  const lienFiltre = (valeur: FiltreCompte | null) => {
-    const parametres = new URLSearchParams(conserve);
-    if (valeur) parametres.set("filtre", valeur);
-    const chaine = parametres.toString();
-    return chaine ? `/admin/clients?${chaine}` : "/admin/clients";
-  };
+  const tri = (TRIS_VALIDES as readonly string[]).includes(filtres.tri ?? "")
+    ? (filtres.tri as (typeof TRIS_VALIDES)[number])
+    : null;
+  const estFiltre = recherche !== "" || filtre !== null;
 
   const lignesBrutes = await db
     .select({
@@ -63,13 +63,26 @@ export default async function ListeComptesClientsPage({
       telephone: comptesClients.telephone,
       etat: comptesClients.etat,
       createdAt: comptesClients.createdAt,
+      valideLe: comptesClients.valideLe,
+      refuseMotif: comptesClients.refuseMotif,
       nom: user.name,
     })
     .from(comptesClients)
     .leftJoin(user, eq(user.id, comptesClients.betterAuthUserId))
     .orderBy(desc(comptesClients.createdAt));
 
-  const lignes = lignesBrutes.filter((ligne) => {
+  // eslint-disable-next-line react-hooks/purity -- lecture unique de l'horloge en composant serveur
+  const maintenant = Date.now();
+
+  const enAttente = lignesBrutes.filter(
+    (ligne) => ligne.etat === "EN_ATTENTE_VALIDATION",
+  );
+  const plusAncien = Math.max(
+    0,
+    ...enAttente.map((ligne) => joursAttente(ligne.createdAt, maintenant)),
+  );
+
+  const lignesFiltrees = lignesBrutes.filter((ligne) => {
     if (filtre !== null && ligne.etat !== ETAT_PAR_FILTRE[filtre]) return false;
     if (recherche) {
       const nom = (ligne.nom?.trim() || ligne.email).toLowerCase();
@@ -83,7 +96,60 @@ export default async function ListeComptesClientsPage({
     return true;
   });
 
+  const lignesTriees = [...lignesFiltrees].sort((a, b) => {
+    if (tri === "anciens") return a.createdAt.getTime() - b.createdAt.getTime();
+    if (tri === "nom-az")
+      return nomAffiche(a).localeCompare(nomAffiche(b), "fr");
+    return b.createdAt.getTime() - a.createdAt.getTime();
+  });
+
   const total = lignesBrutes.length;
+  const totalPages = Math.max(
+    1,
+    Math.ceil(lignesTriees.length / LIGNES_PAR_PAGE),
+  );
+  const pageDemandee = Math.floor(Number(filtres.page));
+  const page =
+    Number.isFinite(pageDemandee) && pageDemandee >= 1
+      ? Math.min(pageDemandee, totalPages)
+      : 1;
+  const conserves = new URLSearchParams();
+  if (recherche) conserves.set("q", filtres.q?.trim() ?? "");
+  if (filtre) conserves.set("filtre", filtre);
+  if (tri) conserves.set("tri", tri);
+  const chaineConservee = conserves.toString();
+  const hrefBase = chaineConservee
+    ? `/admin/clients?${chaineConservee}`
+    : "/admin/clients";
+
+  const exportLignes = lignesTriees.map((ligne) => ({
+    nom: nomAffiche(ligne),
+    email: ligne.email,
+    telephone: ligne.telephone,
+    etat: ligne.etat,
+    inscritLe: ligne.createdAt.toLocaleDateString("fr-FR"),
+    attenteJours:
+      ligne.etat === "EN_ATTENTE_VALIDATION"
+        ? String(joursAttente(ligne.createdAt, maintenant))
+        : "—",
+    valideLe: ligne.valideLe
+      ? ligne.valideLe.toLocaleDateString("fr-FR")
+      : "—",
+    motifRefus: ligne.refuseMotif ?? "—",
+  }));
+
+  const lignes = lignesTriees
+    .slice((page - 1) * LIGNES_PAR_PAGE, page * LIGNES_PAR_PAGE)
+    .map((ligne) => ({
+      id: ligne.id,
+      nom: ligne.nom,
+      email: ligne.email,
+      telephone: ligne.telephone,
+      etat: ligne.etat,
+      inscritLe: ligne.createdAt,
+      valideLe: ligne.valideLe,
+      refuseMotif: ligne.refuseMotif,
+    }));
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 pt-4">
@@ -95,81 +161,105 @@ export default async function ListeComptesClientsPage({
           Comptes clients
         </h1>
         <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-          Connexions des clients (email + mot de passe, téléphone clé métier).
-          États : <code>EN_ATTENTE_VALIDATION</code>, <code>VALIDE</code>,{" "}
-          <code>REFUSE</code>, <code>REVOQUE</code>.{" "}
           {total === 0
             ? "Aucun compte pour le moment."
-            : `${total} compte${total > 1 ? "s" : ""}.`}
+            : estFiltre
+              ? `${lignesTriees.length} sur ${total} compte${total > 1 ? "s" : ""}.`
+              : `${total} compte${total > 1 ? "s" : ""}.`}{" "}
+          Une connexion par ligne : le téléphone est la clé du compte. Le
+          dossier financier vit ailleurs — ici aucun solde.
         </p>
       </div>
 
-      <div className="flex flex-wrap gap-2 text-xs">
-        <Link
-          href={lienFiltre(null)}
-          aria-current={filtre === null ? "page" : undefined}
-          className="rounded-md border px-2 py-1 underline-offset-4 hover:underline"
-        >
-          Tous
-        </Link>
-        {FILTRES_VALIDES.map((valeur) => (
+      {enAttente.length === 0 ? (
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg border bg-card px-3 py-2 text-xs text-muted-foreground">
+          <span
+            aria-hidden
+            className="size-1.5 shrink-0 rounded-full bg-muted-foreground/40"
+          />
+          <span>File de validation vide — aucun compte bloqué.</span>
           <Link
-            key={valeur}
-            href={lienFiltre(valeur)}
-            aria-current={filtre === valeur ? "page" : undefined}
-            className="rounded-md border px-2 py-1 underline-offset-4 hover:underline"
+            href="/admin/clients/validation"
+            className="ml-auto inline-flex items-center rounded-full border border-primary/50 px-3 py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           >
-            {ETIQUETTES[valeur]}
+            Voir la file
           </Link>
-        ))}
-        {filtre !== null || recherche !== "" ? (
+        </div>
+      ) : (
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg border bg-card px-3 py-2 text-xs">
+          <span
+            aria-hidden
+            className="size-1.5 shrink-0 rounded-full bg-amber-600"
+          />
+          <span className="font-medium">
+            {enAttente.length} compte{enAttente.length > 1 ? "s" : ""} en
+            attente
+          </span>
+          <span className="text-muted-foreground">
+            — plus ancien{" "}
+            {plusAncien === 0
+              ? "arrivé aujourd'hui"
+              : plusAncien === 1
+                ? "arrivé hier"
+                : `en attente depuis ${plusAncien} jours`}{" "}
+            · pièce d&apos;identité exigée.
+          </span>
+          {/* Ticket de guichet : le libellé d'un côté, le numéro de la
+              file de l'autre, séparés par un pointillé perforé. Le compteur
+              quitte le texte et devient le numéro du ticket. */}
           <Link
-            href="/admin/clients"
-            className="px-2 py-1 text-muted-foreground underline underline-offset-4"
+            href="/admin/clients/validation"
+            aria-label={`Ouvrir la file de validation, ${enAttente.length} compte${enAttente.length > 1 ? "s" : ""} en attente`}
+            className="group ml-auto inline-flex items-center overflow-hidden rounded-full border border-primary/50 bg-transparent text-primary shadow-sm transition-colors hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           >
-            Réinitialiser
+            <span className="py-1.5 pr-2 pl-3.5 text-xs font-medium">
+              Ouvrir la file
+            </span>
+            <span
+              aria-hidden
+              className="h-4 w-px border-l border-dashed border-primary/40"
+            />
+            <span className="flex items-center gap-1 py-1.5 pr-3 pl-2 text-xs font-semibold tabular-nums">
+              {enAttente.length}
+              <ArrowUpRightIcon className="size-3.5 transition-transform motion-safe:group-hover:-translate-y-px motion-safe:group-hover:translate-x-px" />
+            </span>
           </Link>
-        ) : null}
-      </div>
+        </div>
+      )}
+
+      <Suspense>
+        <BarreOutilsClients exportLignes={exportLignes} />
+      </Suspense>
 
       {lignes.length === 0 ? (
-        <div className="rounded-md border p-4">
+        <div className="rounded-xl border bg-card p-6 text-center">
           <p className="text-sm font-medium">
-            {filtre !== null || recherche !== ""
+            {estFiltre
               ? "Aucun compte ne correspond aux filtres"
               : "Aucun compte client pour le moment"}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            La file des comptes à valider est sur la page{" "}
-            <Link href="/admin/clients/validation" className="underline underline-offset-4">
-              Validation
-            </Link>
-            .
+            {estFiltre ? (
+              <Link
+                href="/admin/clients"
+                className="underline-offset-4 hover:underline"
+              >
+                Réinitialiser les filtres
+              </Link>
+            ) : (
+              "Les inscriptions des clients apparaîtront ici dès leur première connexion."
+            )}
           </p>
         </div>
       ) : (
-        <ul className="flex flex-col gap-2">
-          {lignes.map((ligne) => (
-            <li
-              key={ligne.id}
-              className="flex flex-wrap items-center justify-between gap-2 rounded-md border p-3"
-            >
-              <div>
-                <p className="text-sm font-medium">
-                  {ligne.nom?.trim() || ligne.email}
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {ligne.email} · {ligne.telephone} · inscrit le{" "}
-                  {ligne.createdAt.toLocaleDateString("fr-FR")}
-                </p>
-              </div>
-              <span className="rounded-md border px-2 py-1 text-xs font-medium">
-                {ligne.etat}
-              </span>
-            </li>
-          ))}
-        </ul>
+        <RegistreComptesClients
+          lignes={lignes}
+          maintenant={maintenant}
+          page={page}
+          totalPages={totalPages}
+        />
       )}
+      <PaginationListe page={page} totalPages={totalPages} hrefBase={hrefBase} />
     </div>
   );
 }
