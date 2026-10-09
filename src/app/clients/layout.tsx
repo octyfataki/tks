@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { redirect } from "next/navigation";
+import { GardienSession } from "@/components/gardien-session";
 import { profilSession } from "@/lib/s1-comptes/profil-session";
 import { redirectionAcces } from "@/lib/s1-comptes/role-session";
 
@@ -16,5 +17,10 @@ export default async function ClientsLayout({
   const profil = await profilSession();
   const redirection = redirectionAcces(profil, "CLIENTS");
   if (redirection) redirect(redirection);
-  return <>{children}</>;
+  return (
+    <>
+      <GardienSession />
+      {children}
+    </>
+  );
 }

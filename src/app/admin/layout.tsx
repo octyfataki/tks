@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { profilSession } from "@/lib/s1-comptes/profil-session";
 import { redirectionAcces } from "@/lib/s1-comptes/role-session";
+import { GardienSession } from "@/components/gardien-session";
 import { AppSidebar } from "@/components/app-sidebar";
 import { AdminHeader } from "@/components/admin-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
@@ -42,6 +43,7 @@ export default async function AdminLayout({
 
   return (
     <SidebarProvider>
+      <GardienSession />
       <AppSidebar
         utilisateur={{ nom, email: email || "Espace distributeur" }}
         profilUrl="/admin/profil"
