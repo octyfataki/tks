@@ -1,19 +1,31 @@
-import type { CompteProfil } from "@/components/profil";
+import type { CompteProfil, SessionEnCoursProfil } from "@/components/profil";
 import { ProfilUtilisateur } from "@/components/profil";
 import { profilSession } from "@/lib/s1-comptes/profil-session";
 import { auth } from "@/lib/auth";
+import { db } from "@/lib/db/client";
+import { session as tableSession, user } from "@/lib/db/schema/auth-schema";
+import { comptesStaff, facteurs2faAdmin } from "@/lib/db/schema/s1-comptes";
+import { peutModifierAdmin } from "@/lib/db/schema/s1-comptes";
+import { FormulaireMonProfil } from "./formulaire-mon-profil";
+import { ActivationSecondFacteur } from "@/components/profil";
+import { and, desc, eq, gt } from "drizzle-orm";
 import { headers } from "next/headers";
 
 // Mon compte (espace distributeur) : contenu seul, le shell sidebar +
-// AdminHeader vit dans /admin/layout. Données issues de la session,
-// jamais saisies (S4 branchera le dossier client rattaché ici).
+// AdminHeader vit dans /admin/layout. Données issues de la session et des
+// tables staff, jamais saisies (S4 branchera le dossier client rattaché ici).
 export default async function AdminProfilPage() {
-  const session = await auth.api.getSession({ headers: await headers() });
+  const entetes = await headers();
+  const session = await auth.api.getSession({ headers: entetes });
   const email = session?.user?.email ?? "";
+  const userId = session?.user?.id;
+  const sessionActuelleId =
+    (session as unknown as { session?: { id?: string } } | null)?.session?.id ?? null;
   const nom =
     session?.user?.name?.trim() ||
     (email ? email.split("@")[0] : "") ||
     "Administrateur";
+  const avatarUrl = session?.user?.image ?? null;
 
   const profil = await profilSession();
   const compte: CompteProfil =
@@ -21,13 +33,111 @@ export default async function AdminProfilPage() {
       ? { type: "STAFF", role: profil.role, etat: profil.etat }
       : { type: "CLIENT" };
 
+  // Données réelles du compte connecté : téléphone, matricule, ancienneté,
+  // second facteur. Replis neutres si illisible : on n'invente rien.
+  let telephone: string | null = null;
+  let matricule: string | null = null;
+  let creeLe: Date | null = null;
+  let creePar: string | null = null;
+  let secondFacteurActif: boolean | null = null;
+  let appareilSecondFacteur: string | null = null;
+
+  if (userId && profil.type === "STAFF") {
+    const lignes = await db
+      .select({
+        id: comptesStaff.id,
+        telephone: comptesStaff.telephone,
+        createdAt: comptesStaff.createdAt,
+        creePar: comptesStaff.creePar,
+        nom: user.name,
+      })
+      .from(comptesStaff)
+      .leftJoin(user, eq(user.id, comptesStaff.betterAuthUserId))
+      .where(eq(comptesStaff.betterAuthUserId, userId))
+      .limit(1);
+    const ligne = lignes[0];
+    if (ligne) {
+      telephone = ligne.telephone ?? null;
+      matricule = ligne.id.slice(0, 8).toUpperCase();
+      creeLe = ligne.createdAt;
+      if (ligne.creePar) {
+        const createurs = await db
+          .select({ email: comptesStaff.email, nom: user.name })
+          .from(comptesStaff)
+          .leftJoin(user, eq(user.id, comptesStaff.betterAuthUserId))
+          .where(eq(comptesStaff.id, ligne.creePar))
+          .limit(1);
+        const createur = createurs[0];
+        creePar = createur
+          ? createur.nom?.trim() || createur.email || "Compte supprimé"
+          : "Compte supprimé";
+      } else {
+        creePar = "Système (bootstrap)";
+      }
+      const facteurs = await db
+        .select({ nomAppareil: facteurs2faAdmin.nomAppareil, actif: facteurs2faAdmin.actif })
+        .from(facteurs2faAdmin)
+        .where(eq(facteurs2faAdmin.compteStaffId, ligne.id))
+        .limit(1);
+      const facteur = facteurs[0];
+      if (facteur) {
+        secondFacteurActif = facteur.actif;
+        appareilSecondFacteur = facteur.nomAppareil;
+      } else {
+        secondFacteurActif = null;
+      }
+    }
+  }
+
+  // Sessions encore valides du compte connecté : d'où on est connecté,
+  // depuis quand, jusqu'à quand. Le secret ne s'affiche jamais.
+  let sessions: SessionEnCoursProfil[] = [];
+  if (userId) {
+    const lignesSessions = await db
+      .select({
+        id: tableSession.id,
+        appareil: tableSession.userAgent,
+        adresse: tableSession.ipAddress,
+        creeLe: tableSession.createdAt,
+        expireLe: tableSession.expiresAt,
+      })
+      .from(tableSession)
+      .where(and(eq(tableSession.userId, userId), gt(tableSession.expiresAt, new Date())))
+      .orderBy(desc(tableSession.createdAt))
+      .limit(20);
+    sessions = lignesSessions;
+  }
+
+  const peutModifierCoordonnees =
+    profil.type === "STAFF" && peutModifierAdmin(profil.role, profil.etat);
+
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 pt-4">
       <ProfilUtilisateur
         nom={nom}
         email={email || "Espace distributeur"}
+        telephone={telephone}
+        avatarUrl={avatarUrl}
         compte={compte}
         dossier={null}
+        secondFacteurActif={secondFacteurActif}
+        appareilSecondFacteur={appareilSecondFacteur}
+        matricule={matricule}
+        creeLe={creeLe}
+        creePar={creePar}
+        sessions={sessions}
+        peutModifierCoordonnees={peutModifierCoordonnees}
+        motifCoordonneesVerrouillees="Lecture seule : votre compte ne permet pas la correction."
+        cleCoordonnees={`${nom}-${telephone ?? ""}`}
+        formulaireCoordonnees={
+          <FormulaireMonProfil nomInitial={nom} telephoneInitial={telephone ?? ""} />
+        }
+        sessionActuelleId={sessionActuelleId}
+        formulaireSecondFacteur={
+          profil.type === "STAFF" && profil.role !== "AGENT" && secondFacteurActif !== true ? (
+            <ActivationSecondFacteur email={email} />
+          ) : undefined
+        }
       />
     </div>
   );
