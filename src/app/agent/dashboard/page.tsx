@@ -1,33 +1,87 @@
+import type { Metadata } from "next";
 import Link from "next/link";
-import { BoutonDeconnexion } from "@/components/bouton-deconnexion";
+import {
+  BanknoteIcon,
+  ClipboardListIcon,
+  UserCheckIcon,
+} from "lucide-react";
 
-// Espace agent — écran d'accueil. Les permissions de l'agent (ce qu'il sert,
-// encaisse et valide) sont le sujet de S2 : ici on pose seulement l'espace
-// et sa porte, distincts de ceux des administrateurs.
+export const metadata: Metadata = {
+  title: "Tableau de bord agent — TKS",
+  description:
+    "Journée de l'agent de service : commandes à servir, encaissements au comptoir, comptes clients à valider.",
+};
+
+const zones = [
+  {
+    icone: <ClipboardListIcon aria-hidden className="size-5" />,
+    titre: "Commandes",
+    texte:
+      "La file d'attente et la caisse rapide : servir les commandes des clients.",
+    href: "/agent/commandes",
+    lien: "Ouvrir les commandes",
+  },
+  {
+    icone: <BanknoteIcon aria-hidden className="size-5" />,
+    titre: "Encaissements",
+    texte:
+      "Encaisser au comptoir et suivre les créances restant dues.",
+    href: "/agent/encaissements",
+    lien: "Ouvrir les encaissements",
+  },
+  {
+    icone: <UserCheckIcon aria-hidden className="size-5" />,
+    titre: "Validation des comptes",
+    texte:
+      "Valider les comptes des clients au comptoir, pièce d'identité vue.",
+    href: "/agent/clients/validation",
+    lien: "Ouvrir la validation",
+  },
+];
+
+/**
+ * Espace agent de service — écran d'accueil. Contenu seul : la coquille
+ * (navigation + en-tête) vit dans /agent/layout et persiste pendant la
+ * navigation. Les trois zones décrivent la journée de l'agent ; les
+ * fonctions métier arrivent avec S4 à S6, les pages existent déjà.
+ */
 export default function AgentDashboardPage() {
   return (
-    <main className="flex min-h-dvh flex-col items-center justify-center gap-3 bg-background px-6 text-center">
-      <span className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-[11px] font-medium text-primary">
-        Espace agent de service
-      </span>
-      <h1 className="font-heading text-2xl font-semibold tracking-tight">
-        Tableau de bord agent
-      </h1>
-      <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
-        Le service des commandes, l&apos;encaissement au comptoir et la
-        validation des preuves de paiement arrivent avec les rôles et les
-        permissions. Cet écran existe d&apos;abord pour que la connexion d&apos;un
-        agent atterrisse ici, et nulle part ailleurs.
-      </p>
-      <div className="flex flex-wrap items-center justify-center gap-3">
-        <Link href="/agent/aide" className="text-sm underline underline-offset-4">
-          Aide — vos raccourcis agent
-        </Link>
-        <Link href="/agent/profil" className="text-sm underline underline-offset-4">
-          Mon compte
-        </Link>
+    <div className="flex flex-1 flex-col gap-4 p-4 pt-4">
+      <div className="flex flex-col gap-1">
+        <h1 className="text-lg font-semibold tracking-tight">
+          La journée au comptoir
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Trois gestes, dans l&apos;ordre du terrain : servir, encaisser,
+          valider.
+        </p>
       </div>
-      <BoutonDeconnexion />
-    </main>
+      <ul className="grid gap-4 md:grid-cols-3">
+        {zones.map((zone) => (
+          <li
+            key={zone.titre}
+            className="flex flex-col gap-2 rounded-xl border bg-card p-4"
+          >
+            <span
+              aria-hidden
+              className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary"
+            >
+              {zone.icone}
+            </span>
+            <h2 className="text-sm font-medium">{zone.titre}</h2>
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              {zone.texte}
+            </p>
+            <Link
+              href={zone.href}
+              className="mt-auto pt-2 text-sm font-medium text-primary underline-offset-4 hover:underline"
+            >
+              {zone.lien}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
   );
 }
