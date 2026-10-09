@@ -8,11 +8,13 @@ import {
   reglages,
   type CleReglage,
 } from "@/lib/db/schema/s1-comptes";
+import { enregistrerEvenement } from "@/lib/s2-autorisations/journal";
 import { StaffError } from "./staff";
 
 // Couche applicative des réglages (/admin/parametres). Lecture : tout admin
-// de l'espace /admin. Écriture : même autorisation que la création d'un
-// administrateur principal, tracée par modifiePar (journal S2 à venir).
+// de l'espace /admin. Écriture : autorisation scindée par nature de réglage
+// (validation.ts — TECHNIQUE : les deux admins ; METIER : principal seul,
+// S2 §Frontière), chaque écriture journalisée avant/après (invariant 8).
 
 const VALEURS_DEFAUT: Record<CleReglage, string> = {
   duree_invitation_jours: String(DEFAUT_DUREE_INVITATION_JOURS),
@@ -45,7 +47,7 @@ export async function definirReglage(input: {
     throw new StaffError("NON_AUTORISE", "réglage inconnu");
   }
   if (
-    !peutModifierReglage(input.modifieParRole, input.modifieParEtat)
+    !peutModifierReglage(input.cle, input.modifieParRole, input.modifieParEtat)
   ) {
     throw new StaffError("NON_AUTORISE", "modificateur non autorisé");
   }
@@ -53,11 +55,29 @@ export async function definirReglage(input: {
     input.cle === "duree_invitation_jours"
       ? String(normaliserDureeInvitationJours(input.valeur))
       : input.valeur;
-  await db
-    .insert(reglages)
-    .values({ cle: input.cle, valeur, modifiePar: input.modifieParId })
-    .onDuplicateKeyUpdate({
-      set: { valeur, modifiePar: input.modifieParId },
-    });
+  const avant = await lireReglage(input.cle);
+  await db.transaction(async (tx) => {
+    await tx
+      .insert(reglages)
+      .values({ cle: input.cle, valeur, modifiePar: input.modifieParId })
+      .onDuplicateKeyUpdate({
+        set: { valeur, modifiePar: input.modifieParId },
+      });
+    const trace = await enregistrerEvenement(
+      {
+        acteurId: input.modifieParId,
+        roleAuMoment: input.modifieParRole,
+        typeAction: "reglage.modifier",
+        entite: "reglage",
+        entiteId: input.cle,
+        avant: { valeur: avant },
+        apres: { valeur },
+      },
+      tx,
+    );
+    if (!trace.ok) {
+      throw new StaffError("JOURNAL_INDISPONIBLE", "journal indisponible");
+    }
+  });
   return { cle: input.cle, valeur };
 }
