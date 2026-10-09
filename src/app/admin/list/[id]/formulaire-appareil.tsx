@@ -11,8 +11,8 @@ import {
 } from "./actions";
 
 /**
- * Renomme l'étiquette d'appareil du second facteur. Seul le libellé est
- * écrit — le secret TOTP ne transite jamais par ce formulaire (S2-04).
+ * Renomme l'étiquette du second facteur. Seul le libellé est
+ * écrit — le secret du second facteur ne transite jamais par ce formulaire (S2-04).
  * La garde réelle est côté serveur.
  */
 export function FormulaireAppareil({
@@ -33,7 +33,7 @@ export function FormulaireAppareil({
     <form action={action} className="mt-3 flex flex-col gap-3">
       <div>
         <label htmlFor="nomAppareil" className="mb-1.5 block text-xs font-medium">
-          Nom de l&apos;appareil
+          Nom du second facteur
         </label>
         <div className="group relative">
           <SmartphoneIcon className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground transition-colors group-focus-within:text-primary" />

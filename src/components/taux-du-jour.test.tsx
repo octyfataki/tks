@@ -43,11 +43,19 @@ describe("TauxDuJour", () => {
     expect(screen.getByText("1 USD = 2 300 CDF")).toBeInTheDocument();
   });
 
-  it("reste informatif sans la permission de saisie", () => {
+  it("ouvre un modal en lecture seule sans la permission de saisie", async () => {
     render(<TauxDuJour taux={null} peutSaisir={false} />);
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Voir le taux du jour" }),
+    );
     expect(
-      screen.queryByRole("button", { name: "Saisir le taux du jour" }),
+      await screen.findByRole("dialog", { name: "Taux du jour" }),
+    ).toBeInTheDocument();
+    // Pas de formulaire de saisie : la permission `taux.saisir` manque.
+    expect(
+      screen.queryByRole("button", { name: "Enregistrer" }),
     ).not.toBeInTheDocument();
-    expect(screen.getByText("Taux du jour : —")).toBeInTheDocument();
+    expect(screen.getByText(/lecture seule/i)).toBeInTheDocument();
   });
 });

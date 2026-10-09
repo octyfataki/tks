@@ -33,7 +33,7 @@ describe("PaletteRecherche", () => {
     ]) {
       expect(screen.getByText(groupe)).toBeInTheDocument();
     }
-    expect(screen.getByText("Comptes à valider")).toBeInTheDocument();
+    expect(screen.getByText("Comptes clients")).toBeInTheDocument();
     expect(screen.getByText("Taux de change")).toBeInTheDocument();
   });
 
@@ -43,8 +43,8 @@ describe("PaletteRecherche", () => {
       screen.getByPlaceholderText(/rechercher une page/i),
       { target: { value: "valider" } },
     );
-    fireEvent.click(screen.getByText("Comptes à valider"));
-    expect(pousse).toHaveBeenCalledWith("/admin/pending");
+    fireEvent.click(screen.getByText("Validation des comptes clients"));
+    expect(pousse).toHaveBeenCalledWith("/admin/clients/validation");
     expect(
       screen.queryByRole("dialog", { name: "Recherche" }),
     ).not.toBeInTheDocument();

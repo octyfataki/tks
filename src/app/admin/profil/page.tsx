@@ -135,7 +135,7 @@ export default async function AdminProfilPage() {
         sessionActuelleId={sessionActuelleId}
         formulaireSecondFacteur={
           profil.type === "STAFF" && profil.role !== "AGENT" && secondFacteurActif !== true ? (
-            <ActivationSecondFacteur email={email} />
+            <ActivationSecondFacteur email={email} telephone={telephone} />
           ) : undefined
         }
       />

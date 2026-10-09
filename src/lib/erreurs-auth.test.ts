@@ -48,7 +48,7 @@ describe("messageErreurConnexion", () => {
 });
 
 describe("messageErreurSecondFacteur", () => {
-  it("traduit un code TOTP incorrect", () => {
+  it("traduit un code OTP incorrect", () => {
     expect(messageErreurSecondFacteur({ code: "INVALID_CODE", status: 400 })).toBe(
       "Code incorrect.",
     );
@@ -72,9 +72,21 @@ describe("messageErreurSecondFacteur", () => {
     );
   });
 
-  it("replie en français sans exposer l'anglais", () => {
+  it("traduit le code email expiré", () => {
     expect(
       messageErreurSecondFacteur({ message: "OTP has expired", code: "OTP_HAS_EXPIRED", status: 400 }),
+    ).toBe("Code expiré. Demandez un nouveau code.");
+  });
+
+  it("traduit l'envoi du code indisponible", () => {
+    expect(
+      messageErreurSecondFacteur({ code: "OTP_NOT_ENABLED", status: 400 }),
+    ).toBe("Envoi du code indisponible. Demandez un nouveau code.");
+  });
+
+  it("replie en français sans exposer l'anglais", () => {
+    expect(
+      messageErreurSecondFacteur({ message: "Something broke", code: "CODE_INCONNU_2FA", status: 400 }),
     ).toBe("Code refusé. Réessayez.");
   });
 });

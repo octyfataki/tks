@@ -1,5 +1,6 @@
 export * from "./comptes-staff";
 export * from "./comptes-clients";
+export * from "./pieces-identite-clients";
 export * from "./invitations-agents";
 export * from "./premiers-acces-admin";
 export * from "./reglages";

@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   estEtatClient,
   ETATS_CLIENT,
+  normaliserTelephoneClient,
   telephoneClientValide,
   transitionCompteClientValide,
 } from "../db/schema/s1-comptes/validation";
@@ -74,5 +75,19 @@ describe("téléphone du compte client", () => {
     expect(telephoneClientValide("0815000000")).toBe(true);
     expect(telephoneClientValide("abc")).toBe(false);
     expect(telephoneClientValide("123")).toBe(false);
+  });
+
+  it("normalisation canonique : deux écritures du même numéro sont le même compte", () => {
+    // La forme stockée et comparée ne contient que des chiffres (+ initial
+    // optionnel) : l'unicité ne se contourne pas par des espaces.
+    expect(normaliserTelephoneClient("+243 815 000 000")).toBe("+243815000000");
+    expect(normaliserTelephoneClient("+243-815-000-000")).toBe("+243815000000");
+    expect(normaliserTelephoneClient("+243 (815) 000 000")).toBe("+243815000000");
+    expect(normaliserTelephoneClient("00243815000000")).toBe("+243815000000");
+    expect(normaliserTelephoneClient("0815000000")).toBe("0815000000");
+    expect(normaliserTelephoneClient("")).toBeNull();
+    expect(normaliserTelephoneClient("   ")).toBeNull();
+    expect(normaliserTelephoneClient("abc")).toBeNull();
+    expect(normaliserTelephoneClient("123")).toBeNull();
   });
 });

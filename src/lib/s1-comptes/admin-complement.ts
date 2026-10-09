@@ -15,7 +15,7 @@ import { StaffError, type ErreurStaff } from "./staff";
 
 // Complément S1 (stories 2-4, 11-13) : second facteur admin, pièces staff,
 // accès temporaires reset. IDs générés côté appareil (offline-first, ADR-0006).
-// Le secret TOTP vit dans better-auth `two_factor` ; ici seule la traçabilité.
+// Le code OTP vit dans better-auth `two_factor` (chiffré) ; ici seule la traçabilité.
 // NON EXPOSÉ : aucune server action ne les appelle encore. Le contrôle du
 // demandeur vit quand même ici (comme staff.ts) pour que le câblage futur
 // ne puisse pas oublier l'autorisation.
@@ -37,7 +37,7 @@ function erreur(code: ErreurStaff, message: string): StaffError {
   return new StaffError(code, message);
 }
 
-/** Déclare le facteur TOTP d'un admin (appareil nommé). Un seul actif par admin. */
+/** Déclare le facteur OTP d'un admin (canal nommé : « Code par SMS », « Code par email »). Un seul actif par admin. */
 export async function declarerFacteur2faAdmin(input: {
   compteStaffId: string;
   nomAppareil: string;

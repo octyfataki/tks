@@ -85,6 +85,13 @@
       "when": 1791507064430,
       "tag": "0011_harsh_genesis",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "5",
+      "when": 1791512190156,
+      "tag": "0012_secret_wither",
+      "breakpoints": true
     }
   ]
 }

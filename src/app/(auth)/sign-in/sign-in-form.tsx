@@ -85,7 +85,8 @@ export function SignInForm() {
               toast.add({
                 type: "info",
                 title: "Vérification en deux étapes",
-                description: "Saisissez le code de votre application.",
+                description:
+                  "Saisissez le code de votre application ou demandez un code par email.",
               });
               router.push("/verify-2fa");
             } else {

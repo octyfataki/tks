@@ -146,7 +146,7 @@ export function transitionCompteStaffValide(
  * - email intouchable ici (identifiant better-auth, sync + vérification
  *   dédiées) : une coquille d'email se corrige aussi par
  *   révocation + recréation ;
- * - jamais de secret (mot de passe, TOTP) ;
+ * - jamais de secret (mot de passe, second facteur) ;
  * - jamais sur un compte REVOQUE (définitif).
  * L'auto-correction de son propre nom / téléphone est autorisée (sans
  * risque de verrouillage) ; l'auto-révocation reste interdite côté action.
@@ -159,10 +159,10 @@ export function peutModifierAdmin(
 }
 
 /**
- * Renommer l'étiquette d'appareil du second facteur (« téléphone du chef »).
+ * Renommer l'étiquette du second facteur (« Code par SMS »).
  * Même autorisation que la correction nom + téléphone : seul le libellé
- * est écrit, jamais le secret TOTP (S2-04 : un administrateur technique ne
- * voit ni ne modifie aucun secret). Jamais sur un compte REVOQUE.
+ * est écrit, jamais le secret du second facteur (S2-04 : un administrateur
+ * technique ne voit ni ne modifie aucun secret). Jamais sur un compte REVOQUE.
  */
 export function peutRenommerAppareil2fa(
   roleModificateur: string,
@@ -314,7 +314,7 @@ export const DUREE_MAX_ACCES_TEMPORAIRE_MS = 24 * 60 * 60 * 1000;
  * le lendemain, trop court pour traîner. */
 export const DUREE_PREMIER_ACCES_MS = 24 * 60 * 60 * 1000;
 
-/** Seuls les deux rôles admin portent un second facteur TOTP. */
+/** Seuls les deux rôles admin portent un second facteur OTP (SMS ou email). */
 export function roleExigeSecondFacteur(role: string): boolean {
   return role === "ADMIN_PRINCIPAL" || role === "ADMIN_TECHNIQUE";
 }
@@ -396,13 +396,32 @@ export function transitionCompteClientValide(
 }
 
 /**
+ * Normalise un téléphone de compte client en forme canonique : espaces,
+ * points, tirets et parenthèses retirés, `00` initial converti en `+`.
+ * Renvoie `null` si le numéro est invalide — même règle souple que le
+ * staff (7 à 15 chiffres). La forme canonique est celle stockée et
+ * comparée : deux écritures du même numéro (`+243 815 000 000` et
+ * `+243815000000`) sont le même compte, et la seconde inscription est
+ * refusée (S1-01, unicité).
+ */
+export function normaliserTelephoneClient(telephone: string): string | null {
+  const brut = telephone.trim();
+  if (brut === "") return null;
+  let canonique = brut.replace(/[\s.\-()]/g, "");
+  if (canonique.startsWith("00")) canonique = `+${canonique.slice(2)}`;
+  if (!telephoneStaffValide(canonique)) return null;
+  // Revalide la forme canonique elle-même : le stockage ne contient que
+  // des chiffres avec un `+` initial optionnel, jamais de séparateurs.
+  if (!/^[+]?\d+$/.test(canonique)) return null;
+  return canonique;
+}
+
+/**
  * Téléphone du compte client : clé métier du compte (GLOSSARY, invariant
  * de séparation), UNIQUE en base. Même format souple que le staff, mais
  * obligatoire ici : un compte sans téléphone ne peut pas être rappelé au
  * comptoir.
  */
 export function telephoneClientValide(telephone: string): boolean {
-  const valeur = telephone.trim();
-  if (valeur === "") return false;
-  return telephoneStaffValide(valeur);
+  return normaliserTelephoneClient(telephone) !== null;
 }

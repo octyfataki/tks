@@ -5,7 +5,7 @@ export default function Verify2faPage() {
   return (
     <AuthShell
       title="Second facteur"
-      description="Administrateurs : code obligatoire à chaque connexion."
+      description="Administrateurs : code reçu par SMS ou par email, à chaque connexion."
     >
       <Verify2faForm />
     </AuthShell>

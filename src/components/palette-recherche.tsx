@@ -6,6 +6,7 @@ import {
   AlertTriangleIcon,
   BadgeCheckIcon,
   BanknoteIcon,
+  CircleHelpIcon,
   ClipboardListIcon,
   ClockIcon,
   FileCheckIcon,
@@ -16,10 +17,12 @@ import {
   ScaleIcon,
   ScrollTextIcon,
   SearchIcon,
+  SettingsIcon,
   ShieldCheckIcon,
   TagsIcon,
   UserCheckIcon,
   UserPlusIcon,
+  UsersIcon,
   WalletIcon,
   ZapIcon,
   type LucideIcon,
@@ -38,7 +41,7 @@ import {
 } from "@/components/ui/command"
 import { Kbd } from "@/components/ui/kbd"
 
-type Suggestion = {
+export type Suggestion = {
   /** Libellé affiché, vocabulaire du domaine (GLOSSARY.md). */
   etiquette: string
   /** Synonymes de recherche, sans aucun terme interdit du glossaire. */
@@ -48,7 +51,7 @@ type Suggestion = {
   href?: string
 }
 
-type GroupeSuggestions = {
+export type GroupeSuggestions = {
   titre: string
   elements: Suggestion[]
 }
@@ -60,7 +63,7 @@ type GroupeSuggestions = {
  *   affichés désactivés avec « Bientôt » tant que la tranche n'est pas
  *   construite — jamais de lien mort.
  */
-const GROUPES: GroupeSuggestions[] = [
+const GROUPES_ADMIN: GroupeSuggestions[] = [
   {
     titre: "Pilotage",
     elements: [
@@ -81,10 +84,16 @@ const GROUPES: GroupeSuggestions[] = [
     titre: "Accès",
     elements: [
       {
-        etiquette: "Comptes à valider",
-        motsCles: ["compte", "validation", "pièce", "identité"],
-        icone: UserCheckIcon,
-        href: "/admin/pending",
+        etiquette: "Comptes clients",
+        motsCles: ["compte", "client", "validation", "pièce", "identité"],
+        icone: UsersIcon,
+        href: "/admin/clients",
+      },
+      {
+        etiquette: "Validation des comptes clients",
+        motsCles: ["compte", "validation", "attente", "valider"],
+        icone: UsersIcon,
+        href: "/admin/clients/validation",
       },
       {
         etiquette: "Inviter un agent",
@@ -183,12 +192,103 @@ const GROUPES: GroupeSuggestions[] = [
   },
 ]
 
+/**
+ * Points de recherche de l'espace agent de service, calqués sur la
+ * navigation terrain : servir, encaisser, valider. Chaque entrée mène
+ * à une page qui existe — aucun lien mort, aucun « Bientôt ».
+ */
+export const GROUPES_AGENT: GroupeSuggestions[] = [
+  {
+    titre: "Pilotage",
+    elements: [
+      {
+        etiquette: "Tableau de bord",
+        motsCles: ["tableau", "bord", "accueil", "comptoir", "journée"],
+        icone: LayoutDashboardIcon,
+        href: "/agent/dashboard",
+      },
+    ],
+  },
+  {
+    titre: "Clients et crédit",
+    elements: [
+      {
+        etiquette: "Dossiers clients",
+        motsCles: ["dossier", "client", "fiche", "nom", "adresse"],
+        icone: FolderOpenIcon,
+        href: "/agent/clients",
+      },
+      {
+        etiquette: "Validation des comptes",
+        motsCles: ["compte", "validation", "pièce", "identité", "valider"],
+        icone: UserCheckIcon,
+        href: "/agent/clients/validation",
+      },
+    ],
+  },
+  {
+    titre: "Opérations",
+    elements: [
+      {
+        etiquette: "Commandes",
+        motsCles: ["commande", "file", "attente", "servir", "caisse"],
+        icone: ClipboardListIcon,
+        href: "/agent/commandes",
+      },
+      {
+        etiquette: "Preuves de paiement",
+        motsCles: ["preuve", "paiement", "mobile money"],
+        icone: FileCheckIcon,
+        href: "/agent/preuves",
+      },
+      {
+        etiquette: "Encaissements",
+        motsCles: ["encaisser", "paiement", "comptoir", "espèces"],
+        icone: BanknoteIcon,
+        href: "/agent/encaissements",
+      },
+      {
+        etiquette: "Créances et dettes",
+        motsCles: ["créance", "dette", "reste à payer"],
+        icone: ScaleIcon,
+        href: "/agent/creances",
+      },
+    ],
+  },
+  {
+    titre: "Système",
+    elements: [
+      {
+        etiquette: "Mon compte",
+        motsCles: ["compte", "profil"],
+        icone: BadgeCheckIcon,
+        href: "/agent/profil",
+      },
+      {
+        etiquette: "Paramètres",
+        motsCles: ["paramètres", "réglages", "session", "mot de passe", "thème", "synchronisation", "appareil"],
+        icone: SettingsIcon,
+        href: "/agent/parametres",
+      },
+      {
+        etiquette: "Aide",
+        motsCles: ["aide", "raccourcis", "comptoir"],
+        icone: CircleHelpIcon,
+        href: "/agent/aide",
+      },
+    ],
+  },
+]
+
 export function PaletteRecherche({
   placeholder = "Rechercher…",
   className,
+  groupes = GROUPES_ADMIN,
 }: {
   placeholder?: string
   className?: string
+  /** Périmètre de recherche : administrateur par défaut, agent si fourni. */
+  groupes?: GroupeSuggestions[]
 }) {
   const router = useRouter()
   const [ouvert, setOuvert] = React.useState(false)
@@ -237,7 +337,7 @@ export function PaletteRecherche({
               Aucun résultat — la recherche dans les dossiers clients (par nom,
               avec adresse et solde) arrive avec la tranche S4.
             </CommandEmpty>
-            {GROUPES.map((groupe, index) => (
+            {groupes.map((groupe, index) => (
               <React.Fragment key={groupe.titre}>
                 {index > 0 ? <CommandSeparator /> : null}
                 <CommandGroup heading={groupe.titre}>

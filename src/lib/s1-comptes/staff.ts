@@ -945,7 +945,7 @@ export async function modifierEmailAgentSupport(
  * doit pouvoir créer un principal ; la cible doit être un ADMIN_PRINCIPAL
  * VALIDE. Le lien n'ouvre AUCUNE session et ne contourne pas la 2FA : il
  * autorise le seul choix du mot de passe, la connexion suivante exige
- * email + mot de passe + TOTP.
+ * email + mot de passe + OTP (SMS ou email).
  */
 export async function ouvrirPremierAccesAdmin(
   createurId: string,

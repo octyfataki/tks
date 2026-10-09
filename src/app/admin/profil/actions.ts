@@ -13,7 +13,6 @@ import { session as tableSession, twoFactor as tableDoubleFacteur, user } from "
 import {
   comptesStaff,
   facteurs2faAdmin,
-  peutModifierAdmin,
   roleExigeSecondFacteur,
   telephoneStaffValide,
 } from "@/lib/db/schema/s1-comptes";
@@ -115,6 +114,7 @@ export async function modifierPhotoProfilAction(
     await supprimerFichierAvatar(ancienneImage);
   }
   revalidatePath("/admin/profil");
+  revalidatePath("/agent/profil");
   return { ok: true, inchange: false };
 }
 
@@ -129,18 +129,22 @@ export async function supprimerPhotoProfilAction(): Promise<ResultatPhotoProfil>
   await db.update(user).set({ image: null }).where(eq(user.id, userId));
   await supprimerFichierAvatar(lignes[0]?.image ?? null);
   revalidatePath("/admin/profil");
+  revalidatePath("/agent/profil");
   return { ok: true, inchange: false };
 }
 
 /**
  * Corrige le nom affiché + le téléphone contact du compte connecté (lui
  * seul). Même périmètre que la fiche /admin/list/[id] : nom + téléphone
- * uniquement, sur un compte ADMIN_* VALIDE — l'auto-correction est
- * autorisée sans risque de verrouillage. Email, rôle, état et secrets ne
- * passent jamais par ici (révocation + recréation tracées).
+ * uniquement. Ouvert à tout compte staff VALIDE (administrateurs comme
+ * agents de service) sur son PROPRE compte — l'auto-correction est
+ * autorisée sans risque de verrouillage ; les pouvoirs de gestion
+ * (corriger autrui) restent réservés par peutModifierAdmin. Email, rôle,
+ * état et secrets ne passent jamais par ici (révocation + recréation
+ * tracées).
  *
  * Sans journal d'audit dans cette branche : la correction sera journalisée
- * (admin.modifier, avant/après) quand la couche S2 arrivera (invariant 8).
+ * (avant/après) quand la couche S2 arrivera (invariant 8).
  */
 export async function modifierMonProfilAction(
   _precedent: ResultatModificationMonProfil | null,
@@ -165,7 +169,9 @@ export async function modifierMonProfilAction(
   if (!moi) {
     return { ok: false, erreur: "Compte introuvable." };
   }
-  if (moi.etat !== "VALIDE" || !peutModifierAdmin(moi.role, moi.etat)) {
+  // Auto-correction : son propre compte, état VALIDE, tous rôles staff.
+  // (La gestion d'autrui reste gardée par peutModifierAdmin côté fiches.)
+  if (moi.etat !== "VALIDE") {
     return { ok: false, erreur: "Modification impossible (compte non modifiable)." };
   }
   const nom = String(donnees.get("nom") ?? "").trim();
@@ -208,6 +214,7 @@ export async function modifierMonProfilAction(
       .where(eq(comptesStaff.id, moi.id));
   });
   revalidatePath("/admin/profil");
+  revalidatePath("/agent/profil");
   return { ok: true, inchange: false };
 }
 
@@ -252,6 +259,7 @@ export async function deconnecterAutresSessionsAction(): Promise<ResultatDeconne
     return { ok: false, erreur: "Déconnexion impossible." };
   }
   revalidatePath("/admin/profil");
+  revalidatePath("/agent/profil");
   return { ok: true, coupees: autres.length };
 }
 
@@ -260,8 +268,8 @@ export type ResultatConfirmationSecondFacteur =
   | { ok: false; erreur: string };
 
 /**
- * Enregistre la traçabilité du second facteur après enrôlement TOTP réussi
- * côté better-auth (QR scanné ou code email vérifié). Auto-déclaration du titulaire
+ * Enregistre la traçabilité du second facteur après enrôlement OTP réussi
+ * côté better-auth (code SMS ou email vérifié). Auto-déclaration du titulaire
  * lui-même (les deux rôles admin, compte VALIDE), tracée avec creePar = soi.
  * Le remplacement d'un facteur perdu reste réservé au principal
  * (remplacerFacteur2faAdmin). Un seul facteur actif par compte.

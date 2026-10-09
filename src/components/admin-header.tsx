@@ -23,7 +23,11 @@ const FIL_ARIANE_PAR_CHEMIN: Record<string, Segment[]> = {
     { etiquette: "Créer" },
   ],
   "/admin/invites": [{ etiquette: "Invitations" }],
-  "/admin/pending": [{ etiquette: "Validation des comptes clients" }],
+  "/admin/clients": [{ etiquette: "Comptes clients" }],
+  "/admin/clients/validation": [
+    { etiquette: "Comptes clients", href: "/admin/clients" },
+    { etiquette: "Validation" },
+  ],
   "/admin/notifications": [
     { etiquette: "Tableau de bord", href: "/admin/dashboard" },
     { etiquette: "Notifications" },
@@ -75,6 +79,7 @@ export function AdminHeader() {
       />
       <DashboardHeader
         className="min-w-0 flex-1"
+        aideHref="/admin/aide"
         filAriane={
           <Breadcrumb aria-label="Fil d'Ariane">
             <BreadcrumbList>

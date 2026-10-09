@@ -5,7 +5,7 @@
 // console en dev pour étoffer le catalogue.
 //
 // Utilisé par le formulaire de connexion (sign-in) et celui du second facteur
-// TOTP (verify-2fa), qui partagent les mêmes défauts.
+// (verify-2fa, OTP par SMS ou par email), qui partagent les mêmes défauts.
 
 // Erreur telle que rendue par le client Better Auth : code et message viennent
 // du corps JSON de l'API, status/statusText du fetch. Les propriétés du corps
@@ -29,9 +29,13 @@ const CONNEXION: Record<string, string> = {
   FAILED_TO_CREATE_SESSION: "Impossible d'ouvrir la session. Réessayez.",
 };
 
-// Codes atteignables sur POST /two-factor/verify/totp.
+// Codes atteignables sur POST /two-factor/verify-otp et POST
+// /two-factor/send-otp (OTP SMS + email, seule méthode restante).
 const SECOND_FACTEUR: Record<string, string> = {
   INVALID_CODE: "Code incorrect.",
+  OTP_HAS_EXPIRED: "Code expiré. Demandez un nouveau code.",
+  OTP_NOT_ENABLED: "Envoi du code indisponible. Demandez un nouveau code.",
+  OTP_NOT_CONFIGURED: "Envoi du code indisponible. Demandez un nouveau code.",
   TOO_MANY_ATTEMPTS_REQUEST_NEW_CODE: "Trop de tentatives. Demandez un nouveau code.",
   ACCOUNT_TEMPORARILY_LOCKED: "Trop d'échecs : compte temporairement bloqué. Réessayez plus tard.",
   INVALID_TWO_FACTOR_COOKIE: "Vérification expirée : reconnectez-vous.",

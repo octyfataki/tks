@@ -141,9 +141,15 @@ export const AIDE_SECTIONS: AideSectionNiveau[] = [
         motsCles: ["tableau", "bord", "pilotage", "accueil", "diagnostic"],
       },
       {
-        label: "Comptes à valider",
+        label: "Comptes clients",
+        description: "Liste des connexions clients, avec leur état.",
+        href: "/admin/clients",
+        motsCles: ["compte", "client", "liste"],
+      },
+      {
+        label: "Validation des comptes clients",
         description: "File d'attente avec ancienneté, sur pièce d'identité.",
-        href: "/admin/pending",
+        href: "/admin/clients/validation",
         motsCles: ["compte", "validation", "attente", "valider"],
       },
       {

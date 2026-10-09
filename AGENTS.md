@@ -28,6 +28,11 @@ n'est pas un dépôt git. Les artefacts présents sont :
 5. Ce projet est **offline-first**. Toute écriture doit être capable de se faire
    sans réseau, puis de se synchroniser. Une spec qui introduit un élément non
    réplicable est une spec incomplète.
+6. **Ne jamais installer de dépendances sans accord préalable.** Avant toute
+   installation (`npm install`, `yarn add`, `pnpm add`, `npx`, `pip install`,
+   etc.), demander explicitement l'autorisation à l'utilisateur et attendre sa
+   validation. Cela vaut pour les dépendances de production comme de
+   développement. En cas de doute, ne pas installer.
 
 ## Agent skills
 

@@ -1,9 +1,16 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { CircleHelpIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { usePathname } from "next/navigation";
+import {
+  DashboardHeader,
+  ELEMENTS_NOTIFICATIONS_AGENT,
+  PanneauNotifications,
+} from "@/components/dashboard-header";
+import {
+  GROUPES_AGENT,
+  PaletteRecherche,
+} from "@/components/palette-recherche";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -13,8 +20,6 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import { DateDuJour } from "@/components/taux-du-jour";
-import { ModeToggle } from "@/components/mode-toggle";
 
 type Segment = { etiquette: string; href?: string };
 
@@ -33,6 +38,10 @@ const FIL_ARIANE_PAR_CHEMIN: Record<string, Segment[]> = {
     { etiquette: "Tableau de bord", href: "/agent/dashboard" },
     { etiquette: "Mon compte" },
   ],
+  "/agent/parametres": [
+    { etiquette: "Tableau de bord", href: "/agent/dashboard" },
+    { etiquette: "Paramètres" },
+  ],
   "/agent/aide": [
     { etiquette: "Tableau de bord", href: "/agent/dashboard" },
     { etiquette: "Aide" },
@@ -40,6 +49,17 @@ const FIL_ARIANE_PAR_CHEMIN: Record<string, Segment[]> = {
 };
 
 function segmentsPourChemin(chemin: string): Segment[] {
+  // Dossier d'un client : /agent/clients/[id] — l'identifiant n'est
+  // jamais affiché tel quel dans le fil d'Ariane.
+  if (
+    chemin.startsWith("/agent/clients/") &&
+    chemin !== "/agent/clients/validation"
+  ) {
+    return [
+      { etiquette: "Dossiers clients", href: "/agent/clients" },
+      { etiquette: "Dossier" },
+    ];
+  }
   const exacts = FIL_ARIANE_PAR_CHEMIN[chemin];
   if (exacts) return exacts;
   const dernier = chemin.split("/").filter(Boolean).pop();
@@ -53,13 +73,15 @@ function segmentsPourChemin(chemin: string): Segment[] {
 /**
  * En-tête fixe de l'espace agent de service. Monté une seule fois dans
  * /agent/layout : il persiste pendant la navigation client-side, seul le
- * contenu sous lui change. Volontairement sobre — terrain, téléphone,
- * réseau instable : date du jour, aide, thème. Le taux en vigueur et la
- * recherche arriveront avec S3 et le périmètre agent.
+ * contenu sous lui change. Le fil d'Ariane est déduit du chemin courant.
+ *
+ * Même coquille que l'espace administrateur (DashboardHeader) : date du
+ * jour, taux en vigueur en lecture seule — l'agent n'a pas la permission
+ * `taux.saisir` — notifications au périmètre du comptoir, aide de
+ * l'espace agent, recherche au périmètre agent.
  */
 export function AgentHeader() {
   const chemin = usePathname();
-  const router = useRouter();
   const segments = segmentsPourChemin(chemin);
 
   return (
@@ -69,41 +91,47 @@ export function AgentHeader() {
         orientation="vertical"
         className="mr-1 data-vertical:h-4 data-vertical:self-auto"
       />
-      <div className="hidden min-w-0 flex-1 md:block">
-        <Breadcrumb aria-label="Fil d'Ariane">
-          <BreadcrumbList>
-            {segments.map((segment, index) => (
-              <span key={segment.etiquette} className="contents">
-                {index > 0 ? <BreadcrumbSeparator /> : null}
-                <BreadcrumbItem>
-                  {segment.href && index < segments.length - 1 ? (
-                    <Link
-                      href={segment.href}
-                      className="transition-colors hover:text-foreground"
-                    >
-                      {segment.etiquette}
-                    </Link>
-                  ) : (
-                    <BreadcrumbPage>{segment.etiquette}</BreadcrumbPage>
-                  )}
-                </BreadcrumbItem>
-              </span>
-            ))}
-          </BreadcrumbList>
-        </Breadcrumb>
-      </div>
-      <div className="ml-auto flex shrink-0 items-center gap-2">
-        <DateDuJour />
-        <Button
-          variant="outline"
-          size="icon"
-          aria-label="Aide"
-          onClick={() => router.push("/agent/aide")}
-        >
-          <CircleHelpIcon />
-        </Button>
-        <ModeToggle />
-      </div>
+      <DashboardHeader
+        className="min-w-0 flex-1"
+        taux={null}
+        peutSaisirTaux={false}
+        aideHref="/agent/aide"
+        notifications={
+          <PanneauNotifications
+            elements={ELEMENTS_NOTIFICATIONS_AGENT}
+            description="Servir, encaisser, valider — la journée au comptoir."
+          />
+        }
+        recherche={
+          <PaletteRecherche
+            groupes={GROUPES_AGENT}
+            className="w-32 justify-start gap-2 bg-muted/50 px-2 font-normal sm:w-48 lg:w-64"
+          />
+        }
+        filAriane={
+          <Breadcrumb aria-label="Fil d'Ariane">
+            <BreadcrumbList>
+              {segments.map((segment, index) => (
+                <span key={segment.etiquette} className="contents">
+                  {index > 0 ? <BreadcrumbSeparator /> : null}
+                  <BreadcrumbItem>
+                    {segment.href && index < segments.length - 1 ? (
+                      <Link
+                        href={segment.href}
+                        className="transition-colors hover:text-foreground"
+                      >
+                        {segment.etiquette}
+                      </Link>
+                    ) : (
+                      <BreadcrumbPage>{segment.etiquette}</BreadcrumbPage>
+                    )}
+                  </BreadcrumbItem>
+                </span>
+              ))}
+            </BreadcrumbList>
+          </Breadcrumb>
+        }
+      />
     </header>
   );
 }

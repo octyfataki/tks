@@ -85,9 +85,8 @@ export async function modifierCoordonneesAdminAction(
 }
 
 /**
- * Renomme l'étiquette d'appareil du second facteur (« téléphone du chef »).
- * Seul le libellé est écrit : le secret TOTP ne passe jamais par ici
- * (S2-04). Même autorisation que la correction des coordonnées, jamais sur
+ * Renomme l'étiquette du second facteur (« Code par SMS »). Seul le libellé
+ * est écrit : le secret du second facteur ne passe jamais par ici (S2-04). Même autorisation que la correction des coordonnées, jamais sur
  * un compte révoqué. Correction journalisée (avant/après).
  */
 export async function modifierAppareil2faAction(

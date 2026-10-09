@@ -42,7 +42,8 @@ au contrôle de permission)
       francs ensuite, avec la **date du taux** à côté de tout montant converti.
       Une dette en USD n'est jamais présentée comme une dette en francs.
 - [ ] Test navigateur mince : le contrôle de permission s'applique à l'écran — un
-      agent sans la permission **`taux.saisir`** ne voit pas le bouton.
+      agent sans la permission **`taux.saisir`** ouvre le modal en lecture seule,
+      sans formulaire de saisie ni bouton d'enregistrement.
 
 **Où sont les autres tests.** Cette tranche ne contient pas encore l'exemple de
 référence ni les tests de taux changeant : ils sont dans les tranches 02 et 03, et

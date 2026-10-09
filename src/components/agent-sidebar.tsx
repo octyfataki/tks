@@ -21,6 +21,7 @@ import {
   FileCheckIcon,
   FolderOpenIcon,
   LayoutDashboardIcon,
+  SettingsIcon,
   ScaleIcon,
   UserCheckIcon,
 } from "lucide-react"
@@ -88,6 +89,11 @@ const groups: { label: string; items: NavItem[] }[] = [
   {
     label: "Système",
     items: [
+      {
+        title: "Paramètres",
+        url: "/agent/parametres",
+        icon: <SettingsIcon />,
+      },
       {
         title: "Aide",
         url: "/agent/aide",

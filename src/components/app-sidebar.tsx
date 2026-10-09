@@ -28,8 +28,8 @@ import {
   SettingsIcon,
   ShieldCheckIcon,
   TagsIcon,
-  UserCheckIcon,
   UserPlusIcon,
+  UsersIcon,
   WalletIcon,
 } from "lucide-react"
 
@@ -83,10 +83,13 @@ const groups: { label: string; items: NavItem[] }[] = [
         ],
       },
       {
-        title: "Comptes à valider",
-        url: "/admin/pending",
-        icon: <UserCheckIcon />,
-        items: [{ title: "File d'attente", url: "/admin/pending" }],
+        title: "Comptes clients",
+        url: "/admin/clients",
+        icon: <UsersIcon />,
+        items: [
+          { title: "Liste des comptes", url: "/admin/clients" },
+          { title: "Validation", url: "/admin/clients/validation" },
+        ],
       },
       {
         title: "Agents de service",

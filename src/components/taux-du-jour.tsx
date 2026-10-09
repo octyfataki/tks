@@ -66,12 +66,14 @@ export function DateDuJour({ className }: { className?: string }) {
 }
 
 /**
- * Pastille du taux en vigueur + modal de saisie du taux du jour.
+ * Pastille du taux en vigueur + modal du taux du jour.
  *
- * La persistance (tranche S3 : entité datée, permission `taux.saisir`,
- * écriture journalisée, un jour = au plus un taux) n'existe pas encore :
- * sans `onEnregistrer`, le formulaire est inerte et l'indisponibilité est
- * annoncée au lieu d'être simulée.
+ * Le modal s'ouvre pour tout le monde : il montre le taux, sa date et son
+ * auteur. La saisie n'est proposée qu'avec la permission `taux.saisir` ;
+ * sans elle, le modal est en lecture seule. La persistance (tranche S3 :
+ * entité datée, écriture journalisée, un jour = au plus un taux) n'existe
+ * pas encore : sans `onEnregistrer`, le formulaire est inerte et
+ * l'indisponibilité est annoncée au lieu d'être simulée.
  */
 export function TauxDuJour({
   taux = null,
@@ -80,7 +82,7 @@ export function TauxDuJour({
   className,
 }: {
   taux?: TauxEnVigueur | null
-  /** Sans la permission `taux.saisir`, la pastille reste informative. */
+  /** Sans la permission `taux.saisir`, le modal s'ouvre en lecture seule. */
   peutSaisir?: boolean
   /** Appelé avec la valeur validée. Absent = saisie pas encore câblée. */
   onEnregistrer?: (valeur: number) => void | Promise<void>
@@ -102,18 +104,7 @@ export function TauxDuJour({
     </>
   )
 
-  if (!peutSaisir) {
-    return (
-      <span
-        data-slot="taux-du-jour"
-        className={cn("hidden lg:inline-flex", classePastille, className)}
-      >
-        {contenu}
-      </span>
-    )
-  }
-
-  const pret = onEnregistrer !== undefined
+  const pret = peutSaisir && onEnregistrer !== undefined
 
   const soumettre = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault()
@@ -135,7 +126,9 @@ export function TauxDuJour({
         render={
           <Button
             variant="outline"
-            aria-label="Saisir le taux du jour"
+            aria-label={
+              peutSaisir ? "Saisir le taux du jour" : "Voir le taux du jour"
+            }
             className={cn("hidden lg:inline-flex", classePastille, className)}
           >
             {contenu}
@@ -163,46 +156,61 @@ export function TauxDuJour({
             {taux.saisiPar ? ` par ${taux.saisiPar}` : ""}).
           </p>
         )}
-        <form id="formulaire-taux-du-jour" onSubmit={soumettre}>
-          <Field>
-            <FieldLabel htmlFor="taux-valeur">
-              Valeur — francs pour 1 dollar (CDF)
-            </FieldLabel>
-            <Input
-              id="taux-valeur"
-              type="number"
-              inputMode="decimal"
-              min="0"
-              step="any"
-              placeholder="ex. 2300"
-              value={valeur}
-              onChange={(event) => setValeur(event.target.value)}
-              disabled={!pret}
-            />
-            <FieldDescription>
-              Saisie manuelle, jamais récupérée automatiquement : c&apos;est un
-              taux négocié.
-            </FieldDescription>
-            {erreur ? <FieldError>{erreur}</FieldError> : null}
-          </Field>
-        </form>
-        {!pret ? (
+        {peutSaisir ? (
+          <>
+            <form id="formulaire-taux-du-jour" onSubmit={soumettre}>
+              <Field>
+                <FieldLabel htmlFor="taux-valeur">
+                  Valeur — francs pour 1 dollar (CDF)
+                </FieldLabel>
+                <Input
+                  id="taux-valeur"
+                  type="number"
+                  inputMode="decimal"
+                  min="0"
+                  step="any"
+                  placeholder="ex. 2300"
+                  value={valeur}
+                  onChange={(event) => setValeur(event.target.value)}
+                  disabled={!pret}
+                />
+                <FieldDescription>
+                  Saisie manuelle, jamais récupérée automatiquement : c&apos;est
+                  un taux négocié.
+                </FieldDescription>
+                {erreur ? <FieldError>{erreur}</FieldError> : null}
+              </Field>
+            </form>
+            {!pret ? (
+              <p className="text-xs/relaxed text-muted-foreground">
+                Bientôt — la persistance arrive avec la tranche S3 (permission
+                « taux.saisir », saisie journalisée comme écriture métier).
+              </p>
+            ) : null}
+          </>
+        ) : (
           <p className="text-xs/relaxed text-muted-foreground">
-            Bientôt — la persistance arrive avec la tranche S3 (permission
-            « taux.saisir », saisie journalisée comme écriture métier).
+            Lecture seule — seul un compte disposant de la permission «
+            taux.saisir » peut saisir le taux.
           </p>
-        ) : null}
+        )}
         <DialogFooter>
           <DialogClose
-            render={<Button variant="outline">Annuler</Button>}
+            render={
+              <Button variant="outline">
+                {peutSaisir ? "Annuler" : "Fermer"}
+              </Button>
+            }
           />
-          <Button
-            type="submit"
-            form="formulaire-taux-du-jour"
-            disabled={!pret}
-          >
-            Enregistrer
-          </Button>
+          {peutSaisir ? (
+            <Button
+              type="submit"
+              form="formulaire-taux-du-jour"
+              disabled={!pret}
+            >
+              Enregistrer
+            </Button>
+          ) : null}
         </DialogFooter>
       </DialogContent>
     </Dialog>
