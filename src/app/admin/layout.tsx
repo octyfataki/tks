@@ -43,7 +43,7 @@ export default async function AdminLayout({
   return (
     <SidebarProvider>
       <AppSidebar
-        utilisateur={{ nom, email: email || "Espace distributeur" }}
+        utilisateur={{ nom, email: email || "Espace distributeur", avatar: session?.user?.image ?? undefined }}
         profilUrl="/admin/profil"
       />
       <SidebarInset>

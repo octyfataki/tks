@@ -23,7 +23,15 @@ const FIL_ARIANE_PAR_CHEMIN: Record<string, Segment[]> = {
     { etiquette: "Créer" },
   ],
   "/admin/invites": [{ etiquette: "Invitations" }],
-  "/admin/pending": [{ etiquette: "Validation des comptes clients" }],
+  "/admin/clients": [{ etiquette: "Comptes clients" }],
+  "/admin/clients/validation": [
+    { etiquette: "Comptes clients", href: "/admin/clients" },
+    { etiquette: "Validation" },
+  ],
+  "/admin/journal": [
+    { etiquette: "Accès", href: "/admin/agents" },
+    { etiquette: "Journal d'audit" },
+  ],
   "/admin/notifications": [
     { etiquette: "Tableau de bord", href: "/admin/dashboard" },
     { etiquette: "Notifications" },

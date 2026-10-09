@@ -28,8 +28,8 @@ import {
   SettingsIcon,
   ShieldCheckIcon,
   TagsIcon,
-  UserCheckIcon,
   UserPlusIcon,
+  UsersIcon,
   WalletIcon,
 } from "lucide-react"
 
@@ -83,12 +83,6 @@ const groups: { label: string; items: NavItem[] }[] = [
         ],
       },
       {
-        title: "Comptes à valider",
-        url: "/admin/pending",
-        icon: <UserCheckIcon />,
-        items: [{ title: "File d'attente", url: "/admin/pending" }],
-      },
-      {
         title: "Agents de service",
         url: "/admin/agents",
         icon: <UserPlusIcon />,
@@ -98,6 +92,15 @@ const groups: { label: string; items: NavItem[] }[] = [
           { title: "Inviter un agent", url: "/admin/invites?cible=agent" },
           { title: "Invitations agents", url: "/admin/agents/invitations" },
           { title: "Permissions des agents", url: "/admin/agents/permissions" },
+        ],
+      },
+      {
+        title: "Comptes clients",
+        url: "/admin/clients",
+        icon: <UsersIcon />,
+        items: [
+          { title: "Liste des comptes", url: "/admin/clients" },
+          { title: "Validation", url: "/admin/clients/validation" },
         ],
       },
       {
@@ -204,6 +207,7 @@ const groups: { label: string; items: NavItem[] }[] = [
 export type UtilisateurSidebar = {
   nom: string
   email: string
+  avatar?: string
 }
 
 export function AppSidebar({
@@ -249,6 +253,7 @@ export function AppSidebar({
           user={{
             name: utilisateur?.nom ?? "Administrateur",
             email: utilisateur?.email ?? "Espace distributeur",
+            avatar: utilisateur?.avatar,
           }}
           profilUrl={profilUrl}
         />

@@ -18,6 +18,10 @@ const SchemaInscription = z.object({
   password: z.string().min(8, "mot de passe d'au moins 8 caractères exigé"),
   name: z.string().trim().min(2, "nom exigé").max(255, "nom exigé"),
   telephone: z.string().trim().min(1, "numéro de téléphone exigé"),
+  // Identifiant généré sur l'appareil (S1-01, future file hors-ligne S8) :
+  // une inscription interrompue puis rejouée porte le même id et ne crée
+  // pas de doublon. Défaut = UUID serveur quand l'écran n'en fournit pas.
+  id: z.string().uuid("inscription invalide").optional(),
 });
 
 // S1-01 : inscription publique d'un client. Le compte créé est
@@ -30,6 +34,7 @@ export async function inscrireCompteClient(input: {
   password: string;
   name: string;
   telephone: string;
+  id?: string;
 }): Promise<ResultatAction> {
   const parse = SchemaInscription.safeParse(input);
   if (!parse.success) {

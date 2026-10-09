@@ -102,7 +102,19 @@ export const auth = betterAuth({
   advanced: {
     useSecureCookies: process.env.NODE_ENV === "production",
   },
-  plugins: [twoFactor({ issuer: "TKS" }), nextCookies()],
+  plugins: [
+    twoFactor({
+      issuer: "TKS",
+      otpOptions: {
+        sendOTP: async ({ user, otp }) => {
+          // Dev : le code sort en console (même esprit que sendResetPassword).
+          // Prod : brancher l'envoi réel (SMTP) ici.
+          console.log(`[auth] code second facteur pour ${user.email} : ${otp}`);
+        },
+      },
+    }),
+    nextCookies(),
+  ],
 });
 
 export type Session = typeof auth.$Infer.Session;

@@ -33,7 +33,7 @@ describe("PaletteRecherche", () => {
     ]) {
       expect(screen.getByText(groupe)).toBeInTheDocument();
     }
-    expect(screen.getByText("Comptes à valider")).toBeInTheDocument();
+    expect(screen.getByText("Administrateurs principaux")).toBeInTheDocument();
     expect(screen.getByText("Taux de change")).toBeInTheDocument();
   });
 
@@ -41,10 +41,10 @@ describe("PaletteRecherche", () => {
     ouvrir();
     fireEvent.change(
       screen.getByPlaceholderText(/rechercher une page/i),
-      { target: { value: "valider" } },
+      { target: { value: "administrateur" } },
     );
-    fireEvent.click(screen.getByText("Comptes à valider"));
-    expect(pousse).toHaveBeenCalledWith("/admin/pending");
+    fireEvent.click(screen.getByText("Administrateurs principaux"));
+    expect(pousse).toHaveBeenCalledWith("/admin/list");
     expect(
       screen.queryByRole("dialog", { name: "Recherche" }),
     ).not.toBeInTheDocument();

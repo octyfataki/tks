@@ -129,8 +129,7 @@
   }
 }
 
-/* Ticket d'attente (/pending) : une seule entrée en fondu, jamais rejouée. */
-@keyframes tks-ticket-enter {
+/* Ticket d'attente (/pending) : une seule entrée en fondu, jamais rejouée. */@keyframes tks-ticket-enter {
   from {
     opacity: 0;
     transform: translateY(8px);
@@ -145,6 +144,26 @@
 }
 @media (prefers-reduced-motion: reduce) {
   .tks-ticket-enter {
+    animation: none;
+  }
+}
+
+/* Écrans d'échec (404, erreur) : une seule entrée en fondu, jamais rejouée. */
+@keyframes tks-erreur-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.tks-erreur-enter {
+  animation: tks-erreur-enter 0.45s ease-out both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tks-erreur-enter {
     animation: none;
   }
 }

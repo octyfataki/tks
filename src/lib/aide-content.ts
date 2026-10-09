@@ -132,19 +132,13 @@ export const AIDE_SECTIONS: AideSectionNiveau[] = [
   },
   {
     niveau: "Admin",
-    phrase: "Pilotage et socle : valider, inviter, suivre l'argent, diagnostiquer.",
+    phrase: "Pilotage et socle : inviter, suivre l'argent, diagnostiquer.",
     raccourcis: [
       {
         label: "Tableau de bord",
         description: "Matin du chef : jour en cours, dettes à relancer.",
         href: "/admin/dashboard",
         motsCles: ["tableau", "bord", "pilotage", "accueil", "diagnostic"],
-      },
-      {
-        label: "Comptes à valider",
-        description: "File d'attente avec ancienneté, sur pièce d'identité.",
-        href: "/admin/pending",
-        motsCles: ["compte", "validation", "attente", "valider"],
       },
       {
         label: "Inviter un agent",
@@ -154,7 +148,7 @@ export const AIDE_SECTIONS: AideSectionNiveau[] = [
       },
       {
         label: "Notifications",
-        description: "Preuves en attente, conflits, comptes à valider.",
+        description: "Preuves en attente et conflits ouverts.",
         href: "/admin/notifications",
         motsCles: ["notification", "alerte", "preuve", "conflit"],
       },

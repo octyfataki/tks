@@ -1,13 +1,13 @@
 import { AuthShell } from "@/components/auth-shell";
-import { Verify2faForm } from "./verify-2fa-form";
+import { VerificationSecondFacteur } from "./verification-second-facteur";
 
 export default function Verify2faPage() {
   return (
     <AuthShell
       title="Second facteur"
-      description="Administrateurs : code obligatoire à chaque connexion."
+      description="Administrateurs : code obligatoire à chaque connexion, par application ou par email."
     >
-      <Verify2faForm />
+      <VerificationSecondFacteur />
     </AuthShell>
   );
 }

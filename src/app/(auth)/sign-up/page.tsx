@@ -17,13 +17,14 @@ import { toast } from "@/components/ui/toast";
 import { inscrireCompteClient } from "./actions";
 
 // S1-01 (câblée) : inscription réservée aux clients, en une seule
-// page — nom complet, email, téléphone, mot de passe — puis dépôt de la pièce
-// d'identité juste après la soumission (second écran, même page /sign-up).
+// page — nom complet, email, téléphone, mot de passe — puis un écran
+// honnête sur la pièce : aucun envoi ici, aucune session n'étant ouverte.
 // La soumission crée réellement le compte en EN_ATTENTE_VALIDATION via la
 // server action (utilisateur auth + ligne comptes_clients en transaction) :
-// la validation reste humaine, sur pièce vue par un humain (comptoir ou
-// pièce déposée ici). Aucune session n'est ouverte à l'inscription : le
-// client se connecte ensuite et atterrit sur /pending.
+// la validation reste humaine, sur pièce vue par un humain (pièce déposée
+// sur /pending après connexion, ou présentée au comptoir).
+// Aucune session n'est ouverte à l'inscription : le client se connecte
+// ensuite et atterrit sur /pending.
 // Les infos saisies sont mémorisées en session (clé `tks-inscription`, sans le
 // mot de passe) pour que /pending affiche le récapitulatif et l'avancement.
 // Aucune auto-inscription staff : administrateur (bootstrap, ou création par
@@ -60,6 +61,30 @@ function memoriserInscription(patch: Record<string, string | number>) {
   }
 }
 
+// Identifiant généré sur l'appareil (S1-01) : stable pour toute la durée
+// de la tentative — une inscription interrompue puis rejouée porte le même
+// id et ne crée pas de doublon. Stocké avec le récapitulatif, jamais le
+// mot de passe.
+function obtenirIdInscription(): string | undefined {
+  try {
+    const brut = sessionStorage.getItem(CLE_INSCRIPTION);
+    const actuel = brut
+      ? (JSON.parse(brut) as { v?: number; data?: Record<string, string | number> })
+      : undefined;
+    const existant =
+      actuel?.v === VERSION_INSCRIPTION ? actuel.data?.["id"] : undefined;
+    if (typeof existant === "string" && existant.length > 0) return existant;
+    const frais =
+      typeof crypto !== "undefined" && "randomUUID" in crypto
+        ? crypto.randomUUID()
+        : undefined;
+    if (frais) memoriserInscription({ id: frais });
+    return frais;
+  } catch {
+    return undefined;
+  }
+}
+
 export default function SignUpPage() {
   const router = useRouter();
   const [etape, setEtape] = useState<"infos" | "piece">("infos");
@@ -79,6 +104,7 @@ export default function SignUpPage() {
         password,
         name,
         telephone,
+        id: obtenirIdInscription(),
       });
       setChargement(false);
       if (!resultat.ok) {
@@ -95,22 +121,7 @@ export default function SignUpPage() {
     [],
   );
 
-  const soumettrePiece = useCallback(
-    async (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
-      const champ = e.currentTarget.elements.namedItem("piece");
-      const fichier =
-        champ instanceof HTMLInputElement ? champ.files?.[0] : undefined;
-      memoriserInscription({ piece: fichier?.name ?? "comptoir" });
-      setChargement(true);
-      // Maquette : latence simulée pour rendre l'état de chargement visible.
-      await new Promise((r) => setTimeout(r, 600));
-      router.push("/pending");
-    },
-    [router],
-  );
-
-  const passerAuComptoir = useCallback(() => {
+  const allerAttente = useCallback(() => {
     memoriserInscription({ piece: "comptoir" });
     router.push("/pending");
   }, [router]);
@@ -118,50 +129,23 @@ export default function SignUpPage() {
   if (etape === "piece") {
     return (
       <AuthShell
-        title="Pièce d'identité"
-        description="Dernière étape : déposez votre pièce d'identité, ou présentez-la au comptoir. Sans pièce vue par un humain, le compte ne sera pas validé."
+        title="Compte créé"
+        description="Dernière étape : un humain doit voir votre pièce d'identité avant de valider le compte."
       >
-        <form action="#" method="post" onSubmit={soumettrePiece}>
-          <FieldGroup>
-            <Field>
-              <FieldLabel htmlFor="piece">Pièce d&apos;identité</FieldLabel>
-              <Input
-                id="piece"
-                name="piece"
-                type="file"
-                accept="image/*"
-                required
-              />
-              <FieldDescription>
-                Photo compressée, plafonnée en taille. Elle sera conservée sur
-                votre dossier et montrée à l&apos;humain qui validera le compte.
-              </FieldDescription>
-            </Field>
-            <Field>
-              <Button
-                type="submit"
-                size="lg"
-                className="w-full"
-                disabled={chargement}
-              >
-                {chargement ? "Envoi…" : "Envoyer ma pièce d'identité"}
-              </Button>
-            </Field>
-            <Field>
-              <p className="text-xs text-muted-foreground">
-                Je l&apos;ai sous la main plus tard ?{" "}
-                <button
-                  type="button"
-                  className="underline underline-offset-4"
-                  onClick={passerAuComptoir}
-                >
-                  Je la présenterai au comptoir
-                </button>
-                .
-              </p>
-            </Field>
-          </FieldGroup>
-        </form>
+        <FieldGroup>
+          <Field>
+            <p className="text-xs leading-relaxed text-muted-foreground">
+              Déposez-la après connexion sur votre page d&apos;attente, ou
+              présentez-la au comptoir. Sans pièce vue par un humain, le
+              compte ne sera pas validé.
+            </p>
+          </Field>
+          <Field>
+            <Button size="lg" className="w-full" onClick={allerAttente}>
+              Voir ma page d&apos;attente
+            </Button>
+          </Field>
+        </FieldGroup>
       </AuthShell>
     );
   }
@@ -239,7 +223,8 @@ export default function SignUpPage() {
           </Field>
           <Field>
             <p className="text-xs text-muted-foreground">
-              Après l&apos;envoi, vous déposerez votre pièce d&apos;identité.
+              Après l&apos;envoi, connectez-vous : vous déposerez votre pièce
+              sur votre page d&apos;attente.
             </p>
           </Field>
           <Field>
