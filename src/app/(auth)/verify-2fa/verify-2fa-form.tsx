@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
 import { demanderDestination } from "@/lib/destination-connexion";
 import { MESSAGE_RESEAU, messageErreurSecondFacteur } from "@/lib/erreurs-auth";
+import { toast } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
 import {
   Field,
@@ -64,6 +65,7 @@ export function Verify2faForm() {
       setErreur("Session introuvable : réessayez.");
       return;
     }
+    toast.add({ type: "success", title: "Connexion réussie" });
     router.push(suite.destination);
   }
 
