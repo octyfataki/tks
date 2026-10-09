@@ -22,15 +22,14 @@ export function clePreferenceMethode2fa(defi: string): string {
   return `2fa-methode-${defi}`;
 }
 
-// Jeton de défi brut depuis les entêtes : même représentation que
+// Jeton de défi brut depuis l'en-tête Cookie : même représentation que
 // better-auth (cookie parsé puis pourcent-décodé une fois, signature
 // `.<44 caractères>=` retirée). Tout autre contenu est refusé : la
 // préférence ne doit jamais être écrite sous une clé devinable ou vide.
-export function lireDefi2fa(entetes: Headers): string | null {
-  const cookies = entetes.get("cookie") ?? "";
+export function lireDefi2fa(cookie: string): string | null {
   const trouve =
     /(?:^|;\s*)((?:__Secure-|__Host-)?better-auth\.two_factor)=([^;]*)/.exec(
-      cookies,
+      cookie,
     );
   if (!trouve) return null;
   const brut = trouve[2].trim();

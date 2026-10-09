@@ -12,29 +12,25 @@ import {
 const JETON = "2fa-WKDKhWRH-0hL5VxcDUt9";
 const SIGNATURE = `${JETON}.${"A".repeat(43)}=`;
 
-function entetes(cookie: string): Headers {
-  return new Headers({ cookie });
-}
-
 describe("lireDefi2fa", () => {
   it("retire la signature du cookie (format valeur.signature)", () => {
-    const defi = lireDefi2fa(
-      entetes(`better-auth.two_factor=${SIGNATURE}; autre=1`),
-    );
-    expect(defi).toBe(JETON);
+    expect(
+      lireDefi2fa(`better-auth.two_factor=${SIGNATURE}; autre=1`),
+    ).toBe(JETON);
   });
 
   it("accepte le préfixe __Secure- (production https)", () => {
-    const defi = lireDefi2fa(
-      entetes(`__Secure-better-auth.two_factor=${SIGNATURE}`),
-    );
-    expect(defi).toBe(JETON);
+    expect(
+      lireDefi2fa(`__Secure-better-auth.two_factor=${SIGNATURE}`),
+    ).toBe(JETON);
   });
 
   it("refuse un cookie absent ou sans jeton 2fa-", () => {
-    expect(lireDefi2fa(entetes("autre=1"))).toBeNull();
-    expect(lireDefi2fa(entetes("better-auth.two_factor=nimporte-quoi"))).toBeNull();
-    expect(lireDefi2fa(entetes(""))).toBeNull();
+    expect(lireDefi2fa("autre=1")).toBeNull();
+    expect(
+      lireDefi2fa("better-auth.two_factor=nimporte-quoi"),
+    ).toBeNull();
+    expect(lireDefi2fa("")).toBeNull();
   });
 });
 

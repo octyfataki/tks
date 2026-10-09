@@ -41,7 +41,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const defi = lireDefi2fa(await headers());
+  const defi = lireDefi2fa((await headers()).get("cookie") ?? "");
   if (!defi) {
     // Défi expiré ou absent : renvoyer un code est impossible, la reconnexion
     // est la seule issue (le formulaire y redirige).
