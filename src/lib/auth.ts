@@ -4,6 +4,7 @@ import { nextCookies } from "better-auth/next-js";
 import { twoFactor } from "better-auth/plugins/two-factor";
 import { eq } from "drizzle-orm";
 import { db } from "./db/client";
+import { verification } from "./db/schema/auth-schema";
 import { comptesStaff } from "./db/schema/s1-comptes";
 
 // Socle S1 : TOUS les comptes (client comme staff) utilisent email + mot de
@@ -13,8 +14,11 @@ import { comptesStaff } from "./db/schema/s1-comptes";
 // à l'inscription) vs comptes_staff (VALIDE, créé par un admin ou bootstrap)
 // — jamais par le type d'identifiant.
 // 2FA OTP obligatoire pour les administrateurs (vérifiée en couche applicative S1-T02).
-// Second facteur = code à usage unique, deux canaux redondants : email ET SMS
-// (le même code part sur les deux ; l'utilisateur saisit celui qu'il reçoit).
+// Second facteur = code à usage unique, envoyé sur UNE méthode redondante au
+// choix de l'utilisateur : email OU SMS vers le numéro de contact du compte
+// staff (POST /api/2fa/envoyer-code, préférence `2fa-methode-<défi>` lue
+// ci-dessous). « Méthode » et non « canal » : canal est réservé aux commandes
+// (GLOSSARY — EN_LIGNE / PRESENTIEL).
 // ÉCART ASSUMÉ à S1-spec (« pas de SMS », « pas d'OTP sous toute forme ») et à
 // ADR-0006 §4 (TOTP seul) : la méthode application TOTP est supprimée, le SMS
 // rejoint l'email. Motif : en RDC la boîte email est souvent injoignable sur le
@@ -121,12 +125,35 @@ export const auth = betterAuth({
     twoFactor({
       issuer: "TKS",
       otpOptions: {
-        // Code à 6 chiffres, 5 minutes, 5 essais, chiffré au repos. Le même
-        // code part sur les deux canaux : email (toujours) et SMS vers le
-        // numéro de contact du compte staff (quand il est renseigné). Le code
-        // ne sort jamais dans les logs de production — voir sendResetPassword
-        // ci-dessus. Mock console en attendant les vrais fournisseurs.
-        sendOTP: async ({ user, otp }) => {
+        // Code à 6 chiffres, 5 minutes, 5 essais, chiffré au repos. Envoyé
+        // sur la méthode demandée (POST /api/2fa/envoyer-code) : email, ou
+        // SMS vers le numéro de contact du compte staff quand il est
+        // renseigné. Sans préférence lisible : repli historique, les deux
+        // méthodes — aucun envoi ne doit se perdre parce que le choix
+        // n'a pas suivi. SMS demandé sans numéro : repli email.
+        // Le code ne sort jamais dans les logs de production — voir
+        // sendResetPassword ci-dessus. Mock console en attendant les vrais
+        // fournisseurs.
+        sendOTP: async ({ user, otp }, ctx) => {
+          let methode: "sms" | "email" | null = null;
+          try {
+            const jar = ctx?.context.createAuthCookie("two_factor");
+            const defi =
+              jar && ctx
+                ? await ctx.getSignedCookie(jar.name, ctx.context.secret)
+                : null;
+            if (defi) {
+              const lignes = await db
+                .select({ valeur: verification.value })
+                .from(verification)
+                .where(eq(verification.identifier, `2fa-methode-${defi}`))
+                .limit(1);
+              const pref = lignes[0]?.valeur;
+              if (pref === "sms" || pref === "email") methode = pref;
+            }
+          } catch {
+            methode = null;
+          }
           let telephone: string | null = null;
           try {
             const lignes = await db
@@ -136,16 +163,22 @@ export const auth = betterAuth({
               .limit(1);
             telephone = lignes[0]?.telephone ?? null;
           } catch {
-            // Numéro illisible : l'email reste le canal de repli, on n'invente rien.
+            // Numéro illisible : l'email reste la méthode de repli, on n'invente rien.
             telephone = null;
           }
+          // SMS demandé sans numéro : repli email, jamais de code perdu.
+          const versSms = (methode === null || methode === "sms") && telephone !== null;
+          const versEmail = methode === null || methode === "email" || telephone === null;
           if (process.env.NODE_ENV === "production") {
-            console.log(`[auth] code 2FA demandé pour ${user.email}`);
-            if (telephone) console.log("[auth] canal SMS utilisé pour le second facteur");
+            console.log(
+              `[auth] code 2FA demandé pour ${user.email} (méthode : ${methode ?? "sms+email"})`,
+            );
+            if (versSms) console.log("[auth] méthode SMS utilisée pour le second facteur");
           } else {
-            console.log(`[auth] code 2FA pour ${user.email} : ${otp}`);
-            if (telephone) console.log(`[auth] SMS 2FA vers ${telephone} : ${otp}`);
-            else console.log("[auth] SMS 2FA : aucun numéro de contact, email seul");
+            if (versEmail) console.log(`[auth] code 2FA pour ${user.email} : ${otp}`);
+            if (versSms) console.log(`[auth] SMS 2FA vers ${telephone} : ${otp}`);
+            else if (methode === "sms")
+              console.log("[auth] SMS 2FA : aucun numéro de contact, repli email");
           }
         },
         period: 5,

@@ -21,14 +21,22 @@ type Methode = "sms" | "email";
 // chaque nouvelle session. Sans code valide : pas de session, pas d'accès
 // (étape bloquante). `trustDevice: false` — jamais mémorisé, chaque session
 // re-vérifie.
-// Second facteur = OTP à usage unique (6 chiffres, 5 minutes), envoyé sur deux
-// canaux redondants : SMS (prioritaire, onglet par défaut) et email. Le même
-// code part sur les deux ; l'utilisateur saisit celui qu'il reçoit.
+// Second facteur = OTP à usage unique (6 chiffres, 5 minutes), envoyé sur la
+// méthode demandée via POST /api/2fa/envoyer-code : SMS (onglet par défaut)
+// ou email. La méthode n'est pas décorative : l'onglet choisi décide où part
+// le code (repli email si aucun numéro de contact).
 // ÉCART ASSUMÉ à S1-spec et ADR-0006 §4, voir src/lib/auth.ts.
 // Délai anti-renvoi : le serveur limite déjà à 3 envois/minute, mais sans
 // retour visible l'utilisateur martèle le bouton. Le minuteur local rend
 // l'attente explicite ; la garde serveur reste l'autorité.
 const DELAI_RENVOI_SECONDES = 60;
+
+// Réponse de POST /api/2fa/envoyer-code : succès { status: true }, échec
+// { code } avec les codes better-auth (traduits par
+// messageErreurSecondFacteur) — le 429 sans code est reconnu au statut.
+type ReponseEnvoi =
+  | { status: true; methode: Methode }
+  | { status?: undefined; code?: string };
 
 export function Verify2faForm() {
   const router = useRouter();
@@ -64,20 +72,39 @@ export function Verify2faForm() {
     setInfo(null);
     setEnvoi(true);
     try {
-      const { error } = await authClient.twoFactor.sendOtp({
-        trustDevice: false,
+      const reponse = await fetch("/api/2fa/envoyer-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ methode }),
       });
-      if (error) throw new Error(messageErreurSecondFacteur(error));
+      const corps = (await reponse.json().catch(() => null)) as ReponseEnvoi | null;
+      if (!reponse.ok || !corps || corps.status !== true) {
+        const code =
+          corps && corps.status !== true && typeof corps.code === "string"
+            ? corps.code
+            : undefined;
+        if (code === "INVALID_TWO_FACTOR_COOKIE") {
+          // Défi expiré : aucun renvoi ne peut aboutir ici, retour au login.
+          router.push("/sign-in");
+        }
+        throw { code, status: reponse.status };
+      }
       setDejaEnvoye(true);
       setAttente(DELAI_RENVOI_SECONDES);
-      setInfo("Code envoyé par SMS et par email. Saisissez celui que vous avez reçu.");
+      setInfo(
+        methode === "email"
+          ? "Code envoyé par email. Saisissez celui que vous avez reçu."
+          : "Code envoyé par SMS. Saisissez celui que vous avez reçu.",
+      );
     } catch (e) {
+      // Le 429 sans code est reconnu au statut, les codes au catalogue —
+      // voir messageErreurSecondFacteur. TypeError = réseau (offline-first).
       setErreur(
         e instanceof TypeError
           ? MESSAGE_RESEAU
-          : e instanceof Error
-            ? e.message
-            : "envoi refusé",
+          : messageErreurSecondFacteur(
+              e as { code?: string; status?: number } | null | undefined,
+            ),
       );
     } finally {
       setEnvoi(false);

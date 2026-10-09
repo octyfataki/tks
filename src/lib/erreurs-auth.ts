@@ -30,7 +30,8 @@ const CONNEXION: Record<string, string> = {
 };
 
 // Codes atteignables sur POST /two-factor/verify-otp et POST
-// /two-factor/send-otp (OTP SMS + email, seule méthode restante).
+// /two-factor/send-otp (OTP SMS ou email, une seule méthode demandée), plus
+// POST /api/2fa/envoyer-code qui relaye ces codes et ajoute CANAL_INCONNU.
 const SECOND_FACTEUR: Record<string, string> = {
   INVALID_CODE: "Code incorrect.",
   OTP_HAS_EXPIRED: "Code expiré. Demandez un nouveau code.",
@@ -40,6 +41,8 @@ const SECOND_FACTEUR: Record<string, string> = {
   ACCOUNT_TEMPORARILY_LOCKED: "Trop d'échecs : compte temporairement bloqué. Réessayez plus tard.",
   INVALID_TWO_FACTOR_COOKIE: "Vérification expirée : reconnectez-vous.",
   FAILED_TO_CREATE_SESSION: "Impossible d'ouvrir la session. Réessayez.",
+  CANAL_INCONNU: "Méthode inconnue. Recommencez.",
+  ENVOI_REFUSE: "Envoi refusé. Réessayez.",
 };
 
 function traduire(erreur: ErreurAuth, catalogue: Record<string, string>, generique: string): string {
