@@ -3,6 +3,11 @@ import { NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
+import {
+  clePreferenceMethode2fa,
+  estMethodeEnvoi2fa,
+  lireDefi2fa,
+} from "@/lib/2fa-methode";
 import { db } from "@/lib/db/client";
 import { verification } from "@/lib/db/schema/auth-schema";
 
@@ -29,7 +34,7 @@ export async function POST(request: Request) {
   } catch {
     methode = undefined;
   }
-  if (methode !== "sms" && methode !== "email") {
+  if (!estMethodeEnvoi2fa(methode)) {
     return NextResponse.json(
       { code: "CANAL_INCONNU", message: "Méthode inconnue : sms ou email." },
       { status: 400 },
@@ -49,7 +54,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const identifiant = `2fa-methode-${defi}`;
+  const identifiant = clePreferenceMethode2fa(defi);
   await db.delete(verification).where(eq(verification.identifier, identifiant));
   await db.insert(verification).values({
     id: randomUUID(),
@@ -78,24 +83,5 @@ export async function POST(request: Request) {
   }
 }
 
-// Jeton de défi brut, même représentation que better-auth (cookie parsé puis
-// pourcent-décodé une fois — cf. tryDecode côté librairie). Forme attendue
-// `2fa-<aléa>` : tout autre contenu est refusé, la préférence ne doit jamais
-// être écrite sous une clé devinable ou vide.
-function lireDefi2fa(entetes: Headers): string | null {
-  const cookies = entetes.get("cookie") ?? "";
-  const trouve = /(?:^|;\s*)((?:__Secure-|__Host-)?better-auth\.two_factor)=([^;]*)/.exec(
-    cookies,
-  );
-  if (!trouve) return null;
-  const brut = trouve[2].trim();
-  let clair = brut;
-  if (brut.includes("%")) {
-    try {
-      clair = decodeURIComponent(brut);
-    } catch {
-      clair = brut;
-    }
-  }
-  return clair.startsWith("2fa-") ? clair : null;
-}
+// lireDefi2fa vit dans @/lib/2fa-methode (testé) : même représentation du
+// jeton des deux côtés, sinon la préférence n'est jamais retrouvée.

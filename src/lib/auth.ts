@@ -4,6 +4,11 @@ import { nextCookies } from "better-auth/next-js";
 import { twoFactor } from "better-auth/plugins/two-factor";
 import { eq } from "drizzle-orm";
 import { db } from "./db/client";
+import {
+  clePreferenceMethode2fa,
+  estMethodeEnvoi2fa,
+  type MethodeEnvoi2fa,
+} from "./2fa-methode";
 import { verification } from "./db/schema/auth-schema";
 import { comptesStaff } from "./db/schema/s1-comptes";
 
@@ -135,7 +140,7 @@ export const auth = betterAuth({
         // sendResetPassword ci-dessus. Mock console en attendant les vrais
         // fournisseurs.
         sendOTP: async ({ user, otp }, ctx) => {
-          let methode: "sms" | "email" | null = null;
+          let methode: MethodeEnvoi2fa | null = null;
           try {
             const jar = ctx?.context.createAuthCookie("two_factor");
             const defi =
@@ -146,13 +151,25 @@ export const auth = betterAuth({
               const lignes = await db
                 .select({ valeur: verification.value })
                 .from(verification)
-                .where(eq(verification.identifier, `2fa-methode-${defi}`))
+                .where(
+                  eq(
+                    verification.identifier,
+                    clePreferenceMethode2fa(defi),
+                  ),
+                )
                 .limit(1);
               const pref = lignes[0]?.valeur;
-              if (pref === "sms" || pref === "email") methode = pref;
+              if (estMethodeEnvoi2fa(pref)) methode = pref;
             }
           } catch {
             methode = null;
+          }
+          if (methode === null && process.env.NODE_ENV !== "production") {
+            // Préférence illisible : on ne perd aucun envoi (repli double),
+            // mais on le signale — c'est le symptôme d'un désaccord de clé.
+            console.warn(
+              "[auth] 2FA : méthode demandée illisible, repli sms+email",
+            );
           }
           let telephone: string | null = null;
           try {
