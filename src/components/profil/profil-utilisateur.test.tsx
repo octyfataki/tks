@@ -1,15 +1,16 @@
-import { describe, expect, it } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { describe, expect, it, vi } from "vitest";
+import { render, screen } from "@testing-library/react";
 import { ProfilUtilisateur } from "./profil-utilisateur";
 
-// Composant piloté par la session : on vérifie l'affichage conditionnel par
-// type d'utilisateur, et l'absence de termes interdits (GLOSSARY).
-// Les informations vivent dans les onglets : il faut cliquer sur l'onglet
-// avant d'assertir son contenu (seul le panneau actif est monté).
-function allerOnglet(nom: string) {
-  fireEvent.click(screen.getByRole("tab", { name: nom }));
-}
+vi.mock("@/app/admin/profil/actions", () => ({
+  modifierPhotoProfilAction: vi.fn(),
+  supprimerPhotoProfilAction: vi.fn(),
+  deconnecterAutresSessionsAction: vi.fn(),
+}));
 
+// Mon compte, sans onglets : tout est visible en lecture seule, dans le même
+// langage que la fiche /admin/list/[id]. On vérifie l'affichage conditionnel
+// par type d'utilisateur, et l'absence de termes interdits (GLOSSARY).
 describe("ProfilUtilisateur", () => {
   it("affiche le compte client sans dossier avec l'état vide normatif", () => {
     render(
@@ -21,8 +22,9 @@ describe("ProfilUtilisateur", () => {
       />,
     );
     expect(screen.getByRole("heading", { name: "Aline Mukendi" })).toBeInTheDocument();
-    allerOnglet("Dossier client");
-    expect(screen.getByText("Aucun dossier rattaché : aucun dossier ni solde n'est visible tant que le rattachement n'est pas fait.".replace(/\s+/g, " ").slice(0, 20), { exact: false })).toBeInTheDocument();
+    expect(
+      screen.getByText(/aucun dossier rattaché/i),
+    ).toBeInTheDocument();
     expect(screen.queryByText("Dossier client rattaché")).not.toBeInTheDocument();
   });
 
@@ -36,10 +38,8 @@ describe("ProfilUtilisateur", () => {
         dossier={{ nom: "Boutique Mukendi", statut: "PRIVILEGIE", adresse: "Kinshasa" }}
       />,
     );
-    allerOnglet("Dossier client");
-    expect(screen.getByText("Dossier client rattaché")).toBeInTheDocument();
     expect(screen.getByText("Boutique Mukendi")).toBeInTheDocument();
-    expect(screen.getByText("PRIVILEGIE")).toBeInTheDocument();
+    expect(screen.getByText("Privilégié")).toBeInTheDocument();
   });
 
   it("affiche la mission pour un agent et l'administration pour un principal", () => {
@@ -50,7 +50,6 @@ describe("ProfilUtilisateur", () => {
         compte={{ type: "STAFF", role: "AGENT", etat: "VALIDE" }}
       />,
     );
-    allerOnglet("Accès et mission");
     expect(screen.getByText("Mission de terrain")).toBeInTheDocument();
     expect(screen.queryByText("Administration")).not.toBeInTheDocument();
 
@@ -62,7 +61,6 @@ describe("ProfilUtilisateur", () => {
         secondFacteurActif={false}
       />,
     );
-    allerOnglet("Accès et mission");
     expect(screen.getByText("Administration")).toBeInTheDocument();
     expect(screen.getAllByText("À activer").length).toBeGreaterThanOrEqual(1);
   });
@@ -86,6 +84,77 @@ describe("ProfilUtilisateur", () => {
       />,
     );
     expect(screen.getAllByText("Actif").length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("affiche le bandeau registre quand les données sont connues", () => {
+    render(
+      <ProfilUtilisateur
+        nom="Chef Distributeur"
+        email="chef@example.com"
+        telephone="+243 810 000 002"
+        compte={{ type: "STAFF", role: "ADMIN_PRINCIPAL", etat: "VALIDE" }}
+        matricule="ABCDEF12"
+        creeLe={new Date("2024-03-02T10:00:00Z")}
+        creePar="Système (bootstrap)"
+      />,
+    );
+    expect(screen.getByText(/Matricule ABCDEF12/i)).toBeInTheDocument();
+    expect(screen.getByText("Système (bootstrap)")).toBeInTheDocument();
+    expect(screen.getAllByText("Administrateur principal").length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("propose de modifier la photo du compte", () => {
+    render(
+      <ProfilUtilisateur
+        nom="Chef Distributeur"
+        email="chef@example.com"
+        compte={{ type: "STAFF", role: "ADMIN_PRINCIPAL", etat: "VALIDE" }}
+      />,
+    );
+    expect(screen.getByRole("button", { name: "Modifier la photo" })).toBeInTheDocument();
+  });
+
+  it("affiche les sessions en cours avec la session actuelle marquée", () => {
+    render(
+      <ProfilUtilisateur
+        nom="Chef Distributeur"
+        email="chef@example.com"
+        compte={{ type: "STAFF", role: "ADMIN_PRINCIPAL", etat: "VALIDE" }}
+        sessionActuelleId="session-ici"
+        sessions={[
+          {
+            id: "session-ici",
+            appareil: "Navigateur du bureau",
+            adresse: "192.0.2.10",
+            creeLe: new Date("2024-03-02T10:00:00Z"),
+            expireLe: new Date("2024-03-09T10:00:00Z"),
+          },
+          {
+            id: "session-ailleurs",
+            appareil: "Téléphone de terrain",
+            adresse: null,
+            creeLe: new Date("2024-03-03T10:00:00Z"),
+            expireLe: new Date("2024-03-10T10:00:00Z"),
+          },
+        ]}
+      />,
+    );
+    expect(screen.getByText("2 sessions actives, cet appareil compris.")).toBeInTheDocument();
+    expect(screen.getByText("Cet appareil")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Déconnecter les autres" }),
+    ).toBeInTheDocument();
+  });
+
+  it("masque la carte sessions quand elles ne sont pas chargées", () => {
+    render(
+      <ProfilUtilisateur
+        nom="Chef Distributeur"
+        email="chef@example.com"
+        compte={{ type: "STAFF", role: "ADMIN_PRINCIPAL", etat: "VALIDE" }}
+      />,
+    );
+    expect(screen.queryByText("Sessions en cours")).not.toBeInTheDocument();
   });
 
   it("n'emploie aucun terme interdit du glossaire", () => {

@@ -8,7 +8,7 @@ export const ROLES_STAFF = [
 ] as const;
 export type RoleStaff = (typeof ROLES_STAFF)[number];
 
-export const ETATS_STAFF = ["VALIDE", "REVOQUE"] as const;
+export const ETATS_STAFF = ["VALIDE", "SUSPENDU", "REVOQUE"] as const;
 export type EtatStaff = (typeof ETATS_STAFF)[number];
 
 export function estRoleStaff(role: string): role is RoleStaff {
@@ -75,6 +75,103 @@ export function peutInviterAgent(
 }
 
 /**
+ * Révoquer un compte d'administration : même autorisation que la
+ * création — administrateur technique ou principal, toujours VALIDE.
+ * La révocation est définitive (REVOQUE = inutilisable, jamais de
+ * retour) : rouvrir un accès passe par révocation + recréation (S2).
+ * Pour un malentendu, voir la suspension (peutSuspendreAdmin) :
+ * réversible, connexion refusée, sessions tuées.
+ */
+export function peutRevoquerAdmin(
+  roleCreateur: string,
+  etatCreateur: string,
+): boolean {
+  return peutCreerAdminPrincipal(roleCreateur, etatCreateur);
+}
+
+/**
+ * Suspendre un compte staff (VALIDE → SUSPENDU) : même autorisation que
+ * la révocation — administrateur technique ou principal, toujours VALIDE.
+ * La suspension est réversible (lever la suspension) : le compte suspendu
+ * ne se connecte plus et ses sessions sont tuées, mais le retour vers
+ * VALIDE existe — contrairement à REVOQUE, définitif. Jamais sur
+ * soi-même (garde côté action), jamais sur un compte REVOQUE.
+ */
+export function peutSuspendreAdmin(
+  roleCreateur: string,
+  etatCreateur: string,
+): boolean {
+  return peutRevoquerAdmin(roleCreateur, etatCreateur);
+}
+
+/**
+ * Lever la suspension d'un compte staff (SUSPENDU → VALIDE) : même
+ * autorisation que suspendre — administrateur technique ou principal,
+ * toujours VALIDE. Jamais sur soi-même (garde côté action) : on ne se
+ * dé-suspend pas tout seul.
+ */
+export function peutLeverSuspension(
+  roleCreateur: string,
+  etatCreateur: string,
+): boolean {
+  return peutSuspendreAdmin(roleCreateur, etatCreateur);
+}
+
+/**
+ * Machine à états d'un compte staff. Transitions autorisées :
+ * VALIDE → SUSPENDU, SUSPENDU → VALIDE, VALIDE → REVOQUE,
+ * SUSPENDU → REVOQUE. Tout le reste est refusé — surtout REVOQUE → *,
+ * définitif, et les auto-transitions (suspendre deux fois = état, pas
+ * d'erreur côté action, mais pas une transition).
+ */
+export function transitionCompteStaffValide(
+  depart: string,
+  arrivee: string,
+): boolean {
+  if (depart === "VALIDE" && arrivee === "SUSPENDU") return true;
+  if (depart === "SUSPENDU" && arrivee === "VALIDE") return true;
+  if (depart === "VALIDE" && arrivee === "REVOQUE") return true;
+  if (depart === "SUSPENDU" && arrivee === "REVOQUE") return true;
+  return false;
+}
+
+/**
+ * Corriger un compte d'administration (support / livraison : coquille sur
+ * le nom, téléphone de contact). Même autorisation que la création et la
+ * révocation — administrateur technique ou principal, toujours VALIDE.
+ * Périmètre volontairement étroit, S2 §Frontière :
+ * - nom + téléphone uniquement (contact, jamais identifiant) ;
+ * - rôle immuable (peutChangerRole = false) : une erreur de rôle se
+ *   corrige par révocation + recréation tracées, jamais par update ;
+ * - email intouchable ici (identifiant better-auth, sync + vérification
+ *   dédiées) : une coquille d'email se corrige aussi par
+ *   révocation + recréation ;
+ * - jamais de secret (mot de passe, TOTP) ;
+ * - jamais sur un compte REVOQUE (définitif).
+ * L'auto-correction de son propre nom / téléphone est autorisée (sans
+ * risque de verrouillage) ; l'auto-révocation reste interdite côté action.
+ */
+export function peutModifierAdmin(
+  roleModificateur: string,
+  etatModificateur: string,
+): boolean {
+  return peutCreerAdminPrincipal(roleModificateur, etatModificateur);
+}
+
+/**
+ * Renommer l'étiquette d'appareil du second facteur (« téléphone du chef »).
+ * Même autorisation que la correction nom + téléphone : seul le libellé
+ * est écrit, jamais le secret TOTP (S2-04 : un administrateur technique ne
+ * voit ni ne modifie aucun secret). Jamais sur un compte REVOQUE.
+ */
+export function peutRenommerAppareil2fa(
+  roleModificateur: string,
+  etatModificateur: string,
+): boolean {
+  return peutModifierAdmin(roleModificateur, etatModificateur);
+}
+
+/**
  * ÉCART ASSUMÉ à S1-spec (« le lien ne peut créer qu'un compte AGENT »),
  * demandé explicitement : un lien peut aussi créer un ADMIN_PRINCIPAL, pour
  * que la personne choisisse elle-même son email + mot de passe.
@@ -88,6 +185,18 @@ export function peutInviterAdminPrincipal(
   return peutCreerAdminPrincipal(roleCreateur, etatCreateur);
 }
 
+/**
+ * Normalise un email staff (identifiant de connexion) : minuscules,
+ * sans espaces. Renvoie `null` si invalide (pas de @, trop long).
+ * L'unicité se vérifie en base (contrainte UNIQUE + pré-contrôle).
+ */
+export function normaliserEmailStaff(email: string): string | null {
+  const valeur = email.trim().toLowerCase();
+  if (!valeur.includes("@")) return null;
+  if (valeur.length < 3 || valeur.length > 255) return null;
+  return valeur;
+}
+
 /** Une invitation cible AGENT ou ADMIN_PRINCIPAL — jamais CLIENT, jamais
  * ADMIN_TECHNIQUE (le bootstrap technique reste le seul chemin). Le rôle
  * effectif est fixé par le lien et vérifié à l'acceptation : un lien AGENT
@@ -95,6 +204,61 @@ export function peutInviterAdminPrincipal(
  */
 export function roleCibleInvitationValide(roleCible: string): boolean {
   return roleCible === "AGENT" || roleCible === "ADMIN_PRINCIPAL";
+}
+
+export const ETATS_LIEN_INVITATION = [
+  "en-attente",
+  "termine",
+  "expire",
+  "revoque",
+] as const;
+export type EtatLienInvitation = (typeof ETATS_LIEN_INVITATION)[number];
+
+/**
+ * État d'affichage d'un lien d'invitation : consommé > révoqué > expiré >
+ * en attente. Un lien révoqué reste « révoqué » même après son expiration :
+ * c'est la décision humaine qui fait foi, pas l'horloge.
+ * Vaut pour les deux voies : lien d'invitation (invitations_agents) et
+ * fiche de premier accès (premiers_acces_admin).
+ */
+export function etatLienInvitation(
+  lien: {
+    consommeLe: Date | null;
+    revoqueLe: Date | null;
+    expireLe: Date;
+  },
+  maintenant: number = Date.now(),
+): EtatLienInvitation {
+  if (lien.consommeLe !== null) return "termine";
+  if (lien.revoqueLe !== null) return "revoque";
+  if (lien.expireLe.getTime() < maintenant) return "expire";
+  return "en-attente";
+}
+
+/**
+ * Verdict pur d'une demande de révocation d'un lien (voie `lien` ou voie
+ * `fiche`) : consommé et expiré sont non révoquables (message explicite),
+ * déjà révoqué est idempotent (même état, pas d'erreur — la révocation ne
+ * s'écrit qu'une fois).
+ */
+export type VerdictRevocationLien =
+  | "A_REVOQUER"
+  | "DEJA_REVOQUE"
+  | "DEJA_CONSOMME"
+  | "EXPIRE";
+
+export function verdictRevocationLien(
+  lien: {
+    consommeLe: Date | null;
+    revoqueLe: Date | null;
+    expireLe: Date;
+  },
+  maintenant: number = Date.now(),
+): VerdictRevocationLien {
+  if (lien.consommeLe !== null) return "DEJA_CONSOMME";
+  if (lien.revoqueLe !== null) return "DEJA_REVOQUE";
+  if (lien.expireLe.getTime() < maintenant) return "EXPIRE";
+  return "A_REVOQUER";
 }
 
 // ---- Réglages métier (/admin/parametres) --------
@@ -186,4 +350,78 @@ export function ouvertureAccesTemporaireValide(
   if (!pieceId) return false;
   const duree = expireLe.getTime() - ouvertLe;
   return duree > 0 && duree <= DUREE_MAX_ACCES_TEMPORAIRE_MS;
+}
+
+// ---- Comptes clients (S1-01, S1-03) --------
+// docs/db/02-comptes-clients.md, GLOSSARY « Compte ». Règles purement
+// applicatives (pas de CHECK en base), comme le staff ci-dessus.
+
+/** Les quatre états d'un compte client, et rien d'autre. */
+export const ETATS_CLIENT = [
+  "EN_ATTENTE_VALIDATION",
+  "VALIDE",
+  "REFUSE",
+  "REVOQUE",
+] as const;
+export type EtatClient = (typeof ETATS_CLIENT)[number];
+
+export function estEtatClient(etat: string): etat is EtatClient {
+  return (ETATS_CLIENT as readonly string[]).includes(etat);
+}
+
+/**
+ * Machine à états d'un compte client. Transitions autorisées :
+ * EN_ATTENTE_VALIDATION → VALIDE | REFUSE | REVOQUE,
+ * REFUSE → VALIDE | REVOQUE (le distributeur valide plus tard, sans
+ * ressaisie), VALIDE → REVOQUE. Tout le reste est refusé — surtout
+ * REVOQUE → *, définitif, et VALIDE → EN_ATTENTE_VALIDATION (on ne
+ * rebloque jamais un compte validé).
+ */
+export function transitionCompteClientValide(
+  depart: string,
+  arrivee: string,
+): boolean {
+  if (depart === "EN_ATTENTE_VALIDATION") {
+    return (
+      arrivee === "VALIDE" || arrivee === "REFUSE" || arrivee === "REVOQUE"
+    );
+  }
+  if (depart === "REFUSE") {
+    return arrivee === "VALIDE" || arrivee === "REVOQUE";
+  }
+  if (depart === "VALIDE") {
+    return arrivee === "REVOQUE";
+  }
+  return false;
+}
+
+/**
+ * Normalise un téléphone de compte client en forme canonique : espaces,
+ * points, tirets et parenthèses retirés, `00` initial converti en `+`.
+ * Renvoie `null` si le numéro est invalide — même règle souple que le
+ * staff (7 à 15 chiffres). La forme canonique est celle stockée et
+ * comparée : deux écritures du même numéro (`+243 815 000 000` et
+ * `+243815000000`) sont le même compte, et la seconde inscription est
+ * refusée (S1-01, unicité).
+ */
+export function normaliserTelephoneClient(telephone: string): string | null {
+  const brut = telephone.trim();
+  if (brut === "") return null;
+  let canonique = brut.replace(/[\s.\-()]/g, "");
+  if (canonique.startsWith("00")) canonique = `+${canonique.slice(2)}`;
+  if (!telephoneStaffValide(canonique)) return null;
+  // Revalide la forme canonique elle-même : le stockage ne contient que
+  // des chiffres avec un `+` initial optionnel, jamais de séparateurs.
+  if (!/^[+]?\d+$/.test(canonique)) return null;
+  return canonique;
+}
+
+/**
+ * Téléphone du compte client : clé métier du compte (GLOSSARY, invariant
+ * de séparation), UNIQUE en base. Même format souple que le staff, mais
+ * obligatoire ici : un compte sans téléphone ne peut pas être rappelé au
+ * comptoir.
+ */
+export function telephoneClientValide(telephone: string): boolean {
+  return normaliserTelephoneClient(telephone) !== null;
 }
