@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { and, desc, eq } from "drizzle-orm";
-import { ArrowLeftIcon } from "lucide-react";
+import { ArrowLeftIcon, FingerprintIcon } from "lucide-react";
 import { db } from "@/lib/db/client";
 import { session as sessionAuth, user } from "@/lib/db/schema/auth-schema";
 import {
@@ -42,6 +42,14 @@ function Champ({ etiquette, valeur }: { etiquette: string; valeur: string }) {
   );
 }
 
+function dateLongue(valeur: Date): string {
+  return valeur.toLocaleDateString("fr-FR", {
+    day: "2-digit",
+    month: "long",
+    year: "numeric",
+  });
+}
+
 /**
  * /admin/agents/[id] — Fiche d'un agent de service : identité, traçabilité,
  * état, et ses permissions une par une. Un identifiant inconnu ou non-agent
@@ -77,6 +85,7 @@ export default async function FicheAgentPage({
   if (!compte || compte.role !== "AGENT") notFound();
 
   const nom = nomAffiche({ nom: compte.nom, email: compte.email });
+  const matricule = compte.id.slice(0, 8).toUpperCase();
 
   // Lectures indépendantes en parallèle : créateur, permissions
   // (individuel + socle), dernière inscription, dernière connexion, moi.
@@ -170,25 +179,35 @@ export default async function FicheAgentPage({
         Retour aux agents
       </Link>
 
-      <div className="flex items-center gap-3 rounded-xl border bg-card p-4">
-        <span
-          aria-hidden
-          className="flex size-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary"
-        >
-          {initiales(nom)}
-        </span>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-base font-semibold">{nom}</p>
-          <p className="truncate text-xs text-muted-foreground">{compte.email}</p>
+      <header className="border-l-4 border-primary bg-card p-4 sm:p-5">
+        <div className="flex flex-wrap items-start gap-4">
+          <span
+            aria-hidden
+            className="flex size-14 shrink-0 items-center justify-center rounded-full bg-primary/10 text-base font-semibold text-primary"
+          >
+            {initiales(nom)}
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-xl font-semibold tracking-tight">{nom}</p>
+            <p className="mt-0.5 truncate text-sm text-muted-foreground">
+              {compte.email}
+              {compte.telephone ? ` · ${compte.telephone}` : null}
+            </p>
+            <p className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
+              <FingerprintIcon className="size-3.5" />
+              Matricule {matricule} · suivi depuis le{" "}
+              {dateLongue(compte.createdAt)}
+            </p>
+          </div>
+          <div className="flex shrink-0 flex-wrap gap-1.5">
+            <Badge variant="outline">Agent de service</Badge>
+            <Badge variant="outline">
+              {effectives.length} permission{effectives.length > 1 ? "s" : ""}
+            </Badge>
+            <Badge variant={valide ? "secondary" : suspendu ? "default" : "destructive"}>{compte.etat}</Badge>
+          </div>
         </div>
-        <div className="flex shrink-0 flex-wrap justify-end gap-1.5">
-          <Badge variant="outline">Agent de service</Badge>
-          <Badge variant="outline">
-            {effectives.length} permission{effectives.length > 1 ? "s" : ""}
-          </Badge>
-          <Badge variant={valide ? "secondary" : suspendu ? "default" : "destructive"}>{compte.etat}</Badge>
-        </div>
-      </div>
+      </header>
 
       <Tabs defaultValue="compte" className="mt-0 w-full">
         <TabsList aria-label="Sections de la fiche agent" className="inline-flex h-auto w-fit max-w-full flex-wrap items-center gap-1 p-1">
