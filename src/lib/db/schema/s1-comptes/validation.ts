@@ -293,14 +293,57 @@ export function normaliserDureeInvitationJours(valeur: unknown): number {
 }
 
 /**
- * Modifier un réglage : même autorisation que créer un administrateur
- * principal — administrateur technique ou principal, toujours VALIDE.
+ * Nature d'un réglage : ce qui sépare le technique du métier (S2
+ * §Frontière — « ni taux, ni plafond » pour l'administrateur technique).
+ * - `TECHNIQUE` : mécanique interne, sans portée financière directe
+ *   (ex. durée d'un lien d'invitation). Les deux administrateurs VALIDE
+ *   peuvent modifier.
+ * - `METIER` : décision du distributeur qui touche l'argent ou le crédit
+ *   (ex. plafond par défaut, seuil de retard). Seul l'administrateur
+ *   principal VALIDE peut modifier. Aucune clé METIER n'existe encore :
+ *   les classer ici suffit à appliquer la règle le jour où elles arrivent.
  */
-export function peutModifierReglage(
+export type NatureReglage = "TECHNIQUE" | "METIER";
+
+/** Nature de chaque clé de réglage existante. */
+export const NATURE_REGLAGE: Record<CleReglage, NatureReglage> = {
+  duree_invitation_jours: "TECHNIQUE",
+};
+
+/**
+ * Modifier un réglage de la nature donnée : un réglage métier est réservé
+ * à l'administrateur principal VALIDE ; un réglage technique suit la même
+ * autorisation que créer un administrateur principal (technique ou
+ * principal, toujours VALIDE).
+ */
+export function peutModifierReglageNature(
+  nature: NatureReglage,
   roleModificateur: string,
   etatModificateur: string,
 ): boolean {
+  if (nature === "METIER") {
+    return (
+      roleModificateur === "ADMIN_PRINCIPAL" && etatModificateur === "VALIDE"
+    );
+  }
   return peutCreerAdminPrincipal(roleModificateur, etatModificateur);
+}
+
+/**
+ * Modifier le réglage de la clé donnée : la nature de la clé décide.
+ * Clé inconnue = refus (liste fermée, comme les permissions S2).
+ */
+export function peutModifierReglage(
+  cle: string,
+  roleModificateur: string,
+  etatModificateur: string,
+): boolean {
+  if (!estCleReglage(cle)) return false;
+  return peutModifierReglageNature(
+    NATURE_REGLAGE[cle],
+    roleModificateur,
+    etatModificateur,
+  );
 }
 
 // ---- Complément S1 : second facteur, pièces, accès temporaires --------

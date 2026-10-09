@@ -146,10 +146,11 @@ describe("règles staff", () => {
     expect(normaliserDureeInvitationJours("illisible")).toBe(
       DEFAUT_DUREE_INVITATION_JOURS,
     );
-    expect(peutModifierReglage("ADMIN_TECHNIQUE", "VALIDE")).toBe(true);
-    expect(peutModifierReglage("ADMIN_PRINCIPAL", "VALIDE")).toBe(true);
-    expect(peutModifierReglage("AGENT", "VALIDE")).toBe(false);
-    expect(peutModifierReglage("ADMIN_PRINCIPAL", "REVOQUE")).toBe(false);
+    expect(peutModifierReglage("duree_invitation_jours", "ADMIN_TECHNIQUE", "VALIDE")).toBe(true);
+    expect(peutModifierReglage("duree_invitation_jours", "ADMIN_PRINCIPAL", "VALIDE")).toBe(true);
+    expect(peutModifierReglage("duree_invitation_jours", "AGENT", "VALIDE")).toBe(false);
+    expect(peutModifierReglage("duree_invitation_jours", "ADMIN_PRINCIPAL", "REVOQUE")).toBe(false);
+    expect(peutModifierReglage("cle_inconnue", "ADMIN_PRINCIPAL", "VALIDE")).toBe(false);
   });
 
   it("email staff : normalisé minuscule, invalide rejeté", () => {
