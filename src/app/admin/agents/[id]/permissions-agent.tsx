@@ -42,11 +42,13 @@ export function InterrupteurPermission({
   permission,
   accordee,
   desactive,
+  heriteeSocle,
 }: {
   agentId: string;
   permission: string;
   accordee: boolean;
   desactive?: boolean;
+  heriteeSocle?: boolean;
 }) {
   const [erreur, setErreur] = React.useState<string | null>(null);
   const [enCours, demarrer] = React.useTransition();
@@ -62,14 +64,24 @@ export function InterrupteurPermission({
   }
 
   const libelle = LIBELLES_PERMISSION[permission] ?? { titre: permission, detail: "" };
+  const verrouille = desactive || enCours || (heriteeSocle && !accordee);
 
   return (
     <div className="flex items-center justify-between gap-3 rounded-lg border p-3">
       <div className="min-w-0">
-        <p className="text-xs font-medium">{libelle.titre}</p>
+        <p className="flex flex-wrap items-center gap-1.5 text-xs font-medium">
+          <span>{libelle.titre}</span>
+          {heriteeSocle ? <Badge variant="secondary">Socle</Badge> : null}
+        </p>
         <p className="mt-0.5 font-mono text-[11px] text-muted-foreground">{permission}</p>
         {libelle.detail ? (
           <p className="mt-0.5 text-[11px] text-muted-foreground">{libelle.detail}</p>
+        ) : null}
+        {heriteeSocle && !accordee ? (
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            Accordée à tous par le socle — pour la retirer à cet agent,
+            retirez-la du socle.
+          </p>
         ) : null}
         {erreur ? (
           <p role="alert" className="mt-1 text-[11px] font-medium text-destructive">
@@ -80,21 +92,21 @@ export function InterrupteurPermission({
       <button
         type="button"
         role="switch"
-        aria-checked={accordee}
-        aria-label={`${libelle.titre} : ${accordee ? "accordée" : "refusée"}`}
-        disabled={desactive || enCours}
+        aria-checked={accordee || !!heriteeSocle}
+        aria-label={`${libelle.titre} : ${accordee || heriteeSocle ? "accordée" : "refusée"}`}
+        disabled={verrouille}
         onClick={basculer}
         className={cn(
           "relative h-5 w-9 shrink-0 rounded-full transition-colors",
-          accordee ? "bg-primary" : "bg-input",
-          desactive || enCours ? "cursor-not-allowed opacity-70" : "cursor-pointer",
+          accordee || heriteeSocle ? "bg-primary" : "bg-input",
+          verrouille ? "cursor-not-allowed opacity-70" : "cursor-pointer",
         )}
       >
         <span
           aria-hidden
           className={cn(
             "absolute top-0.5 left-0.5 size-4 rounded-full bg-white shadow transition-transform",
-            accordee && "translate-x-4",
+            (accordee || heriteeSocle) && "translate-x-4",
           )}
         />
       </button>

@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { profilSession } from "@/lib/s1-comptes/profil-session";
 import type { CompteProfil } from "@/components/profil";
 import { ProfilUtilisateur } from "@/components/profil";
+import { BoutonDeconnexion } from "@/components/bouton-deconnexion";
 
 // Mon compte (espace agent) : le même composant ProfilUtilisateur, nourri par
 // la session. Quand l'espace agent aura son shell à sidebar, cette page
@@ -23,6 +24,9 @@ export default async function AgentProfilPage() {
 
   return (
     <main className="flex min-h-dvh flex-col bg-background px-6 py-8">
+      <div className="mx-auto flex w-full max-w-5xl justify-end">
+        <BoutonDeconnexion />
+      </div>
       <ProfilUtilisateur
         nom={nom}
         email={email || "Espace agent"}

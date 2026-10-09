@@ -9,9 +9,12 @@ import { comptesStaff, peutInviterAgent } from "@/lib/db/schema/s1-comptes";
 import { peutGererPermissions } from "@/lib/db/schema/s2-autorisations";
 import {
   accorderPermission,
+  accorderSocle,
   appliquerProfilAgent,
   AutorisationError,
+  listerSocle,
   retirerPermission,
+  retirerSocle,
 } from "@/lib/s2-autorisations/autorisations";
 import { enregistrerEvenement } from "@/lib/s2-autorisations/journal";
 import {
@@ -21,6 +24,10 @@ import {
   StaffError,
   tuerSessionsStaff,
 } from "@/lib/s1-comptes/staff";
+import {
+  PERMISSIONS_FERMEES,
+  PROFIL_AGENT_SERVICE_DEFAUT,
+} from "@/lib/db/schema/s2-autorisations/validation";
 
 export type ResultatAction =
   | { ok: true; lien?: string; email?: string }
@@ -301,9 +308,9 @@ function erreurAutorisation(erreur: unknown): string {
       case "AGENT_INTROUVABLE":
         return "Agent introuvable.";
       case "DEJA_ACCORDEE":
-        return "Permission déjà accordée.";
+        return erreur.message || "Permission déjà accordée.";
       case "NON_ACCORDEE":
-        return "Permission non accordée.";
+        return erreur.message || "Permission non accordée.";
     }
   }
   return "Opération impossible.";
@@ -360,5 +367,83 @@ export async function appliquerProfilAction(agentId: string): Promise<ResultatAc
     return { ok: true };
   } catch (erreur) {
     return { ok: false, erreur: erreurAutorisation(erreur) };
+  }
+}
+
+/** Accorde une permission du socle à tous les agents (y compris futurs). */
+export async function accorderSocleAction(permission: string): Promise<ResultatAction> {
+  const moi = await staffConnecte();
+  if (!moi || !peutGererPermissions(moi.role, moi.etat)) {
+    return { ok: false, erreur: erreurAutorisation(new AutorisationError("NON_AUTORISE", "")) };
+  }
+  try {
+    await accorderSocle(moi.id, permission);
+    revalidatePath("/admin/agents/permissions");
+    return { ok: true };
+  } catch (erreur) {
+    return { ok: false, erreur: erreurAutorisation(erreur) };
+  }
+}
+
+/** Retire une permission du socle (tous les agents la perdent, sauf exception fiche). */
+export async function retirerSocleAction(permission: string): Promise<ResultatAction> {
+  const moi = await staffConnecte();
+  if (!moi || !peutGererPermissions(moi.role, moi.etat)) {
+    return { ok: false, erreur: erreurAutorisation(new AutorisationError("NON_AUTORISE", "")) };
+  }
+  try {
+    await retirerSocle(moi.id, permission);
+    revalidatePath("/admin/agents/permissions");
+    return { ok: true };
+  } catch (erreur) {
+    return { ok: false, erreur: erreurAutorisation(erreur) };
+  }
+}
+
+export type ResultatLotSocle =
+  | { ok: true; ajoutees: string[]; retirees: string[] }
+  | { ok: false; erreur: string };
+
+/**
+ * Préremplit le socle en un seul aller-retour (profil, tout ou rien).
+ * Un seul revalidate à la fin au lieu d'un par permission : le lot des 18
+ * ne coûte qu'une revalidation et chaque accord/retrait reste journalisé
+ * un par un côté serveur.
+ */
+export async function appliquerSocleLotAction(
+  cible: "profil" | "tout" | "rien",
+): Promise<ResultatLotSocle> {
+  const moi = await staffConnecte();
+  if (!moi || !peutGererPermissions(moi.role, moi.etat)) {
+    return { ok: false, erreur: erreurAutorisation(new AutorisationError("NON_AUTORISE", "")) };
+  }
+  try {
+    const ajoutees: string[] = [];
+    const retirees: string[] = [];
+    if (cible === "rien") {
+      const socle = await listerSocle();
+      for (const permission of socle) {
+        try {
+          await retirerSocle(moi.id, permission);
+          retirees.push(permission);
+        } catch {
+          // Déjà retirée entre-temps : on continue le lot.
+        }
+      }
+    } else {
+      const visees = cible === "profil" ? [...PROFIL_AGENT_SERVICE_DEFAUT] : [...PERMISSIONS_FERMEES];
+      for (const permission of visees) {
+        try {
+          await accorderSocle(moi.id, permission);
+          ajoutees.push(permission);
+        } catch {
+          // Déjà au socle : on continue le lot.
+        }
+      }
+    }
+    revalidatePath("/admin/agents/permissions");
+    return { ok: true, ajoutees, retirees };
+  } catch {
+    return { ok: false, erreur: "Opération impossible." };
   }
 }

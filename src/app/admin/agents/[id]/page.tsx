@@ -78,34 +78,47 @@ export default async function FicheAgentPage({
 
   const nom = nomAffiche({ nom: compte.nom, email: compte.email });
 
-  const lignesCreateur = compte.creePar
-    ? await db
-        .select({ email: comptesStaff.email, nom: user.name })
-        .from(comptesStaff)
-        .leftJoin(user, eq(user.id, comptesStaff.betterAuthUserId))
-        .where(eq(comptesStaff.id, compte.creePar))
-        .limit(1)
-    : [];
+  // Lectures indépendantes en parallèle : créateur, permissions
+  // (individuel + socle), dernière inscription, dernière connexion, moi.
+  // Seule l'invitation d'origine dépend de l'inscription : elle suit.
+  const [lignesCreateur, detenues, socle, inscriptions, dernieres, session] =
+    await Promise.all([
+      compte.creePar
+        ? db
+            .select({ email: comptesStaff.email, nom: user.name })
+            .from(comptesStaff)
+            .leftJoin(user, eq(user.id, comptesStaff.betterAuthUserId))
+            .where(eq(comptesStaff.id, compte.creePar))
+            .limit(1)
+        : Promise.resolve([] as { email: string; nom: string | null }[]),
+      listerPermissions(compte.id),
+      listerSocle(),
+      db
+        .select({ apres: journalAudit.apres })
+        .from(journalAudit)
+        .where(
+          and(
+            eq(journalAudit.entiteId, compte.id),
+            eq(journalAudit.typeAction, "agent.inscrire"),
+          ),
+        )
+        .orderBy(desc(journalAudit.recuLe))
+        .limit(1),
+      db
+        .select({ creeLe: sessionAuth.createdAt })
+        .from(sessionAuth)
+        .where(eq(sessionAuth.userId, compte.betterAuthUserId))
+        .orderBy(desc(sessionAuth.createdAt))
+        .limit(1),
+      auth.api.getSession({ headers: await headers() }),
+    ]);
   const createur = compte.creePar
     ? (lignesCreateur[0]?.nom?.trim() || lignesCreateur[0]?.email || "Compte supprimé")
     : "Lien d'invitation";
-
-  const detenues = await listerPermissions(compte.id);
   const ensemble = new Set(detenues);
 
   // Origine : le lien d'invitation qui a créé l'agent (journal
   // agent.inscrire), sinon création directe au comptoir.
-  const inscriptions = await db
-    .select({ apres: journalAudit.apres })
-    .from(journalAudit)
-    .where(
-      and(
-        eq(journalAudit.entiteId, compte.id),
-        eq(journalAudit.typeAction, "agent.inscrire"),
-      ),
-    )
-    .orderBy(desc(journalAudit.recuLe))
-    .limit(1);
   const invitationId = (
     inscriptions[0]?.apres as { invitation?: string } | null
   )?.invitation;
@@ -125,17 +138,10 @@ export default async function FicheAgentPage({
     : "Création directe au comptoir";
 
   // Dernière connexion : session la plus récente, tous appareils.
-  const dernieres = await db
-    .select({ creeLe: sessionAuth.createdAt })
-    .from(sessionAuth)
-    .where(eq(sessionAuth.userId, compte.betterAuthUserId))
-    .orderBy(desc(sessionAuth.createdAt))
-    .limit(1);
   const derniereConnexion = dernieres[0]?.creeLe ?? null;
-  const socle = await listerSocle();
   const ensembleSocle = new Set(socle);
+  const effectives = [...new Set([...socle, ...detenues])].sort();
 
-  const session = await auth.api.getSession({ headers: await headers() });
   const lignesMoi = session?.user?.id
     ? await db
         .select({ id: comptesStaff.id, role: comptesStaff.role, etat: comptesStaff.etat })
@@ -178,7 +184,7 @@ export default async function FicheAgentPage({
         <div className="flex shrink-0 flex-wrap justify-end gap-1.5">
           <Badge variant="outline">Agent de service</Badge>
           <Badge variant="outline">
-            {detenues.length} permission{detenues.length > 1 ? "s" : ""}
+            {effectives.length} permission{effectives.length > 1 ? "s" : ""}
           </Badge>
           <Badge variant={valide ? "secondary" : suspendu ? "default" : "destructive"}>{compte.etat}</Badge>
         </div>
@@ -325,7 +331,7 @@ export default async function FicheAgentPage({
               </div>
             </section>
 
-            <ProfilEmbauche agentId={compte.id} detenues={detenues} desactive={verrouille} />
+            <ProfilEmbauche agentId={compte.id} detenues={effectives} desactive={verrouille} />
 
             <SessionsAgent
               betterAuthUserId={compte.betterAuthUserId}

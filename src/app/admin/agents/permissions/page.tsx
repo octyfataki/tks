@@ -1,21 +1,20 @@
 import { headers } from "next/headers";
-import { eq, inArray } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
-import { user } from "@/lib/db/schema/auth-schema";
 import { comptesStaff, peutInviterAgent } from "@/lib/db/schema/s1-comptes";
-import { permissionsAgents } from "@/lib/db/schema/s2-autorisations";
-import { estPermissionConnue } from "@/lib/db/schema/s2-autorisations";
-import { nomAffiche } from "../../list/affichage-admin";
 import { PermissionRefusee } from "@/components/permission-refusee";
-import { MatricePermissions } from "./matrice-permissions";
+import { listerSocle } from "@/lib/s2-autorisations/autorisations";
+import { SoclePermissions } from "./matrice-permissions";
 
 /**
- * /admin/agents/permissions — Matrice globale : tous les agents validés,
- * leurs permissions du quotidien en bascules rapides, profil d'embauche en
- * un clic. Lecture seule sans le droit de gérer (S2 : seul un
- * administrateur principal VALIDE accorde — les bascules appellent les
- * server actions qui recontrôlent).
+ * /admin/agents/permissions — Socle de base commun à tous les agents.
+ * Ce qui est accordé ici s'applique à tous les agents de service, y
+ * compris ceux créés après. L'individuel (fiche de chaque agent) ne fait
+ * qu'ajouter des exceptions. Effectif = socle ∪ individuel.
+ * Lecture seule sans le droit de gérer (S2 : seul un administrateur
+ * principal VALIDE accorde — les bascules appellent les server actions
+ * qui recontrôlent).
  */
 export default async function PermissionsGlobalesPage() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -37,45 +36,7 @@ export default async function PermissionsGlobalesPage() {
     );
   }
 
-  const lignesAgents = await db
-    .select({
-      id: comptesStaff.id,
-      email: comptesStaff.email,
-      etat: comptesStaff.etat,
-      nom: user.name,
-    })
-    .from(comptesStaff)
-    .leftJoin(user, eq(user.id, comptesStaff.betterAuthUserId))
-    .where(eq(comptesStaff.role, "AGENT"));
-
-  const ids = lignesAgents.filter((l) => l.etat === "VALIDE").map((l) => l.id);
-  const lignesPermissions =
-    ids.length > 0
-      ? await db
-          .select({
-            agentId: permissionsAgents.agentId,
-            permission: permissionsAgents.permission,
-          })
-          .from(permissionsAgents)
-          .where(inArray(permissionsAgents.agentId, ids))
-      : [];
-  const parAgent = new Map<string, string[]>();
-  for (const ligne of lignesPermissions) {
-    if (!estPermissionConnue(ligne.permission)) continue;
-    const liste = parAgent.get(ligne.agentId) ?? [];
-    liste.push(ligne.permission);
-    parAgent.set(ligne.agentId, liste);
-  }
-
-  const initiales = lignesAgents
-    .filter((l) => l.etat === "VALIDE")
-    .map((l) => ({
-      id: l.id,
-      nom: nomAffiche({ nom: l.nom, email: l.email }),
-      email: l.email,
-      permissions: (parAgent.get(l.id) ?? []).sort(),
-    }))
-    .sort((a, b) => a.nom.localeCompare(b.nom, "fr"));
+  const socle = await listerSocle();
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 pt-4 sm:p-6">
@@ -84,14 +45,16 @@ export default async function PermissionsGlobalesPage() {
           Accès
         </p>
         <h1 className="mt-1 text-2xl font-semibold tracking-tight">
-          Permissions des agents
+          Permissions de base des agents
         </h1>
         <p className="mt-1 text-sm text-muted-foreground">
-          Vue d&apos;ensemble du quotidien : qui peut créer, prendre, servir,
-          encaisser. Chaque bascule est tracée au journal.
+          Le socle commun à tous les agents de service : ce qui est accordé
+          ici s&apos;applique à chacun, y compris aux agents créés après.
+          Pour un cas particulier, ajoutez une exception sur la fiche de
+          l&apos;agent. Chaque bascule est tracée au journal.
         </p>
       </div>
-      <MatricePermissions initiales={initiales} />
+      <SoclePermissions initiales={socle} />
     </div>
   );
 }

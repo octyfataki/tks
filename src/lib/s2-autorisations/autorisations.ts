@@ -3,6 +3,7 @@ import { db } from "@/lib/db/client";
 import { comptesStaff } from "@/lib/db/schema/s1-comptes";
 import {
   permissionsAgents,
+  permissionsSocleAgents,
   estPermissionConnue,
   peutGererPermissions,
   PROFIL_AGENT_SERVICE_DEFAUT,
@@ -10,8 +11,9 @@ import {
 } from "@/lib/db/schema/s2-autorisations";
 import { enregistrerEvenement } from "./journal";
 
-// S2 issues 02-03 — accorder / retirer / vérifier, une par une.
-// Absence = refus. Permission inconnue = refus. Zéro par défaut.
+// S2 issues 02-03 — socle global + individuel, une par une.
+// Effectif = socle ∪ individuel. Absence des deux = refus.
+// Permission inconnue = refus. Un agent créé n'a rien en individuel.
 
 export type ErreurAutorisation =
   | "NON_AUTORISE"
@@ -37,12 +39,22 @@ async function staffParId(id: string) {
   return lignes[0] ?? null;
 }
 
-/** Vérifie qu'un agent tient une permission (inconnue = faux). */
-export async function aPermission(
+/** Socle global : les permissions accordées à tous les agents. */
+export async function listerSocle(): Promise<Permission[]> {
+  const lignes = await db
+    .select({ permission: permissionsSocleAgents.permission })
+    .from(permissionsSocleAgents);
+  return lignes
+    .map((l) => l.permission)
+    .filter(estPermissionConnue)
+    .sort();
+}
+
+/** L'agent tient-il la permission en individuel (hors socle) ? */
+async function aPermissionIndividuelle(
   agentId: string,
   permission: string,
 ): Promise<boolean> {
-  if (!estPermissionConnue(permission)) return false;
   const lignes = await db
     .select({ permission: permissionsAgents.permission })
     .from(permissionsAgents)
@@ -56,7 +68,27 @@ export async function aPermission(
   return lignes.length > 0;
 }
 
-/** Liste exacte des permissions d'un agent (vide par défaut). */
+/** Le socle accorde-t-il cette permission à tous ? */
+async function aPermissionSocle(permission: string): Promise<boolean> {
+  const lignes = await db
+    .select({ permission: permissionsSocleAgents.permission })
+    .from(permissionsSocleAgents)
+    .where(eq(permissionsSocleAgents.permission, permission))
+    .limit(1);
+  return lignes.length > 0;
+}
+
+/** Vérifie qu'un agent tient une permission (socle ou individuel, inconnue = faux). */
+export async function aPermission(
+  agentId: string,
+  permission: string,
+): Promise<boolean> {
+  if (!estPermissionConnue(permission)) return false;
+  if (await aPermissionSocle(permission)) return true;
+  return aPermissionIndividuelle(agentId, permission);
+}
+
+/** Permissions individuelles d'un agent (hors socle, vide par défaut). */
 export async function listerPermissions(agentId: string): Promise<Permission[]> {
   const lignes = await db
     .select({ permission: permissionsAgents.permission })
@@ -66,6 +98,17 @@ export async function listerPermissions(agentId: string): Promise<Permission[]> 
     .map((l) => l.permission)
     .filter(estPermissionConnue)
     .sort();
+}
+
+/** Permissions effectives d'un agent : socle ∪ individuel. */
+export async function listerPermissionsEffectives(
+  agentId: string,
+): Promise<Permission[]> {
+  const [socle, individuelles] = await Promise.all([
+    listerSocle(),
+    listerPermissions(agentId),
+  ]);
+  return [...new Set([...socle, ...individuelles])].sort();
 }
 
 async function gerantValide(gestionnaireId: string) {
@@ -95,8 +138,14 @@ export async function accorderPermission(
   }
   const gerant = await gerantValide(gestionnaireId);
   await agentValide(agentId);
-  if (await aPermission(agentId, permission)) {
+  if (await aPermissionIndividuelle(agentId, permission)) {
     throw new AutorisationError("DEJA_ACCORDEE", "déjà accordée");
+  }
+  if (await aPermissionSocle(permission)) {
+    throw new AutorisationError(
+      "DEJA_ACCORDEE",
+      "déjà accordée par le socle à tous les agents",
+    );
   }
   await db.insert(permissionsAgents).values({
     agentId,
@@ -113,7 +162,11 @@ export async function accorderPermission(
   });
 }
 
-/** Retire une permission. Le retrait fait foi : le profil ne réaccorde rien. */
+/**
+ * Retire une permission individuelle. Ne touche jamais au socle : une
+ * permission du socle reste accordée à tous — pour la retirer à un seul
+ * agent, retirez-la du socle (page globale) ou assumez l'addition.
+ */
 export async function retirerPermission(
   gestionnaireId: string,
   agentId: string,
@@ -124,7 +177,13 @@ export async function retirerPermission(
   }
   const gerant = await gerantValide(gestionnaireId);
   await agentValide(agentId);
-  if (!(await aPermission(agentId, permission))) {
+  if (!(await aPermissionIndividuelle(agentId, permission))) {
+    if (await aPermissionSocle(permission)) {
+      throw new AutorisationError(
+        "NON_ACCORDEE",
+        "permission du socle : elle s'applique à tous, modifiez le socle",
+      );
+    }
     throw new AutorisationError("NON_ACCORDEE", "permission non accordée");
   }
   await db
@@ -145,9 +204,61 @@ export async function retirerPermission(
   });
 }
 
+/** Accorde une permission du socle à tous les agents (y compris futurs). */
+export async function accorderSocle(
+  gestionnaireId: string,
+  permission: string,
+): Promise<void> {
+  if (!estPermissionConnue(permission)) {
+    throw new AutorisationError("PERMISSION_INCONNUE", "permission inconnue");
+  }
+  const gerant = await gerantValide(gestionnaireId);
+  if (await aPermissionSocle(permission)) {
+    throw new AutorisationError("DEJA_ACCORDEE", "déjà au socle");
+  }
+  await db.insert(permissionsSocleAgents).values({
+    permission,
+    accordePar: gestionnaireId,
+  });
+  await enregistrerEvenement({
+    acteurId: gestionnaireId,
+    roleAuMoment: gerant.role,
+    typeAction: "permission.socle.accorder",
+    entite: "permission_socle",
+    entiteId: permission,
+    apres: { permission },
+  });
+}
+
+/** Retire une permission du socle (tous les agents la perdent, sauf exception individuelle). */
+export async function retirerSocle(
+  gestionnaireId: string,
+  permission: string,
+): Promise<void> {
+  if (!estPermissionConnue(permission)) {
+    throw new AutorisationError("PERMISSION_INCONNUE", "permission inconnue");
+  }
+  const gerant = await gerantValide(gestionnaireId);
+  if (!(await aPermissionSocle(permission))) {
+    throw new AutorisationError("NON_ACCORDEE", "permission hors socle");
+  }
+  await db
+    .delete(permissionsSocleAgents)
+    .where(eq(permissionsSocleAgents.permission, permission));
+  await enregistrerEvenement({
+    acteurId: gestionnaireId,
+    roleAuMoment: gerant.role,
+    typeAction: "permission.socle.retirer",
+    entite: "permission_socle",
+    entiteId: permission,
+    avant: { permission },
+  });
+}
+
 /**
  * Applique le profil prédéfini d'embauche : insère les permissions
- * manquantes, sans toucher aux autres. Raccourci, pas contrainte.
+ * manquantes à l'effectif (socle ∪ individuel), sans toucher aux autres.
+ * Raccourci, pas contrainte.
  */
 export async function appliquerProfilAgent(
   gestionnaireId: string,
@@ -155,7 +266,7 @@ export async function appliquerProfilAgent(
 ): Promise<{ ajoutees: Permission[] }> {
   const gerant = await gerantValide(gestionnaireId);
   await agentValide(agentId);
-  const detenues = new Set(await listerPermissions(agentId));
+  const detenues = new Set(await listerPermissionsEffectives(agentId));
   const ajoutees = PROFIL_AGENT_SERVICE_DEFAUT.filter((p) => !detenues.has(p));
   for (const permission of ajoutees) {
     await db.insert(permissionsAgents).values({

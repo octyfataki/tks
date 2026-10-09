@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { BoutonDeconnexion } from "@/components/bouton-deconnexion";
 
 // Espace agent — écran d'accueil. Les permissions de l'agent (ce qu'il sert,
 // encaisse et valide) sont le sujet de S2 : ici on pose seulement l'espace
@@ -18,9 +19,15 @@ export default function AgentDashboardPage() {
         permissions. Cet écran existe d&apos;abord pour que la connexion d&apos;un
         agent atterrisse ici, et nulle part ailleurs.
       </p>
-      <Link href="/agent/aide" className="text-sm underline underline-offset-4">
-        Aide — vos raccourcis agent
-      </Link>
+      <div className="flex flex-wrap items-center justify-center gap-3">
+        <Link href="/agent/aide" className="text-sm underline underline-offset-4">
+          Aide — vos raccourcis agent
+        </Link>
+        <Link href="/agent/profil" className="text-sm underline underline-offset-4">
+          Mon compte
+        </Link>
+      </div>
+      <BoutonDeconnexion />
     </main>
   );
 }

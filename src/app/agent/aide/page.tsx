@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { AideContenu } from "@/components/aide/aide-contenu";
+import { BoutonDeconnexion } from "@/components/bouton-deconnexion";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -23,13 +24,16 @@ export default function AgentAidePage() {
           <span className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-[11px] font-medium text-primary">
             Espace agent de service
           </span>
-          <Link
-            href="/agent/dashboard"
-            className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
-          >
-            <ArrowLeft aria-hidden data-icon="inline-start" />
-            Tableau de bord
-          </Link>
+          <div className="flex items-center gap-2">
+            <BoutonDeconnexion />
+            <Link
+              href="/agent/dashboard"
+              className={cn(buttonVariants({ variant: "ghost", size: "sm" }))}
+            >
+              <ArrowLeft aria-hidden data-icon="inline-start" />
+              Tableau de bord
+            </Link>
+          </div>
         </div>
         <AideContenu />
       </div>
