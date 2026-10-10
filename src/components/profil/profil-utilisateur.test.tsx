@@ -229,6 +229,37 @@ describe("ProfilUtilisateur", () => {
     expect(optionEmail).toHaveAttribute("aria-pressed", "true");
   });
 
+  it("propose d'activer le second facteur à un agent de service", () => {
+    render(
+      <ProfilUtilisateur
+        nom="Joel Agent"
+        email="joel@example.com"
+        telephone="+243 810 000 003"
+        compte={{ type: "STAFF", role: "AGENT", etat: "VALIDE" }}
+        secondFacteurActif={false}
+        formulaireSecondFacteur={<ActivationSecondFacteur />}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Activer le second facteur" }));
+    expect(screen.getByLabelText("Confirmez votre mot de passe")).toBeInTheDocument();
+  });
+
+  it("propose d'activer le second facteur à un client validé", () => {
+    render(
+      <ProfilUtilisateur
+        nom="Aline Mukendi"
+        email="aline@example.com"
+        telephone="+243 815 000 000"
+        compte={{ type: "CLIENT" }}
+        dossier={null}
+        secondFacteurActif={false}
+        formulaireSecondFacteur={<ActivationSecondFacteur />}
+      />,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Activer le second facteur" }));
+    expect(screen.getByLabelText("Confirmez votre mot de passe")).toBeInTheDocument();
+  });
+
   it("n'emploie aucun terme interdit du glossaire", () => {
     const { container } = render(
       <ProfilUtilisateur

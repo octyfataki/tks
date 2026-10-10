@@ -11,6 +11,13 @@ Stack imposée ADR-0006 : Next.js + MySQL + Drizzle + better-auth. better-auth g
 
 Rôles staff : email + mot de passe (`emailAndPassword`) + 2FA TOTP obligatoire pour les deux admins (`twoFactor()`). Agent par lien d'invitation, puis email + mot de passe, sans 2FA.
 
+> Évolution validée (issue #3) : le second facteur est **optionnel pour
+> tous** — staff comme clients — par code à usage unique SMS ou email,
+> activé par le titulaire depuis sa page profil. Le TOTP n'est plus utilisé
+> (écart assumé, voir `src/lib/auth.ts`). La traçabilité staff reste dans
+> `facteurs_2fa_admin` (tout rôle staff), celle des clients dans
+> `facteurs_2fa_clients`.
+
 ## Tables envisagées
 
 ### 1. `comptes_staff` — tableau réservé staff
@@ -39,6 +46,9 @@ S1 stories 2-4 + plugin `twoFactor()` better-auth. Uniquement pour les deux rôl
 * `cree_le, remplace_le NULL, cree_par CHAR(36) FK`
 
 Règle : login admin sans TOTP = refus + journalisé. Perte = remplacement bout-en-bout testé, pas de bypass. Secrets TOTP jamais lisibles par admin technique.
+
+> Évolution validée (issue #3) : cette règle est assouplie — le second
+> facteur est optionnel, par OTP SMS ou email, pour tout compte `VALIDE`.
 
 ### 3. `invitations_agents`
 

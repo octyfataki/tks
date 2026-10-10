@@ -22,7 +22,7 @@ export default async function Verify2faPage() {
   return (
     <AuthShell
       title="Second facteur"
-      description="Administrateurs : code reçu par SMS ou par email, à chaque connexion."
+      description="Code reçu par SMS ou par email, à chaque connexion quand il est actif."
     >
       <Verify2faForm />
     </AuthShell>

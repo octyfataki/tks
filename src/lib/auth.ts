@@ -10,7 +10,7 @@ import {
   type MethodeEnvoi2fa,
 } from "./2fa-methode";
 import { verification } from "./db/schema/auth-schema";
-import { comptesStaff } from "./db/schema/s1-comptes";
+import { comptesClients, comptesStaff } from "./db/schema/s1-comptes";
 
 // Socle S1 : TOUS les comptes (client comme staff) utilisent email + mot de
 // passe. Le téléphone n'est plus un identifiant de connexion : il reste une
@@ -18,7 +18,9 @@ import { comptesStaff } from "./db/schema/s1-comptes";
 // distinguent par leurs tables custom — comptes_clients (EN_ATTENTE_VALIDATION
 // à l'inscription) vs comptes_staff (VALIDE, créé par un admin ou bootstrap)
 // — jamais par le type d'identifiant.
-// 2FA OTP obligatoire pour les administrateurs (vérifiée en couche applicative S1-T02).
+// 2FA OTP optionnelle pour tous (issue #3) : chaque compte VALIDE — staff
+// comme client — s'enrôle depuis sa page profil, vérifiée en couche
+// applicative (confirmerSecondFacteurAction).
 // Second facteur = code à usage unique, envoyé sur UNE méthode redondante au
 // choix de l'utilisateur : email OU SMS vers le numéro de contact du compte
 // staff (POST /api/2fa/envoyer-code, préférence `2fa-methode-<défi>` lue
@@ -132,9 +134,9 @@ export const auth = betterAuth({
       otpOptions: {
         // Code à 6 chiffres, 5 minutes, 5 essais, chiffré au repos. Envoyé
         // sur la méthode demandée (POST /api/2fa/envoyer-code) : email, ou
-        // SMS vers le numéro de contact du compte staff quand il est
-        // renseigné. Sans préférence lisible : repli historique, les deux
-        // méthodes — aucun envoi ne doit se perdre parce que le choix
+        // SMS vers le numéro de contact du compte (staff comme client) quand
+        // il est renseigné. Sans préférence lisible : repli historique, les
+        // deux méthodes — aucun envoi ne doit se perdre parce que le choix
         // n'a pas suivi. SMS demandé sans numéro : repli email.
         // Le code ne sort jamais dans les logs de production — voir
         // sendResetPassword ci-dessus. Mock console en attendant les vrais
@@ -173,12 +175,20 @@ export const auth = betterAuth({
           }
           let telephone: string | null = null;
           try {
-            const lignes = await db
+            const lignesStaff = await db
               .select({ telephone: comptesStaff.telephone })
               .from(comptesStaff)
               .where(eq(comptesStaff.betterAuthUserId, user.id))
               .limit(1);
-            telephone = lignes[0]?.telephone ?? null;
+            telephone = lignesStaff[0]?.telephone ?? null;
+            if (telephone === null) {
+              const lignesClients = await db
+                .select({ telephone: comptesClients.telephone })
+                .from(comptesClients)
+                .where(eq(comptesClients.betterAuthUserId, user.id))
+                .limit(1);
+              telephone = lignesClients[0]?.telephone ?? null;
+            }
           } catch {
             // Numéro illisible : l'email reste la méthode de repli, on n'invente rien.
             telephone = null;

@@ -18,16 +18,18 @@ import { Input } from "@/components/ui/input";
 import { confirmerSecondFacteurAction } from "@/app/admin/profil/actions";
 
 type Etape = "appareil" | "sms" | "courriel" | "codes";
-type Canal = "sms" | "email";
+type Methode = "sms" | "email";
 
 /**
- * Active le second facteur OTP du compte connecté (administrateurs
- * uniquement) : mot de passe, choix du canal (SMS prioritaire, email en
- * repli), code à 6 chiffres, puis confirmation. Le même code part sur les
- * deux canaux (voir sendOTP dans src/lib/auth.ts) ; l'utilisateur saisit
- * celui qu'il reçoit. La traçabilité (canal nommé) est enregistrée côté
- * serveur après vérification. Sans TOTP : aucune application à installer,
- * aucun QR à scanner.
+ * Active le second facteur OTP du compte connecté (tout compte VALIDE,
+ * staff comme client, depuis sa page profil — issue #3) : mot de passe,
+ * choix de la méthode (SMS prioritaire, email en repli), code à 6 chiffres,
+ * puis confirmation. Le même code part sur les deux méthodes (voir sendOTP
+ * dans src/lib/auth.ts) ; l'utilisateur saisit celui qu'il reçoit. La
+ * traçabilité (méthode nommée) est enregistrée côté serveur après
+ * vérification. Sans TOTP : aucune application à installer, aucun QR à
+ * scanner. SMS sans numéro de contact = repli email explicite, jamais de
+ * code perdu.
  */
 export function ActivationSecondFacteur({
   email,
@@ -39,15 +41,17 @@ export function ActivationSecondFacteur({
   const router = useRouter();
   const [ouvert, setOuvert] = React.useState(false);
   const [etape, setEtape] = React.useState<Etape>("appareil");
-  const [canal, setCanal] = React.useState<Canal>("sms");
-  const [nomCanal, setNomCanal] = React.useState("");
+  const [methode, setMethode] = React.useState<Methode>("sms");
+  const [nomMethode, setNomMethode] = React.useState("");
+  const [repliEmail, setRepliEmail] = React.useState(false);
   const [erreur, setErreur] = React.useState<string | null>(null);
   const [chargement, setChargement] = React.useState(false);
 
   function ouvrir() {
     setEtape("appareil");
-    setCanal("sms");
-    setNomCanal("");
+    setMethode("sms");
+    setNomMethode("");
+    setRepliEmail(false);
     setErreur(null);
     setOuvert(true);
   }
@@ -55,8 +59,9 @@ export function ActivationSecondFacteur({
   function fermer() {
     setOuvert(false);
     setEtape("appareil");
-    setCanal("sms");
-    setNomCanal("");
+    setMethode("sms");
+    setNomMethode("");
+    setRepliEmail(false);
     setErreur(null);
   }
 
@@ -72,12 +77,10 @@ export function ActivationSecondFacteur({
       setErreur("Votre mot de passe est exigé pour activer le second facteur.");
       return;
     }
-    if (canal === "sms" && !(telephone ?? "").trim()) {
-      setErreur(
-        "Aucun numéro de contact sur votre compte : renseignez-le d'abord via le formulaire Coordonnées, puis revenez ici.",
-      );
-      return;
-    }
+    // SMS sans numéro de contact = repli email explicite (issue #3) : le
+    // code part quand même (l'envoi couvre l'email), jamais de code perdu.
+    const sansNumero = methode === "sms" && !(telephone ?? "").trim();
+    setRepliEmail(sansNumero);
     setErreur(null);
     setChargement(true);
     try {
@@ -88,8 +91,9 @@ export function ActivationSecondFacteur({
       if (erreurActivation) throw new Error(messageErreurSecondFacteur(erreurActivation));
       const { error: erreurEnvoi } = await authClient.twoFactor.sendOtp({ trustDevice: false });
       if (erreurEnvoi) throw new Error(messageErreurSecondFacteur(erreurEnvoi));
-      setNomCanal(canal === "sms" ? "Code par SMS" : "Code par email");
-      setEtape(canal === "sms" ? "sms" : "courriel");
+      const parSms = methode === "sms" && !sansNumero;
+      setNomMethode(parSms ? "Code par SMS" : "Code par email");
+      setEtape(parSms ? "sms" : "courriel");
     } catch (e) {
       setErreur(
         e instanceof TypeError
@@ -118,7 +122,7 @@ export function ActivationSecondFacteur({
       });
       if (error) throw new Error(messageErreurSecondFacteur(error));
       if (!data) throw new Error("Code refusé.");
-      const confirmation = await confirmerSecondFacteurAction(nomCanal);
+      const confirmation = await confirmerSecondFacteurAction(nomMethode);
       if (!confirmation.ok) throw new Error(confirmation.erreur);
       setEtape("codes");
     } catch (e) {
@@ -152,7 +156,7 @@ export function ActivationSecondFacteur({
             <DialogTitle className="text-base">Activer le second facteur</DialogTitle>
             <DialogDescription>
               {etape === "appareil"
-                ? "Étape 1/2 : choisissez le canal, puis confirmez le mot de passe."
+                ? "Étape 1/2 : choisissez la méthode, puis confirmez le mot de passe."
                 : etape === "codes"
                   ? "Second facteur actif."
                   : "Étape 2/2 : saisissez le code reçu."}
@@ -163,25 +167,25 @@ export function ActivationSecondFacteur({
             <form
               action={demanderCode}
               className="flex flex-col gap-3"
-              aria-label="Choisir le canal"
+              aria-label="Choisir la méthode"
             >
-              <div role="group" aria-label="Canal du second facteur" className="grid grid-cols-2 gap-2">
+              <div role="group" aria-label="Méthode du second facteur" className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
-                  aria-pressed={canal === "sms"}
-                  onClick={() => setCanal("sms")}
-                  className={canal === "sms" ? "rounded-lg border-2 border-primary bg-primary/5 px-3 py-2.5 text-left" : "rounded-lg border px-3 py-2.5 text-left hover:bg-muted/50"}
+                  aria-pressed={methode === "sms"}
+                  onClick={() => setMethode("sms")}
+                  className={methode === "sms" ? "rounded-lg border-2 border-primary bg-primary/5 px-3 py-2.5 text-left" : "rounded-lg border px-3 py-2.5 text-left hover:bg-muted/50"}
                 >
                   <span className="block text-xs font-medium">SMS</span>
                   <span className="mt-0.5 block text-[11px] text-muted-foreground">
-                    {telephone?.trim() ? telephoneMasque() : "Recommandé"}
+                    {telephone?.trim() ? telephoneMasque() : "Par email en repli"}
                   </span>
                 </button>
                 <button
                   type="button"
-                  aria-pressed={canal === "email"}
-                  onClick={() => setCanal("email")}
-                  className={canal === "email" ? "rounded-lg border-2 border-primary bg-primary/5 px-3 py-2.5 text-left" : "rounded-lg border px-3 py-2.5 text-left hover:bg-muted/50"}
+                  aria-pressed={methode === "email"}
+                  onClick={() => setMethode("email")}
+                  className={methode === "email" ? "rounded-lg border-2 border-primary bg-primary/5 px-3 py-2.5 text-left" : "rounded-lg border px-3 py-2.5 text-left hover:bg-muted/50"}
                 >
                   <span className="block text-xs font-medium">Email</span>
                   <span className="mt-0.5 block text-[11px] text-muted-foreground">Code reçu par email</span>
@@ -285,7 +289,8 @@ export function ActivationSecondFacteur({
               aria-label="Vérifier le code reçu"
             >
               <p className="text-xs leading-relaxed text-muted-foreground">
-                Un code à 6 chiffres vient d&apos;être envoyé{email ? ` à ${email}` : ""} (et par SMS en redondance) — valable 5 minutes.
+                Un code à 6 chiffres vient d&apos;être envoyé{email ? ` à ${email}` : ""}
+                {repliEmail ? " (repli : aucun numéro de contact sur votre compte, le SMS est remplacé par l'email)" : " (et par SMS en redondance)"} — valable 5 minutes.
               </p>
               <div>
                 <label htmlFor="2fa-code-email" className="mb-1.5 block text-xs font-medium">
@@ -333,8 +338,8 @@ export function ActivationSecondFacteur({
           {etape === "codes" ? (
             <div className="flex flex-col gap-3" aria-label="Second facteur actif">
               <p className="text-xs leading-relaxed text-muted-foreground">
-                Second facteur actif ({nomCanal}). À chaque connexion, un code vous sera envoyé
-                par SMS et par email. En cas de perte d&apos;accès aux deux canaux, contactez
+                Second facteur actif ({nomMethode}). À chaque connexion, un code vous sera envoyé
+                par SMS et par email. En cas de perte d&apos;accès aux deux méthodes, contactez
                 le distributeur.
               </p>
               {erreur ? (
