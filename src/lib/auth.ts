@@ -149,7 +149,7 @@ export const auth = betterAuth({
               jar && ctx
                 ? await ctx.getSignedCookie(jar.name, ctx.context.secret)
                 : null;
-            if (defi) {
+            if (typeof defi === "string" && defi.length > 0) {
               const lignes = await db
                 .select({ valeur: verification.value })
                 .from(verification)
@@ -161,17 +161,24 @@ export const auth = betterAuth({
                 )
                 .limit(1);
               const pref = lignes[0]?.valeur;
-              if (estMethodeEnvoi2fa(pref)) methode = pref;
+              if (estMethodeEnvoi2fa(pref)) {
+                methode = pref;
+              } else if (process.env.NODE_ENV !== "production") {
+                // Ligne absente ou valeur inattendue : le suffixe permet de
+                // corréler avec la ligne écrite par POST /api/2fa/envoyer-code.
+                console.warn(
+                  `[auth] 2FA : aucune préférence pour le défi …${defi.slice(-6)} (repli sms+email)`,
+                );
+              }
+            } else if (process.env.NODE_ENV !== "production") {
+              // Cookie de défi absent ou signature invalide : la méthode
+              // demandée est introuvable (repli double), sans rien perdre.
+              console.warn(
+                "[auth] 2FA : défi illisible dans le cookie (repli sms+email)",
+              );
             }
           } catch {
             methode = null;
-          }
-          if (methode === null && process.env.NODE_ENV !== "production") {
-            // Préférence illisible : on ne perd aucun envoi (repli double),
-            // mais on le signale — c'est le symptôme d'un désaccord de clé.
-            console.warn(
-              "[auth] 2FA : méthode demandée illisible, repli sms+email",
-            );
           }
           let telephone: string | null = null;
           try {

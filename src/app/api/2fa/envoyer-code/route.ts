@@ -62,6 +62,11 @@ export async function POST(request: Request) {
     value: methode,
     expiresAt: new Date(Date.now() + 10 * 60 * 1000),
   });
+  if (process.env.NODE_ENV !== "production") {
+    console.log(
+      `[auth] 2FA : préférence ${methode} mémorisée pour le défi …${defi.slice(-6)}`,
+    );
+  }
 
   try {
     await auth.api.sendTwoFactorOTP({
