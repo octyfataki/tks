@@ -6,6 +6,7 @@ import { db } from "@/lib/db/client";
 import { session as tableSession, user } from "@/lib/db/schema/auth-schema";
 import { comptesStaff, facteurs2faAdmin } from "@/lib/db/schema/s1-comptes";
 import { FormulaireMonProfil } from "@/app/admin/profil/formulaire-mon-profil";
+import { ActivationSecondFacteur } from "@/components/profil";
 import { and, desc, eq, gt } from "drizzle-orm";
 import { headers } from "next/headers";
 
@@ -13,8 +14,9 @@ import { headers } from "next/headers";
 // AgentHeader vit dans /agent/layout. Même ProfilUtilisateur que
 // l'espace distributeur, nourri par la session et les tables staff.
 // Modifiables par l'agent lui-même (compte VALIDE) : nom, téléphone,
-// photo, autres sessions. Second facteur : réservé aux administrateurs
-// (roleExigeSecondFacteur) — aucun enrôlement proposé ici, S1 inchangée.
+// photo, autres sessions. Second facteur : optionnel, activé par
+// l'agent lui-même depuis ici (compte VALIDE), comme les autres
+// profils (issue #3).
 export default async function AgentProfilPage() {
   const entetes = await headers();
   const session = await auth.api.getSession({ headers: entetes });
@@ -136,6 +138,11 @@ export default async function AgentProfilPage() {
           <FormulaireMonProfil nomInitial={nom} telephoneInitial={telephone ?? ""} />
         }
         sessionActuelleId={sessionActuelleId}
+        formulaireSecondFacteur={
+          profil.type === "STAFF" && profil.etat === "VALIDE" && secondFacteurActif !== true ? (
+            <ActivationSecondFacteur email={email} telephone={telephone} />
+          ) : undefined
+        }
       />
     </div>
   );

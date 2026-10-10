@@ -357,9 +357,32 @@ export const DUREE_MAX_ACCES_TEMPORAIRE_MS = 24 * 60 * 60 * 1000;
  * le lendemain, trop court pour traîner. */
 export const DUREE_PREMIER_ACCES_MS = 24 * 60 * 60 * 1000;
 
-/** Seuls les deux rôles admin portent un second facteur OTP (SMS ou email). */
-export function roleExigeSecondFacteur(role: string): boolean {
-  return role === "ADMIN_PRINCIPAL" || role === "ADMIN_TECHNIQUE";
+/** Depuis l'issue #3 (second facteur optionnel pour tous) : plus aucun rôle
+ * ne l'exige. Conservée pour compatibilité, elle vaut toujours faux :
+ * l'enrôlement passe par `rolePeutActiverSecondFacteur` (staff) et
+ * `compteClientPeutActiverSecondFacteur` (client). */
+export function roleExigeSecondFacteur(): boolean {
+  return false;
+}
+
+/** Le titulaire active lui-même son second facteur depuis sa page profil :
+ * administrateur principal, administrateur technique ou agent de service,
+ * compte `VALIDE` uniquement. Optionnel, jamais obligatoire (issue #3). */
+export function rolePeutActiverSecondFacteur(role: string): boolean {
+  return (
+    role === "ADMIN_PRINCIPAL" ||
+    role === "ADMIN_TECHNIQUE" ||
+    role === "AGENT"
+  );
+}
+
+/** Un compte client active son second facteur depuis `/clients/profil`,
+ * compte `VALIDE` uniquement (validé sur pièce d'identité, S1-03).
+ * Le rattachement au dossier (S4) n'est pas vérifié ici : inexistant en
+ * base à ce stade, et la garde `/clients` n'y laisse entrer que les
+ * comptes `VALIDE`. */
+export function compteClientPeutActiverSecondFacteur(etat: string): boolean {
+  return etat === "VALIDE";
 }
 
 /**

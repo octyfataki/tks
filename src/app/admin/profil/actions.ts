@@ -11,9 +11,12 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
 import { session as tableSession, twoFactor as tableDoubleFacteur, user } from "@/lib/db/schema/auth-schema";
 import {
+  comptesClients,
   comptesStaff,
+  compteClientPeutActiverSecondFacteur,
   facteurs2faAdmin,
-  roleExigeSecondFacteur,
+  facteurs2faClients,
+  rolePeutActiverSecondFacteur,
   telephoneStaffValide,
 } from "@/lib/db/schema/s1-comptes";
 import {
@@ -270,9 +273,11 @@ export type ResultatConfirmationSecondFacteur =
 /**
  * Enregistre la traçabilité du second facteur après enrôlement OTP réussi
  * côté better-auth (code SMS ou email vérifié). Auto-déclaration du titulaire
- * lui-même (les deux rôles admin, compte VALIDE), tracée avec creePar = soi.
- * Le remplacement d'un facteur perdu reste réservé au principal
- * (remplacerFacteur2faAdmin). Un seul facteur actif par compte.
+ * lui-même depuis sa page profil — tout compte `VALIDE`, staff comme client
+ * (issue #3, optionnel pour tous) — tracée avec creePar = soi. Le
+ * remplacement d'un facteur perdu reste réservé au principal
+ * (remplacerFacteur2faAdmin). Un seul facteur actif par compte : la seconde
+ * activation est refusée, jamais écrasée.
  *
  * Sans journal d'audit dans cette branche : sera tracé avec la couche S2.
  */
@@ -294,11 +299,22 @@ export async function confirmerSecondFacteurAction(
     .where(eq(comptesStaff.betterAuthUserId, userId))
     .limit(1);
   const moi = lignesMoi[0];
-  if (!moi) {
+  const lignesClient = moi
+    ? []
+    : await db
+        .select({ id: comptesClients.id, etat: comptesClients.etat })
+        .from(comptesClients)
+        .where(eq(comptesClients.betterAuthUserId, userId))
+        .limit(1);
+  const client = lignesClient[0];
+  if (!moi && !client) {
     return { ok: false, erreur: "Compte introuvable." };
   }
-  if (moi.etat !== "VALIDE" || !roleExigeSecondFacteur(moi.role)) {
-    return { ok: false, erreur: "Second facteur réservé aux administrateurs validés." };
+  if (moi && (moi.etat !== "VALIDE" || !rolePeutActiverSecondFacteur(moi.role))) {
+    return { ok: false, erreur: "Second facteur réservé aux comptes validés." };
+  }
+  if (client && !compteClientPeutActiverSecondFacteur(client.etat)) {
+    return { ok: false, erreur: "Second facteur réservé aux comptes validés." };
   }
   const lignesUtilisateur = await db
     .select({ twoFactorEnabled: user.twoFactorEnabled })
@@ -317,23 +333,49 @@ export async function confirmerSecondFacteurAction(
         "Terminez d'abord la vérification (code à 6 chiffres).",
     };
   }
-  const actifs = await db
-    .select({ id: facteurs2faAdmin.id })
-    .from(facteurs2faAdmin)
+  if (moi) {
+    const actifs = await db
+      .select({ id: facteurs2faAdmin.id })
+      .from(facteurs2faAdmin)
+      .where(
+        and(eq(facteurs2faAdmin.compteStaffId, moi.id), eq(facteurs2faAdmin.actif, true)),
+      )
+      .limit(1);
+    if (actifs[0]) {
+      return { ok: false, erreur: "Un second facteur actif existe déjà pour ce compte." };
+    }
+    await db.insert(facteurs2faAdmin).values({
+      id: randomUUID(),
+      compteStaffId: moi.id,
+      nomAppareil: appareil,
+      actif: true,
+      creePar: moi.id,
+    });
+    revalidatePath("/admin/profil");
+    revalidatePath("/agent/profil");
+    return { ok: true };
+  }
+  const compteClientId = client?.id;
+  if (!compteClientId) {
+    return { ok: false, erreur: "Compte introuvable." };
+  }
+  const actifsClient = await db
+    .select({ id: facteurs2faClients.id })
+    .from(facteurs2faClients)
     .where(
-      and(eq(facteurs2faAdmin.compteStaffId, moi.id), eq(facteurs2faAdmin.actif, true)),
+      and(eq(facteurs2faClients.compteClientId, compteClientId), eq(facteurs2faClients.actif, true)),
     )
     .limit(1);
-  if (actifs[0]) {
+  if (actifsClient[0]) {
     return { ok: false, erreur: "Un second facteur actif existe déjà pour ce compte." };
   }
-  await db.insert(facteurs2faAdmin).values({
+  await db.insert(facteurs2faClients).values({
     id: randomUUID(),
-    compteStaffId: moi.id,
+    compteClientId,
     nomAppareil: appareil,
     actif: true,
-    creePar: moi.id,
+    creePar: compteClientId,
   });
-  revalidatePath("/admin/profil");
+  revalidatePath("/clients/profil");
   return { ok: true };
 }

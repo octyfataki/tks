@@ -9,12 +9,13 @@ import {
   comptesStaff,
   ouvertureAccesTemporaireValide,
   peutRemplacerFacteur2fa,
-  roleExigeSecondFacteur,
+  rolePeutActiverSecondFacteur,
 } from "@/lib/db/schema/s1-comptes";
 import { StaffError, type ErreurStaff } from "./staff";
 
-// Complément S1 (stories 2-4, 11-13) : second facteur admin, pièces staff,
-// accès temporaires reset. IDs générés côté appareil (offline-first, ADR-0006).
+// Complément S1 (stories 2-4, 11-13) : second facteur staff et clients,
+// pièces staff, accès temporaires reset. IDs générés côté appareil
+// (offline-first, ADR-0006).
 // Le code OTP vit dans better-auth `two_factor` (chiffré) ; ici seule la traçabilité.
 // NON EXPOSÉ : aucune server action ne les appelle encore. Le contrôle du
 // demandeur vit quand même ici (comme staff.ts) pour que le câblage futur
@@ -37,7 +38,9 @@ function erreur(code: ErreurStaff, message: string): StaffError {
   return new StaffError(code, message);
 }
 
-/** Déclare le facteur OTP d'un admin (canal nommé : « Code par SMS », « Code par email »). Un seul actif par admin. */
+/** Déclare le facteur OTP d'un compte staff (méthode nommée : « Code par SMS »,
+ * « Code par email »). Tout rôle staff VALIDE : administrateurs comme agent
+ * de service (issue #3, optionnel pour tous). Un seul actif par compte. */
 export async function declarerFacteur2faAdmin(input: {
   compteStaffId: string;
   nomAppareil: string;
@@ -49,8 +52,8 @@ export async function declarerFacteur2faAdmin(input: {
     .from(comptesStaff)
     .where(eq(comptesStaff.id, input.compteStaffId));
   const titulaire = titulaires[0];
-  if (!titulaire || !roleExigeSecondFacteur(titulaire.role)) {
-    throw erreur("SECOND_FACTEUR_NON_REQUIS", "second facteur réservé aux admins");
+  if (!titulaire || !rolePeutActiverSecondFacteur(titulaire.role)) {
+    throw erreur("SECOND_FACTEUR_NON_REQUIS", "second facteur réservé aux comptes staff validés");
   }
   const existants = await db
     .select()

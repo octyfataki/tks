@@ -71,7 +71,7 @@ export type ProfilUtilisateurProps = {
   motifCoordonneesVerrouillees?: string;
   /** Change à chaque enregistrement : le formulaire repart des valeurs fraîches. */
   cleCoordonnees?: string;
-  /** Activation du second facteur (carte Sécurité, espace admin). */
+  /** Activation du second facteur (carte Sécurité, page profil). */
   formulaireSecondFacteur?: ReactNode;
   className?: string;
 };
@@ -406,12 +406,12 @@ export function ProfilUtilisateur({
                 Appareil déclaré :{" "}
                 <span className="font-medium text-foreground">{appareilSecondFacteur}</span>
               </p>
-            ) : estAdmin ? (
+            ) : (
               <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
-                Obligatoire pour un administrateur principal ou technique, jamais par SMS. Le secret
-                n&apos;est jamais affiché.
+                Optionnel : code à usage unique par SMS ou par email, exigé à
+                chaque connexion quand il est actif. Le secret n&apos;est jamais affiché.
               </p>
-            ) : null}
+            )}
             {formulaireSecondFacteur ? (
               <div className="mt-3">{formulaireSecondFacteur}</div>
             ) : null}

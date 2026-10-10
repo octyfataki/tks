@@ -5,6 +5,7 @@ export * from "./invitations-agents";
 export * from "./premiers-acces-admin";
 export * from "./reglages";
 export * from "./facteurs-2fa-admin";
+export * from "./facteurs-2fa-clients";
 export * from "./pieces-identite-staff";
 export * from "./acces-temporaires-reset-staff";
 export * from "./validation";

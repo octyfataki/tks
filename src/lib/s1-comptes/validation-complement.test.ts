@@ -1,17 +1,32 @@
 import { describe, expect, it } from "vitest";
 import {
   accesTemporaireUtilisable,
+  compteClientPeutActiverSecondFacteur,
   DUREE_MAX_ACCES_TEMPORAIRE_MS,
   ouvertureAccesTemporaireValide,
   peutRemplacerFacteur2fa,
   roleExigeSecondFacteur,
+  rolePeutActiverSecondFacteur,
 } from "../db/schema/s1-comptes/validation";
 
 describe("complément staff : 2FA, pièces, accès temporaires", () => {
-  it("second facteur réservé aux deux admins", () => {
-    expect(roleExigeSecondFacteur("ADMIN_PRINCIPAL")).toBe(true);
-    expect(roleExigeSecondFacteur("ADMIN_TECHNIQUE")).toBe(true);
-    expect(roleExigeSecondFacteur("AGENT")).toBe(false);
+  it("second facteur optionnel pour tous : plus aucun rôle ne l'exige", () => {
+    expect(roleExigeSecondFacteur()).toBe(false);
+  });
+
+  it("second facteur activable par tout le staff validé (issue #3)", () => {
+    expect(rolePeutActiverSecondFacteur("ADMIN_PRINCIPAL")).toBe(true);
+    expect(rolePeutActiverSecondFacteur("ADMIN_TECHNIQUE")).toBe(true);
+    expect(rolePeutActiverSecondFacteur("AGENT")).toBe(true);
+    expect(rolePeutActiverSecondFacteur("CLIENT")).toBe(false);
+    expect(rolePeutActiverSecondFacteur("INCONNU")).toBe(false);
+  });
+
+  it("client : seul un compte VALIDE active son second facteur", () => {
+    expect(compteClientPeutActiverSecondFacteur("VALIDE")).toBe(true);
+    expect(compteClientPeutActiverSecondFacteur("EN_ATTENTE_VALIDATION")).toBe(false);
+    expect(compteClientPeutActiverSecondFacteur("REFUSE")).toBe(false);
+    expect(compteClientPeutActiverSecondFacteur("REVOQUE")).toBe(false);
   });
 
   it("remplacement initié par un principal valide, sans bypass", () => {

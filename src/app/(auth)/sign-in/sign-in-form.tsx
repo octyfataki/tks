@@ -12,9 +12,10 @@ import { PasswordInput } from "@/components/password-input";
 import { toast } from "@/components/ui/toast";
 
 // S1 : connexion unique email + mot de passe pour tous — client comme staff.
-// Sans second facteur admin -> refus : Better Auth répond `twoFactorRedirect`,
-// on envoie vers /verify-2fa. Pas d'écran d'attente : le bouton porte l'état
-// (« Connexion… », désactivé) pendant l'appel.
+// Quand le compte a un second facteur actif, Better Auth répond
+// `twoFactorRedirect` et on envoie vers /verify-2fa (optionnel pour tous,
+// issue #3). Sans facteur actif : mot de passe seul. Pas d'écran d'attente :
+// le bouton porte l'état (« Connexion… », désactivé) pendant l'appel.
 // Après connexion, la destination n'est pas devinée : le serveur relit
 // comptes_staff et comptes_clients et renvoie /admin, /agent, /clients ou
 // /pending (compte client en attente ou refusé, qui reste connecté).
@@ -86,7 +87,7 @@ export function SignInForm() {
                 type: "info",
                 title: "Vérification en deux étapes",
                 description:
-                  "Saisissez le code de votre application ou demandez un code par email.",
+                  "Saisissez le code reçu par SMS ou par email.",
               });
               router.push("/verify-2fa");
             } else {

@@ -18,10 +18,10 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 type Methode = "sms" | "email";
 
-// S1-02 : second facteur obligatoire pour les deux administrateurs, exigé à
-// chaque nouvelle session. Sans code valide : pas de session, pas d'accès
-// (étape bloquante). `trustDevice: false` — jamais mémorisé, chaque session
-// re-vérifie.
+// S1 : second facteur optionnel pour tous (issue #3), exigé à chaque
+// nouvelle session quand il est actif. Sans code valide : pas de session,
+// pas d'accès (étape bloquante). `trustDevice: false` — jamais mémorisé,
+// chaque session re-vérifie.
 // Second facteur = OTP à usage unique (6 chiffres, 5 minutes), envoyé sur la
 // méthode demandée via POST /api/2fa/envoyer-code : SMS (onglet par défaut)
 // ou email. La méthode n'est pas décorative : l'onglet choisi décide où part
@@ -58,8 +58,8 @@ export function Verify2faForm() {
   }, [attente]);
 
   async function ouvrirSession() {
-    // Session ouverte : le serveur dit où atterrir (le second facteur
-    // n'exige que les administrateurs, mais la décision reste la même).
+    // Session ouverte : le serveur dit où atterrir (le second facteur est
+    // optionnel pour tous, mais la décision reste la même).
     const suite = await demanderDestination();
     if (suite.code !== "OK") {
       setErreur("Session introuvable : réessayez.");

@@ -60,8 +60,10 @@ qui tient debout **sans réseau**.
 - Une réinitialisation de mot de passe **par un administrateur**, conditionnée à
   la production d'une pièce d'identité, parce que beaucoup de clients n'ont pas
   d'email et que le SMS n'est pas disponible.
-- **2FA obligatoire pour les deux administrateurs**, par application
-  d'authentification — pas par SMS.
+- **2FA optionnelle pour tous** (issue #3, évolution validée) : chaque compte
+  `VALIDE` — administrateur principal, administrateur technique, agent de
+  service, client — active son second facteur depuis sa page profil, par code
+  à usage unique SMS ou email. Sans facteur actif : mot de passe seul.
 - Une **session locale à durée de vie bornée**, qui survit à une coupure réseau
   mais **expire quand même**. Ce n'est pas une session infinie.
 
@@ -127,10 +129,10 @@ qui tient debout **sans réseau**.
 
 | Population | Identifiant | Second facteur |
 | ---------- | ----------- | -------------- |
-| Administrateur principal | email + mot de passe | **obligatoire**, application d'authentification |
-| Administrateur technique | email + mot de passe | **obligatoire**, application d'authentification |
-| Client | **numéro de téléphone** + mot de passe | aucun |
-| Agent | lien d'invitation, puis email + mot de passe | aucun |
+| Administrateur principal | email + mot de passe | **optionnel**, code à usage unique par SMS ou email |
+| Administrateur technique | email + mot de passe | **optionnel**, code à usage unique par SMS ou email |
+| Client | **numéro de téléphone** + mot de passe | **optionnel**, code à usage unique par SMS ou email |
+| Agent | lien d'invitation, puis email + mot de passe | **optionnel**, code à usage unique par SMS ou email |
 
 - Le **numéro de téléphone est l'identifiant unique du compte client**, et
   l'identifiant du compte est unique. Il **n'est pas** la clé du dossier client :
@@ -138,8 +140,10 @@ qui tient debout **sans réseau**.
   « Compte et dossier » ci-dessous, et S4 pour le dossier lui-même.
 - L'agent choisit son email au moment de s'inscrire. Le lien d'invitation fixe le
   rôle, pas l'identifiant.
-- **Aucun SMS n'est envoyé, nulle part.** En particulier la 2FA des
-  administrateurs passe par une application d'authentification, pas par SMS.
+- **Aucun SMS n'est envoyé à l'inscription client.** La vérification du numéro
+  passe par la **validation** humaine, pas par un code (voir « Compte,
+  validation et dossier »). Le SMS sert au second facteur optionnel
+  (issue #3), jamais à l'inscription.
 - **Aucune vérification de numéro par code à l'inscription client.** Elle n'est pas
   nécessaire, parce que la protection n'est pas le code : c'est la **validation**.
   Voir « Compte, validation et dossier ».
@@ -355,7 +359,9 @@ pas seulement en couche applicative.
 - Vérification de numéro par code à l'inscription client.
 - Récupération de mot de passe par email.
 - Photo de profil, changement d'email, changement de numéro par l'utilisateur.
-- Authentification à deux facteurs pour les agents et les clients.
+- Authentification à deux facteurs **obligatoire** pour qui que ce soit
+  (optionnelle pour tous depuis l'issue #3 ; le retrait ci-dessous ne porte
+  que sur l'obligation).
 - SSO d'entreprise.
 - Chiffrement de bout en bout des échanges.
 - Multi-distributeur.
