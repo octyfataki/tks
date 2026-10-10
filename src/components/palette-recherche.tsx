@@ -280,6 +280,83 @@ export const GROUPES_AGENT: GroupeSuggestions[] = [
   },
 ]
 
+/**
+ * Points de recherche de l'espace client, calqués sur sa navigation :
+ * dossier client, statut et plafond (S4), commandes et preuves de
+ * paiement (S5), paiements et soldes (S6). Seuls les écrans qui
+ * existent portent un `href` — le reste s'affiche « Bientôt ».
+ */
+export const GROUPES_CLIENT: GroupeSuggestions[] = [
+  {
+    titre: "Pilotage",
+    elements: [
+      {
+        etiquette: "Votre compte",
+        motsCles: ["compte", "dossier", "solde", "accueil", "espace"],
+        icone: LayoutDashboardIcon,
+        href: "/clients",
+      },
+    ],
+  },
+  {
+    titre: "Mon dossier et crédit",
+    elements: [
+      {
+        etiquette: "Mon dossier",
+        motsCles: ["dossier", "client", "fiche", "nom", "adresse"],
+        icone: FolderOpenIcon,
+      },
+      {
+        etiquette: "Statut et plafond",
+        motsCles: ["statut", "plafond", "privilégié", "évaluation", "crédit"],
+        icone: GaugeIcon,
+      },
+    ],
+  },
+  {
+    titre: "Opérations",
+    elements: [
+      {
+        etiquette: "Commandes",
+        motsCles: ["commande", "airtime", "unités", "montant", "suivi"],
+        icone: ClipboardListIcon,
+      },
+      {
+        etiquette: "Preuves de paiement",
+        motsCles: ["preuve", "paiement", "mobile money"],
+        icone: FileCheckIcon,
+      },
+      {
+        etiquette: "Paiements et soldes",
+        motsCles: ["paiement", "encaisser", "remboursement", "solde"],
+        icone: BanknoteIcon,
+      },
+      {
+        etiquette: "Dette et reste à payer",
+        motsCles: ["dette", "créance", "reste à payer"],
+        icone: ScaleIcon,
+      },
+    ],
+  },
+  {
+    titre: "Système",
+    elements: [
+      {
+        etiquette: "Mon compte",
+        motsCles: ["compte", "profil", "connexion"],
+        icone: BadgeCheckIcon,
+        href: "/clients/profil",
+      },
+      {
+        etiquette: "Aide",
+        motsCles: ["aide", "raccourcis", "dossier", "commande"],
+        icone: CircleHelpIcon,
+        href: "/clients/aide",
+      },
+    ],
+  },
+]
+
 export function PaletteRecherche({
   placeholder = "Rechercher…",
   className,

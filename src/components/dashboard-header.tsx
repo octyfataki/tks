@@ -8,6 +8,7 @@ import {
   CircleHelpIcon,
   ClipboardListIcon,
   FileCheckIcon,
+  ScaleIcon,
   UserCheckIcon,
   UsersIcon,
   type LucideIcon,
@@ -185,6 +186,30 @@ export const ELEMENTS_NOTIFICATIONS_AGENT: ElementNotification[] = [
     etiquette: "Commandes à servir",
     icone: ClipboardListIcon,
     href: "/agent/commandes",
+  },
+]
+
+/**
+ * Raccourcis de l'espace client : dossier, commandes, soldes. Seul
+ * « Votre compte » existe aujourd'hui ; les deux autres s'affichent
+ * désactivés tant que S5 et S6 ne sont pas construites — jamais de
+ * lien mort.
+ */
+export const ELEMENTS_NOTIFICATIONS_CLIENT: ElementNotification[] = [
+  {
+    etiquette: "Votre compte et solde",
+    icone: ScaleIcon,
+    href: "/clients",
+  },
+  {
+    etiquette: "Suivi des commandes",
+    icone: ClipboardListIcon,
+    desactive: true,
+  },
+  {
+    etiquette: "Preuves de paiement en attente",
+    icone: FileCheckIcon,
+    desactive: true,
   },
 ]
 

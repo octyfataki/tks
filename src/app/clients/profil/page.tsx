@@ -80,7 +80,7 @@ export default async function ClientsProfilPage() {
   }
 
   return (
-    <main className="flex min-h-dvh flex-col bg-background px-6 py-8">
+    <div className="flex flex-1 flex-col bg-background px-6 py-8">
       <ProfilUtilisateur
         nom={nom}
         email={email || "Espace client"}
@@ -101,6 +101,6 @@ export default async function ClientsProfilPage() {
           ) : undefined
         }
       />
-    </main>
+    </div>
   );
 }
