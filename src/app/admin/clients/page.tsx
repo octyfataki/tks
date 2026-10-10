@@ -5,11 +5,12 @@ import { ArrowUpRightIcon } from "lucide-react";
 import { db } from "@/lib/db/client";
 import { user } from "@/lib/db/schema/auth-schema";
 import { comptesClients } from "@/lib/db/schema/s1-comptes";
-import { nomAffiche } from "../list/affichage-admin";
+import { nomAffiche } from "@/components/clients/affichage-partage";
 import { PaginationListe } from "../list/pagination-liste";
-import { BarreOutilsClients } from "./barre-outils-clients";
-import { RegistreComptesClients } from "./registre-comptes-clients";
-import { joursAttente } from "./affichage-client";
+import { BarreOutilsClients } from "@/components/clients/barre-outils-clients";
+import { RegistreComptesClients } from "@/components/clients/registre-comptes-clients";
+import { joursAttente } from "@/components/clients/affichage-client";
+import { ActualiserDonnees } from "@/components/actualiser-donnees";
 
 const FILTRES_VALIDES = [
   "en-attente",
@@ -226,6 +227,8 @@ export default async function ListeComptesClientsPage({
           </Link>
         </div>
       )}
+
+      <ActualiserDonnees />
 
       <Suspense>
         <BarreOutilsClients exportLignes={exportLignes} />

@@ -10,14 +10,16 @@ import {
   comptesStaff,
   piecesIdentiteClients,
 } from "@/lib/db/schema/s1-comptes";
+import { aPermission } from "@/lib/s2-autorisations/autorisations";
 
 const RACINE_PIECES = join(process.cwd(), "donnees");
 
 /**
  * GET /api/pieces-clients/[id] — la pièce vue par l'humain qui tranche.
- * Jamais publique : administrateur validé (principal ou technique), ou le
- * client propriétaire du compte. Le fichier sort en lecture seule, avec
- * son type d'origine (image ou PDF).
+ * Jamais publique : administrateur validé (principal ou technique), agent
+ * de service VALIDE avec la permission `client.valider`, ou le client
+ * propriétaire du compte. Le fichier sort en lecture seule, avec son type
+ * d'origine (image ou PDF).
  */
 export async function GET(
   _requete: Request,
@@ -42,7 +44,11 @@ export async function GET(
   if (!piece) return NextResponse.json({ erreur: "Pièce introuvable." }, { status: 404 });
 
   const staff = await db
-    .select({ role: comptesStaff.role, etat: comptesStaff.etat })
+    .select({
+      id: comptesStaff.id,
+      role: comptesStaff.role,
+      etat: comptesStaff.etat,
+    })
     .from(comptesStaff)
     .where(eq(comptesStaff.betterAuthUserId, userId))
     .limit(1);
@@ -51,8 +57,15 @@ export async function GET(
     staff[0].etat === "VALIDE" &&
     (staff[0].role === "ADMIN_PRINCIPAL" || staff[0].role === "ADMIN_TECHNIQUE");
 
+  // Agent au comptoir : même droit de voir que de trancher — VALIDE avec
+  // la permission `client.valider` (socle ou individuelle).
+  let estAgentAutorise = false;
+  if (!estAdmin && staff[0]?.role === "AGENT" && staff[0].etat === "VALIDE") {
+    estAgentAutorise = await aPermission(staff[0].id, "client.valider");
+  }
+
   let estProprietaire = false;
-  if (!estAdmin) {
+  if (!estAdmin && !estAgentAutorise) {
     const comptes = await db
       .select({ id: comptesClients.id })
       .from(comptesClients)
@@ -61,7 +74,7 @@ export async function GET(
     estProprietaire =
       comptes[0] !== undefined && comptes[0].id === piece.compteClientId;
   }
-  if (!estAdmin && !estProprietaire) {
+  if (!estAdmin && !estAgentAutorise && !estProprietaire) {
     return NextResponse.json({ erreur: "Accès refusé." }, { status: 403 });
   }
 

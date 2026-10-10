@@ -25,9 +25,9 @@ type Segment = { etiquette: string; href?: string };
 
 const FIL_ARIANE_PAR_CHEMIN: Record<string, Segment[]> = {
   "/agent/dashboard": [{ etiquette: "Tableau de bord" }],
-  "/agent/clients": [{ etiquette: "Dossiers clients" }],
+  "/agent/clients": [{ etiquette: "Comptes clients" }],
   "/agent/clients/validation": [
-    { etiquette: "Dossiers clients", href: "/agent/clients" },
+    { etiquette: "Comptes clients", href: "/agent/clients" },
     { etiquette: "Validation" },
   ],
   "/agent/commandes": [{ etiquette: "Commandes" }],
@@ -56,8 +56,8 @@ function segmentsPourChemin(chemin: string): Segment[] {
     chemin !== "/agent/clients/validation"
   ) {
     return [
-      { etiquette: "Dossiers clients", href: "/agent/clients" },
-      { etiquette: "Dossier" },
+      { etiquette: "Comptes clients", href: "/agent/clients" },
+      { etiquette: "Compte" },
     ];
   }
   const exacts = FIL_ARIANE_PAR_CHEMIN[chemin];

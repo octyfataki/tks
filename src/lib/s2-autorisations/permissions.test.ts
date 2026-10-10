@@ -8,8 +8,8 @@ import {
 } from "../db/schema/s2-autorisations/validation";
 
 describe("S2 — liste fermée des permissions", () => {
-  it("contient les 18 identifiants métier, et eux seuls", () => {
-    expect(PERMISSIONS_FERMEES).toHaveLength(18);
+  it("contient les 19 identifiants métier, et eux seuls", () => {
+    expect(PERMISSIONS_FERMEES).toHaveLength(19);
     for (const nom of [
       "taux.saisir",
       "creance.creer",
@@ -29,6 +29,7 @@ describe("S2 — liste fermée des permissions", () => {
       "commande.annuler",
       "reconciliation.trancher",
       "journal.consulter",
+      "client.valider",
     ]) {
       expect(estPermissionConnue(nom)).toBe(true);
     }

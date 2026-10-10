@@ -31,6 +31,8 @@ export const PERMISSIONS_FERMEES = [
   "reconciliation.trancher",
   // Journal (S2)
   "journal.consulter",
+  // Validation des comptes clients (S1-03)
+  "client.valider",
 ] as const;
 
 export type Permission = (typeof PERMISSIONS_FERMEES)[number];
@@ -55,6 +57,7 @@ export const PROFIL_AGENT_SERVICE_DEFAUT: readonly Permission[] = [
   "commande.annuler",
   "preuve.valider",
   "paiement.creer",
+  "client.valider",
 ];
 
 /** Seul un administrateur principal VALIDE accorde ou retire (S2). */

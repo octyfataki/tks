@@ -19,11 +19,10 @@ import {
   CircleHelpIcon,
   ClipboardListIcon,
   FileCheckIcon,
-  FolderOpenIcon,
   LayoutDashboardIcon,
   SettingsIcon,
   ScaleIcon,
-  UserCheckIcon,
+  UsersIcon,
 } from "lucide-react"
 
 const groups: { label: string; items: NavItem[] }[] = [
@@ -42,18 +41,13 @@ const groups: { label: string; items: NavItem[] }[] = [
     label: "Clients et crédit",
     items: [
       {
-        title: "Dossiers clients",
+        title: "Comptes clients",
         url: "/agent/clients",
-        icon: <FolderOpenIcon />,
+        icon: <UsersIcon />,
         items: [
-          { title: "Tous les dossiers", soon: true },
-          { title: "Suivi des retards", soon: true },
+          { title: "Liste des comptes", url: "/agent/clients" },
+          { title: "Validation", url: "/agent/clients/validation" },
         ],
-      },
-      {
-        title: "Validation des comptes",
-        url: "/agent/clients/validation",
-        icon: <UserCheckIcon />,
       },
     ],
   },
@@ -112,9 +106,10 @@ export type UtilisateurSidebarAgent = {
 /**
  * Navigation de l'espace agent de service. Même primitives que la
  * navigation administrateur (NavMain, NavUser, BrandLogo), contenu
- * restreint au terrain : commandes, preuves de paiement,
- * encaissements, créances. Les écrans métier arrivent avec S4 à S6 ;
- * en attendant, les pages existent et annoncent la suite.
+ * restreint au terrain : comptes clients (registre + validation au
+ * comptoir, permission `client.valider`), commandes, preuves de paiement,
+ * encaissements, créances. Les écrans métier restants arrivent avec S4
+ * à S6 ; en attendant, les pages existent et annoncent la suite.
  */
 export function AgentSidebar({
   utilisateur,

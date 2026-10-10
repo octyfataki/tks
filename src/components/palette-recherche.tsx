@@ -213,8 +213,8 @@ export const GROUPES_AGENT: GroupeSuggestions[] = [
     titre: "Clients et crédit",
     elements: [
       {
-        etiquette: "Dossiers clients",
-        motsCles: ["dossier", "client", "fiche", "nom", "adresse"],
+        etiquette: "Comptes clients",
+        motsCles: ["compte", "client", "connexion", "téléphone", "nom", "email"],
         icone: FolderOpenIcon,
         href: "/agent/clients",
       },

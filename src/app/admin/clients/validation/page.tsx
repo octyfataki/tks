@@ -8,8 +8,8 @@ import {
   piecesIdentiteClients,
 } from "@/lib/db/schema/s1-comptes";
 import { cn } from "@/lib/utils";
-import { joursAttente } from "../affichage-client";
-import { FileValidation } from "./file-validation";
+import { joursAttente } from "@/components/clients/affichage-client";
+import { FileValidation } from "@/components/clients/file-validation";
 import { RafraichissementFile } from "./rafraichissement-file";
 
 /**
@@ -174,7 +174,11 @@ export default async function ValidationComptesClientsPage() {
       {lignes.length > 0 ? (
         <>
           <RafraichissementFile />
-          <FileValidation lignes={lignes} maintenant={maintenant} />
+          <FileValidation
+            lignes={lignes}
+            maintenant={maintenant}
+            listeComptesHref="/admin/clients"
+          />
         </>
       ) : null}
 
