@@ -69,6 +69,10 @@ function revaliderLesDeuxEspaces() {
   revalidatePath("/admin/clients/validation");
   revalidatePath("/agent/clients");
   revalidatePath("/agent/clients/validation");
+  // Les fiches sont des routes dynamiques : le motif + « page » revalide
+  // toutes les fiches ouvertes (Next 16 l'exige pour un segment dynamique).
+  revalidatePath("/admin/clients/[id]", "page");
+  revalidatePath("/agent/clients/[id]", "page");
 }
 
 /**

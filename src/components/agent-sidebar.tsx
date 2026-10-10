@@ -41,7 +41,7 @@ const groups: { label: string; items: NavItem[] }[] = [
     label: "Clients et crédit",
     items: [
       {
-        title: "Comptes clients",
+        title: "Gestion des clients",
         url: "/agent/clients",
         icon: <UsersIcon />,
         items: [

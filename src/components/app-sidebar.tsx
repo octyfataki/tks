@@ -83,7 +83,7 @@ const groups: { label: string; items: NavItem[] }[] = [
         ],
       },
       {
-        title: "Comptes clients",
+        title: "Gestion des clients",
         url: "/admin/clients",
         icon: <UsersIcon />,
         items: [

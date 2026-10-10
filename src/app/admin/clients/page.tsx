@@ -257,6 +257,7 @@ export default async function ListeComptesClientsPage({
           maintenant={maintenant}
           page={page}
           totalPages={totalPages}
+          ficheBaseHref="/admin/clients"
         />
       )}
       <PaginationListe page={page} totalPages={totalPages} hrefBase={hrefBase} />
