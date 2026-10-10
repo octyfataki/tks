@@ -1,7 +1,8 @@
 "use client";
 
 import * as React from "react";
-import { ChevronRightIcon } from "lucide-react";
+import Link from "next/link";
+import { ArrowUpRightIcon, ChevronRightIcon } from "lucide-react";
 import { Cachet } from "./cachet";
 import { cn } from "@/lib/utils";
 import { dateCourte, nomAffiche } from "./affichage-partage";
@@ -40,11 +41,14 @@ export function RegistreComptesClients({
   maintenant,
   page,
   totalPages,
+  ficheBaseHref,
 }: {
   lignes: LigneCompteClient[];
   maintenant: number;
   page: number;
   totalPages: number;
+  /** Base de la fiche d'un compte dans l'espace courant (/admin/clients, /agent/clients). */
+  ficheBaseHref: string;
 }) {
   const [depliees, setDepliees] = React.useState<ReadonlySet<string>>(
     new Set(),
@@ -119,7 +123,12 @@ export function RegistreComptesClients({
                     </button>
                   </td>
                   <td className="max-w-60 px-3 py-2.5">
-                    <span className="block truncate font-medium">{nom}</span>
+                    <Link
+                      href={`${ficheBaseHref}/${ligne.id}`}
+                      className="block truncate font-medium underline-offset-4 hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                    >
+                      {nom}
+                    </Link>
                     <span className="block truncate text-[11px] text-muted-foreground">
                       {ligne.email}
                     </span>
@@ -194,6 +203,20 @@ export function RegistreComptesClients({
                           </div>
                         ) : null}
                       </dl>
+                      <Link
+                        href={`${ficheBaseHref}/${ligne.id}`}
+                        className="group mt-3 inline-flex items-center overflow-hidden rounded-full border border-primary/50 text-primary transition-colors hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+                      >
+                        <span className="py-1.5 pr-2 pl-3.5 text-xs font-medium">
+                          Ouvrir la fiche
+                        </span>
+                        <span
+                          aria-hidden
+                          className="flex items-center pr-3 pl-2"
+                        >
+                          <ArrowUpRightIcon className="size-3.5 transition-transform motion-safe:group-hover:-translate-y-px motion-safe:group-hover:translate-x-px" />
+                        </span>
+                      </Link>
                     </td>
                   </tr>
                 ) : null}

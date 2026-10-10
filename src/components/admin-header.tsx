@@ -51,6 +51,17 @@ function segmentsPourChemin(chemin: string): Segment[] {
       { etiquette: "Profil" },
     ];
   }
+  // Fiche d'un compte client : /admin/clients/[id] — l'identifiant n'est
+  // jamais affiché tel quel dans le fil d'Ariane.
+  if (
+    chemin.startsWith("/admin/clients/") &&
+    chemin !== "/admin/clients/validation"
+  ) {
+    return [
+      { etiquette: "Comptes clients", href: "/admin/clients" },
+      { etiquette: "Compte" },
+    ];
+  }
   const exacts = FIL_ARIANE_PAR_CHEMIN[chemin];
   if (exacts) return exacts;
   const dernier = chemin.split("/").filter(Boolean).pop();
