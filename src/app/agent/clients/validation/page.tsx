@@ -1,28 +1,217 @@
-import type { Metadata } from "next";
-import { UserCheckIcon } from "lucide-react";
-import { AgentBientot } from "@/components/agent-bientot";
+import Link from "next/link";
+import { headers } from "next/headers";
+import { ArrowUpRightIcon } from "lucide-react";
+import { asc, eq, inArray } from "drizzle-orm";
+import { auth } from "@/lib/auth";
+import { db } from "@/lib/db/client";
+import { user } from "@/lib/db/schema/auth-schema";
+import {
+  comptesClients,
+  comptesStaff,
+  piecesIdentiteClients,
+} from "@/lib/db/schema/s1-comptes";
+import { aPermission } from "@/lib/s2-autorisations/autorisations";
+import { cn } from "@/lib/utils";
+import { joursAttente } from "@/components/clients/affichage-client";
+import { FileValidation } from "@/components/clients/file-validation";
+import { ActualiserDonnees } from "@/components/actualiser-donnees";
+import { PermissionRefusee } from "@/components/permission-refusee";
 
-export const metadata: Metadata = {
-  title: "Validation des comptes — Agent — TKS",
-  description:
-    "Valider un compte client au comptoir après avoir vu une pièce d'identité.",
-};
+async function agentConnecte(): Promise<{ id: string } | null> {
+  const session = await auth.api.getSession({ headers: await headers() });
+  const userId = session?.user?.id;
+  if (!userId) return null;
+  const lignes = await db
+    .select({ id: comptesStaff.id })
+    .from(comptesStaff)
+    .where(eq(comptesStaff.betterAuthUserId, userId))
+    .limit(1);
+  return lignes[0] ?? null;
+}
 
 /**
- * Validation des comptes au comptoir (espace agent). La page existe ;
- * l'action métier — valider ou refuser un compte sur pièce vue,
- * journalisée — dépend du contrôle de permission (S2) et arrive après
- * la coquille. Aucune écriture ici.
+ * /agent/clients/validation — File des comptes clients à trancher, au
+ * comptoir (S1-03). Même guichet que /admin/clients/validation : pièce à
+ * voir, valider sur pièce, refuser avec motif (réversible), attester au
+ * comptoir, révoquer le suspect (définitif). Exige la permission
+ * `client.valider`. Valider n'est pas rattacher : un compte validé non
+ * rattaché ne voit toujours aucun dossier et aucun solde.
  */
-export default function AgentValidationPage() {
-  return (
-    <div className="flex flex-1 flex-col">
-      <AgentBientot
-        icone={<UserCheckIcon aria-hidden className="size-6" />}
-        titre="Validation des comptes"
-        texte="Valider ou refuser un compte client au comptoir, après avoir vu sa pièce d'identité."
-        suite="La validation au comptoir arrive après la coquille — pièce vue exigée, geste journalisé."
+export default async function AgentValidationComptesClientsPage() {
+  const agent = await agentConnecte();
+  if (!agent || !(await aPermission(agent.id, "client.valider"))) {
+    return (
+      <PermissionRefusee
+        titre="Validation réservée"
+        detail="Seuls les agents autorisés à valider les comptes clients peuvent trancher ici."
+        action="Demandez à l'administrateur principal la permission « client.valider »."
       />
+    );
+  }
+
+  const lignesBrutes = await db
+    .select({
+      id: comptesClients.id,
+      email: comptesClients.email,
+      telephone: comptesClients.telephone,
+      etat: comptesClients.etat,
+      motifRefus: comptesClients.refuseMotif,
+      createdAt: comptesClients.createdAt,
+      nom: user.name,
+    })
+    .from(comptesClients)
+    .leftJoin(user, eq(user.id, comptesClients.betterAuthUserId))
+    .where(
+      inArray(comptesClients.etat, ["EN_ATTENTE_VALIDATION", "REFUSE"]),
+    )
+    .orderBy(asc(comptesClients.createdAt));
+
+  const ids = lignesBrutes.map((ligne) => ligne.id);
+  const piecesBrutes =
+    ids.length > 0
+      ? await db
+          .select({
+            id: piecesIdentiteClients.id,
+            compteClientId: piecesIdentiteClients.compteClientId,
+            typePiece: piecesIdentiteClients.typePiece,
+            mime: piecesIdentiteClients.mime,
+          })
+          .from(piecesIdentiteClients)
+          .where(inArray(piecesIdentiteClients.compteClientId, ids))
+          .orderBy(asc(piecesIdentiteClients.createdAt))
+      : [];
+  const dernierePiece = new Map(
+    piecesBrutes.map((piece) => [piece.compteClientId, piece]),
+  );
+
+  // eslint-disable-next-line react-hooks/purity -- lecture unique de l'horloge en composant serveur
+  const maintenant = Date.now();
+  const plusAncien =
+    lignesBrutes.length > 0
+      ? joursAttente(lignesBrutes[0].createdAt, maintenant)
+      : 0;
+
+  const lignes = lignesBrutes
+    .map((ligne) => ({
+      id: ligne.id,
+      nom: ligne.nom,
+      email: ligne.email,
+      telephone: ligne.telephone,
+      etat: ligne.etat,
+      motifRefus: ligne.motifRefus,
+      inscritLe: ligne.createdAt,
+      piece: dernierePiece.get(ligne.id) ?? null,
+    }))
+    .sort((a, b) => {
+      const rang = (etat: string) => (etat === "REFUSE" ? 1 : 0);
+      return (
+        rang(a.etat) - rang(b.etat) ||
+        a.inscritLe.getTime() - b.inscritLe.getTime()
+      );
+    });
+
+  return (
+    <div className="flex flex-1 flex-col gap-4 p-4 pt-4">
+      <div>
+        <p className="text-[11px] font-semibold tracking-widest text-muted-foreground uppercase">
+          Accès · Comptes clients
+        </p>
+        <h1 className="mt-1 text-2xl font-semibold tracking-tight">
+          Validation
+        </h1>
+        <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+          {lignes.length === 0
+            ? "File vide : aucun compte en attente."
+            : `${lignes.length} compte${lignes.length > 1 ? "s" : ""} en attente, les plus anciens d'abord. `}
+          Un compte non validé ne peut rien faire : ni dossier, ni solde, ni
+          commande.
+        </p>
+      </div>
+
+      {lignes.length === 0 ? (
+        <>
+          <ActualiserDonnees
+            etiquette="Actualiser la file"
+            suivi="File"
+            intervalleMs={10000}
+          />
+          <div className="rounded-xl border bg-card p-6 text-center">
+            <p className="text-sm font-medium">Aucun compte en attente</p>
+            <p className="mt-1 text-xs text-muted-foreground">
+              Retour à la{" "}
+              <Link
+                href="/agent/clients"
+                className="underline underline-offset-4"
+              >
+                liste des comptes
+              </Link>
+              .
+            </p>
+          </div>
+        </>
+      ) : (
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg border bg-card px-3 py-2 text-xs">
+          <span
+            aria-hidden
+            className={cn(
+              "size-1.5 shrink-0 rounded-full",
+              plusAncien >= 7 ? "bg-destructive" : "bg-amber-600",
+            )}
+          />
+          <span className="font-medium">
+            {lignes.length} compte{lignes.length > 1 ? "s" : ""} en attente
+          </span>
+          <span className="text-muted-foreground">
+            — plus ancien{" "}
+            {plusAncien === 0
+              ? "arrivé aujourd'hui"
+              : plusAncien === 1
+                ? "arrivé hier"
+                : `en attente depuis ${plusAncien} jours`}{" "}
+            · pièce d&apos;identité exigée.
+          </span>
+          <Link
+            href="/agent/clients"
+            aria-label="Retour à la liste des comptes clients"
+            className="group ml-auto inline-flex items-center overflow-hidden rounded-full border text-foreground transition-colors hover:bg-muted focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
+          >
+            <span className="py-1.5 pr-2 pl-3.5 text-xs font-medium">
+              Liste des comptes
+            </span>
+            <span
+              aria-hidden
+              className="mx-1 border-l border-dashed border-border pr-1 pl-2 text-xs font-semibold tabular-nums"
+            >
+              {lignes.length}
+              <ArrowUpRightIcon className="ml-1 inline size-3.5 transition-transform group-hover:translate-x-px group-hover:-translate-y-px" />
+            </span>
+          </Link>
+        </div>
+      )}
+
+      {lignes.length > 0 ? (
+        <>
+          <ActualiserDonnees
+            etiquette="Actualiser la file"
+            suivi="File"
+            intervalleMs={10000}
+          />
+          <FileValidation
+            lignes={lignes}
+            maintenant={maintenant}
+            listeComptesHref="/agent/clients"
+          />
+        </>
+      ) : null}
+
+      <p className="max-w-2xl text-xs leading-relaxed text-muted-foreground">
+        Valider exige d&apos;avoir vu la pièce déposée par le client ; refuser
+        exige un motif, montré au client, qui pourra être validé plus tard
+        sans ressaisie. Un compte suspect se révoque définitivement avec un
+        motif : aucune suppression physique, le compte passe en REVOQUE et
+        sort de la file. Chaque décision est journalisée : qui, quand, quel
+        compte, sur quelle pièce.
+      </p>
     </div>
   );
 }
