@@ -32,12 +32,31 @@ function useEtatReseau(): boolean {
   return enLigne;
 }
 
-function Ligne({ etiquette, valeur }: { etiquette: string; valeur: string }) {
+function LigneStatut({
+  etiquette,
+  valeur,
+  ton = "neutre",
+}: {
+  etiquette: string;
+  valeur: string;
+  ton?: "ok" | "alerte" | "neutre";
+}) {
+  const pastille =
+    ton === "ok"
+      ? "bg-emerald-500"
+      : ton === "alerte"
+        ? "bg-destructive"
+        : "bg-muted-foreground/40";
   return (
-    <div className="min-w-0">
-      <dt className="text-xs text-muted-foreground">{etiquette}</dt>
-      <dd className="mt-0.5 text-sm font-medium text-foreground">{valeur}</dd>
-    </div>
+    <li className="flex items-center justify-between gap-4 py-2.5 first:pt-0 last:pb-0">
+      <span className="flex min-w-0 items-center gap-2.5">
+        <span aria-hidden="true" className={`size-2 shrink-0 rounded-full ${pastille}`} />
+        <span className="truncate text-[13px] text-muted-foreground">{etiquette}</span>
+      </span>
+      <span className="shrink-0 text-right text-[13px] font-semibold text-foreground tabular-nums">
+        {valeur}
+      </span>
+    </li>
   );
 }
 
@@ -46,37 +65,37 @@ export function SynchronisationSection() {
 
   return (
     <div className="flex flex-col gap-4">
-      <dl className="grid grid-cols-1 gap-x-8 gap-y-4 sm:grid-cols-2">
-        <Ligne
+      <ul className="divide-y divide-dashed">
+        <LigneStatut
           etiquette="État du réseau"
-          valeur={enLigne ? "En ligne" : "Hors ligne — le travail continue"}
+          valeur={enLigne ? "En ligne" : "Hors ligne — on continue"}
+          ton={enLigne ? "ok" : "alerte"}
         />
-        <Ligne
+        <LigneStatut
           etiquette="Écritures en attente"
-          valeur="Comptage branché avec S8"
+          valeur="Comptage S8"
         />
-        <Ligne
-          etiquette="Dernière synchronisation"
-          valeur="Pas encore suivie — arrive avec S8"
+        <LigneStatut
+          etiquette="Dernière synchro"
+          valeur="Pas encore suivie"
         />
-        <Ligne
+        <LigneStatut
           etiquette="Taux embarqué"
-          valeur="Affiché avec sa date quand S3 le fournit"
+          valeur="Avec S3, daté"
         />
-      </dl>
-      <p className="text-xs leading-relaxed text-muted-foreground">
+      </ul>
+      <p className="rounded-md bg-muted/60 px-3 py-2 text-xs leading-relaxed text-muted-foreground">
         La session survit à la coupure réseau mais expire quand même. La
-        révocation d&apos;un compte n&apos;agit qu&apos;à la synchronisation :
-        en cas de téléphone perdu ou volé, prévenez le distributeur sans
-        attendre.
+        révocation d’un compte n’agit qu’à la synchronisation : en cas de
+        téléphone perdu ou volé, prévenez le distributeur sans attendre.
       </p>
-      <div>
-        <Button type="button" disabled>
+      <div className="flex flex-col gap-2">
+        <Button type="button" disabled className="self-start">
           Synchroniser maintenant
         </Button>
-        <p className="mt-2 text-xs text-muted-foreground">
-          La synchronisation manuelle arrive avec S8 : déclenchée par
-          l&apos;appareil, sans permission métier, sans doublon.
+        <p className="text-xs text-muted-foreground">
+          La synchro manuelle arrive avec S8 : déclenchée par l’appareil, sans
+          doublon.
         </p>
       </div>
     </div>

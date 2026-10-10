@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { validerChangementMotDePasse } from "./mot-de-passe-validation";
+import {
+  evaluerForceMotDePasse,
+  validerChangementMotDePasse,
+} from "./mot-de-passe-validation";
 
 // Même exigence qu'à l'inscription : 8 caractères minimum, confirmation
 // identique. Aucun appel réseau dans ces tests.
@@ -44,5 +47,21 @@ describe("validerChangementMotDePasse", () => {
         confirmation: "meme-mot-de-passe",
       }),
     ).toContain("différent");
+  });
+});
+
+describe("evaluerForceMotDePasse", () => {
+  it("juge trop court sous 8 caractères", () => {
+    expect(evaluerForceMotDePasse("abc")).toEqual({
+      niveau: 0,
+      etiquette: "Trop court",
+    });
+    expect(evaluerForceMotDePasse("1234567").niveau).toBe(0);
+  });
+
+  it("monte avec la longueur et la variété", () => {
+    expect(evaluerForceMotDePasse("huitcara").niveau).toBe(1);
+    expect(evaluerForceMotDePasse("huitcaractere12").niveau).toBeGreaterThan(1);
+    expect(evaluerForceMotDePasse("Comptoir-Kinshasa-2026!").niveau).toBe(4);
   });
 });

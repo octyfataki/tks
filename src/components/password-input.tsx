@@ -11,6 +11,9 @@ type PasswordInputProps = {
   minLength?: number;
   required?: boolean;
   placeholder?: string;
+  /** Mode contrôlé (jauge de force en direct) : absent = non contrôlé. */
+  value?: string;
+  onChange?: (valeur: string) => void;
 };
 
 /** Champ mot de passe avec bascule afficher/masquer (icône œil). Bouton
@@ -26,6 +29,8 @@ export function PasswordInput({
   minLength,
   required,
   placeholder = "••••••••",
+  value,
+  onChange,
 }: PasswordInputProps) {
   const [visible, setVisible] = useState(false);
   return (
@@ -39,6 +44,8 @@ export function PasswordInput({
         required={required}
         placeholder={placeholder}
         className="pr-9"
+        value={value}
+        onChange={onChange ? (e) => onChange(e.target.value) : undefined}
       />
       <button
         type="button"
