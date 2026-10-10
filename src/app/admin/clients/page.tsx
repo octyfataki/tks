@@ -10,7 +10,6 @@ import { PaginationListe } from "../list/pagination-liste";
 import { BarreOutilsClients } from "@/components/clients/barre-outils-clients";
 import { RegistreComptesClients } from "@/components/clients/registre-comptes-clients";
 import { joursAttente } from "@/components/clients/affichage-client";
-import { ActualiserDonnees } from "@/components/actualiser-donnees";
 
 const FILTRES_VALIDES = [
   "en-attente",
@@ -227,8 +226,6 @@ export default async function ListeComptesClientsPage({
           </Link>
         </div>
       )}
-
-      <ActualiserDonnees />
 
       <Suspense>
         <BarreOutilsClients exportLignes={exportLignes} />

@@ -13,7 +13,7 @@ import { nomAffiche } from "@/components/clients/affichage-partage";
 import { joursAttente } from "@/components/clients/affichage-client";
 import { BarreOutilsClients } from "@/components/clients/barre-outils-clients";
 import { RegistreComptesClients } from "@/components/clients/registre-comptes-clients";
-import { ActualiserDonnees } from "@/components/actualiser-donnees";
+import { RafraichissementFile } from "@/components/clients/rafraichissement-file";
 import { PaginationListe } from "@/app/admin/list/pagination-liste";
 import { PermissionRefusee } from "@/components/permission-refusee";
 
@@ -250,7 +250,11 @@ export default async function AgentComptesClientsPage({
         </div>
       )}
 
-      <ActualiserDonnees />
+      <RafraichissementFile
+        etiquette="Actualiser la liste"
+        suivi="Liste"
+        intervalleMs={30000}
+      />
 
       <Suspense>
         <BarreOutilsClients exportLignes={exportLignes} />

@@ -14,7 +14,7 @@ import { aPermission } from "@/lib/s2-autorisations/autorisations";
 import { cn } from "@/lib/utils";
 import { joursAttente } from "@/components/clients/affichage-client";
 import { FileValidation } from "@/components/clients/file-validation";
-import { ActualiserDonnees } from "@/components/actualiser-donnees";
+import { RafraichissementFile } from "@/components/clients/rafraichissement-file";
 import { PermissionRefusee } from "@/components/permission-refusee";
 
 async function agentConnecte(): Promise<{ id: string } | null> {
@@ -130,11 +130,7 @@ export default async function AgentValidationComptesClientsPage() {
 
       {lignes.length === 0 ? (
         <>
-          <ActualiserDonnees
-            etiquette="Actualiser la file"
-            suivi="File"
-            intervalleMs={10000}
-          />
+          <RafraichissementFile />
           <div className="rounded-xl border bg-card p-6 text-center">
             <p className="text-sm font-medium">Aucun compte en attente</p>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -191,11 +187,7 @@ export default async function AgentValidationComptesClientsPage() {
 
       {lignes.length > 0 ? (
         <>
-          <ActualiserDonnees
-            etiquette="Actualiser la file"
-            suivi="File"
-            intervalleMs={10000}
-          />
+          <RafraichissementFile />
           <FileValidation
             lignes={lignes}
             maintenant={maintenant}
