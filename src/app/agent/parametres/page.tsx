@@ -26,7 +26,7 @@ import { FormulaireMotDePasse } from "./formulaire-mot-de-passe";
 import { SynchronisationSection } from "./synchronisation-section";
 import { AppareilSection } from "./appareil-section";
 import { NotificationsSection } from "./notifications-section";
-import { EtatPosteBandeau } from "./etat-poste-bandeau";
+import { PastilleReseau } from "./pastille-reseau";
 import { decrireExpiration } from "./session-helpers";
 
 export const metadata: Metadata = {
@@ -41,9 +41,10 @@ export const metadata: Metadata = {
  * agent de service VALIDE.
  *
  * Parti pris visuel « fiche de poste » : colonne unique alignée à gauche,
- * un bandeau-ticket d'état en tête (réseau + session + file), puis trois
- * sections différenciées par icône — Sécurité, Synchro, Appareil.
- * Aucun pouvoir métier ici : ni taux, ni plafond, ni promotion.
+ * pastilles d'état dans l'en-tête (session côté serveur, réseau en
+ * direct), puis sections différenciées par icône — Sécurité, Synchro,
+ * Appareil, Notifications. Aucun pouvoir métier ici : ni taux, ni plafond,
+ * ni promotion.
  */
 export default async function AgentParametresPage() {
   const session = await auth.api.getSession({ headers: await headers() });
@@ -65,6 +66,7 @@ export default async function AgentParametresPage() {
           ) : (
             <Badge variant="secondary">Poste prêt</Badge>
           )}
+          <PastilleReseau />
         </div>
         <p className="max-w-[62ch] text-[13px] leading-relaxed text-muted-foreground">
           Ce téléphone, votre session, votre mot de passe. Votre fiche reste
@@ -78,8 +80,6 @@ export default async function AgentParametresPage() {
           .
         </p>
       </div>
-
-      <EtatPosteBandeau expiration={expiration} />
 
       <div className="flex flex-col gap-4">
         <section aria-labelledby="titre-securite" className="flex flex-col gap-3">
