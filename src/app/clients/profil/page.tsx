@@ -12,6 +12,7 @@ import {
   ProfilUtilisateur,
   type SessionEnCoursProfil,
 } from "@/components/profil";
+import { FormulaireMonProfil } from "@/app/admin/profil/formulaire-mon-profil";
 import { and, desc, eq, gt } from "drizzle-orm";
 
 // Mon compte (espace client) : le même composant ProfilUtilisateur, nourri
@@ -31,6 +32,7 @@ export default async function ClientsProfilPage() {
     session?.user?.name?.trim() ||
     (email ? email.split("@")[0] : "") ||
     "Client";
+  const avatarUrl = session?.user?.image ?? null;
 
   let telephone: string | null = null;
   let compteValide = false;
@@ -85,12 +87,19 @@ export default async function ClientsProfilPage() {
         nom={nom}
         email={email || "Espace client"}
         telephone={telephone}
+        avatarUrl={avatarUrl}
         compte={{ type: "CLIENT" }}
         dossier={null}
         secondFacteurActif={secondFacteurActif}
         appareilSecondFacteur={appareilSecondFacteur}
         sessions={sessions}
         sessionActuelleId={sessionActuelleId}
+        peutModifierCoordonnees={compteValide}
+        motifCoordonneesVerrouillees="Lecture seule : votre compte ne permet pas la correction."
+        cleCoordonnees={`${nom}-${telephone ?? ""}`}
+        formulaireCoordonnees={
+          <FormulaireMonProfil nomInitial={nom} telephoneInitial={telephone ?? ""} />
+        }
         formulaireSecondFacteur={
           compteValide ? (
             secondFacteurActif === true ? (

@@ -16,6 +16,7 @@ import {
   compteClientPeutActiverSecondFacteur,
   facteurs2faAdmin,
   facteurs2faClients,
+  normaliserTelephoneClient,
   rolePeutActiverSecondFacteur,
   telephoneStaffValide,
 } from "@/lib/db/schema/s1-comptes";
@@ -118,6 +119,7 @@ export async function modifierPhotoProfilAction(
   }
   revalidatePath("/admin/profil");
   revalidatePath("/agent/profil");
+  revalidatePath("/clients/profil");
   return { ok: true, inchange: false };
 }
 
@@ -133,6 +135,7 @@ export async function supprimerPhotoProfilAction(): Promise<ResultatPhotoProfil>
   await supprimerFichierAvatar(lignes[0]?.image ?? null);
   revalidatePath("/admin/profil");
   revalidatePath("/agent/profil");
+  revalidatePath("/clients/profil");
   return { ok: true, inchange: false };
 }
 
@@ -149,6 +152,81 @@ export async function supprimerPhotoProfilAction(): Promise<ResultatPhotoProfil>
  * Sans journal d'audit dans cette branche : la correction sera journalisée
  * (avant/après) quand la couche S2 arrivera (invariant 8).
  */
+/**
+ * Branche client de `modifierMonProfilAction` : nom + téléphone du compte
+ * connecté (lui seul), compte `VALIDE` exigé. Le téléphone est la clé du
+ * compte client : forme canonique obligatoire (jamais vide, jamais de
+ * séparateurs stockés) et unicité vérifiée contre les autres comptes
+ * avant écriture — la contrainte unique en base reste le dernier rempart,
+ * pas le premier message.
+ */
+async function modifierMonProfilClient(
+  donnees: FormData,
+  userId: string,
+): Promise<ResultatModificationMonProfil> {
+  const lignesClient = await db
+    .select({
+      id: comptesClients.id,
+      etat: comptesClients.etat,
+      telephone: comptesClients.telephone,
+    })
+    .from(comptesClients)
+    .where(eq(comptesClients.betterAuthUserId, userId))
+    .limit(1);
+  const client = lignesClient[0];
+  if (!client) {
+    return { ok: false, erreur: "Compte introuvable." };
+  }
+  if (client.etat !== "VALIDE") {
+    return { ok: false, erreur: "Modification impossible (compte non modifiable)." };
+  }
+  const nom = String(donnees.get("nom") ?? "").trim();
+  const telephone = String(donnees.get("telephone") ?? "").trim();
+  if (!nom) {
+    return { ok: false, erreur: "Le nom est exigé." };
+  }
+  if (nom.length < 2 || nom.length > 255) {
+    return { ok: false, erreur: "Le nom doit faire entre 2 et 255 caractères." };
+  }
+  const canonique = normaliserTelephoneClient(telephone);
+  if (!canonique) {
+    return {
+      ok: false,
+      erreur: "Numéro de téléphone invalide (format international : + optionnel, chiffres, espaces, tirets, points, parenthèses).",
+    };
+  }
+  if (canonique !== client.telephone) {
+    const doublons = await db
+      .select({ id: comptesClients.id })
+      .from(comptesClients)
+      .where(eq(comptesClients.telephone, canonique))
+      .limit(1);
+    if (doublons[0]) {
+      return { ok: false, erreur: "Ce numéro est déjà utilisé par un autre compte." };
+    }
+  }
+  const lignesUtilisateur = await db
+    .select({ name: user.name })
+    .from(user)
+    .where(eq(user.id, userId))
+    .limit(1);
+  if (!lignesUtilisateur[0]) {
+    return { ok: false, erreur: "Compte introuvable." };
+  }
+  if (lignesUtilisateur[0].name === nom && client.telephone === canonique) {
+    return { ok: true, inchange: true };
+  }
+  await db.transaction(async (tx) => {
+    await tx.update(user).set({ name: nom }).where(eq(user.id, userId));
+    await tx
+      .update(comptesClients)
+      .set({ telephone: canonique })
+      .where(eq(comptesClients.id, client.id));
+  });
+  revalidatePath("/clients/profil");
+  return { ok: true, inchange: false };
+}
+
 export async function modifierMonProfilAction(
   _precedent: ResultatModificationMonProfil | null,
   donnees: FormData,
@@ -170,7 +248,7 @@ export async function modifierMonProfilAction(
     .limit(1);
   const moi = lignesMoi[0];
   if (!moi) {
-    return { ok: false, erreur: "Compte introuvable." };
+    return await modifierMonProfilClient(donnees, userId);
   }
   // Auto-correction : son propre compte, état VALIDE, tous rôles staff.
   // (La gestion d'autrui reste gardée par peutModifierAdmin côté fiches.)
