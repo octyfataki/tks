@@ -10,3 +10,4 @@ export { BoutonDeconnexionAutres } from "./bouton-deconnexion-autres";
 export { PhotoProfilModifiable } from "./photo-profil-modifiable";
 export { ProfilSquelette } from "./profil-squelette";
 export { ActivationSecondFacteur } from "./activation-second-facteur";
+export { DesactivationSecondFacteur } from "./desactivation-second-facteur";

@@ -54,6 +54,12 @@ describe("messageErreurSecondFacteur", () => {
     );
   });
 
+  it("traduit un mot de passe incorrect (désactivation)", () => {
+    expect(messageErreurSecondFacteur({ code: "INVALID_PASSWORD", status: 400 })).toBe(
+      "Mot de passe incorrect.",
+    );
+  });
+
   it("traduit le blocage temporaire du compte", () => {
     expect(
       messageErreurSecondFacteur({ code: "ACCOUNT_TEMPORARILY_LOCKED", status: 429 }),

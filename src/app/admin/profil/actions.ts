@@ -270,6 +270,10 @@ export type ResultatConfirmationSecondFacteur =
   | { ok: true }
   | { ok: false; erreur: string };
 
+export type ResultatDesactivationSecondFacteur =
+  | { ok: true }
+  | { ok: false; erreur: string };
+
 /**
  * Enregistre la traçabilité du second facteur après enrôlement OTP réussi
  * côté better-auth (code SMS ou email vérifié). Auto-déclaration du titulaire
@@ -376,6 +380,93 @@ export async function confirmerSecondFacteurAction(
     actif: true,
     creePar: compteClientId,
   });
+  revalidatePath("/clients/profil");
+  return { ok: true };
+}
+
+/**
+ * Enregistre la traçabilité de la désactivation du second facteur, après
+ * désactivation effective côté better-auth (`authClient.twoFactor.disable`,
+ * mot de passe vérifié par better-auth). Miroir de
+ * `confirmerSecondFacteurAction` : le client désactive d'abord (le mot de
+ * passe y est exigé et vérifié), puis cette action vérifie que better-auth
+ * n'exige plus de second facteur avant de marquer la traçabilité
+ * (`facteurs2faAdmin` / `facteurs2faClients` → `actif = false`). Aucune ligne
+ * n'est supprimée : la désactivation se lit dans l'historique. Idempotente :
+ * désactiver deux fois rend le même état, pas d'erreur.
+ *
+ * Sans journal d'audit dans cette branche : sera tracé avec la couche S2.
+ */
+export async function desactiverSecondFacteurAction(): Promise<ResultatDesactivationSecondFacteur> {
+  const session = await auth.api.getSession({ headers: await headers() });
+  const userId = session?.user?.id;
+  if (!userId) {
+    return { ok: false, erreur: "Vous devez être connecté pour désactiver le second facteur." };
+  }
+  const lignesMoi = await db
+    .select({ id: comptesStaff.id, role: comptesStaff.role, etat: comptesStaff.etat })
+    .from(comptesStaff)
+    .where(eq(comptesStaff.betterAuthUserId, userId))
+    .limit(1);
+  const moi = lignesMoi[0];
+  const lignesClient = moi
+    ? []
+    : await db
+        .select({ id: comptesClients.id, etat: comptesClients.etat })
+        .from(comptesClients)
+        .where(eq(comptesClients.betterAuthUserId, userId))
+        .limit(1);
+  const client = lignesClient[0];
+  if (!moi && !client) {
+    return { ok: false, erreur: "Compte introuvable." };
+  }
+  if (moi && (moi.etat !== "VALIDE" || !rolePeutActiverSecondFacteur(moi.role))) {
+    return { ok: false, erreur: "Second facteur réservé aux comptes validés." };
+  }
+  if (client && !compteClientPeutActiverSecondFacteur(client.etat)) {
+    return { ok: false, erreur: "Second facteur réservé aux comptes validés." };
+  }
+  // La désactivation better-auth doit avoir eu lieu avant : un appel direct
+  // sans passer par `twoFactor.disable` (mot de passe vérifié) est refusé,
+  // pour ne jamais afficher « À activer » pendant que la connexion exige
+  // encore un code.
+  const lignesUtilisateur = await db
+    .select({ twoFactorEnabled: user.twoFactorEnabled })
+    .from(user)
+    .where(eq(user.id, userId))
+    .limit(1);
+  const lignesSecret = await db
+    .select({ id: tableDoubleFacteur.id })
+    .from(tableDoubleFacteur)
+    .where(eq(tableDoubleFacteur.userId, userId))
+    .limit(1);
+  if (lignesSecret[0] || lignesUtilisateur[0]?.twoFactorEnabled) {
+    return {
+      ok: false,
+      erreur: "Terminez d'abord la désactivation (mot de passe).",
+    };
+  }
+  if (moi) {
+    await db
+      .update(facteurs2faAdmin)
+      .set({ actif: false })
+      .where(
+        and(eq(facteurs2faAdmin.compteStaffId, moi.id), eq(facteurs2faAdmin.actif, true)),
+      );
+    revalidatePath("/admin/profil");
+    revalidatePath("/agent/profil");
+    return { ok: true };
+  }
+  const compteClientId = client?.id;
+  if (!compteClientId) {
+    return { ok: false, erreur: "Compte introuvable." };
+  }
+  await db
+    .update(facteurs2faClients)
+    .set({ actif: false })
+    .where(
+      and(eq(facteurs2faClients.compteClientId, compteClientId), eq(facteurs2faClients.actif, true)),
+    );
   revalidatePath("/clients/profil");
   return { ok: true };
 }

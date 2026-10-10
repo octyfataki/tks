@@ -8,6 +8,7 @@ import {
 } from "@/lib/db/schema/s1-comptes";
 import {
   ActivationSecondFacteur,
+  DesactivationSecondFacteur,
   ProfilUtilisateur,
   type SessionEnCoursProfil,
 } from "@/components/profil";
@@ -91,8 +92,12 @@ export default async function ClientsProfilPage() {
         sessions={sessions}
         sessionActuelleId={sessionActuelleId}
         formulaireSecondFacteur={
-          compteValide && secondFacteurActif !== true ? (
-            <ActivationSecondFacteur email={email} telephone={telephone} />
+          compteValide ? (
+            secondFacteurActif === true ? (
+              <DesactivationSecondFacteur />
+            ) : (
+              <ActivationSecondFacteur email={email} telephone={telephone} />
+            )
           ) : undefined
         }
       />

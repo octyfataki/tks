@@ -29,10 +29,12 @@ const CONNEXION: Record<string, string> = {
   FAILED_TO_CREATE_SESSION: "Impossible d'ouvrir la session. Réessayez.",
 };
 
-// Codes atteignables sur POST /two-factor/verify-otp et POST
-// /two-factor/send-otp (OTP SMS ou email, une seule méthode demandée), plus
+// Codes atteignables sur POST /two-factor/verify-otp, POST
+// /two-factor/send-otp (OTP SMS ou email, une seule méthode demandée) et POST
+// /two-factor/disable (mot de passe exigé pour désactiver), plus
 // POST /api/2fa/envoyer-code qui relaye ces codes et ajoute CANAL_INCONNU.
 const SECOND_FACTEUR: Record<string, string> = {
+  INVALID_PASSWORD: "Mot de passe incorrect.",
   INVALID_CODE: "Code incorrect.",
   OTP_HAS_EXPIRED: "Code expiré. Demandez un nouveau code.",
   OTP_NOT_ENABLED: "Envoi du code indisponible. Demandez un nouveau code.",

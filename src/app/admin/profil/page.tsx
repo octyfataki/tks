@@ -7,7 +7,7 @@ import { session as tableSession, user } from "@/lib/db/schema/auth-schema";
 import { comptesStaff, facteurs2faAdmin } from "@/lib/db/schema/s1-comptes";
 import { peutModifierAdmin } from "@/lib/db/schema/s1-comptes";
 import { FormulaireMonProfil } from "./formulaire-mon-profil";
-import { ActivationSecondFacteur } from "@/components/profil";
+import { ActivationSecondFacteur, DesactivationSecondFacteur } from "@/components/profil";
 import { and, desc, eq, gt } from "drizzle-orm";
 import { headers } from "next/headers";
 
@@ -134,8 +134,12 @@ export default async function AdminProfilPage() {
         }
         sessionActuelleId={sessionActuelleId}
         formulaireSecondFacteur={
-          profil.type === "STAFF" && profil.etat === "VALIDE" && secondFacteurActif !== true ? (
-            <ActivationSecondFacteur email={email} telephone={telephone} />
+          profil.type === "STAFF" && profil.etat === "VALIDE" ? (
+            secondFacteurActif === true ? (
+              <DesactivationSecondFacteur />
+            ) : (
+              <ActivationSecondFacteur email={email} telephone={telephone} />
+            )
           ) : undefined
         }
       />
