@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { EcranErreur } from "@/components/ecran-erreur";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 
 export const metadata: Metadata = {
   title: "Page introuvable — TKS",
@@ -22,12 +22,12 @@ export default function Introuvable() {
       message="L'adresse a peut-être changé ou a été mal saisie. Vos commandes, créances et paiements sont inchangés."
       actions={
         <>
-          <Button size="lg" render={<Link href="/" />}>
+          <Link href="/" className={buttonVariants({ size: "lg" })}>
             Retour à l&apos;accueil
-          </Button>
-          <Button size="lg" variant="outline" render={<Link href="/aide" />}>
+          </Link>
+          <Link href="/aide" className={buttonVariants({ size: "lg", variant: "outline" })}>
             Voir l&apos;aide
-          </Button>
+          </Link>
         </>
       }
     />

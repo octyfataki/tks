@@ -3,7 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { EcranErreur } from "@/components/ecran-erreur";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 
 type ErreurSegmentProps = {
   error: Error & { digest?: string };
@@ -46,9 +46,9 @@ export default function ErreurSegment({ error, reset, retry }: ErreurSegmentProp
           <Button size="lg" onClick={reessayer}>
             Réessayer
           </Button>
-          <Button size="lg" variant="outline" render={<Link href="/" />}>
+          <Link href="/" className={buttonVariants({ size: "lg", variant: "outline" })}>
             Retour à l&apos;accueil
-          </Button>
+          </Link>
         </>
       }
     />
