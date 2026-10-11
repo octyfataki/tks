@@ -3,6 +3,7 @@ import {
   ArrowLeftIcon,
   CalendarIcon,
   ClockIcon,
+  CheckIcon,
   EyeIcon,
   FileTextIcon,
   FingerprintIcon,
@@ -12,6 +13,7 @@ import {
   MailIcon,
   PhoneIcon,
   ShieldAlertIcon,
+  XIcon,
 } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -26,11 +28,13 @@ import {
   FormulaireRevoquer,
   FormulaireValider,
 } from "./formulaires-decision";
+import { FormulaireStatutPiece } from "./formulaire-statut-piece";
 import {
   etatRevoquable,
   etatTranchable,
   pieceAValider,
-  pieceDeposeeApresValidation,
+  pieceARevoir,
+  revuePiecePossible,
   type FicheClient,
   type PieceFicheClient,
 } from "@/lib/s1-comptes/fiche-client";
@@ -45,59 +49,100 @@ function cachetEtat(etat: string): {
   return { encre: "attente", libelle: "En attente" };
 }
 
+/**
+ * Verdict d'une pièce : pastille d'état. Lisible d'un coup d'œil par un
+ * agent au comptoir — ambre « à revoir », vert « acceptée », rouge
+ * « refusée » avec le motif que le client va lire.
+ */
+function PastillePiece({ piece }: { piece: PieceFicheClient }) {
+  if (piece.statutPiece === "ACCEPTEE") {
+    return (
+      <span className="mt-1 inline-flex w-fit items-center gap-1 rounded-full border border-emerald-600/40 bg-emerald-600/5 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">
+        <CheckIcon className="size-3" />
+        Acceptée le {dateCourte(piece.vueLe ?? piece.deposeLe)}
+      </span>
+    );
+  }
+  if (piece.statutPiece === "REFUSEE") {
+    return (
+      <span className="mt-1 inline-flex w-fit items-center gap-1 rounded-full border border-destructive/40 bg-destructive/5 px-2 py-0.5 text-[11px] font-semibold text-destructive">
+        <XIcon className="size-3" />
+        Refusée — à refaire
+      </span>
+    );
+  }
+  return (
+    <span className="mt-1 inline-flex w-fit items-center gap-1 rounded-full border border-amber-600/40 bg-amber-600/5 px-2 py-0.5 text-[11px] font-semibold text-amber-700 dark:text-amber-400">
+      À revoir
+    </span>
+  );
+}
+
 /** Aperçu d'une pièce : image à voir, PDF à ouvrir (route authentifiée). */
 function Piece({
   piece,
   nom,
-  deposeeApresValidation,
+  compteDuPiece,
+  peutStatuer,
 }: {
   piece: PieceFicheClient;
   nom: string;
-  /** Déposée après la validation du compte : pas encore revue. */
-  deposeeApresValidation?: boolean;
+  /** Compte propriétaire : le verdict se porte sur sa pièce. */
+  compteDuPiece: string;
+  /** Le compte est validé et la pièce attend un verdict. */
+  peutStatuer: boolean;
 }) {
   const estImage = piece.mime.startsWith("image/");
   return (
-    <a
-      href={`/api/pieces-clients/${piece.id}`}
-      target="_blank"
-      rel="noreferrer"
-      className="flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors hover:border-primary"
-    >
-      {estImage ? (
-        // eslint-disable-next-line @next/next/no-img-element -- aperçu local authentifié, pas d'optimisation CDN
-        <img
-          src={`/api/pieces-clients/${piece.id}`}
-          alt={`Pièce ${piece.typePiece} de ${nom}`}
-          className="h-16 w-16 shrink-0 rounded-md border object-cover"
-        />
-      ) : (
-        <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-md border bg-muted text-muted-foreground">
-          <FileTextIcon className="size-6" />
-        </span>
-      )}
-      <span className="min-w-0">
-        <span className="flex items-center gap-1.5 text-xs font-semibold">
-          <ImageIcon className="size-3.5 text-muted-foreground" />
-          Pièce {piece.typePiece}
-        </span>
-        <span className="mt-0.5 block text-[11px] text-muted-foreground">
-          Déposée le {dateCourte(piece.deposeLe)} ·{" "}
-          {estImage ? "cliquez pour agrandir" : "PDF, cliquez pour ouvrir"}
-        </span>
-        <span className="mt-0.5 flex items-center gap-1 text-[11px] text-muted-foreground">
-          <EyeIcon className="size-3" />
-          {piece.vueLe
-            ? `Vue le ${dateCourte(piece.vueLe)}`
-            : "Pas encore vue"}
-        </span>
-        {deposeeApresValidation ? (
-          <span className="mt-1 inline-flex w-fit items-center rounded-full border border-amber-600/40 bg-amber-600/5 px-2 py-0.5 text-[11px] font-semibold text-amber-700 dark:text-amber-400">
-            Déposée après validation — à revoir
+    <li>
+      <a
+        href={`/api/pieces-clients/${piece.id}`}
+        target="_blank"
+        rel="noreferrer"
+        className="flex items-start gap-3 rounded-lg border bg-card p-3 transition-colors hover:border-primary"
+      >
+        {estImage ? (
+          // eslint-disable-next-line @next/next/no-img-element -- aperçu local authentifié, pas d'optimisation CDN
+          <img
+            src={`/api/pieces-clients/${piece.id}`}
+            alt={`Pièce ${piece.typePiece} de ${nom}`}
+            className="h-16 w-16 shrink-0 rounded-md border object-cover"
+          />
+        ) : (
+          <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-md border bg-muted text-muted-foreground">
+            <FileTextIcon className="size-6" />
           </span>
-        ) : null}
-      </span>
-    </a>
+        )}
+        <span className="min-w-0">
+          <span className="flex items-center gap-1.5 text-xs font-semibold">
+            <ImageIcon className="size-3.5 text-muted-foreground" />
+            Pièce {piece.typePiece}
+          </span>
+          <span className="mt-0.5 block text-[11px] text-muted-foreground">
+            Déposée le {dateCourte(piece.deposeLe)} ·{" "}
+            {estImage ? "cliquez pour agrandir" : "PDF, cliquez pour ouvrir"}
+          </span>
+          <span className="mt-0.5 flex items-center gap-1 text-[11px] text-muted-foreground">
+            <EyeIcon className="size-3" />
+            {piece.vueLe
+              ? `Vue le ${dateCourte(piece.vueLe)}`
+              : "Pas encore vue"}
+          </span>
+          <PastillePiece piece={piece} />
+          {piece.statutPiece === "REFUSEE" && piece.refusMotif ? (
+            <span className="mt-1 block text-[11px] leading-relaxed text-muted-foreground">
+              {piece.refusMotif}
+            </span>
+          ) : null}
+        </span>
+      </a>
+      {peutStatuer ? (
+        <FormulaireStatutPiece
+          compteId={compteDuPiece}
+          pieceId={piece.id}
+        />
+      ) : null}
+    </li>
   );
 }
 
@@ -132,6 +177,9 @@ export function VueFicheClient({
   const enAttente = fiche.etat === "EN_ATTENTE_VALIDATION";
   const tranchable = etatTranchable(fiche.etat);
   const piece = pieceAValider(fiche);
+  // Compte déjà validé et pièce déposée depuis : le distributeur statue
+  // sur la pièce seule, jamais sur le compte (ticket 10).
+  const revuePossible = revuePiecePossible(fiche);
   const matricule = fiche.id.slice(0, 8).toUpperCase();
 
   return (
@@ -260,7 +308,9 @@ export function VueFicheClient({
           <h2 className="text-sm font-medium">Pièce d&apos;identité</h2>
           <p className="mt-0.5 text-xs text-muted-foreground">
             Valider exige d&apos;avoir vu une pièce ; un compte sans pièce
-            reste bloqué, sauf attestation au comptoir.
+            reste bloqué, sauf attestation au comptoir. Une pièce déposée par un
+            compte déjà validé se statue sous sa vignette, sans toucher à son
+            accès.
           </p>
           {fiche.pieces.length === 0 ? (
             <p
@@ -273,19 +323,17 @@ export function VueFicheClient({
               Le client la dépose depuis sa page d&apos;attente.
             </p>
           ) : (
-            <div className="mt-3 flex flex-col gap-2">
+            <ul className="mt-3 flex flex-col gap-2">
               {fiche.pieces.map((p) => (
                 <Piece
                   key={p.id}
                   piece={p}
                   nom={nom}
-                  deposeeApresValidation={pieceDeposeeApresValidation(
-                    p,
-                    fiche.valideLe,
-                  )}
+                  compteDuPiece={fiche.id}
+                  peutStatuer={revuePossible && pieceARevoir(p)}
                 />
               ))}
-            </div>
+            </ul>
           )}
         </section>
       </div>
@@ -337,8 +385,8 @@ export function VueFicheClient({
             )}
           >
             <p className="rounded-lg border bg-muted/30 p-3 text-xs leading-relaxed text-muted-foreground">
-              Compte validé : il peut se connecter. Pour corriger sa pièce
-              ou son identité, le client repasse par sa page d&apos;attente.
+              Compte validé : il peut se connecter. Les pièces déposées
+              depuis se tranchent sous chaque vignette, ci-dessus.
             </p>
             {etatRevoquable(fiche.etat) ? (
               <div className="rounded-lg border border-destructive/40 bg-card p-3">

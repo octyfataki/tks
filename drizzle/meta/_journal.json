@@ -127,6 +127,13 @@
       "when": 1791716013926,
       "tag": "0017_dazzling_nitro",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "5",
+      "when": 1791735244737,
+      "tag": "0018_stale_silver_sable",
+      "breakpoints": true
     }
   ]
 }

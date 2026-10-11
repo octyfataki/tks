@@ -10,15 +10,25 @@ const pieces: PieceIdentiteProfil[] = [
     id: "piece-image",
     typePiece: "CNI",
     mime: "image/jpeg",
-    vue: true,
+    statutPiece: "ACCEPTEE",
+    refusMotif: null,
     deposeLe: new Date("2026-10-02T08:00:00Z"),
   },
   {
     id: "piece-pdf",
     typePiece: "PASSEPORT",
     mime: "application/pdf",
-    vue: false,
+    statutPiece: "EN_ATTENTE",
+    refusMotif: null,
     deposeLe: "2026-10-06T08:00:00Z",
+  },
+  {
+    id: "piece-refusee",
+    typePiece: "CNI",
+    mime: "image/jpeg",
+    statutPiece: "REFUSEE",
+    refusMotif: "Photo trop floue, envoyez une CNI lisible.",
+    deposeLe: "2026-10-08T08:00:00Z",
   },
 ];
 
@@ -28,7 +38,7 @@ describe("ListePiecesIdentite", () => {
   it("lie chaque pièce à la route authentifiée du propriétaire", () => {
     render(<ListePiecesIdentite pieces={pieces} />);
     const liens = screen.getAllByRole("link");
-    expect(liens).toHaveLength(2);
+    expect(liens).toHaveLength(3);
     expect(liens[0].getAttribute("href")).toBe(
       "/api/pieces-clients/piece-image",
     );
@@ -38,19 +48,25 @@ describe("ListePiecesIdentite", () => {
 
   it("montre la vignette pour une image, l'icône fichier sinon", () => {
     const { container } = render(<ListePiecesIdentite pieces={pieces} />);
-    expect(
-      screen.getByAltText("Votre pièce CNI"),
-    ).toBeInTheDocument();
-    expect(container.querySelectorAll("img")).toHaveLength(1);
+    expect(screen.getAllByAltText(/votre pièce/i)).toHaveLength(2);
     expect(
       screen.getByText(/pdf, cliquez pour ouvrir/i),
     ).toBeInTheDocument();
+    expect(container.querySelectorAll("img")).toHaveLength(2);
   });
 
-  it("dit si la pièce est vue, sans date de vision ni nom", () => {
-    const { container } = render(<ListePiecesIdentite pieces={pieces} />);
-    expect(screen.getByText("Vue par le distributeur")).toBeInTheDocument();
+  it("montre le verdict de chaque pièce au client", () => {
+    render(<ListePiecesIdentite pieces={pieces} />);
+    expect(screen.getByText("Acceptée par le distributeur")).toBeInTheDocument();
     expect(screen.getByText("Pas encore vue")).toBeInTheDocument();
+    expect(screen.getByText("Refusée — à refaire")).toBeInTheDocument();
+  });
+
+  it("montre au client le motif du refus, sans nom ni date de vision", () => {
+    const { container } = render(<ListePiecesIdentite pieces={pieces} />);
+    expect(
+      screen.getByText(/photo trop floue, envoyez une cni lisible/i),
+    ).toBeInTheDocument();
     expect(container.textContent).not.toMatch(/vu le/i);
   });
 

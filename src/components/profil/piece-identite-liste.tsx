@@ -1,12 +1,14 @@
-import { EyeIcon, FileTextIcon, ImageIcon } from "lucide-react";
+import { CheckIcon, EyeIcon, FileTextIcon, ImageIcon, XIcon } from "lucide-react";
+import type { StatutPiece } from "@/lib/s1-comptes/fiche-client";
 
 /** Pièce d'identité du compte connecté, telle que montrée sur son profil. */
 export type PieceIdentiteProfil = {
   id: string;
   typePiece: string;
   mime: string;
-  /** Vue par un humain du distributeur — sans dire qui ni quand. */
-  vue: boolean;
+  statutPiece: StatutPiece;
+  /** Ce qu'il faut corriger, quand la pièce est refusée. */
+  refusMotif: string | null;
   deposeLe: Date | string;
 };
 
@@ -64,9 +66,32 @@ export function ListePiecesIdentite({
                   {estImage ? "cliquez pour agrandir" : "PDF, cliquez pour ouvrir"}
                 </span>
                 <span className="mt-0.5 flex items-center gap-1 text-[11px] text-muted-foreground">
-                  <EyeIcon className="size-3" />
-                  {piece.vue ? "Vue par le distributeur" : "Pas encore vue"}
+                  {piece.statutPiece === "ACCEPTEE" ? (
+                    <>
+                      <CheckIcon className="size-3" />
+                      Acceptée par le distributeur
+                    </>
+                  ) : piece.statutPiece === "REFUSEE" ? (
+                    <>
+                      <XIcon className="size-3" />
+                      Refusée — à refaire
+                    </>
+                  ) : (
+                    <>
+                      <EyeIcon className="size-3" />
+                      Pas encore vue
+                    </>
+                  )}
                 </span>
+                {piece.statutPiece === "REFUSEE" && piece.refusMotif ? (
+                  <span className="mt-1 flex items-start gap-1 rounded-md border border-destructive/40 bg-destructive/5 p-2 text-[11px] leading-relaxed text-destructive">
+                    <XIcon className="mt-0.5 size-3 shrink-0" />
+                    <span>
+                      <span className="font-semibold">Refusée — à refaire. </span>
+                      {piece.refusMotif}
+                    </span>
+                  </span>
+                ) : null}
               </span>
             </a>
           </li>

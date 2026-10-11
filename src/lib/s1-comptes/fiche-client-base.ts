@@ -11,6 +11,7 @@ import {
 } from "@/lib/db/schema/s1-comptes";
 import {
   lireFicheClient,
+  statutPieceValide,
   type FicheClient,
   type LecteurFicheClient,
 } from "./fiche-client";
@@ -37,11 +38,13 @@ export const lecteurFicheDb: LecteurFicheClient = {
   },
 
   async lirePieces(compteId) {
-    return db
+    const lignes = await db
       .select({
         id: piecesIdentiteClients.id,
         typePiece: piecesIdentiteClients.typePiece,
         mime: piecesIdentiteClients.mime,
+        statutPiece: piecesIdentiteClients.statutPiece,
+        refusMotif: piecesIdentiteClients.refusMotif,
         vuePar: piecesIdentiteClients.vuePar,
         vueLe: piecesIdentiteClients.vueLe,
         deposeLe: piecesIdentiteClients.createdAt,
@@ -49,6 +52,14 @@ export const lecteurFicheDb: LecteurFicheClient = {
       .from(piecesIdentiteClients)
       .where(eq(piecesIdentiteClients.compteClientId, compteId))
       .orderBy(desc(piecesIdentiteClients.createdAt));
+    // La colonne est un texte libre en base : une valeur hors liste fermée
+    // est ramenée à EN_ATTENTE plutôt que rendue tel quel à l'écran.
+    return lignes.map((ligne) => ({
+      ...ligne,
+      statutPiece: statutPieceValide(ligne.statutPiece)
+        ? ligne.statutPiece
+        : ("EN_ATTENTE" as const),
+    }));
   },
 };
 
