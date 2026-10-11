@@ -65,6 +65,16 @@ describe("S2 — correctives proposées depuis le journal", () => {
     expect(resultat.contestable).toBe(false);
   });
 
+  it("explique sans bouton pour une étiquette (retrait depuis la fiche)", () => {
+    for (const typeAction of ["annotation.poser", "annotation.retirer"]) {
+      const resultat = correctivesPour({ typeAction, statut: "REUSSIE" });
+      expect(resultat.contestable).toBe(false);
+      if (!resultat.contestable) {
+        expect(resultat.explication).toContain("fiche");
+      }
+    }
+  });
+
   it("ne conteste jamais une action échouée", () => {
     const resultat = correctivesPour({
       typeAction: "client.valider",

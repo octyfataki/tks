@@ -146,7 +146,7 @@ export function PhotoProfilModifiable({ nom, avatarUrl }: { nom: string; avatarU
       </div>
 
       <Dialog open={ouvert} onOpenChange={(v) => (v ? setOuvert(true) : fermer())}>
-        <DialogContent aria-label="Modifier la photo">
+        <DialogContent aria-label="Modifier la photo" className="max-h-[calc(100dvh-2rem)] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-base">Modifier la photo</DialogTitle>
             <DialogDescription>
@@ -240,7 +240,7 @@ export function PhotoProfilModifiable({ nom, avatarUrl }: { nom: string; avatarU
 
           <div>
             <p className="text-xs font-medium">Choisir depuis la galerie :</p>
-            <div className="mt-2 grid grid-cols-4 gap-2" role="group" aria-label="Galerie d'illustrations">
+            <div className="mt-2 grid grid-cols-3 gap-2 sm:grid-cols-4" role="group" aria-label="Galerie d'illustrations">
               {GALERIE_PHOTOS_PROFIL.map((illustration) => {
                 const choisie = apercu === illustration.src;
                 return (

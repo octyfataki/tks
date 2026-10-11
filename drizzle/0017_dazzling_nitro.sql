@@ -1,0 +1,1 @@
+ALTER TABLE `annotations_clients` MODIFY COLUMN `acteur_id` varchar(36) NOT NULL;

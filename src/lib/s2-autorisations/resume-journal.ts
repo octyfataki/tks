@@ -60,6 +60,8 @@ export function nomEntite(entite: string): string {
       return "Premier accès administrateur";
     case "reglage":
       return "Réglage";
+    case "annotation_client":
+      return "Annotation client";
     default:
       return entite;
   }
@@ -121,6 +123,18 @@ export function resumerEvenement(
       const transition = avantEtat ? `${avantEtat} → ${cible}` : cible;
       const motif = input.motif?.trim();
       return `Compte client ${transition.toLowerCase()} (${transition}${motif ? `, motif : ${motif}` : ""})`;
+    }
+    case "annotation.poser":
+    case "annotation.retirer": {
+      // Le libellé est figé dans la trace à l'écriture ; le code brut sert
+      // de repli pour les lignes antérieures.
+      const code = texte(apresO?.["etiquette"]);
+      const libelle = texte(apresO?.["libelle"]) ?? code ?? "étiquette inconnue";
+      const compte = texte(apresO?.["compteClientId"]);
+      if (input.typeAction === "annotation.poser") {
+        return `Étiquette « ${libelle} » posée${compte ? ` sur le compte ${nomDe(compte, noms)}` : ""}`;
+      }
+      return `Étiquette « ${libelle} » retirée${compte ? ` du compte ${nomDe(compte, noms)}` : ""}`;
     }
     case "permission.accorder":
     case "permission.retirer": {
