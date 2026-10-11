@@ -40,7 +40,7 @@ export function NavUser({
   /** Destination de « Mon compte ». Sans elle, l'entrée reste inerte. */
   profilUrl?: string
 }) {
-  const { isMobile } = useSidebar()
+  const { isMobile, setOpenMobile } = useSidebar()
   const router = useRouter()
   const [deconnexionEnCours, setDeconnexionEnCours] = useState(false)
   const initials = user.name
@@ -56,7 +56,14 @@ export function NavUser({
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
-              <SidebarMenuButton size="lg" className="aria-expanded:bg-muted" />
+              // Le déclencheur n'est pas un lien : fermer le tiroir ici
+              // démonterait le Sheet et donc le menu déroulant qui vient
+              // de s'ouvrir. La fermeture se fait sur « Mon compte ».
+              <SidebarMenuButton
+                size="lg"
+                fermeAuClicMobile={false}
+                className="aria-expanded:bg-muted"
+              />
             }
           >
             <Avatar>
@@ -98,7 +105,11 @@ export function NavUser({
               <DropdownMenuItem
                 disabled={!profilUrl}
                 onClick={() => {
-                  if (profilUrl) router.push(profilUrl)
+                  if (!profilUrl) return
+                  // Sur mobile, le tiroir est resté ouvert sous le menu :
+                  // on le ferme avant de naviguer.
+                  if (isMobile) setOpenMobile(false)
+                  router.push(profilUrl)
                 }}
               >
                 <BadgeCheckIcon

@@ -134,7 +134,12 @@ export function NavMain({
                 defaultOpen={item.isActive ?? false}
               >
                 <CollapsibleTrigger
-                  render={<SidebarMenuButton tooltip={item.title} />}
+                  render={
+                    <SidebarMenuButton
+                      tooltip={item.title}
+                      fermeAuClicMobile={false}
+                    />
+                  }
                 >
                   {item.icon}
                   <span>{item.title}</span>
