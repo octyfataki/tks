@@ -87,5 +87,48 @@ describe("S2 — résumé lisible du journal", () => {
   it("libelle les entités sans jargon de table", () => {
     expect(nomEntite("compte_client")).toBe("Compte client");
     expect(nomEntite("taux_change")).toBe("Taux");
+    expect(nomEntite("annotation_client")).toBe("Annotation client");
+  });
+
+  it("formule la pose d'étiquette avec le libellé figé dans la trace", () => {
+    const noms = new Map([["client-1", "Marie"]]);
+    expect(
+      resumerEvenement(
+        {
+          typeAction: "annotation.poser",
+          entite: "annotation_client",
+          apres: {
+            compteClientId: "client-1",
+            etiquette: "BON_PAYEUR",
+            libelle: "Bon payeur",
+          },
+        },
+        noms,
+      ),
+    ).toBe("Étiquette « Bon payeur » posée sur le compte Marie");
+  });
+
+  it("formule le retrait d'étiquette sans inventer de nom", () => {
+    expect(
+      resumerEvenement({
+        typeAction: "annotation.retirer",
+        entite: "annotation_client",
+        apres: {
+          compteClientId: "client-9",
+          etiquette: "A_SURVEILLER",
+          libelle: "À surveiller",
+        },
+      }),
+    ).toBe("Étiquette « À surveiller » retirée du compte client-9");
+  });
+
+  it("retombe sur le code brut pour une trace sans libellé", () => {
+    expect(
+      resumerEvenement({
+        typeAction: "annotation.poser",
+        entite: "annotation_client",
+        apres: { compteClientId: "client-1", etiquette: "BON_PAYEUR" },
+      }),
+    ).toContain("BON_PAYEUR");
   });
 });

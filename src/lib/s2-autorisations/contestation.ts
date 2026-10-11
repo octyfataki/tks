@@ -82,6 +82,13 @@ export function correctivesPour(input: {
         explication:
           "Un taux saisi n'est jamais écrasé : la correction passe par un taux d'ajustement daté et tracé.",
       };
+    case "annotation.poser":
+    case "annotation.retirer":
+      return {
+        contestable: false,
+        explication:
+          "Une étiquette se retire depuis la fiche du compte : l'écriture inverse est déjà tracée.",
+      };
     case "client.revoquer":
     case "agent.revoquer":
     case "admin.revoquer":

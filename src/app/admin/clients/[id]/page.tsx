@@ -1,5 +1,11 @@
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
+import { eq } from "drizzle-orm";
+import { auth } from "@/lib/auth";
+import { db } from "@/lib/db/client";
+import { comptesStaff } from "@/lib/db/schema/s1-comptes";
 import { chargerFicheClient } from "@/lib/s1-comptes/fiche-client-base";
+import { etiquettesActivesParCompte } from "@/lib/s4-annotations/annotations";
 import { VueFicheClient } from "@/components/clients/fiche-client";
 
 /**
@@ -7,6 +13,8 @@ import { VueFicheClient } from "@/components/clients/fiche-client";
  *
  * L'accès est déjà gardé par /admin/layout (administrateur principal ou
  * technique VALIDE) : un client ou un agent n'atteint jamais cette page.
+ * Seul l'administrateur principal annote : le technique n'a aucun pouvoir
+ * métier (GLOSSARY), il voit la fiche sans la zone de geste.
  * Un identifiant inconnu rend 404 — aucune fuite de données d'un autre
  * compte. La fiche ne montre jamais de solde, de dette ni de plafond.
  */
@@ -16,7 +24,18 @@ export default async function FicheCompteClientAdminPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const fiche = await chargerFicheClient(id);
+  const session = await auth.api.getSession({ headers: await headers() });
+  const [fiche, actives, lignes] = await Promise.all([
+    chargerFicheClient(id),
+    etiquettesActivesParCompte([id]),
+    session?.user?.id
+      ? db
+          .select({ role: comptesStaff.role })
+          .from(comptesStaff)
+          .where(eq(comptesStaff.betterAuthUserId, session.user.id))
+          .limit(1)
+      : Promise.resolve([]),
+  ]);
   if (!fiche) notFound();
 
   // eslint-disable-next-line react-hooks/purity -- lecture unique de l'horloge en composant serveur
@@ -27,6 +46,8 @@ export default async function FicheCompteClientAdminPage({
       fiche={fiche}
       maintenant={maintenant}
       listeHref="/admin/clients"
+      etiquettesActives={actives.get(id) ?? []}
+      peutAnnoter={lignes[0]?.role === "ADMIN_PRINCIPAL"}
     />
   );
 }

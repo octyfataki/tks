@@ -28,7 +28,7 @@ export function ProfilSquelette({ className }: { className?: string }) {
           </div>
           <Separator orientation="vertical" className="hidden sm:block" />
           <Separator className="sm:hidden" />
-          <div className="grid flex-1 grid-cols-1 gap-x-8 gap-y-3 min-[420px]:grid-cols-2 sm:max-w-sm">
+          <div className="grid flex-1 grid-cols-1 gap-x-8 gap-y-3 sm:grid-cols-2 sm:max-w-sm">
             {Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="min-w-0">
                 <Skeleton className="h-3 w-20" />

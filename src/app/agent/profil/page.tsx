@@ -117,7 +117,7 @@ export default async function AgentProfilPage() {
     profil.type === "STAFF" && profil.etat === "VALIDE";
 
   return (
-    <div className="flex flex-1 flex-col bg-background px-6 py-8">
+    <div className="flex flex-1 flex-col gap-4 bg-background p-4 sm:p-6">
       <ProfilUtilisateur
         nom={nom}
         email={email || "Espace agent"}

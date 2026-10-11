@@ -16,6 +16,8 @@ import {
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Cachet } from "./cachet";
+import { EtiquettesBadge } from "./etiquettes-badge";
+import { FormulairesEtiquettes } from "./formulaires-etiquettes";
 import { dateCourte, initiales, nomAffiche } from "./affichage-partage";
 import { detailAttente, texteAttente } from "./affichage-client";
 import {
@@ -94,20 +96,27 @@ function Piece({
  * Fiche d'un compte client (issue #9), partagée par l'espace admin et
  * l'espace agent. Un compte est une connexion (téléphone = clé) ; le
  * dossier financier vit en S4. Montre l'identité, la ou les pièces
- * d'identité, et la zone Actions — qui réutilise les gestes existants de
- * `actions.ts` (valider / refuser / attester / révoquer), jamais réécrits.
- * Les actions de dossier (S4) sont annoncées différées : pas de bouton
- * mort.
+ * d'identité, les étiquettes d'annotation (S4 issue #7, badge visible et
+ * zone de pose/retrait), et la zone Actions — qui réutilise les gestes
+ * existants de `actions.ts` (valider / refuser / attester / révoquer),
+ * jamais réécrits. Les actions de dossier (S4) sont annoncées différées :
+ * pas de bouton mort.
  */
 export function VueFicheClient({
   fiche,
   maintenant,
   listeHref,
+  etiquettesActives,
+  peutAnnoter,
 }: {
   fiche: FicheClient;
   maintenant: number;
   /** Retour vers la liste des comptes de l'espace courant. */
   listeHref: string;
+  /** Étiquettes actives du compte, dérivées du journal append-only. */
+  etiquettesActives: readonly string[];
+  /** Vrai si le lecteur tient la permission `client.annoter`. */
+  peutAnnoter: boolean;
 }) {
   const nom = nomAffiche({ nom: fiche.nom, email: fiche.email });
   const cachet = cachetEtat(fiche.etat);
@@ -164,6 +173,11 @@ export function VueFicheClient({
             <Cachet encre={cachet.encre}>{cachet.libelle}</Cachet>
           </div>
         </div>
+        {etiquettesActives.length > 0 ? (
+          <div className="mt-3">
+            <EtiquettesBadge codes={etiquettesActives} />
+          </div>
+        ) : null}
       </header>
 
       <div className="grid items-start gap-4 lg:grid-cols-2">
@@ -319,6 +333,21 @@ export function VueFicheClient({
             ) : null}
           </div>
         )}
+      </section>
+
+      <section className="rounded-xl border bg-card p-4 sm:p-5">
+        <h2 className="text-sm font-medium">Annotations</h2>
+        <p className="mt-0.5 text-xs text-muted-foreground">
+          Repères posés à la main : ni note, ni score, ni calcul. Retirer
+          ajoute l&apos;écriture inverse, tracée — rien n&apos;est effacé.
+        </p>
+        <div className="mt-3">
+          <FormulairesEtiquettes
+            compteId={fiche.id}
+            actives={etiquettesActives}
+            peutAnnoter={peutAnnoter}
+          />
+        </div>
       </section>
 
       <section className="rounded-xl border border-dashed bg-card p-4 sm:p-5">

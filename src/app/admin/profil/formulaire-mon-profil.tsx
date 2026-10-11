@@ -32,9 +32,9 @@ export function FormulaireMonProfil({
     nom.trim() !== nomInitial || telephone.trim() !== telephoneInitial;
 
   return (
-    <form action={action} className="mt-3 flex flex-col gap-3">
-      <div className="grid gap-3 sm:grid-cols-2">
-        <div>
+    <form action={action} className="mt-3 flex min-w-0 flex-col gap-3">
+      <div className="grid min-w-0 gap-3 sm:grid-cols-2">
+        <div className="min-w-0">
           <label htmlFor="mon-profil-nom" className="mb-1.5 block text-xs font-medium">
             Nom affiché
           </label>
@@ -54,7 +54,7 @@ export function FormulaireMonProfil({
             />
           </div>
         </div>
-        <div>
+        <div className="min-w-0">
           <label
             htmlFor="mon-profil-telephone"
             className="mb-1.5 block text-xs font-medium"

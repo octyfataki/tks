@@ -33,6 +33,8 @@ export const PERMISSIONS_FERMEES = [
   "journal.consulter",
   // Validation des comptes clients (S1-03)
   "client.valider",
+  // Annotations client (S4 issue #7) : poser/retirer une étiquette.
+  "client.annoter",
 ] as const;
 
 export type Permission = (typeof PERMISSIONS_FERMEES)[number];
@@ -58,6 +60,7 @@ export const PROFIL_AGENT_SERVICE_DEFAUT: readonly Permission[] = [
   "preuve.valider",
   "paiement.creer",
   "client.valider",
+  "client.annoter",
 ];
 
 /** Seul un administrateur principal VALIDE accorde ou retire (S2). */
