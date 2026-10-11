@@ -27,7 +27,7 @@ export function BoutonDeconnexionAutres({ nbAutres }: { nbAutres: number }) {
   }
 
   return (
-    <span className="flex flex-col items-end gap-1">
+    <span className="flex flex-col items-stretch gap-1 sm:items-end">
       <Button
         type="button"
         size="sm"

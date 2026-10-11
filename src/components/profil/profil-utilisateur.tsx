@@ -151,7 +151,7 @@ function Champ({ etiquette, valeur }: { etiquette: string; valeur: string }) {
   return (
     <div className="min-w-0">
       <dt className="text-xs text-muted-foreground">{etiquette}</dt>
-      <dd className="mt-0.5 truncate text-sm font-medium text-foreground">{valeur}</dd>
+      <dd className="mt-0.5 break-words text-sm font-medium text-foreground">{valeur}</dd>
     </div>
   );
 }
@@ -194,7 +194,7 @@ function LigneVerrouillee({
           {etiquette}
           <LockIcon className="size-3 text-muted-foreground" aria-label="Verrouillé" />
         </p>
-        <p className="mt-0.5 truncate text-sm">{valeur}</p>
+        <p className="mt-0.5 break-words text-sm">{valeur}</p>
         <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">{aide}</p>
       </div>
     </div>
@@ -240,12 +240,12 @@ export function ProfilUtilisateur({
             <PhotoProfilModifiable nom={nom} avatarUrl={avatarUrl} />
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <h1 className="truncate text-xl font-semibold tracking-tight">{nom}</h1>
+                <h1 className="min-w-0 break-words text-xl font-semibold tracking-tight">{nom}</h1>
                 <Badge variant="secondary" className="rounded-full">
                   {libelleRole(compte)}
                 </Badge>
               </div>
-              <p className="mt-1 truncate text-sm text-muted-foreground">
+              <p className="mt-1 min-w-0 break-words text-sm text-muted-foreground">
                 {email} · {precisionRole(compte)}
               </p>
               <p className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
@@ -268,7 +268,7 @@ export function ProfilUtilisateur({
           <Separator orientation="vertical" className="hidden sm:block" />
           <Separator className="sm:hidden" />
 
-          <dl className="grid flex-1 grid-cols-1 gap-x-8 gap-y-3 min-[420px]:grid-cols-2 sm:max-w-sm">
+          <dl className="grid flex-1 grid-cols-1 gap-x-8 gap-y-3 sm:grid-cols-2 sm:max-w-sm">
             <div className="min-w-0">
               <dt className="text-xs text-muted-foreground">Matricule</dt>
               <dd className="mt-0.5 flex items-center gap-1 text-sm font-medium text-foreground">
@@ -303,7 +303,7 @@ export function ProfilUtilisateur({
                       <PhoneIcon className="size-3" aria-hidden />
                       Téléphone contact
                     </dt>
-                    <dd className="mt-0.5 text-sm font-medium">{telephoneAffiche ?? "Non renseigné"}</dd>
+                    <dd className="mt-0.5 break-words text-sm font-medium">{telephoneAffiche ?? "Non renseigné"}</dd>
                   </div>
                 </dl>
                 <div className="mt-4 flex flex-col gap-2">
@@ -433,8 +433,8 @@ export function ProfilUtilisateur({
 
           {sessionsAffichees ? (
             <section aria-label="Sessions en cours" className="rounded-xl border bg-card p-4 sm:p-5">
-              <div className="flex items-start justify-between gap-2">
-                <div>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
                   <h2 className="text-base font-semibold tracking-tight">Sessions en cours</h2>
                   <p className="mt-0.5 text-xs text-muted-foreground">
                     {sessionsAffichees.length === 0
@@ -464,7 +464,7 @@ export function ProfilUtilisateur({
                           </Badge>
                         ) : null}
                       </dd>
-                      <dd className="mt-0.5 text-muted-foreground tabular-nums">
+                      <dd className="mt-0.5 break-words text-muted-foreground tabular-nums">
                         {s.adresse ? `${s.adresse} · ` : ""}depuis le {dateHeure(s.creeLe)}
                         {" · "}expire le {dateHeure(s.expireLe)}
                       </dd>

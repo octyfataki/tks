@@ -151,7 +151,7 @@ export function ActivationSecondFacteur({
       </Button>
 
       <Dialog open={ouvert} onOpenChange={(v) => (v ? setOuvert(true) : fermer())}>
-        <DialogContent aria-label="Activer le second facteur">
+        <DialogContent aria-label="Activer le second facteur" className="max-h-[calc(100dvh-2rem)] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-base">Activer le second facteur</DialogTitle>
             <DialogDescription>
@@ -169,7 +169,7 @@ export function ActivationSecondFacteur({
               className="flex flex-col gap-3"
               aria-label="Choisir la méthode"
             >
-              <div role="group" aria-label="Méthode du second facteur" className="grid grid-cols-2 gap-2">
+              <div role="group" aria-label="Méthode du second facteur" className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                 <button
                   type="button"
                   aria-pressed={methode === "sms"}
@@ -288,7 +288,7 @@ export function ActivationSecondFacteur({
               className="flex flex-col gap-3"
               aria-label="Vérifier le code reçu"
             >
-              <p className="text-xs leading-relaxed text-muted-foreground">
+              <p className="break-words text-xs leading-relaxed text-muted-foreground">
                 Un code à 6 chiffres vient d&apos;être envoyé{email ? ` à ${email}` : ""}
                 {repliEmail ? " (repli : aucun numéro de contact sur votre compte, le SMS est remplacé par l'email)" : " (et par SMS en redondance)"} — valable 5 minutes.
               </p>

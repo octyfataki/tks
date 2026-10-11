@@ -89,7 +89,7 @@ export function DesactivationSecondFacteur() {
       </Button>
 
       <Dialog open={ouvert} onOpenChange={(v) => (v ? setOuvert(true) : fermer())}>
-        <DialogContent aria-label="Désactiver le second facteur">
+        <DialogContent aria-label="Désactiver le second facteur" className="max-h-[calc(100dvh-2rem)] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="text-base">Désactiver le second facteur</DialogTitle>
             <DialogDescription>
