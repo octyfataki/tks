@@ -19,9 +19,18 @@ import {
   ERREUR_CONTESTEE_INTROUVABLE,
 } from "@/lib/s2-autorisations/journal";
 import { aPermission } from "@/lib/s2-autorisations/autorisations";
+import {
+  AnnotationError,
+  poserEtiquette,
+  retirerEtiquette,
+} from "@/lib/s4-annotations/annotations";
 import type { ResultatAction } from "@/lib/resultat-action";
 
 export type ResultatDecision = ResultatAction<{ compteId: string }>;
+export type ResultatAnnotation = ResultatAction<{
+  compteId: string;
+  etiquette: string;
+}>;
 
 /**
  * Connecté et autorisé à trancher un compte client (S1-03) :
@@ -407,4 +416,124 @@ export async function revoquerCompteClientAction(
   }
   revaliderLesDeuxEspaces();
   return { ok: true, compteId };
+}
+
+/**
+ * Connecté et autorisé à annoter un compte client (S4 issue #7) :
+ * - ADMIN_PRINCIPAL VALIDE (le distributeur annote toujours),
+ * - AGENT VALIDE avec la permission `client.annoter` (socle ou individuelle).
+ *
+ * L'administrateur technique n'annote jamais : aucun pouvoir métier
+ * (GLOSSARY « Administrateur technique »), comme `rolePeutSaisirTaux` (S3).
+ * Même forme que `peutTrancher`, autre permission : lire n'exige rien,
+ * écrire exige `client.annoter`.
+ */
+async function peutAnnoter(): Promise<{ id: string; role: string } | null> {
+  const session = await auth.api.getSession({ headers: await headers() });
+  const userId = session?.user?.id;
+  if (!userId) return null;
+  const lignes = await db
+    .select({
+      id: comptesStaff.id,
+      role: comptesStaff.role,
+      etat: comptesStaff.etat,
+    })
+    .from(comptesStaff)
+    .where(eq(comptesStaff.betterAuthUserId, userId))
+    .limit(1);
+  const moi = lignes[0];
+  if (!moi) return null;
+  if (moi.etat !== "VALIDE") return null;
+  if (moi.role === "ADMIN_PRINCIPAL") {
+    return { id: moi.id, role: moi.role };
+  }
+  if (moi.role === "ADMIN_TECHNIQUE") return null;
+  if (moi.role === "AGENT") {
+    if (await aPermission(moi.id, "client.annoter")) {
+      return { id: moi.id, role: moi.role };
+    }
+    return null;
+  }
+  return null;
+}
+
+const ERREUR_NON_ANNOTATEUR =
+  "Annotation réservée aux comptes autorisés (« client.annoter »).";
+
+function lireEtiquette(donnees: FormData): string {
+  return String(donnees.get("etiquette") ?? "").trim();
+}
+
+function messageAnnotation(code: string): string {
+  switch (code) {
+    case "COMPTE_INTROUVABLE":
+      return "Compte introuvable.";
+    case "ETIQUETTE_INCONNUE":
+      return "Étiquette inconnue.";
+    default:
+      return "Annotation impossible : journal indisponible.";
+  }
+}
+
+/**
+ * Pose une étiquette sur un compte client (S4 issue #7). Liste fermée :
+ * un code inconnu est refusé, jamais enregistré. L'écriture est
+ * append-only et journalisée dans la même transaction (couche
+ * `s4-annotations`) : journal indisponible = geste annulé.
+ */
+export async function poserEtiquetteAction(
+  _precedent: ResultatAnnotation | null,
+  donnees: FormData,
+): Promise<ResultatAnnotation> {
+  const annotateur = await peutAnnoter();
+  if (!annotateur) return { ok: false, erreur: ERREUR_NON_ANNOTATEUR };
+  const compteId = lireCompteId(donnees);
+  if (!compteId) return { ok: false, erreur: "Compte introuvable." };
+  const etiquette = lireEtiquette(donnees);
+  try {
+    await poserEtiquette({
+      acteurId: annotateur.id,
+      roleAuMoment: annotateur.role,
+      compteClientId: compteId,
+      etiquette,
+    });
+  } catch (erreur) {
+    if (erreur instanceof AnnotationError) {
+      return { ok: false, erreur: messageAnnotation(erreur.code) };
+    }
+    return { ok: false, erreur: "Annotation impossible : journal indisponible." };
+  }
+  revaliderLesDeuxEspaces();
+  return { ok: true, compteId, etiquette };
+}
+
+/**
+ * Retire une étiquette d'un compte client (S4 issue #7). Aucune ligne
+ * n'est supprimée : l'écriture inverse est ajoutée et tracée
+ * (invariant 10). Même autorisation et mêmes échecs fermés que la pose.
+ */
+export async function retirerEtiquetteAction(
+  _precedent: ResultatAnnotation | null,
+  donnees: FormData,
+): Promise<ResultatAnnotation> {
+  const annotateur = await peutAnnoter();
+  if (!annotateur) return { ok: false, erreur: ERREUR_NON_ANNOTATEUR };
+  const compteId = lireCompteId(donnees);
+  if (!compteId) return { ok: false, erreur: "Compte introuvable." };
+  const etiquette = lireEtiquette(donnees);
+  try {
+    await retirerEtiquette({
+      acteurId: annotateur.id,
+      roleAuMoment: annotateur.role,
+      compteClientId: compteId,
+      etiquette,
+    });
+  } catch (erreur) {
+    if (erreur instanceof AnnotationError) {
+      return { ok: false, erreur: messageAnnotation(erreur.code) };
+    }
+    return { ok: false, erreur: "Annotation impossible : journal indisponible." };
+  }
+  revaliderLesDeuxEspaces();
+  return { ok: true, compteId, etiquette };
 }

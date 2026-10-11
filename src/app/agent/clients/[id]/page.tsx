@@ -6,6 +6,7 @@ import { db } from "@/lib/db/client";
 import { comptesStaff } from "@/lib/db/schema/s1-comptes";
 import { aPermission } from "@/lib/s2-autorisations/autorisations";
 import { chargerFicheClient } from "@/lib/s1-comptes/fiche-client-base";
+import { etiquettesActivesParCompte } from "@/lib/s4-annotations/annotations";
 import { VueFicheClient } from "@/components/clients/fiche-client";
 import { PermissionRefusee } from "@/components/permission-refusee";
 
@@ -49,6 +50,10 @@ export default async function FicheCompteClientAgentPage({
   const { id } = await params;
   const fiche = await chargerFicheClient(id);
   if (!fiche) notFound();
+  const [actives, peutAnnoter] = await Promise.all([
+    etiquettesActivesParCompte([id]),
+    aPermission(agent.id, "client.annoter"),
+  ]);
 
   // eslint-disable-next-line react-hooks/purity -- lecture unique de l'horloge en composant serveur
   const maintenant = Date.now();
@@ -58,6 +63,8 @@ export default async function FicheCompteClientAgentPage({
       fiche={fiche}
       maintenant={maintenant}
       listeHref="/agent/clients"
+      etiquettesActives={actives.get(id) ?? []}
+      peutAnnoter={peutAnnoter}
     />
   );
 }
