@@ -1,0 +1,91 @@
+import { describe, expect, it } from "vitest";
+import {
+  nomEntite,
+  resumerEvenement,
+} from "@/lib/s2-autorisations/resume-journal";
+
+// S2-05 (issue #13) — le résumé rend la ligne lisible sans inventer.
+// Chaque cas part des charges réellement enregistrées par les appelants
+// d'enregistrerEvenement (taux, clients, autorisations).
+
+describe("S2 — résumé lisible du journal", () => {
+  it("formule le taux saisi avec jour et valeur", () => {
+    expect(
+      resumerEvenement({
+        typeAction: "taux.saisir",
+        entite: "taux_change",
+        apres: { jour: "2026-10-11", valeur: 2800 },
+      }),
+    ).toBe("Taux du 2026-10-11 : 2\u202f800 CDF pour 1 USD");
+  });
+
+  it("accepte l'après en JSON brut tel que lu en base", () => {
+    expect(
+      resumerEvenement({
+        typeAction: "taux.saisir",
+        entite: "taux_change",
+        apres: JSON.stringify({ jour: "2026-10-11", valeur: 2800 }),
+      }),
+    ).toContain("2\u202f800 CDF");
+  });
+
+  it("formule la validation avec transition d'état", () => {
+    expect(
+      resumerEvenement({
+        typeAction: "client.valider",
+        entite: "compte_client",
+        avant: { etat: "EN_ATTENTE_VALIDATION" },
+        apres: { etat: "VALIDE", vuAuComptoir: true, typePiece: "CNI" },
+      }),
+    ).toBe(
+      "Validation du compte client (EN_ATTENTE_VALIDATION → VALIDE au comptoir, pièce CNI vue)",
+    );
+  });
+
+  it("formule le refus avec son motif", () => {
+    expect(
+      resumerEvenement({
+        typeAction: "client.refuser",
+        entite: "compte_client",
+        avant: { etat: "EN_ATTENTE_VALIDATION" },
+        apres: { etat: "REFUSE" },
+        motif: "Photo illisible",
+      }),
+    ).toContain("motif : Photo illisible");
+  });
+
+  it("nomme l'agent concerné par la permission quand son nom est connu", () => {
+    const noms = new Map([["agent-1", "Aline"]]);
+    expect(
+      resumerEvenement(
+        {
+          typeAction: "permission.accorder",
+          entite: "permission",
+          apres: { agentId: "agent-1", permission: "taux.saisir" },
+        },
+        noms,
+      ),
+    ).toBe("Permission taux.saisir accordée à l'agent Aline");
+  });
+
+  it("retombe sur l'UUID sans inventer de nom inconnu", () => {
+    expect(
+      resumerEvenement({
+        typeAction: "permission.accorder",
+        entite: "permission",
+        apres: { agentId: "agent-9", permission: "taux.saisir" },
+      }),
+    ).toBe("Permission taux.saisir accordée à l'agent agent-9");
+  });
+
+  it("rend null pour une action inconnue (retombée code brut)", () => {
+    expect(
+      resumerEvenement({ typeAction: "inconnu.xyz", entite: "x" }),
+    ).toBeNull();
+  });
+
+  it("libelle les entités sans jargon de table", () => {
+    expect(nomEntite("compte_client")).toBe("Compte client");
+    expect(nomEntite("taux_change")).toBe("Taux");
+  });
+});

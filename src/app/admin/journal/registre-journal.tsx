@@ -24,10 +24,17 @@ import { Cachet } from "../invitations/cachet";
 export type LigneJournal = {
   id: string;
   acteurId: string | null;
+  /** Nom affichable de l'auteur, résolu à la lecture (null si introuvable). */
+  auteurNom: string | null;
+  auteurEmail: string | null;
   role: string;
   typeAction: string;
   entite: string;
   entiteId: string | null;
+  /** Enregistrement visé, formulé lisible (nom/téléphone résolu si connu). */
+  entiteLibelle: string;
+  /** Phrase métier de l'action, null si rien de formulable (retombée code). */
+  resume: string | null;
   avant: string | null;
   apres: string | null;
   appareilId: string | null;
@@ -155,16 +162,20 @@ function cellule(valeur: string): string {
 
 /** Export CSV des lignes filtrées, 100 % client, BOM UTF-8 pour Excel. */
 function exporterCSV(lignes: LigneJournal[]) {
-  const entete = "Reçu le;Écrit le;Action;Entité;Rôle;Statut;Motif;Appareil";
+  const entete =
+    "Reçu le;Écrit le;Auteur;Rôle;Action;Résumé;Entité;Statut;Motif;Appareil";
   const corps = lignes.map((ligne) =>
     [
       cellule(dateComplete(ligne.recuLe)),
       cellule(dateComplete(ligne.ecritLe)),
-      cellule(`${nomRole(ligne.role)} ${verbeAction(ligne.typeAction)} (${ligne.typeAction})`),
       cellule(
-        ligne.entiteId ? `${ligne.entite} ${ligne.entiteId}` : ligne.entite,
+        ligne.auteurNom ??
+          (ligne.acteurId ? `Auteur inconnu (${ligne.acteurId})` : "Auteur inconnu"),
       ),
       cellule(nomRole(ligne.role)),
+      cellule(`${nomRole(ligne.role)} ${verbeAction(ligne.typeAction)} (${ligne.typeAction})`),
+      cellule(ligne.resume ?? ""),
+      cellule(ligne.entiteLibelle),
       cellule(estEchouee(ligne) ? "Échouée" : "Réussie"),
       cellule(ligne.motif ?? ""),
       cellule(ligne.appareilId ?? ""),
@@ -182,13 +193,13 @@ function exporterCSV(lignes: LigneJournal[]) {
 }
 
 function texteRecherche(ligne: LigneJournal): string {
-  return `${ligne.typeAction} ${ligne.entite} ${nomRole(ligne.role)} ${verbeAction(ligne.typeAction)} ${ligne.motif ?? ""}`.toLowerCase();
+  return `${ligne.typeAction} ${ligne.entite} ${ligne.entiteLibelle} ${nomRole(ligne.role)} ${verbeAction(ligne.typeAction)} ${ligne.resume ?? ""} ${ligne.auteurNom ?? ""} ${ligne.acteurId ?? ""} ${ligne.motif ?? ""}`.toLowerCase();
 }
 
 /**
  * Registre du journal d'audit : les 50 dernières lignes reçues, filtrables
- * et dépliables pour la preuve complète (double horodatage, appareil,
- * avant/après — S2).
+ * et dépliables pour la preuve complète (auteur résolu, résumé lisible,
+ * double horodatage, appareil, avant/après — S2, S2-05 issue #13).
  *
  * Même dessin que les registres d'invitations : barre d'outils en carte
  * (recherche, filtre état, tri, export), tableau à lignes dépliables,
@@ -260,7 +271,7 @@ export function RegistreJournal({ lignes }: { lignes: LigneJournal[] }) {
                 type="search"
                 role="searchbox"
                 aria-label="Rechercher dans le journal"
-                placeholder="Action, entité, rôle, motif…"
+                placeholder="Action, auteur, résumé, motif…"
                 value={recherche}
                 onChange={(event) => {
                   setRecherche(event.target.value);
@@ -427,17 +438,22 @@ export function RegistreJournal({ lignes }: { lignes: LigneJournal[] }) {
                       </td>
                       <td className="max-w-64 px-3 py-2.5">
                         <span className="block font-medium">
+                          {ligne.auteurNom ?? "Auteur inconnu"} ·{" "}
                           {nomRole(ligne.role)} {verbeAction(ligne.typeAction)}
                         </span>
+                        {ligne.resume ? (
+                          <span className="block text-[11px]">
+                            {ligne.resume}
+                          </span>
+                        ) : null}
                         <span className="block truncate font-mono text-[11px] text-muted-foreground">
                           {ligne.typeAction}
                         </span>
                       </td>
                       <td className="px-3 py-2.5 text-muted-foreground">
-                        {ligne.entite}
+                        <span className="block">{ligne.entiteLibelle}</span>
                         {ligne.entiteId ? (
-                          <span className="font-mono text-[11px]">
-                            {" "}
+                          <span className="block truncate font-mono text-[11px]">
                             {idCourt(ligne.entiteId)}
                           </span>
                         ) : null}
@@ -495,11 +511,21 @@ export function RegistreJournal({ lignes }: { lignes: LigneJournal[] }) {
                               <dt className="text-[11px] text-muted-foreground">
                                 Auteur
                               </dt>
-                              <dd
-                                title={ligne.acteurId ?? ""}
-                                className="mt-0.5 truncate font-mono text-[11px] select-all"
-                              >
-                                {ligne.acteurId ?? "auteur inconnu"}
+                              <dd className="mt-0.5">
+                                <span className="block font-medium">
+                                  {ligne.auteurNom ?? "auteur inconnu"}
+                                </span>
+                                {ligne.auteurEmail ? (
+                                  <span className="block text-[11px] text-muted-foreground">
+                                    {ligne.auteurEmail}
+                                  </span>
+                                ) : null}
+                                <span
+                                  title={ligne.acteurId ?? ""}
+                                  className="block truncate font-mono text-[11px] text-muted-foreground select-all"
+                                >
+                                  {ligne.acteurId ?? "auteur inconnu"}
+                                </span>
                               </dd>
                             </div>
                             <div>
@@ -527,6 +553,16 @@ export function RegistreJournal({ lignes }: { lignes: LigneJournal[] }) {
                               </div>
                             ) : null}
                           </dl>
+                          {ligne.resume ? (
+                            <div className="mt-2 rounded-md border bg-background p-2 text-[12px]">
+                              <p className="text-[11px] text-muted-foreground">
+                                Résumé
+                              </p>
+                              <p className="mt-0.5 font-medium">
+                                {ligne.resume}
+                              </p>
+                            </div>
+                          ) : null}
                           {ligne.avant || ligne.apres ? (
                             <div className="mt-2 grid gap-2 sm:grid-cols-2">
                               <div>
