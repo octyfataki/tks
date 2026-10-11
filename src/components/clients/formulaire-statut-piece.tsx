@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { CheckIcon, XIcon } from "lucide-react";
+import { CheckIcon, Loader2Icon, XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -60,8 +60,17 @@ export function FormulaireStatutPiece({
           <MessageResultat resultat={resultat} />
           <div className="flex flex-wrap gap-2">
             <Button type="submit" size="sm" variant="destructive" disabled={enCours}>
-              <XIcon />
-              {enCours ? "Refus…" : "Confirmer le refus"}
+              {enCours ? (
+                <>
+                  <Loader2Icon className="animate-spin" aria-hidden />
+                  Refus…
+                </>
+              ) : (
+                <>
+                  <XIcon />
+                  Confirmer le refus
+                </>
+              )}
             </Button>
             <Button
               type="button"
@@ -81,8 +90,17 @@ export function FormulaireStatutPiece({
           <input type="hidden" name="statut" value="ACCEPTEE" />
           <MessageResultat resultat={resultat} />
           <Button type="submit" size="sm" disabled={enCours}>
-            <CheckIcon />
-            {enCours ? "Acceptation…" : "Accepter"}
+            {enCours ? (
+              <>
+                <Loader2Icon className="animate-spin" aria-hidden />
+                Acceptation…
+              </>
+            ) : (
+              <>
+                <CheckIcon />
+                Accepter
+              </>
+            )}
           </Button>
           <Button
             type="button"
