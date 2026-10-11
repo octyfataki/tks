@@ -260,6 +260,63 @@ describe("ProfilUtilisateur", () => {
     expect(screen.getByLabelText("Confirmez votre mot de passe")).toBeInTheDocument();
   });
 
+  it("montre les pièces d'identité au client, entre coordonnées et dossier", () => {
+    render(
+      <ProfilUtilisateur
+        nom="Aline Mukendi"
+        email="aline@example.com"
+        compte={{ type: "CLIENT" }}
+        dossier={null}
+        piecesIdentite={[
+          {
+            id: "piece-1",
+            typePiece: "CNI",
+            mime: "image/jpeg",
+            vue: true,
+            deposeLe: new Date("2026-10-02T08:00:00Z"),
+          },
+        ]}
+        formulairePieceIdentite={<button type="button">Remplacer ma pièce</button>}
+      />,
+    );
+    expect(screen.getByRole("heading", { name: "Pièce d'identité" })).toBeInTheDocument();
+    const lien = screen.getByRole("link", { name: /pièce cni/i });
+    expect(lien.getAttribute("href")).toBe("/api/pieces-clients/piece-1");
+    expect(screen.getByText("Vue par le distributeur")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /remplacer ma pièce/i }),
+    ).toBeInTheDocument();
+  });
+
+  it("affiche l'état vide normatif quand le client n'a aucune pièce", () => {
+    render(
+      <ProfilUtilisateur
+        nom="Aline Mukendi"
+        email="aline@example.com"
+        compte={{ type: "CLIENT" }}
+        dossier={null}
+        piecesIdentite={[]}
+      />,
+    );
+    expect(screen.getByRole("heading", { name: "Pièce d'identité" })).toBeInTheDocument();
+    expect(
+      screen.getByText(/aucune pièce déposée pour l'instant/i),
+    ).toBeInTheDocument();
+  });
+
+  it("ne montre jamais la carte pièce au personnel", () => {
+    render(
+      <ProfilUtilisateur
+        nom="Chef Distributeur"
+        email="chef@example.com"
+        compte={{ type: "STAFF", role: "ADMIN_PRINCIPAL", etat: "VALIDE" }}
+      />,
+    );
+    expect(
+      screen.queryByRole("heading", { name: "Pièce d'identité" }),
+    ).not.toBeInTheDocument();
+  });
+
   it("n'emploie aucun terme interdit du glossaire", () => {
     const { container } = render(
       <ProfilUtilisateur

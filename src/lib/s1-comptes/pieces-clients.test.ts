@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   TAILLE_MAX_IMAGE_OCTETS,
   TAILLE_MAX_PDF_OCTETS,
+  etatPieceDeposable,
   typePieceValide,
   verdictFichierPiece,
 } from "./pieces-fichiers";
@@ -75,5 +76,19 @@ describe("typePieceValide", () => {
     }
     expect(typePieceValide("CARTE_SEJOUR")).toBe(false);
     expect(typePieceValide("")).toBe(false);
+  });
+});
+
+describe("etatPieceDeposable", () => {
+  it("laisse déposer en attente, refusé, ou validé qui remplace sa pièce", () => {
+    expect(etatPieceDeposable("EN_ATTENTE_VALIDATION")).toBe(true);
+    expect(etatPieceDeposable("REFUSE")).toBe(true);
+    expect(etatPieceDeposable("VALIDE")).toBe(true);
+  });
+
+  it("refuse le dépôt à un compte révoqué ou d'état inconnu", () => {
+    expect(etatPieceDeposable("REVOQUE")).toBe(false);
+    expect(etatPieceDeposable("SUSPENDU")).toBe(false);
+    expect(etatPieceDeposable("")).toBe(false);
   });
 });

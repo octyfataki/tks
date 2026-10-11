@@ -10,15 +10,22 @@ import {
   ActivationSecondFacteur,
   DesactivationSecondFacteur,
   ProfilUtilisateur,
+  RemplacerPieceIdentite,
+  type PieceIdentiteProfil,
   type SessionEnCoursProfil,
 } from "@/components/profil";
+import { lirePiecesCompte } from "@/lib/s1-comptes/pieces-clients";
 import { FormulaireMonProfil } from "@/app/admin/profil/formulaire-mon-profil";
 import { and, desc, eq, gt } from "drizzle-orm";
 
 // Mon compte (espace client) : le même composant ProfilUtilisateur, nourri
 // par la session et les tables clients. Le dossier rattaché arrivera avec
 // S4 ; en attendant, l'état vide normatif s'affiche (aucun dossier, aucun
-// solde). Second facteur : optionnel, activé par le client lui-même depuis
+// solde). La carte Pièce d'identité montre les pièces déposées par le
+// compte (route authentifiée, propriétaire autorisé) et propose leur
+// remplacement : l'ancienne reste au dossier, la nouvelle est à revoir,
+// le compte reste validé (issue #24). Second facteur : optionnel, activé
+// par le client lui-même depuis
 // ici (compte VALIDE), code par SMS vers son téléphone ou par email
 // (issue #3). La garde /clients n'y laisse entrer que les comptes VALIDE.
 export default async function ClientsProfilPage() {
@@ -38,6 +45,7 @@ export default async function ClientsProfilPage() {
   let compteValide = false;
   let secondFacteurActif: boolean | null = null;
   let appareilSecondFacteur: string | null = null;
+  let piecesIdentite: PieceIdentiteProfil[] | undefined;
 
   if (userId) {
     const lignes = await db
@@ -61,6 +69,14 @@ export default async function ClientsProfilPage() {
       } else {
         secondFacteurActif = null;
       }
+      const deposees = await lirePiecesCompte(ligne.id);
+      piecesIdentite = deposees.map((p) => ({
+        id: p.id,
+        typePiece: p.typePiece,
+        mime: p.mime,
+        vue: p.vuePar !== null,
+        deposeLe: p.deposeLe,
+      }));
     }
   }
 
@@ -92,6 +108,8 @@ export default async function ClientsProfilPage() {
         dossier={null}
         secondFacteurActif={secondFacteurActif}
         appareilSecondFacteur={appareilSecondFacteur}
+        piecesIdentite={piecesIdentite}
+        formulairePieceIdentite={<RemplacerPieceIdentite />}
         sessions={sessions}
         sessionActuelleId={sessionActuelleId}
         peutModifierCoordonnees={compteValide}
