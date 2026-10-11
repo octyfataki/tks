@@ -78,6 +78,10 @@ async function consignerAnnotation(input: {
   // (S2) reste lisible sans dépendre de la liste applicative.
   const libelle =
     etiquetteParCode(input.etiquette)?.libelle ?? input.etiquette;
+  // L'entité tracée est le compte : `entite_id` du journal fait 36
+  // caractères (UUID), un identifiant composite `compte:etiquette`
+  // déborderait et ferait échouer l'écriture (49+ caractères). Le détail
+  // de l'étiquette vit dans `avant`/`apres`, pas dans l'identifiant.
   const trace = await enregistrerEvenement(
     {
       acteurId: input.acteurId,
@@ -85,7 +89,7 @@ async function consignerAnnotation(input: {
       typeAction:
         input.statut === "POSEE" ? "annotation.poser" : "annotation.retirer",
       entite: "annotation_client",
-      entiteId: `${input.compteClientId}:${input.etiquette}`,
+      entiteId: input.compteClientId,
       avant: input.statut === "RETIREE" ? { etiquette: input.etiquette } : undefined,
       apres: {
         compteClientId: input.compteClientId,
