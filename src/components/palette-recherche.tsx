@@ -40,6 +40,7 @@ import {
   CommandSeparator,
 } from "@/components/ui/command"
 import { Kbd } from "@/components/ui/kbd"
+import { cn } from "@/lib/utils"
 
 export type Suggestion = {
   /** Libellé affiché, vocabulaire du domaine (GLOSSARY.md). */
@@ -394,12 +395,26 @@ export function PaletteRecherche({
 
   return (
     <>
+      {/*
+       * Mobile et tablette : icône seule. Pas de clavier physique, donc pas
+       * de raccourci ⌘K à annoncer — le champ complet reste au bureau.
+       */}
+      <Button
+        type="button"
+        variant="outline"
+        size="icon"
+        onClick={() => setOuvert(true)}
+        aria-label={placeholder}
+        className="shrink-0 lg:hidden"
+      >
+        <SearchIcon />
+      </Button>
       <Button
         type="button"
         variant="outline"
         onClick={() => setOuvert(true)}
         aria-label={`${placeholder} (Ctrl+K)`}
-        className={className}
+        className={cn("hidden lg:inline-flex", className)}
       >
         <SearchIcon />
         <span className="min-w-0 flex-1 truncate text-left font-normal text-muted-foreground">

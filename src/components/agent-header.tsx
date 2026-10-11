@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { BrandLogo } from "@/components/brand-logo";
 import {
   DashboardHeader,
   ELEMENTS_NOTIFICATIONS_AGENT,
@@ -91,6 +92,8 @@ export function AgentHeader() {
         orientation="vertical"
         className="mr-1 data-vertical:h-4 data-vertical:self-auto"
       />
+      {/* Mobile : le fil d'Ariane est masqué, le logo garde le repère du site. */}
+      <BrandLogo height={24} className="shrink-0 md:hidden" />
       <DashboardHeader
         className="min-w-0 flex-1"
         aideHref="/agent/aide"
