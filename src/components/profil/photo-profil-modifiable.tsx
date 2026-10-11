@@ -127,23 +127,34 @@ export function PhotoProfilModifiable({ nom, avatarUrl }: { nom: string; avatarU
 
   return (
     <div className="shrink-0">
-      <div className="group relative">
-        <Avatar className="size-16 sm:size-20">
+      <button
+        type="button"
+        onClick={() => setOuvert(true)}
+        aria-label="Modifier la photo"
+        title="Modifier la photo"
+        className="group relative block rounded-full focus-visible:outline-none"
+      >
+        <Avatar className="size-24 sm:size-20">
           {photoAffichee ? <AvatarImage src={photoAffichee} alt={nom} /> : null}
           <AvatarFallback className="bg-primary/10 text-lg font-semibold text-primary">
             {initiales(nom)}
           </AvatarFallback>
         </Avatar>
-        <button
-          type="button"
-          onClick={() => setOuvert(true)}
-          aria-label="Modifier la photo"
-          title="Modifier la photo"
-          className="absolute inset-0 flex items-center justify-center rounded-full bg-black/45 text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100 focus-visible:opacity-100"
+        {/* Voile + icône au survol ou au focus (bureau) : repère que l'image est modifiable. */}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-full bg-black/45 text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
         >
-          <CameraIcon className="size-5" aria-hidden />
-        </button>
-      </div>
+          <CameraIcon className="size-5" />
+        </span>
+        {/* Pastille caméra permanente : tout l'ensemble est un bouton, donc cliquer l'avatar OU la pastille ouvre la modification. */}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute -right-1 -bottom-1 flex size-7 items-center justify-center rounded-full border bg-card text-muted-foreground shadow-sm"
+        >
+          <CameraIcon className="size-4" />
+        </span>
+      </button>
 
       <Dialog open={ouvert} onOpenChange={(v) => (v ? setOuvert(true) : fermer())}>
         <DialogContent aria-label="Modifier la photo" className="max-h-[calc(100dvh-2rem)] overflow-y-auto">

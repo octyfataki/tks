@@ -15,10 +15,10 @@ export function ProfilSquelette({ className }: { className?: string }) {
     >
       <div className="rounded-xl border bg-card p-4 sm:p-6">
         <div className="flex flex-col gap-5 sm:flex-row">
-          <div className="flex min-w-0 flex-1 items-center gap-4">
+          <div className="flex min-w-0 flex-1 flex-col items-center gap-3 sm:flex-row sm:gap-4">
             <Skeleton className="size-16 shrink-0 rounded-full sm:size-20" />
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2">
+            <div className="flex min-w-0 w-full flex-1 flex-col items-center sm:items-start">
+              <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
                 <Skeleton className="h-6 w-44 max-w-full" />
                 <Skeleton className="h-5 w-28 rounded-full" />
               </div>
@@ -39,8 +39,8 @@ export function ProfilSquelette({ className }: { className?: string }) {
         </div>
       </div>
 
-      <div className="mt-4 grid items-start gap-4 lg:grid-cols-3">
-        <div className="flex flex-col gap-4 lg:col-span-2">
+      <div className="mt-4 grid grid-cols-1 items-start gap-4 lg:grid-cols-3">
+        <div className="flex min-w-0 flex-col gap-4 lg:col-span-2">
           {[0, 1].map((carte) => (
             <div key={carte} className="rounded-xl border bg-card p-4 sm:p-5">
               <div className="flex items-center justify-between gap-2">
@@ -59,7 +59,7 @@ export function ProfilSquelette({ className }: { className?: string }) {
             </div>
           ))}
         </div>
-        <div className="flex flex-col gap-4">
+        <div className="flex min-w-0 flex-col gap-4">
           {[0, 1, 2].map((carte) => (
             <div key={carte} className="rounded-xl border bg-card p-4 sm:p-5">
               <div className="flex items-center justify-between gap-2">
