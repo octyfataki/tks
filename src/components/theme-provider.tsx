@@ -38,36 +38,60 @@ export function ThemeProvider({
   defaultTheme = DEFAULT_THEME,
   storageKey = THEME_STORAGE_KEY,
 }: ThemeProviderProps) {
-  const [theme, setThemeState] = React.useState<Theme>(() => {
-    if (typeof window === "undefined") return defaultTheme
-    try {
-      const stored = window.localStorage.getItem(storageKey) as Theme | null
-      return stored === "light" || stored === "dark" || stored === "system"
-        ? stored
-        : defaultTheme
-    } catch {
-      return defaultTheme
-    }
-  })
+  // Le premier rendu DOIT être identique à celui du serveur, donc il part
+  // toujours de `defaultTheme` ; la valeur stockée est lue après montage.
+  // Lire le stockage ici (initialiseur paresseux) rendait le premier rendu
+  // client différent du HTML serveur dès que la valeur stockée s'écartait du
+  // défaut : React signalait alors un désaccord d'hydratation sur le sélecteur
+  // de thème (aria-checked, classes), et React ne le corrige pas.
+  // Même démarche que `usePreferencesClient`.
+  const [theme, setThemeState] = React.useState<Theme>(defaultTheme)
+  // Résolution volontairement constante au premier rendu : interroger
+  // `prefers-color-scheme` ici diverge aussi du serveur, qui ne voit que
+  // « clair ». L'effet ci-dessous corrige la valeur après le montage.
   const [resolvedTheme, setResolvedTheme] = React.useState<ResolvedTheme>(
-    () => resolveTheme(theme)
+    defaultTheme === "dark" ? "dark" : "light"
   )
 
+  const stockeLu = React.useRef(false)
+
   React.useEffect(() => {
-    const apply = () => {
+    // Première passe : on reprend la valeur stockée. Tant qu'elle n'est pas
+    // connue, on ne touche pas au DOM — le script inline de <head> a déjà
+    // posé la bonne classe avant le premier paint, la réappliquer ici
+    // provoquerait un clignotement clair/sombre au chargement.
+    if (!stockeLu.current) {
+      stockeLu.current = true
+      let stocke: Theme = defaultTheme
+      try {
+        const brut = window.localStorage.getItem(storageKey)
+        if (brut === "light" || brut === "dark" || brut === "system") {
+          stocke = brut
+        }
+      } catch {
+        // Stockage indisponible (navigation privée) : on garde le défaut.
+      }
+      if (stocke !== theme) {
+        // L'effet va repartir avec le bon thème et appliquer le DOM.
+        setThemeState(stocke)
+        return
+      }
+    }
+
+    const appliquer = () => {
       const resolved = resolveTheme(theme)
       setResolvedTheme(resolved)
       document.documentElement.classList.toggle("dark", resolved === "dark")
       document.documentElement.style.colorScheme = resolved
     }
-    apply()
+    appliquer()
 
     if (theme !== "system") return
     const media = window.matchMedia("(prefers-color-scheme: dark)")
-    const onChange = () => apply()
+    const onChange = () => appliquer()
     media.addEventListener("change", onChange)
     return () => media.removeEventListener("change", onChange)
-  }, [theme])
+  }, [theme, defaultTheme, storageKey])
 
   const setTheme = React.useCallback(
     (next: Theme) => {
