@@ -8,6 +8,7 @@ import { db, type ExecuteurDb } from "@/lib/db/client";
 import { comptesClients, piecesIdentiteClients } from "@/lib/db/schema/s1-comptes";
 import {
   verdictFichierPiece,
+  etatPieceDeposable,
   typePieceValide,
 } from "./pieces-fichiers";
 
@@ -50,9 +51,11 @@ export async function compteClientConnecte(): Promise<{
 }
 
 /**
- * Dépose la pièce d'un compte EN_ATTENTE_VALIDATION ou REFUSE (un compte
- * VALIDE ou REVOQUE n'a plus rien à déposer). Écrit le fichier puis la
- * ligne : échec d'écriture = rien en base.
+ * Dépose la pièce d'un compte EN_ATTENTE_VALIDATION, REFUSE ou VALIDE. Un
+ * compte VALIDE remplace sa pièce sans changer d'état : l'ancienne ligne
+ * et son fichier restent au dossier, la nouvelle est à revoir. Un compte
+ * REVOQUE ne dépose plus rien. Écrit le fichier puis la ligne : échec
+ * d'écriture = rien en base.
  */
 export async function deposerPieceIdentiteClient(input: {
   compteClientId: string;
@@ -78,7 +81,7 @@ export async function deposerPieceIdentiteClient(input: {
     .limit(1);
   const compte = comptes[0];
   if (!compte) throw new PieceError("NON_AUTORISE", "compte introuvable");
-  if (compte.etat !== "EN_ATTENTE_VALIDATION" && compte.etat !== "REFUSE") {
+  if (!etatPieceDeposable(compte.etat)) {
     throw new PieceError(
       "COMPTE_NON_ELIGIBLE",
       "ce compte n'a plus de pièce à déposer",

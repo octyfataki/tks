@@ -28,8 +28,9 @@ function messageErreur(code: PieceError["code"], detail: string): string {
 
 /**
  * Dépose la pièce d'identité du client connecté (image ou PDF). Le compte
- * doit être EN_ATTENTE_VALIDATION ou REFUSE : un compte déjà validé n'a
- * plus rien à déposer, et un compte révoqué ne dépose plus rien.
+ * doit pouvoir encore déposer (en attente, refusé, ou validé qui remplace
+ * sa pièce — voir `etatPieceDeposable`) : un compte révoqué ne dépose plus
+ * rien. Un compte validé reste validé ; la nouvelle pièce est à revoir.
  */
 export async function deposerPieceIdentiteAction(
   _precedent: ResultatDepotPiece | null,
@@ -65,6 +66,10 @@ export async function deposerPieceIdentiteAction(
     // pièce » jusqu'au rechargement manuel.
     revalidatePath("/admin/clients/validation");
     revalidatePath("/admin/clients");
+    // Le client validé remplace sa pièce depuis son profil : la carte
+    // « Pièce d'identité » doit montrer la nouvelle pièce sans rechargement
+    // manuel.
+    revalidatePath("/clients/profil");
     return { ok: true, pieceId: deposee.id };
   } catch (erreur) {
     if (erreur instanceof PieceError) {

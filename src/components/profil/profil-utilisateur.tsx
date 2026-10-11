@@ -6,6 +6,10 @@ import { FingerprintIcon, LockIcon, MailIcon, PencilIcon, PhoneIcon, ShieldCheck
 import { BoutonCopierMatricule } from "./bouton-copier-matricule";
 import { BoutonDeconnexionAutres } from "./bouton-deconnexion-autres";
 import { PhotoProfilModifiable } from "./photo-profil-modifiable";
+import {
+  ListePiecesIdentite,
+  type PieceIdentiteProfil,
+} from "./piece-identite-liste";
 import { SectionModifiable } from "@/app/admin/list/[id]/section-modifiable";
 
 // Mon compte : affichage seul, piloté par la session.
@@ -73,6 +77,10 @@ export type ProfilUtilisateurProps = {
   cleCoordonnees?: string;
   /** Activation du second facteur (carte Sécurité, page profil). */
   formulaireSecondFacteur?: ReactNode;
+  /** Pièces d'identité du compte, client uniquement (absent = non chargé). */
+  piecesIdentite?: PieceIdentiteProfil[] | null;
+  /** Remplacement de la pièce (carte Pièce d'identité, profil client). */
+  formulairePieceIdentite?: ReactNode;
   className?: string;
 };
 
@@ -220,6 +228,8 @@ export function ProfilUtilisateur({
   motifCoordonneesVerrouillees,
   cleCoordonnees,
   formulaireSecondFacteur,
+  piecesIdentite,
+  formulairePieceIdentite,
   className,
 }: ProfilUtilisateurProps) {
   const estStaff = compte.type === "STAFF";
@@ -329,6 +339,22 @@ export function ProfilUtilisateur({
               formulaire={formulaireCoordonnees}
             />
           </section>
+
+          {compte.type === "CLIENT" && piecesIdentite !== undefined ? (
+            <section aria-label="Pièce d'identité" className="rounded-xl border bg-card p-4 sm:p-5">
+              <TitreCarte titre="Pièce d'identité" verrou="lecture seule : la validation se fait au comptoir" />
+              {piecesIdentite === null || piecesIdentite.length === 0 ? (
+                <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+                  Aucune pièce déposée pour l&apos;instant.
+                </p>
+              ) : (
+                <ListePiecesIdentite pieces={piecesIdentite} />
+              )}
+              {formulairePieceIdentite ? (
+                <div className="mt-1">{formulairePieceIdentite}</div>
+              ) : null}
+            </section>
+          ) : null}
 
           {compte.type === "CLIENT" ? (
             <section aria-label="Dossier client" className="rounded-xl border bg-card p-4 sm:p-5">

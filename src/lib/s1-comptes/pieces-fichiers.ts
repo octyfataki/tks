@@ -24,6 +24,18 @@ export function typePieceValide(valeur: string): valeur is TypePiece {
 }
 
 /**
+ * Qui peut encore déposer une pièce : un compte en attente, refusé, ou
+ * validé qui remplace sa pièce. Un compte validé reste validé après ce
+ * redépôt : l'ancienne pièce reste au dossier (jamais supprimée) et la
+ * nouvelle est « à revoir » par un humain. Jamais un compte révoqué.
+ */
+export function etatPieceDeposable(etat: string): boolean {
+  return (
+    etat === "EN_ATTENTE_VALIDATION" || etat === "REFUSE" || etat === "VALIDE"
+  );
+}
+
+/**
  * Verdict pur sur un fichier candidat : extension, type et taille.
  */
 export function verdictFichierPiece(input: {

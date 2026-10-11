@@ -30,6 +30,7 @@ import {
   etatRevoquable,
   etatTranchable,
   pieceAValider,
+  pieceDeposeeApresValidation,
   type FicheClient,
   type PieceFicheClient,
 } from "@/lib/s1-comptes/fiche-client";
@@ -48,9 +49,12 @@ function cachetEtat(etat: string): {
 function Piece({
   piece,
   nom,
+  deposeeApresValidation,
 }: {
   piece: PieceFicheClient;
   nom: string;
+  /** Déposée après la validation du compte : pas encore revue. */
+  deposeeApresValidation?: boolean;
 }) {
   const estImage = piece.mime.startsWith("image/");
   return (
@@ -87,6 +91,11 @@ function Piece({
             ? `Vue le ${dateCourte(piece.vueLe)}`
             : "Pas encore vue"}
         </span>
+        {deposeeApresValidation ? (
+          <span className="mt-1 inline-flex w-fit items-center rounded-full border border-amber-600/40 bg-amber-600/5 px-2 py-0.5 text-[11px] font-semibold text-amber-700 dark:text-amber-400">
+            Déposée après validation — à revoir
+          </span>
+        ) : null}
       </span>
     </a>
   );
@@ -266,7 +275,15 @@ export function VueFicheClient({
           ) : (
             <div className="mt-3 flex flex-col gap-2">
               {fiche.pieces.map((p) => (
-                <Piece key={p.id} piece={p} nom={nom} />
+                <Piece
+                  key={p.id}
+                  piece={p}
+                  nom={nom}
+                  deposeeApresValidation={pieceDeposeeApresValidation(
+                    p,
+                    fiche.valideLe,
+                  )}
+                />
               ))}
             </div>
           )}

@@ -5,6 +5,7 @@ import {
   lireFicheClient,
   peutOuvrirFicheClient,
   pieceAValider,
+  pieceDeposeeApresValidation,
   type IdentiteClient,
   type LecteurFicheClient,
   type PieceFicheClient,
@@ -95,5 +96,36 @@ describe("décisions d'affichage de la fiche", () => {
     expect(etatRevoquable("REFUSE")).toBe(true);
     expect(etatRevoquable("VALIDE")).toBe(true);
     expect(etatRevoquable("REVOQUE")).toBe(false);
+  });
+
+  it("repère une pièce déposée après la validation du compte", () => {
+    const valideLe = new Date("2026-10-05T08:00:00Z");
+    expect(
+      pieceDeposeeApresValidation(
+        { deposeLe: new Date("2026-10-06T08:00:00Z") },
+        valideLe,
+      ),
+    ).toBe(true);
+    expect(
+      pieceDeposeeApresValidation(
+        { deposeLe: new Date("2026-10-02T08:00:00Z") },
+        valideLe,
+      ),
+    ).toBe(false);
+    expect(
+      pieceDeposeeApresValidation(
+        { deposeLe: new Date("2026-10-05T08:00:00Z") },
+        valideLe,
+      ),
+    ).toBe(false);
+  });
+
+  it("ne signale rien après validation quand le compte n'est pas validé", () => {
+    expect(
+      pieceDeposeeApresValidation(
+        { deposeLe: new Date("2026-10-06T08:00:00Z") },
+        null,
+      ),
+    ).toBe(false);
   });
 });

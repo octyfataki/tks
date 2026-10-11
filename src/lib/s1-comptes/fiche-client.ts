@@ -87,6 +87,19 @@ export function pieceAValider(
   return fiche.pieces[0] ?? null;
 }
 
+/**
+ * Une pièce déposée après la validation du compte : elle n'a pas encore
+ * été vue par un humain au titre de la validation en cours — à revoir.
+ * Sans date de validation, rien n'est « après » : faux.
+ */
+export function pieceDeposeeApresValidation(
+  piece: Pick<PieceFicheClient, "deposeLe">,
+  valideLe: Date | null,
+): boolean {
+  if (!valideLe) return false;
+  return piece.deposeLe.getTime() > valideLe.getTime();
+}
+
 /** Une action de décision a-t-elle un sens sur ce compte, dans cet état ? */
 export function etatTranchable(etat: string): boolean {
   return etat === "EN_ATTENTE_VALIDATION" || etat === "REFUSE";
