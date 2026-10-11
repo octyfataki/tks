@@ -20,6 +20,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { Cachet } from "../invitations/cachet";
+import { ContestationLigne } from "./contestation-ligne";
 
 export type LigneJournal = {
   id: string;
@@ -35,6 +36,10 @@ export type LigneJournal = {
   entiteLibelle: string;
   /** Phrase métier de l'action, null si rien de formulable (retombée code). */
   resume: string | null;
+  /** Ligne contestée par la présente correction (null = action normale). */
+  contesteId: string | null;
+  /** Nombre de corrections liées à la présente ligne. */
+  nbCorrections: number;
   avant: string | null;
   apres: string | null;
   appareilId: string | null;
@@ -163,7 +168,7 @@ function cellule(valeur: string): string {
 /** Export CSV des lignes filtrées, 100 % client, BOM UTF-8 pour Excel. */
 function exporterCSV(lignes: LigneJournal[]) {
   const entete =
-    "Reçu le;Écrit le;Auteur;Rôle;Action;Résumé;Entité;Statut;Motif;Appareil";
+    "Reçu le;Écrit le;Auteur;Rôle;Action;Résumé;Entité;Correction de;Statut;Motif;Appareil";
   const corps = lignes.map((ligne) =>
     [
       cellule(dateComplete(ligne.recuLe)),
@@ -176,6 +181,7 @@ function exporterCSV(lignes: LigneJournal[]) {
       cellule(`${nomRole(ligne.role)} ${verbeAction(ligne.typeAction)} (${ligne.typeAction})`),
       cellule(ligne.resume ?? ""),
       cellule(ligne.entiteLibelle),
+      cellule(ligne.contesteId ?? ""),
       cellule(estEchouee(ligne) ? "Échouée" : "Réussie"),
       cellule(ligne.motif ?? ""),
       cellule(ligne.appareilId ?? ""),
@@ -193,7 +199,7 @@ function exporterCSV(lignes: LigneJournal[]) {
 }
 
 function texteRecherche(ligne: LigneJournal): string {
-  return `${ligne.typeAction} ${ligne.entite} ${ligne.entiteLibelle} ${nomRole(ligne.role)} ${verbeAction(ligne.typeAction)} ${ligne.resume ?? ""} ${ligne.auteurNom ?? ""} ${ligne.acteurId ?? ""} ${ligne.motif ?? ""}`.toLowerCase();
+  return `${ligne.id} ${ligne.contesteId ?? ""} ${ligne.typeAction} ${ligne.entite} ${ligne.entiteLibelle} ${nomRole(ligne.role)} ${verbeAction(ligne.typeAction)} ${ligne.resume ?? ""} ${ligne.auteurNom ?? ""} ${ligne.acteurId ?? ""} ${ligne.motif ?? ""}`.toLowerCase();
 }
 
 /**
@@ -563,6 +569,49 @@ export function RegistreJournal({ lignes }: { lignes: LigneJournal[] }) {
                               </p>
                             </div>
                           ) : null}
+                          {ligne.contesteId || ligne.nbCorrections > 0 ? (
+                            <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-[12px]">
+                              {ligne.contesteId ? (
+                                <p>
+                                  <span className="text-muted-foreground">
+                                    Correction de la ligne{" "}
+                                  </span>
+                                  <span className="font-mono text-[11px]">
+                                    {idCourt(ligne.contesteId)}
+                                  </span>{" "}
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setRecherche(ligne.contesteId ?? "");
+                                      setPage(1);
+                                    }}
+                                    className="underline-offset-4 hover:underline"
+                                  >
+                                    Voir
+                                  </button>
+                                </p>
+                              ) : null}
+                              {ligne.nbCorrections > 0 ? (
+                                <p>
+                                  <span className="text-muted-foreground">
+                                    Contestée — {ligne.nbCorrections} correction
+                                    {ligne.nbCorrections > 1 ? "s" : ""}{" "}
+                                  </span>
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setRecherche(ligne.id);
+                                      setPage(1);
+                                    }}
+                                    className="underline-offset-4 hover:underline"
+                                  >
+                                    Voir
+                                  </button>
+                                </p>
+                              ) : null}
+                            </div>
+                          ) : null}
+                          <ContestationLigne ligne={ligne} />
                           {ligne.avant || ligne.apres ? (
                             <div className="mt-2 grid gap-2 sm:grid-cols-2">
                               <div>

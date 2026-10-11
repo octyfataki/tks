@@ -58,6 +58,43 @@ export default async function JournalPage() {
     .orderBy(desc(journalAudit.recuLe))
     .limit(LIGNES);
 
+  // S2 issue 15 — fil « erreur → correction ». Les corrections des lignes
+  // affichées (leurs `conteste_id` pointent vers elles) et les lignes
+  // contestées par les corrections affichées (hors fenêtre des 50 si
+  // anciennes) sont chargées avec, pour que le fil se remonte dans les deux
+  // sens sans deviner. Lecture seule, comme le reste de la page.
+  const idsAffiches = evenements.map((e) => e.id);
+  const lignesCorrections =
+    idsAffiches.length > 0
+      ? await db
+          .select({ id: journalAudit.id, contesteId: journalAudit.contesteId })
+          .from(journalAudit)
+          .where(inArray(journalAudit.contesteId, idsAffiches))
+      : [];
+  const nbCorrections = new Map<string, number>();
+  for (const c of lignesCorrections) {
+    if (c.contesteId) {
+      nbCorrections.set(c.contesteId, (nbCorrections.get(c.contesteId) ?? 0) + 1);
+    }
+  }
+  const idsContesteesManquantes = [
+    ...new Set(
+      evenements
+        .map((e) => e.contesteId)
+        .filter(
+          (id): id is string => !!id && !idsAffiches.includes(id),
+        ),
+    ),
+  ];
+  const lignesContestees =
+    idsContesteesManquantes.length > 0
+      ? await db
+          .select()
+          .from(journalAudit)
+          .where(inArray(journalAudit.id, idsContesteesManquantes))
+      : [];
+  const toutes = [...lignesContestees, ...evenements];
+
   // S2-05 (issue #13) — résolution des identités à la lecture (aucune
   // écriture au journal, schéma inchangé). `acteurId` vise `comptes_staff.id` ;
   // le nom affichable vit sur `user` via `betterAuthUserId` (même pattern que
@@ -65,11 +102,11 @@ export default async function JournalPage() {
   // visé) sont résolus dans les mêmes requêtes pour formuler le résumé.
   const idsActeurs = [
     ...new Set(
-      evenements.map((e) => e.acteurId).filter((id): id is string => !!id),
+      toutes.map((e) => e.acteurId).filter((id): id is string => !!id),
     ),
   ];
   const idsAgentsConcernes = new Set<string>();
-  for (const e of evenements) {
+  for (const e of toutes) {
     for (const champ of [e.avant, e.apres]) {
       if (champ && typeof champ === "object" && !Array.isArray(champ)) {
         const agentId = (champ as Record<string, unknown>)["agentId"];
@@ -109,7 +146,7 @@ export default async function JournalPage() {
 
   const idsClients = [
     ...new Set(
-      evenements
+      toutes
         .filter((e) => e.entite === "compte_client" && e.entiteId)
         .map((e) => e.entiteId as string),
     ),
@@ -125,7 +162,7 @@ export default async function JournalPage() {
     lignesClients.map((l) => [l.id, l.telephone] as const),
   );
 
-  const lignes: LigneJournal[] = evenements.map((e) => {
+  const lignes: LigneJournal[] = toutes.map((e) => {
     const auteurNom = e.acteurId
       ? (nomsStaff.get(e.acteurId) ?? null)
       : null;
@@ -174,6 +211,8 @@ export default async function JournalPage() {
       recuLe: e.recuLe.toISOString(),
       statut: e.statut,
       motif: e.motif,
+      contesteId: e.contesteId,
+      nbCorrections: nbCorrections.get(e.id) ?? 0,
     };
   });
 
@@ -186,7 +225,8 @@ export default async function JournalPage() {
           </h1>
           <p className="mt-1 text-sm text-muted-foreground">
             Registre scellé : ni modification ni suppression possibles, même
-            en base. Les {LIGNES} dernières lignes reçues, heures de Kinshasa.
+            en base. Les {LIGNES} dernières lignes reçues, heures de Kinshasa
+            — plus leurs corrections liées, même anciennes.
           </p>
         </div>
         <Badge variant="outline" className="shrink-0">

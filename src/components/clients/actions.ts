@@ -13,7 +13,11 @@ import {
 } from "@/lib/db/schema/s1-comptes";
 import { marquerPieceVue } from "@/lib/s1-comptes/pieces-clients";
 import { typePieceValide } from "@/lib/s1-comptes/pieces-fichiers";
-import { enregistrerEvenement } from "@/lib/s2-autorisations/journal";
+import {
+  enregistrerEvenement,
+  journaliserRefusContestation,
+  ERREUR_CONTESTEE_INTROUVABLE,
+} from "@/lib/s2-autorisations/journal";
 import { aPermission } from "@/lib/s2-autorisations/autorisations";
 import type { ResultatAction } from "@/lib/resultat-action";
 
@@ -60,6 +64,16 @@ const ERREUR_INTERDIT =
 
 function lireCompteId(donnees: FormData): string | null {
   const brut = String(donnees.get("compteId") ?? "").trim();
+  return brut === "" ? null : brut;
+}
+
+/**
+ * S2 issue 15 — ligne contestée depuis le journal (champ caché du
+ * formulaire de contestation, absent des parcours normaux). `null` =
+ * parcours normal, sans lien.
+ */
+function lireContesteId(donnees: FormData): string | null {
+  const brut = String(donnees.get("contesteId") ?? "").trim();
   return brut === "" ? null : brut;
 }
 
@@ -307,7 +321,31 @@ export async function revoquerCompteClientAction(
   donnees: FormData,
 ): Promise<ResultatDecision> {
   const trancheur = await peutTrancher();
-  if (!trancheur) return { ok: false, erreur: ERREUR_INTERDIT };
+  if (!trancheur) {
+    // S2 issue 15 — un refus opposé à une contestation est journalisé comme
+    // échec, lié à la ligne contestée.
+    const contesteId = lireContesteId(donnees);
+    if (contesteId) {
+      const session = await auth.api.getSession({ headers: await headers() });
+      const lignes = session?.user?.id
+        ? await db
+            .select({ id: comptesStaff.id, role: comptesStaff.role })
+            .from(comptesStaff)
+            .where(eq(comptesStaff.betterAuthUserId, session.user.id))
+            .limit(1)
+        : [];
+      await journaliserRefusContestation({
+        acteurId: lignes[0]?.id ?? null,
+        roleAuMoment: lignes[0]?.role ?? "INCONNU",
+        typeAction: "client.revoquer",
+        entite: "compte_client",
+        entiteId: lireCompteId(donnees),
+        motif: ERREUR_INTERDIT,
+        contesteId,
+      });
+    }
+    return { ok: false, erreur: ERREUR_INTERDIT };
+  }
   const compteId = lireCompteId(donnees);
   if (!compteId) return { ok: false, erreur: "Compte introuvable." };
   const motif = String(donnees.get("motif") ?? "").trim();
@@ -350,12 +388,21 @@ export async function revoquerCompteClientAction(
           avant: { etat: compte.etat },
           apres: { etat: "REVOQUE" },
           motif,
+          contesteId: lireContesteId(donnees),
         },
         tx,
       );
-      if (!trace.ok) throw new Error("Journal indisponible.");
+      if (!trace.ok) throw new Error(trace.erreur);
     });
-  } catch {
+  } catch (erreur) {
+    // Cause vraie : une contestation vers une ligne inconnue le dit, le
+    // reste reste un échec fermé générique.
+    if (
+      erreur instanceof Error &&
+      erreur.message === ERREUR_CONTESTEE_INTROUVABLE
+    ) {
+      return { ok: false, erreur: ERREUR_CONTESTEE_INTROUVABLE };
+    }
     return { ok: false, erreur: "Révocation impossible : journal indisponible." };
   }
   revaliderLesDeuxEspaces();

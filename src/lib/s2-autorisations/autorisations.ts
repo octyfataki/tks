@@ -9,7 +9,7 @@ import {
   PROFIL_AGENT_SERVICE_DEFAUT,
   type Permission,
 } from "@/lib/db/schema/s2-autorisations";
-import { enregistrerEvenement } from "./journal";
+import { enregistrerEvenement, ERREUR_CONTESTEE_INTROUVABLE } from "./journal";
 
 // S2 issues 02-03 — socle global + individuel, une par une.
 // Effectif = socle ∪ individuel. Absence des deux = refus.
@@ -21,6 +21,7 @@ export type ErreurAutorisation =
   | "AGENT_INTROUVABLE"
   | "DEJA_ACCORDEE"
   | "NON_ACCORDEE"
+  | "CONTESTEE_INTROUVABLE"
   | "JOURNAL_INDISPONIBLE";
 
 export class AutorisationError extends Error {
@@ -42,6 +43,14 @@ async function tracer(
 ): Promise<void> {
   const trace = await enregistrerEvenement(evenement, ex);
   if (!trace.ok) {
+    // Cause vraie : une correction vers une ligne inconnue le dit, le
+    // reste reste un échec fermé générique.
+    if (trace.erreur === ERREUR_CONTESTEE_INTROUVABLE) {
+      throw new AutorisationError(
+        "CONTESTEE_INTROUVABLE",
+        ERREUR_CONTESTEE_INTROUVABLE,
+      );
+    }
     throw new AutorisationError("JOURNAL_INDISPONIBLE", "journal indisponible");
   }
 }
@@ -197,6 +206,7 @@ export async function retirerPermission(
   gestionnaireId: string,
   agentId: string,
   permission: string,
+  options?: { contesteId?: string | null },
 ): Promise<void> {
   if (!estPermissionConnue(permission)) {
     throw new AutorisationError("PERMISSION_INCONNUE", "permission inconnue");
@@ -228,6 +238,7 @@ export async function retirerPermission(
       entite: "permission",
       entiteId: `${agentId}:${permission}`,
       avant: { agentId, permission },
+      contesteId: options?.contesteId ?? null,
     });
   });
 }
@@ -264,6 +275,7 @@ export async function accorderSocle(
 export async function retirerSocle(
   gestionnaireId: string,
   permission: string,
+  options?: { contesteId?: string | null },
 ): Promise<void> {
   if (!estPermissionConnue(permission)) {
     throw new AutorisationError("PERMISSION_INCONNUE", "permission inconnue");
@@ -283,6 +295,7 @@ export async function retirerSocle(
       entite: "permission_socle",
       entiteId: permission,
       avant: { permission },
+      contesteId: options?.contesteId ?? null,
     });
   });
 }

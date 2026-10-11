@@ -16,7 +16,11 @@ import {
   retirerPermission,
   retirerSocle,
 } from "@/lib/s2-autorisations/autorisations";
-import { enregistrerEvenement } from "@/lib/s2-autorisations/journal";
+import {
+  enregistrerEvenement,
+  journaliserRefusContestation,
+  ERREUR_CONTESTEE_INTROUVABLE,
+} from "@/lib/s2-autorisations/journal";
 import type { ResultatAction as ResultatStandard } from "@/lib/resultat-action";
 import {
   creerAgent,
@@ -110,10 +114,27 @@ export async function creerAgentAction(
  * autorisation que la création, jamais soi-même, jamais deux fois.
  * Journalisée (S2 issue 01).
  */
-export async function revoquerAgentAction(id: string): Promise<ResultatAction> {
+export async function revoquerAgentAction(
+  id: string,
+  contesteId?: string | null,
+): Promise<ResultatAction> {
   const moi = await staffConnecte();
   if (!moi || !peutInviterAgent(moi.role, moi.etat)) {
-    return { ok: false, erreur: "Seul un administrateur principal validé peut révoquer un agent." };
+    const erreur = "Seul un administrateur principal validé peut révoquer un agent.";
+    // S2 issue 15 — un refus opposé à une contestation est journalisé comme
+    // échec, lié à la ligne contestée.
+    if (contesteId) {
+      await journaliserRefusContestation({
+        acteurId: moi?.id ?? null,
+        roleAuMoment: moi?.role ?? "INCONNU",
+        typeAction: "agent.revoquer",
+        entite: "compte_staff",
+        entiteId: id,
+        motif: erreur,
+        contesteId,
+      });
+    }
+    return { ok: false, erreur };
   }
   if (moi.id === id) {
     return { ok: false, erreur: "Vous ne pouvez pas révoquer votre propre compte." };
@@ -145,12 +166,19 @@ export async function revoquerAgentAction(id: string): Promise<ResultatAction> {
           entiteId: cible.id,
           avant: { etat: cible.etat },
           apres: { etat: "REVOQUE" },
+          contesteId: contesteId ?? null,
         },
         tx,
       );
-      if (!trace.ok) throw new Error("journal indisponible");
+      if (!trace.ok) throw new Error(trace.erreur);
     });
-  } catch {
+  } catch (erreur) {
+    if (
+      erreur instanceof Error &&
+      erreur.message === ERREUR_CONTESTEE_INTROUVABLE
+    ) {
+      return { ok: false, erreur: ERREUR_CONTESTEE_INTROUVABLE };
+    }
     return { ok: false, erreur: "Révocation impossible." };
   }
   revalidatePath("/admin/agents");
@@ -164,10 +192,27 @@ export async function revoquerAgentAction(id: string): Promise<ResultatAction> {
  * Garde-fous : même autorisation que la révocation, jamais soi-même,
  * jamais sur un compte REVOQUE. Journalisée (S2 issue 01).
  */
-export async function suspendreAgentAction(id: string): Promise<ResultatAction> {
+export async function suspendreAgentAction(
+  id: string,
+  contesteId?: string | null,
+): Promise<ResultatAction> {
   const moi = await staffConnecte();
   if (!moi || !peutInviterAgent(moi.role, moi.etat)) {
-    return { ok: false, erreur: "Seul un administrateur principal validé peut suspendre un agent." };
+    const erreur = "Seul un administrateur principal validé peut suspendre un agent.";
+    // S2 issue 15 — un refus opposé à une contestation est journalisé comme
+    // échec, lié à la ligne contestée.
+    if (contesteId) {
+      await journaliserRefusContestation({
+        acteurId: moi?.id ?? null,
+        roleAuMoment: moi?.role ?? "INCONNU",
+        typeAction: "agent.suspendre",
+        entite: "compte_staff",
+        entiteId: id,
+        motif: erreur,
+        contesteId,
+      });
+    }
+    return { ok: false, erreur };
   }
   if (moi.id === id) {
     return { ok: false, erreur: "Vous ne pouvez pas suspendre votre propre compte." };
@@ -209,12 +254,19 @@ export async function suspendreAgentAction(id: string): Promise<ResultatAction> 
           entiteId: cible.id,
           avant: { etat: "VALIDE" },
           apres: { etat: "SUSPENDU", suspenduLe },
+          contesteId: contesteId ?? null,
         },
         tx,
       );
-      if (!trace.ok) throw new Error("journal indisponible");
+      if (!trace.ok) throw new Error(trace.erreur);
     });
-  } catch {
+  } catch (erreur) {
+    if (
+      erreur instanceof Error &&
+      erreur.message === ERREUR_CONTESTEE_INTROUVABLE
+    ) {
+      return { ok: false, erreur: ERREUR_CONTESTEE_INTROUVABLE };
+    }
     return { ok: false, erreur: "Suspension impossible." };
   }
   revalidatePath("/admin/agents");
@@ -356,6 +408,8 @@ function erreurAutorisation(erreur: unknown): string {
         return erreur.message || "Permission non accordée.";
       case "JOURNAL_INDISPONIBLE":
         return "Opération impossible : journal d'audit indisponible.";
+      case "CONTESTEE_INTROUVABLE":
+        return "Ligne contestée introuvable — la correction est refusée.";
       default: {
         // Exhaustivité : si un code est ajouté à ErreurAutorisation,
         // la compilation casse ici jusqu'au mapping explicite.
@@ -390,13 +444,28 @@ export async function accorderPermissionAction(
 export async function retirerPermissionAction(
   agentId: string,
   permission: string,
+  contesteId?: string | null,
 ): Promise<ResultatAction> {
   const moi = await staffConnecte();
   if (!moi || !peutGererPermissions(moi.role, moi.etat)) {
-    return { ok: false, erreur: erreurAutorisation(new AutorisationError("NON_AUTORISE", "")) };
+    const erreur = erreurAutorisation(new AutorisationError("NON_AUTORISE", ""));
+    // S2 issue 15 — un refus opposé à une contestation est journalisé comme
+    // échec, lié à la ligne contestée.
+    if (contesteId) {
+      await journaliserRefusContestation({
+        acteurId: moi?.id ?? null,
+        roleAuMoment: moi?.role ?? "INCONNU",
+        typeAction: "permission.retirer",
+        entite: "permission",
+        entiteId: `${agentId}:${permission}`,
+        motif: erreur,
+        contesteId,
+      });
+    }
+    return { ok: false, erreur };
   }
   try {
-    await retirerPermission(moi.id, agentId, permission);
+    await retirerPermission(moi.id, agentId, permission, { contesteId });
     revalidatePath("/admin/agents");
     revalidatePath("/admin/agents/permissions");
     return { ok: true };
@@ -437,13 +506,30 @@ export async function accorderSocleAction(permission: string): Promise<ResultatA
 }
 
 /** Retire une permission du socle (tous les agents la perdent, sauf exception fiche). */
-export async function retirerSocleAction(permission: string): Promise<ResultatAction> {
+export async function retirerSocleAction(
+  permission: string,
+  contesteId?: string | null,
+): Promise<ResultatAction> {
   const moi = await staffConnecte();
   if (!moi || !peutGererPermissions(moi.role, moi.etat)) {
-    return { ok: false, erreur: erreurAutorisation(new AutorisationError("NON_AUTORISE", "")) };
+    const erreur = erreurAutorisation(new AutorisationError("NON_AUTORISE", ""));
+    // S2 issue 15 — un refus opposé à une contestation est journalisé comme
+    // échec, lié à la ligne contestée.
+    if (contesteId) {
+      await journaliserRefusContestation({
+        acteurId: moi?.id ?? null,
+        roleAuMoment: moi?.role ?? "INCONNU",
+        typeAction: "permission.socle.retirer",
+        entite: "permission_socle",
+        entiteId: permission,
+        motif: erreur,
+        contesteId,
+      });
+    }
+    return { ok: false, erreur };
   }
   try {
-    await retirerSocle(moi.id, permission);
+    await retirerSocle(moi.id, permission, { contesteId });
     revalidatePath("/admin/agents/permissions");
     return { ok: true };
   } catch (erreur) {
