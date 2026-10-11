@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
 import NProgress from "nprogress";
 import "nprogress/nprogress.css";
 import {
@@ -9,29 +10,25 @@ import {
 } from "@/lib/progression-navigation";
 
 /**
- * Fenêtre, en ms, pendant laquelle un fetch RSC est rattaché au geste qui l'a
- * provoqué. Passé ce délai, le geste expire sans rien afficher : la
- * destination venait du cache, du stockage local (application offline-first),
- * ou le clic n'a eu aucun effet.
+ * Délai de sécurité, en ms : si ni le chemin ni aucun fetch ne signale la fin
+ * (navigation résolue localement, clic sans effet), la barre se referme
+ * d'elle-même au lieu de ramper.
  */
-const FENETRE_GESTE_MS = 400;
+const DELAI_MAX_MS = 4000;
 
 /**
- * Partagé avec l'intercepteur de `fetch`, qui vit hors du cycle de vie React.
- * `attend` n'est vrai que dans l'instant qui suit un clic sur un lien
- * interne : c'est ce qui empêche les `router.refresh()` périodiques de la
- * scrutation des files (voir `rafraichissement-file.tsx`) de faire ramper la
- * barre en continu au comptoir.
+ * La barre démarre de façon optimiste, dès le clic : Next précharge les liens
+ * au survol et au défilement, donc un clic ordinaire n'émet souvent aucun
+ * fetch — attendre le réseau, c'est rester invisible dans le cas courant.
+ * Elle se referme au premier signal de fin : changement de chemin, réponse
+ * du fetch de navigation, ou délai de sécurité.
+ *
+ * Partagé avec l'intercepteur de `fetch`, qui vit hors du cycle de vie React
+ * et ne sert qu'à signaler les fins (jamais les démarrages) : les
+ * `router.refresh()` périodiques de la scrutation des files (voir
+ * `rafraichissement-file.tsx`) restent donc silencieux au comptoir.
  */
-type EtatProgression = {
-  attend: boolean;
-  minuteur: number;
-  enVol: number;
-  ouvre: () => void;
-  ferme: () => void;
-};
-
-let etat: EtatProgression | null = null;
+let terminerPartage: (() => void) | null = null;
 let fetchOriginal: typeof fetch | null = null;
 let poses = 0;
 
@@ -40,33 +37,21 @@ function installerInterception() {
   if (fetchOriginal) return;
   fetchOriginal = window.fetch;
   window.fetch = (...args: Parameters<typeof fetch>) => {
-    const courant = etat;
+    const termine = terminerPartage;
     const entetes = args[1]?.headers;
-    if (!courant || !courant.attend || !estUneRequeteDeNavigation(entetes)) {
+    if (!termine || !estUneRequeteDeNavigation(entetes)) {
       return fetchOriginal!(...args);
     }
-
-    courant.attend = false;
-    window.clearTimeout(courant.minuteur);
-    courant.enVol += 1;
-    courant.ouvre();
-    NProgress.start();
-
-    const terminer = () => {
-      courant.enVol -= 1;
-      if (courant.enVol <= 0) NProgress.done();
-      courant.ferme();
-    };
 
     // La réponse (ou l'erreur) est retransmise telle quelle : intercepter ne
     // doit jamais changer ce que l'appelant reçoit.
     return fetchOriginal!(...args).then(
       (reponse) => {
-        terminer();
+        termine();
         return reponse;
       },
       (erreur) => {
-        terminer();
+        termine();
         throw erreur;
       },
     );
@@ -89,12 +74,16 @@ function retirerInterception() {
  * Volontairement silencieuse sur tout ce qui n'est pas une navigation
  * demandée par l'utilisateur dans l'onglet courant : préchargements Next,
  * `router.refresh()` des scrutations, server actions des formulaires (qui ont
- * déjà leur propre état d'attente), et navigations résolues localement.
+ * déjà leur propre état d'attente).
  *
  * Rien n'est écrit ni lu ici : la synchronisation (S8) n'est pas concernée.
  */
 export function ProgressionNavigation() {
   const [enCours, setEnCours] = useState(false);
+  const pathname = usePathname();
+  const demarre = useRef(false);
+  const delaiMax = useRef(0);
+  const premierRendu = useRef(true);
 
   useEffect(() => {
     NProgress.configure({
@@ -107,30 +96,25 @@ export function ProgressionNavigation() {
 
     let actif = true;
 
-    const progression: EtatProgression = {
-      attend: false,
-      minuteur: 0,
-      enVol: 0,
-      ouvre: () => {
-        if (!actif) return;
-        setEnCours(true);
-      },
-      ferme: () => {
-        if (!actif) return;
-        setEnCours(false);
-      },
+    // Idempotent : referme une seule fois, au premier signal de fin.
+    const terminer = () => {
+      if (!demarre.current) return;
+      demarre.current = false;
+      window.clearTimeout(delaiMax.current);
+      NProgress.done();
+      if (actif) setEnCours(false);
+    };
+    terminerPartage = terminer;
+
+    const demarrer = () => {
+      demarre.current = true;
+      NProgress.start();
+      if (actif) setEnCours(true);
+      window.clearTimeout(delaiMax.current);
+      delaiMax.current = window.setTimeout(terminer, DELAI_MAX_MS);
     };
 
-    const armer = () => {
-      progression.attend = true;
-      window.clearTimeout(progression.minuteur);
-      progression.minuteur = window.setTimeout(() => {
-        progression.attend = false;
-      }, FENETRE_GESTE_MS);
-    };
-
-    // Capture : s'exécute avant le gestionnaire de `next/link`, ce dernier
-    // émettant le fetch dans la même frame. La fenêtre couvre le cas inverse.
+    // Capture : s'exécute avant le gestionnaire de `next/link`.
     const auClic = (evenement: MouseEvent) => {
       const cible = evenement.target as Element | null;
       const ancre = cible?.closest?.("a") ?? null;
@@ -149,13 +133,12 @@ export function ProgressionNavigation() {
         defaultPrevented: evenement.defaultPrevented,
         urlCourante: window.location.href,
       });
-      if (navigue) armer();
+      if (navigue) demarrer();
     };
 
     /* Retour et avant du navigateur : navigation réelle sans lien cliqué. */
-    const aLHistorique = () => armer();
+    const aLHistorique = () => demarrer();
 
-    etat = progression;
     poses += 1;
     installerInterception();
     document.addEventListener("click", auClic, true);
@@ -163,17 +146,27 @@ export function ProgressionNavigation() {
 
     return () => {
       actif = false;
-      window.clearTimeout(progression.minuteur);
+      window.clearTimeout(delaiMax.current);
       document.removeEventListener("click", auClic, true);
       window.removeEventListener("popstate", aLHistorique);
       poses -= 1;
       if (poses === 0) {
-        etat = null;
+        terminerPartage = null;
         retirerInterception();
         NProgress.remove();
       }
     };
   }, []);
+
+  // Fin de navigation : le chemin a changé (couvre aussi les destinations
+  // préchargées, qui n'émettent aucun fetch).
+  useEffect(() => {
+    if (premierRendu.current) {
+      premierRendu.current = false;
+      return;
+    }
+    terminerPartage?.();
+  }, [pathname]);
 
   if (!enCours) return null;
 
