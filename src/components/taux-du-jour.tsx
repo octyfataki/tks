@@ -31,6 +31,9 @@ export type TauxEnVigueur = {
   saisiPar?: string
 }
 
+/** Retour d'une tentative de saisie : succès muet, ou refus affichable. */
+export type ResultatSaisieTaux = { ok: true } | { ok: false; erreur: string }
+
 function formaterDateDuJour(date: Date): string {
   const texte = new Intl.DateTimeFormat("fr-FR", {
     weekday: "short",
@@ -70,10 +73,9 @@ export function DateDuJour({ className }: { className?: string }) {
  *
  * Le modal s'ouvre pour tout le monde : il montre le taux, sa date et son
  * auteur. La saisie n'est proposée qu'avec la permission `taux.saisir` ;
- * sans elle, le modal est en lecture seule. La persistance (tranche S3 :
- * entité datée, écriture journalisée, un jour = au plus un taux) n'existe
- * pas encore : sans `onEnregistrer`, le formulaire est inerte et
- * l'indisponibilité est annoncée au lieu d'être simulée.
+ * sans elle, le modal est en lecture seule. Sans `onEnregistrer`, le
+ * formulaire est inerte — c'est le cas tant que la persistance n'est pas
+ * câblée (le composant branché vit dans `TauxDuJourAuto`).
  */
 export function TauxDuJour({
   taux = null,
@@ -85,7 +87,9 @@ export function TauxDuJour({
   /** Sans la permission `taux.saisir`, le modal s'ouvre en lecture seule. */
   peutSaisir?: boolean
   /** Appelé avec la valeur validée. Absent = saisie pas encore câblée. */
-  onEnregistrer?: (valeur: number) => void | Promise<void>
+  onEnregistrer?: (
+    valeur: number
+  ) => ResultatSaisieTaux | Promise<ResultatSaisieTaux>
   className?: string
 }) {
   const [ouvert, setOuvert] = React.useState(false)
@@ -114,8 +118,16 @@ export function TauxDuJour({
       setErreur("Saisir un montant strictement positif, en CDF pour 1 USD.")
       return
     }
+    if (!Number.isInteger(nombre)) {
+      setErreur("Saisir un nombre entier de francs, pour 1 USD.")
+      return
+    }
     setErreur(null)
-    await onEnregistrer(nombre)
+    const resultat = await onEnregistrer(nombre)
+    if (resultat && !resultat.ok) {
+      setErreur(resultat.erreur)
+      return
+    }
     setOuvert(false)
     setValeur("")
   }
@@ -183,8 +195,7 @@ export function TauxDuJour({
             </form>
             {!pret ? (
               <p className="text-xs/relaxed text-muted-foreground">
-                Bientôt — la persistance arrive avec la tranche S3 (permission
-                « taux.saisir », saisie journalisée comme écriture métier).
+                Saisie indisponible sur cet écran.
               </p>
             ) : null}
           </>

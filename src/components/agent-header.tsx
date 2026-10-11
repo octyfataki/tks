@@ -76,9 +76,9 @@ function segmentsPourChemin(chemin: string): Segment[] {
  * contenu sous lui change. Le fil d'Ariane est déduit du chemin courant.
  *
  * Même coquille que l'espace administrateur (DashboardHeader) : date du
- * jour, taux en vigueur en lecture seule — l'agent n'a pas la permission
- * `taux.saisir` — notifications au périmètre du comptoir, aide de
- * l'espace agent, recherche au périmètre agent.
+ * jour, taux du jour (saisie proposée quand la permission `taux.saisir`
+ * est accordée, lecture seule sinon), notifications au périmètre du
+ * comptoir, aide de l'espace agent, recherche au périmètre agent.
  */
 export function AgentHeader() {
   const chemin = usePathname();
@@ -93,8 +93,6 @@ export function AgentHeader() {
       />
       <DashboardHeader
         className="min-w-0 flex-1"
-        taux={null}
-        peutSaisirTaux={false}
         aideHref="/agent/aide"
         notifications={
           <PanneauNotifications
