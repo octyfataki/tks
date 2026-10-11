@@ -204,17 +204,20 @@
 /* Barre de progression des navigations (nprogress).
    La barre reprend le primary du site (--primary) : elle suit le thème en
    clair comme en sombre, sans couleur codée en dur. Le cercle tournant est
-   retiré côté JS (showSpinner: false) et la traînée lumineuse ici. */
-#nprogress .bar {
+   retiré côté JS (showSpinner: false) et la traînée lumineuse ici.
+   `body` devant le sélecteur : même spécificité que la bibliothèque,
+   c'est l'ordre d'import qui trancherait — ici notre règle gagne toujours,
+   en dev comme en build. */
+body #nprogress .bar {
   background: var(--primary);
   height: 2px;
   z-index: 1080;
 }
-#nprogress .peg {
+body #nprogress .peg {
   display: none;
 }
 @media (prefers-reduced-motion: reduce) {
-  #nprogress .bar {
+  body #nprogress .bar {
     transition: none !important;
   }
 }
