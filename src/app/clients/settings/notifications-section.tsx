@@ -150,20 +150,11 @@ function DemandeActivation() {
 export function NotificationsSection() {
   const { preferences, chargees, mettreAJour } = usePreferencesClient();
 
-  function reglerActif(cle: CleNotificationClient, actif: boolean) {
+  function reglerNotification(cle: CleNotificationClient, patch: Partial<{ actif: boolean; canal: CanalNotification }>) {
     mettreAJour({
       notifications: {
         ...preferences.notifications,
-        [cle]: { ...preferences.notifications[cle], actif },
-      },
-    });
-  }
-
-  function reglerCanal(cle: CleNotificationClient, canal: CanalNotification) {
-    mettreAJour({
-      notifications: {
-        ...preferences.notifications,
-        [cle]: { ...preferences.notifications[cle], canal },
+        [cle]: { ...preferences.notifications[cle], ...patch },
       },
     });
   }
@@ -201,7 +192,7 @@ export function NotificationsSection() {
                           checked={reglage.actif}
                           disabled={!chargees}
                           onCheckedChange={(suivant: boolean) =>
-                            reglerActif(entree.cle, suivant)
+                            reglerNotification(entree.cle, { actif: suivant })
                           }
                           aria-label={entree.titre}
                           className="mt-0.5"
@@ -216,7 +207,7 @@ export function NotificationsSection() {
                       <Select
                         value={reglage.canal}
                         onValueChange={(valeur: unknown) =>
-                          reglerCanal(entree.cle, valeur as CanalNotification)
+                          reglerNotification(entree.cle, { canal: valeur as CanalNotification })
                         }
                         disabled={!chargees || !reglage.actif}
                       >

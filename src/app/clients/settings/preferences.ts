@@ -25,7 +25,7 @@ export const CANAUX_NOTIFICATION: { valeur: CanalNotification; etiquette: string
 /** Clés stables des événements configurables. */
 export type CleNotificationClient =
   | "commandes"
-  | "soldes"
+  | "paiements"
   | "taux"
   | "session"
   | "synchronisation";
@@ -38,7 +38,7 @@ export type ReglageNotification = {
 
 export type NotificationsClient = Record<CleNotificationClient, ReglageNotification>;
 
-export type GroupeNotificationClient = "dossier" | "appareil";
+export type GroupeNotificationClient = "suivi" | "appareil";
 
 export const GROUPES_NOTIFICATION: {
   valeur: GroupeNotificationClient;
@@ -46,8 +46,8 @@ export const GROUPES_NOTIFICATION: {
   description: string;
 }[] = [
   {
-    valeur: "dossier",
-    titre: "Dossier et soldes",
+    valeur: "suivi",
+    titre: "Commandes et paiements",
     description: "Ce qui bouge sur votre compte : commandes, paiements, taux.",
   },
   {
@@ -65,19 +65,19 @@ export const CATALOGUE_NOTIFICATIONS: {
 }[] = [
   {
     cle: "commandes",
-    groupe: "dossier",
+    groupe: "suivi",
     titre: "Suivi des commandes",
     description: "Quand une commande change d'état — servi avec S5.",
   },
   {
-    cle: "soldes",
-    groupe: "dossier",
-    titre: "Paiements et soldes",
+    cle: "paiements",
+    groupe: "suivi",
+    titre: "Paiements et reste à payer",
     description: "Quand un paiement est enregistré — servi avec S6.",
   },
   {
     cle: "taux",
-    groupe: "dossier",
+    groupe: "suivi",
     titre: "Taux mis à jour",
     description: "Quand le distributeur change le taux — branché avec S3.",
   },
@@ -104,7 +104,7 @@ export type PreferencesClient = {
 
 export const NOTIFICATIONS_DEFAUT: NotificationsClient = {
   commandes: { actif: true, canal: "son-vibration" },
-  soldes: { actif: true, canal: "son-vibration" },
+  paiements: { actif: true, canal: "son-vibration" },
   taux: { actif: true, canal: "silencieuse" },
   session: { actif: true, canal: "son-vibration" },
   synchronisation: { actif: true, canal: "silencieuse" },
@@ -143,7 +143,7 @@ function lireNotifications(valeur: unknown): NotificationsClient {
       : {};
   return {
     commandes: lireReglage(objet.commandes, NOTIFICATIONS_DEFAUT.commandes),
-    soldes: lireReglage(objet.soldes, NOTIFICATIONS_DEFAUT.soldes),
+    paiements: lireReglage(objet.paiements, NOTIFICATIONS_DEFAUT.paiements),
     taux: lireReglage(objet.taux, NOTIFICATIONS_DEFAUT.taux),
     session: lireReglage(objet.session, NOTIFICATIONS_DEFAUT.session),
     synchronisation: lireReglage(

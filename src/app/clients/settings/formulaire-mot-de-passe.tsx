@@ -18,20 +18,12 @@ import {
   type NiveauForceMotDePasse,
 } from "@/app/agent/parametres/mot-de-passe-validation";
 
-const COULEURS_FORCE: Record<NiveauForceMotDePasse, string> = {
-  0: "bg-destructive",
-  1: "bg-orange-500",
-  2: "bg-amber-500",
-  3: "bg-lime-500",
-  4: "bg-emerald-500",
-};
-
-const TEXTE_FORCE: Record<NiveauForceMotDePasse, string> = {
-  0: "text-destructive",
-  1: "text-orange-600 dark:text-orange-400",
-  2: "text-amber-600 dark:text-amber-400",
-  3: "text-lime-600 dark:text-lime-400",
-  4: "text-emerald-600 dark:text-emerald-400",
+const STYLE_FORCE: Record<NiveauForceMotDePasse, { fond: string; texte: string }> = {
+  0: { fond: "bg-destructive", texte: "text-destructive" },
+  1: { fond: "bg-orange-500", texte: "text-orange-600 dark:text-orange-400" },
+  2: { fond: "bg-amber-500", texte: "text-amber-600 dark:text-amber-400" },
+  3: { fond: "bg-lime-500", texte: "text-lime-600 dark:text-lime-400" },
+  4: { fond: "bg-emerald-500", texte: "text-emerald-600 dark:text-emerald-400" },
 };
 
 /**
@@ -148,14 +140,14 @@ export function FormulaireMotDePasse() {
                     aria-hidden="true"
                     className={
                       segment <= Math.max(force.niveau, 1)
-                        ? `h-1 flex-1 rounded-full ${COULEURS_FORCE[force.niveau]}`
+                        ? `h-1 flex-1 rounded-full ${STYLE_FORCE[force.niveau].fond}`
                         : "h-1 flex-1 rounded-full bg-muted"
                     }
                   />
                 ))}
               </div>
               <span
-                className={`shrink-0 text-xs font-semibold ${TEXTE_FORCE[force.niveau]}`}
+                className={`shrink-0 text-xs font-semibold ${STYLE_FORCE[force.niveau].texte}`}
               >
                 {force.etiquette}
               </span>

@@ -69,8 +69,8 @@ export default async function ClientsParametresPage() {
           <PastilleReseau />
         </div>
         <p className="max-w-[62ch] text-[13px] leading-relaxed text-muted-foreground">
-          Votre téléphone, votre session, votre mot de passe. Votre fiche reste
-          visible dans{" "}
+          Votre téléphone, votre session, votre mot de passe. Vos informations restent
+          visibles dans{" "}
           <Link
             href="/clients/profil"
             className="font-medium text-primary underline-offset-4 hover:underline"
