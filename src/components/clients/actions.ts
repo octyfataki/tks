@@ -11,8 +11,9 @@ import {
   piecesIdentiteClients,
   transitionCompteClientValide,
 } from "@/lib/db/schema/s1-comptes";
-import { marquerPieceVue } from "@/lib/s1-comptes/pieces-clients";
+import { statuerPiece } from "@/lib/s1-comptes/pieces-clients";
 import { typePieceValide } from "@/lib/s1-comptes/pieces-fichiers";
+import { statutPieceValide } from "@/lib/s1-comptes/fiche-client";
 import {
   enregistrerEvenement,
   journaliserRefusContestation,
@@ -151,7 +152,7 @@ export async function validerCompteClientAction(
   const maintenant = new Date();
   try {
     await db.transaction(async (tx) => {
-      await marquerPieceVue(pieceId, trancheur.id, tx);
+      await statuerPiece(pieceId, trancheur.id, "ACCEPTEE", null, tx);
       await tx
         .update(comptesClients)
         .set({ etat: "VALIDE", valideLe: maintenant, refuseMotif: null })
@@ -244,6 +245,114 @@ export async function refuserCompteClientAction(
     return { ok: false, erreur: "Refus impossible : journal indisponible." };
   }
   revaliderLesDeuxEspaces();
+  return { ok: true, compteId };
+}
+
+/**
+ * Statue sur une pièce d'identité déposée par un compte déjà VALIDE
+ * (ticket 10) : l'accepter, ou la refuser avec un motif que le client
+ * lira sur son profil et pourra corriger.
+ *
+ * Le compte n'est **jamais** touché : valider une pièce de remplacement ne
+ * change pas l'identité validée au comptoir. Seule la pièce porte un
+ * verdict. Un compte en attente ou refusé passe par sa propre validation
+ * (ticket 03) — les deux gestes ne se recouvrent pas.
+ *
+ * Verdict et journal partent dans une seule transaction : journal
+ * indisponible = rien n'est écrit, jamais un « accepté » sans trace.
+ */
+export async function statuerPieceIdentiteAction(
+  _precedent: ResultatDecision | null,
+  donnees: FormData,
+): Promise<ResultatDecision> {
+  const trancheur = await peutTrancher();
+  if (!trancheur) return { ok: false, erreur: ERREUR_INTERDIT };
+  const compteId = lireCompteId(donnees);
+  if (!compteId) return { ok: false, erreur: "Compte introuvable." };
+  const pieceId = String(donnees.get("pieceId") ?? "").trim();
+  if (pieceId === "") return { ok: false, erreur: "Pièce exigée." };
+  const statutBrut = String(donnees.get("statut") ?? "").trim();
+  if (!statutPieceValide(statutBrut) || statutBrut === "EN_ATTENTE") {
+    return { ok: false, erreur: "Verdict inconnu." };
+  }
+  const statut = statutBrut;
+  const motif = String(donnees.get("motif") ?? "").trim();
+  if (statut === "REFUSEE" && (motif.length < 3 || motif.length > 500)) {
+    return {
+      ok: false,
+      erreur: "Motif exigé : un refus sans motif n'explique rien.",
+    };
+  }
+
+  const comptes = await db
+    .select({ id: comptesClients.id, etat: comptesClients.etat })
+    .from(comptesClients)
+    .where(eq(comptesClients.id, compteId))
+    .limit(1);
+  const compte = comptes[0];
+  if (!compte) return { ok: false, erreur: "Compte introuvable." };
+  if (compte.etat !== "VALIDE") {
+    return {
+      ok: false,
+      erreur: "Ce compte se tranche, il ne se rejoue pas : sa validation prime.",
+    };
+  }
+
+  const pieces = await db
+    .select({
+      id: piecesIdentiteClients.id,
+      compteClientId: piecesIdentiteClients.compteClientId,
+      statutPiece: piecesIdentiteClients.statutPiece,
+    })
+    .from(piecesIdentiteClients)
+    .where(eq(piecesIdentiteClients.id, pieceId))
+    .limit(1);
+  const piece = pieces[0];
+  if (!piece || piece.compteClientId !== compteId) {
+    return { ok: false, erreur: "Pièce inconnue pour ce compte." };
+  }
+  if (piece.statutPiece !== "EN_ATTENTE") {
+    return { ok: false, erreur: "Pièce déjà tranchée." };
+  }
+
+  const refusMotif = statut === "REFUSEE" ? motif : null;
+  try {
+    await db.transaction(async (tx) => {
+      // Gardé par le statut attendu : si quelqu'un a statué la pièce entre
+      // la lecture et l'écriture, aucune ligne n'est touchée et le journal
+      // s'annule avec — jamais deux verdicts sur le même document.
+      const ecrites = await statuerPiece(
+        pieceId,
+        trancheur.id,
+        statut,
+        refusMotif,
+        tx,
+      );
+      if (ecrites === 0) throw new Error("Pièce déjà tranchée.");
+      const trace = await enregistrerEvenement(
+        {
+          acteurId: trancheur.id,
+          roleAuMoment: trancheur.role,
+          typeAction: statut === "ACCEPTEE" ? "piece.accepter" : "piece.refuser",
+          entite: "compte_client",
+          entiteId: compteId,
+          avant: { statutPiece: "EN_ATTENTE" },
+          apres: { statutPiece: statut, pieceId },
+          motif: refusMotif,
+        },
+        tx,
+      );
+      if (!trace.ok) throw new Error("Journal indisponible.");
+    });
+  } catch (erreur) {
+    if (erreur instanceof Error && erreur.message === "Pièce déjà tranchée.") {
+      return { ok: false, erreur: erreur.message };
+    }
+    return { ok: false, erreur: "Verdict impossible : journal indisponible." };
+  }
+  revaliderLesDeuxEspaces();
+  // Le motif se lit sur le profil du client : il doit le voir sans recharger.
+  revalidatePath("/clients/profil");
   return { ok: true, compteId };
 }
 

@@ -7,11 +7,21 @@
 // lecteur injecté, donc testable sans environnement. Le lecteur réel vit
 // dans fiche-client-base.ts.
 
+/** Verdict porté par une pièce d'identité : ces trois valeurs, rien d'autre. */
+export const STATUTS_PIECE = ["EN_ATTENTE", "ACCEPTEE", "REFUSEE"] as const;
+export type StatutPiece = (typeof STATUTS_PIECE)[number];
+
+export function statutPieceValide(valeur: string): valeur is StatutPiece {
+  return (STATUTS_PIECE as readonly string[]).includes(valeur);
+}
+
 /** Pièce d'identité telle qu'exposée sur la fiche. */
 export type PieceFicheClient = {
   id: string;
   typePiece: string;
   mime: string;
+  statutPiece: StatutPiece;
+  refusMotif: string | null;
   vuePar: string | null;
   vueLe: Date | null;
   deposeLe: Date;
@@ -88,16 +98,25 @@ export function pieceAValider(
 }
 
 /**
- * Une pièce déposée après la validation du compte : elle n'a pas encore
- * été vue par un humain au titre de la validation en cours — à revoir.
- * Sans date de validation, rien n'est « après » : faux.
+ * Une pièce attend-elle encore un verdict humain ? Seul cas où le
+ * distributeur peut statuer : acceptée ou refusée, elle est tranchée.
+ * Un statut inconnu compte comme à revoir : mieux vaut le montrer que
+ * le cacher.
  */
-export function pieceDeposeeApresValidation(
-  piece: Pick<PieceFicheClient, "deposeLe">,
-  valideLe: Date | null,
-): boolean {
-  if (!valideLe) return false;
-  return piece.deposeLe.getTime() > valideLe.getTime();
+export function pieceARevoir(piece: Pick<PieceFicheClient, "statutPiece">): boolean {
+  return piece.statutPiece !== "ACCEPTEE" && piece.statutPiece !== "REFUSEE";
+}
+
+/**
+ * Le geste de revue n'a de sens que sur une pièce qu'un humain peut
+ * encore juger : pièce à revoir, compte déjà VALIDE. Un compte en attente
+ * ou refusé passe par sa propre validation (ticket 03) — lui proposer
+ * deux boutons concurrents serait un cul-de-sac de plus.
+ */
+export function revuePiecePossible(fiche: Pick<FicheClient, "etat"> & {
+  pieces: Pick<PieceFicheClient, "statutPiece">[];
+}): boolean {
+  return fiche.etat === "VALIDE" && fiche.pieces.some(pieceARevoir);
 }
 
 /** Une action de décision a-t-elle un sens sur ce compte, dans cet état ? */

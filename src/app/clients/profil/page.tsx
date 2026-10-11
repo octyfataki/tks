@@ -15,6 +15,7 @@ import {
   type SessionEnCoursProfil,
 } from "@/components/profil";
 import { lirePiecesCompte } from "@/lib/s1-comptes/pieces-clients";
+import { statutPieceValide } from "@/lib/s1-comptes/fiche-client";
 import { FormulaireMonProfil } from "@/app/admin/profil/formulaire-mon-profil";
 import { and, desc, eq, gt } from "drizzle-orm";
 
@@ -74,7 +75,10 @@ export default async function ClientsProfilPage() {
         id: p.id,
         typePiece: p.typePiece,
         mime: p.mime,
-        vue: p.vuePar !== null,
+        statutPiece: statutPieceValide(p.statutPiece)
+          ? p.statutPiece
+          : "EN_ATTENTE",
+        refusMotif: p.refusMotif,
         deposeLe: p.deposeLe,
       }));
     }

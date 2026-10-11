@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { headers } from "next/headers";
-import { desc, eq } from "drizzle-orm";
+import { and, desc, eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db, type ExecuteurDb } from "@/lib/db/client";
 import { comptesClients, piecesIdentiteClients } from "@/lib/db/schema/s1-comptes";
@@ -11,6 +11,8 @@ import {
   etatPieceDeposable,
   typePieceValide,
 } from "./pieces-fichiers";
+import type { StatutPiece } from "./fiche-client";
+import { lignesEcrites } from "./resultat-mysql";
 
 // Dépôt de pièce d'identité client (S1-03) : le client dépose depuis
 // l'application (image compressée côté client, ou PDF). Le fichier vit
@@ -114,6 +116,8 @@ export async function lirePiecesCompte(compteClientId: string) {
       id: piecesIdentiteClients.id,
       typePiece: piecesIdentiteClients.typePiece,
       mime: piecesIdentiteClients.mime,
+      statutPiece: piecesIdentiteClients.statutPiece,
+      refusMotif: piecesIdentiteClients.refusMotif,
       vuePar: piecesIdentiteClients.vuePar,
       vueLe: piecesIdentiteClients.vueLe,
       deposeLe: piecesIdentiteClients.createdAt,
@@ -123,14 +127,30 @@ export async function lirePiecesCompte(compteClientId: string) {
     .orderBy(desc(piecesIdentiteClients.createdAt));
 }
 
-/** Marque la pièce vue par l'administrateur qui tranche (dans sa transaction). */
-export async function marquerPieceVue(
+/**
+ * Marque la pièce vue par l'humain qui tranche, et lui donne son verdict
+ * (dans sa transaction). Valider un compte sur une pièce, c'est aussi
+ * l'accepter : un seul état, jamais deux vérités.
+ *
+ * L'écriture est gardée par le statut attendu : deux personnes qui
+ * statuent la même pièce au même instant ne peuvent pas s'écraser, la
+ * seconde ne touche aucune ligne. Renvoie le nombre de lignes écrites.
+ */
+export async function statuerPiece(
   pieceId: string,
   adminId: string,
+  statut: StatutPiece,
+  refusMotif: string | null,
   ex: ExecuteurDb,
-): Promise<void> {
-  await ex
+): Promise<number> {
+  const resultat = await ex
     .update(piecesIdentiteClients)
-    .set({ vuePar: adminId, vueLe: new Date() })
-    .where(eq(piecesIdentiteClients.id, pieceId));
+    .set({ vuePar: adminId, vueLe: new Date(), statutPiece: statut, refusMotif })
+    .where(
+      and(
+        eq(piecesIdentiteClients.id, pieceId),
+        eq(piecesIdentiteClients.statutPiece, "EN_ATTENTE"),
+      ),
+    );
+  return lignesEcrites(resultat);
 }

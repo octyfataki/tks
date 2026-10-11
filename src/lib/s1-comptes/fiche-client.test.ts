@@ -5,7 +5,10 @@ import {
   lireFicheClient,
   peutOuvrirFicheClient,
   pieceAValider,
-  pieceDeposeeApresValidation,
+  pieceARevoir,
+  revuePiecePossible,
+  statutPieceValide,
+  STATUTS_PIECE,
   type IdentiteClient,
   type LecteurFicheClient,
   type PieceFicheClient,
@@ -26,6 +29,8 @@ const piece: PieceFicheClient = {
   id: "p1",
   typePiece: "CNI",
   mime: "image/jpeg",
+  statutPiece: "EN_ATTENTE",
+  refusMotif: null,
   vuePar: null,
   vueLe: null,
   deposeLe: new Date("2026-10-02T08:00:00Z"),
@@ -99,33 +104,38 @@ describe("décisions d'affichage de la fiche", () => {
   });
 
   it("repère une pièce déposée après la validation du compte", () => {
-    const valideLe = new Date("2026-10-05T08:00:00Z");
-    expect(
-      pieceDeposeeApresValidation(
-        { deposeLe: new Date("2026-10-06T08:00:00Z") },
-        valideLe,
-      ),
-    ).toBe(true);
-    expect(
-      pieceDeposeeApresValidation(
-        { deposeLe: new Date("2026-10-02T08:00:00Z") },
-        valideLe,
-      ),
-    ).toBe(false);
-    expect(
-      pieceDeposeeApresValidation(
-        { deposeLe: new Date("2026-10-05T08:00:00Z") },
-        valideLe,
-      ),
-    ).toBe(false);
+    // Le verdict est porté par la pièce, plus déduit d'une date.
+    expect(pieceARevoir({ statutPiece: "EN_ATTENTE" })).toBe(true);
+    expect(pieceARevoir({ statutPiece: "ACCEPTEE" })).toBe(false);
+    expect(pieceARevoir({ statutPiece: "REFUSEE" })).toBe(false);
   });
 
-  it("ne signale rien après validation quand le compte n'est pas validé", () => {
+  it("ne statue que sur les pièces d'un compte déjà validé", () => {
     expect(
-      pieceDeposeeApresValidation(
-        { deposeLe: new Date("2026-10-06T08:00:00Z") },
-        null,
-      ),
+      revuePiecePossible({ etat: "VALIDE", pieces: [{ statutPiece: "EN_ATTENTE" }] }),
+    ).toBe(true);
+    // Compte à trancher : son chemin reste la validation de compte.
+    expect(
+      revuePiecePossible({
+        etat: "EN_ATTENTE_VALIDATION",
+        pieces: [{ statutPiece: "EN_ATTENTE" }],
+      }),
     ).toBe(false);
+    expect(
+      revuePiecePossible({ etat: "REFUSE", pieces: [{ statutPiece: "EN_ATTENTE" }] }),
+    ).toBe(false);
+    // Rien à revoir : pas de boutons.
+    expect(
+      revuePiecePossible({ etat: "VALIDE", pieces: [{ statutPiece: "ACCEPTEE" }] }),
+    ).toBe(false);
+    expect(revuePiecePossible({ etat: "VALIDE", pieces: [] })).toBe(false);
+  });
+
+  it("connaît les trois statuts de pièce — rien d'autre", () => {
+    for (const statut of STATUTS_PIECE) {
+      expect(statutPieceValide(statut)).toBe(true);
+    }
+    expect(statutPieceValide("EN_REVUE")).toBe(false);
+    expect(statutPieceValide("")).toBe(false);
   });
 });

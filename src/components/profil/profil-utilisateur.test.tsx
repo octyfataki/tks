@@ -272,7 +272,8 @@ describe("ProfilUtilisateur", () => {
             id: "piece-1",
             typePiece: "CNI",
             mime: "image/jpeg",
-            vue: true,
+            statutPiece: "ACCEPTEE",
+            refusMotif: null,
             deposeLe: new Date("2026-10-02T08:00:00Z"),
           },
         ]}
@@ -282,7 +283,7 @@ describe("ProfilUtilisateur", () => {
     expect(screen.getByRole("heading", { name: "Pièce d'identité" })).toBeInTheDocument();
     const lien = screen.getByRole("link", { name: /pièce cni/i });
     expect(lien.getAttribute("href")).toBe("/api/pieces-clients/piece-1");
-    expect(screen.getByText("Vue par le distributeur")).toBeInTheDocument();
+    expect(screen.getByText("Acceptée par le distributeur")).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /remplacer ma pièce/i }),
     ).toBeInTheDocument();
