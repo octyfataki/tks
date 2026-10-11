@@ -101,6 +101,7 @@ function verbeAction(typeAction: string): string {
     "client.valider": "a validé un compte client",
     "client.refuser": "a refusé un compte client",
     "client.revoquer": "a révoqué un compte client",
+    "taux.saisir": "a saisi le taux du jour",
   };
   return table[typeAction] ?? "a enregistré l'action";
 }

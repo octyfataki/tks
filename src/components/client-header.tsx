@@ -52,8 +52,8 @@ function segmentsPourChemin(chemin: string): Segment[] {
  * contenu sous lui change. Le fil d'Ariane est déduit du chemin courant.
  *
  * Même coquille que les espaces administrateur et agent de service
- * (DashboardHeader) : date du jour, taux en vigueur en lecture seule — le
- * client n'a pas la permission `taux.saisir` — notifications à son
+ * (DashboardHeader) : date du jour, taux du jour en lecture seule — un
+ * client n'a jamais la permission `taux.saisir` — notifications à son
  * périmètre (dossier, commandes, soldes), aide de l'espace client,
  * recherche au périmètre client.
  */
@@ -70,8 +70,6 @@ export function ClientHeader() {
       />
       <DashboardHeader
         className="min-w-0 flex-1"
-        taux={null}
-        peutSaisirTaux={false}
         aideHref="/clients/aide"
         notifications={
           <PanneauNotifications

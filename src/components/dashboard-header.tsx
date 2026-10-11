@@ -24,7 +24,8 @@ import {
 } from "@/components/ui/sheet"
 import { PaletteRecherche } from "@/components/palette-recherche"
 import { ModeToggle } from "@/components/mode-toggle"
-import { DateDuJour, TauxDuJour, type TauxEnVigueur } from "@/components/taux-du-jour"
+import { DateDuJour } from "@/components/taux-du-jour"
+import { TauxDuJourAuto } from "@/components/taux-du-jour-auto"
 import {
   Tooltip,
   TooltipContent,
@@ -37,10 +38,6 @@ export type DashboardHeaderProps = {
   filAriane?: React.ReactNode
   /** Action métier principale, à droite (ex. lien « Comptes à valider »). */
   action?: React.ReactNode
-  /** Taux en vigueur. Absent tant que la tranche S3 ne le fournit pas. */
-  taux?: TauxEnVigueur | null
-  /** Sans la permission `taux.saisir`, le modal s'ouvre en lecture seule. */
-  peutSaisirTaux?: boolean
   /** Cible du bouton d'aide — l'aide de l'espace courant. */
   aideHref?: string
   /** Panneau de notifications. Défaut : celui de l'espace administrateur. */
@@ -239,8 +236,6 @@ function HeaderIconButton({
 export function DashboardHeader({
   filAriane,
   action,
-  taux = null,
-  peutSaisirTaux = true,
   aideHref = "/aide",
   notifications,
   recherche,
@@ -262,7 +257,7 @@ export function DashboardHeader({
       <div className="ml-auto flex shrink-0 items-center gap-2">
         {action}
         <DateDuJour />
-        <TauxDuJour taux={taux} peutSaisir={peutSaisirTaux} />
+        <TauxDuJourAuto />
         {notifications ?? <NotificationsAdmin />}
         <HeaderIconButton label="Aide" onClick={() => router.push(aideHref)}>
           <CircleHelpIcon />
