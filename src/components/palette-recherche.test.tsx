@@ -8,15 +8,26 @@ import { PaletteRecherche } from "./palette-recherche";
 
 function ouvrir() {
   render(<PaletteRecherche />);
-  fireEvent.click(screen.getByRole("button", { name: /rechercher/i }));
+  fireEvent.click(screen.getByRole("button", { name: /ctrl\+k/i }));
 }
 
 describe("PaletteRecherche", () => {
   it("affiche un déclencheur avec le raccourci clavier", () => {
     render(<PaletteRecherche />);
-    expect(screen.getByRole("button", { name: /rechercher/i })).toHaveTextContent(
+    expect(screen.getByRole("button", { name: /ctrl\+k/i })).toHaveTextContent(
       "⌘K",
     );
+  });
+
+  it("affiche un déclencheur icône seule sans mention du raccourci", () => {
+    render(<PaletteRecherche />);
+    const icone = screen.getByRole("button", { name: "Rechercher…" });
+    expect(icone).toBeInTheDocument();
+    expect(icone).not.toHaveTextContent("⌘K");
+    fireEvent.click(icone);
+    expect(
+      screen.getByRole("dialog", { name: "Recherche" }),
+    ).toBeInTheDocument();
   });
 
   it("ouvre le dialogue avec les groupes du projet", () => {
