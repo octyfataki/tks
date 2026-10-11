@@ -202,12 +202,11 @@
 }
 
 /* Barre de progression des navigations (nprogress).
-   Ambre explicite (#f59e0b, amber-500) : lisible en thème clair comme en
-   thème sombre, distinct du --primary tout en restant dans la palette chaude
-   de l'application. Le cercle tournant est retiré côté JS
-   (showSpinner: false) et la traînée lumineuse ici. */
+   La barre reprend le primary du site (--primary) : elle suit le thème en
+   clair comme en sombre, sans couleur codée en dur. Le cercle tournant est
+   retiré côté JS (showSpinner: false) et la traînée lumineuse ici. */
 #nprogress .bar {
-  background: #f59e0b;
+  background: var(--primary);
   height: 2px;
   z-index: 1080;
 }
