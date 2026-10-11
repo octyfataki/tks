@@ -13,7 +13,7 @@ describe("FormulaireStatutPiece", () => {
   it("propose d'accepter la pièce", () => {
     render(<FormulaireStatutPiece compteId="c1" pieceId="p1" />);
     expect(
-      screen.getByRole("button", { name: /accepter cette pièce/i }),
+      screen.getByRole("button", { name: /^accepter$/i }),
     ).toBeInTheDocument();
     expect(
       screen.getByText(/le compte reste validé/i),
@@ -36,7 +36,7 @@ describe("FormulaireStatutPiece", () => {
     fireEvent.click(screen.getByRole("button", { name: /annuler/i }));
     expect(screen.queryByLabelText(/ce que le client doit corriger/i)).toBeNull();
     expect(
-      screen.getByRole("button", { name: /accepter cette pièce/i }),
+      screen.getByRole("button", { name: /^accepter$/i }),
     ).toBeInTheDocument();
   });
 

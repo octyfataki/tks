@@ -3,17 +3,13 @@ import {
   ArrowLeftIcon,
   CalendarIcon,
   ClockIcon,
-  CheckIcon,
-  EyeIcon,
   FileTextIcon,
   FingerprintIcon,
-  ImageIcon,
   InfoIcon,
   LockIcon,
   MailIcon,
   PhoneIcon,
   ShieldAlertIcon,
-  XIcon,
 } from "lucide-react";
 import { buttonVariants } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -29,6 +25,7 @@ import {
   FormulaireValider,
 } from "./formulaires-decision";
 import { FormulaireStatutPiece } from "./formulaire-statut-piece";
+import { VignettePiece } from "./vignette-piece";
 import {
   etatRevoquable,
   etatTranchable,
@@ -50,32 +47,18 @@ function cachetEtat(etat: string): {
 }
 
 /**
- * Verdict d'une pièce : pastille d'état. Lisible d'un coup d'œil par un
- * agent au comptoir — ambre « à revoir », vert « acceptée », rouge
- * « refusée » avec le motif que le client va lire.
+ * Verdict d'une pièce, tamponné comme l'état du compte : même encre, même
+ * registre. Un agent lit des cachets, pas des pastilles — et le document
+ * porte le sien, en haut à droite, comme sur une pièce papier.
  */
-function PastillePiece({ piece }: { piece: PieceFicheClient }) {
+function CachetPiece({ piece }: { piece: PieceFicheClient }) {
   if (piece.statutPiece === "ACCEPTEE") {
-    return (
-      <span className="mt-1 inline-flex w-fit items-center gap-1 rounded-full border border-emerald-600/40 bg-emerald-600/5 px-2 py-0.5 text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">
-        <CheckIcon className="size-3" />
-        Acceptée le {dateCourte(piece.vueLe ?? piece.deposeLe)}
-      </span>
-    );
+    return <Cachet encre="fait">Acceptée</Cachet>;
   }
   if (piece.statutPiece === "REFUSEE") {
-    return (
-      <span className="mt-1 inline-flex w-fit items-center gap-1 rounded-full border border-destructive/40 bg-destructive/5 px-2 py-0.5 text-[11px] font-semibold text-destructive">
-        <XIcon className="size-3" />
-        Refusée — à refaire
-      </span>
-    );
+    return <Cachet encre="revoque">Refusée</Cachet>;
   }
-  return (
-    <span className="mt-1 inline-flex w-fit items-center gap-1 rounded-full border border-amber-600/40 bg-amber-600/5 px-2 py-0.5 text-[11px] font-semibold text-amber-700 dark:text-amber-400">
-      À revoir
-    </span>
-  );
+  return <Cachet encre="attente">À revoir</Cachet>;
 }
 
 /** Aperçu d'une pièce : image à voir, PDF à ouvrir (route authentifiée). */
@@ -94,44 +77,43 @@ function Piece({
 }) {
   const estImage = piece.mime.startsWith("image/");
   return (
-    <li>
+    <li className="rounded-lg border bg-muted/20">
       <a
         href={`/api/pieces-clients/${piece.id}`}
         target="_blank"
         rel="noreferrer"
-        className="flex items-start gap-3 rounded-lg border bg-card p-3 transition-colors hover:border-primary"
+        className="group flex items-start gap-4 p-3"
       >
         {estImage ? (
-          // eslint-disable-next-line @next/next/no-img-element -- aperçu local authentifié, pas d'optimisation CDN
-          <img
-            src={`/api/pieces-clients/${piece.id}`}
+          <VignettePiece
+            pieceId={piece.id}
+            mime={piece.mime}
             alt={`Pièce ${piece.typePiece} de ${nom}`}
-            className="h-16 w-16 shrink-0 rounded-md border object-cover"
           />
         ) : (
-          <span className="flex h-16 w-16 shrink-0 items-center justify-center rounded-md border bg-muted text-muted-foreground">
-            <FileTextIcon className="size-6" />
+          <span className="flex h-20 w-20 shrink-0 items-center justify-center rounded border bg-background text-muted-foreground">
+            <FileTextIcon className="size-7" />
           </span>
         )}
-        <span className="min-w-0">
-          <span className="flex items-center gap-1.5 text-xs font-semibold">
-            <ImageIcon className="size-3.5 text-muted-foreground" />
-            Pièce {piece.typePiece}
+        <span className="min-w-0 flex-1">
+          <span className="flex items-start justify-between gap-3">
+            <span className="text-sm font-semibold tracking-tight">
+              Pièce {piece.typePiece}
+            </span>
+            <CachetPiece piece={piece} />
           </span>
-          <span className="mt-0.5 block text-[11px] text-muted-foreground">
-            Déposée le {dateCourte(piece.deposeLe)} ·{" "}
-            {estImage ? "cliquez pour agrandir" : "PDF, cliquez pour ouvrir"}
+          <span className="mt-1 block text-xs text-muted-foreground">
+            Déposée le {dateCourte(piece.deposeLe)}
+            {piece.vueLe ? ` · vue le ${dateCourte(piece.vueLe)}` : " · pas encore vue"}
           </span>
-          <span className="mt-0.5 flex items-center gap-1 text-[11px] text-muted-foreground">
-            <EyeIcon className="size-3" />
-            {piece.vueLe
-              ? `Vue le ${dateCourte(piece.vueLe)}`
-              : "Pas encore vue"}
-          </span>
-          <PastillePiece piece={piece} />
           {piece.statutPiece === "REFUSEE" && piece.refusMotif ? (
-            <span className="mt-1 block text-[11px] leading-relaxed text-muted-foreground">
+            <span className="mt-2 block border-l-2 border-destructive/50 pl-2 text-xs leading-relaxed text-destructive">
               {piece.refusMotif}
+            </span>
+          ) : null}
+          {peutStatuer ? (
+            <span className="mt-1 block text-[11px] text-muted-foreground/70">
+              {estImage ? "Ouvrez la pièce pour la juger" : "Ouvrez le PDF pour le juger"}
             </span>
           ) : null}
         </span>
@@ -180,6 +162,7 @@ export function VueFicheClient({
   // Compte déjà validé et pièce déposée depuis : le distributeur statue
   // sur la pièce seule, jamais sur le compte (ticket 10).
   const revuePossible = revuePiecePossible(fiche);
+  const nbACrevoir = fiche.pieces.filter(pieceARevoir).length;
   const matricule = fiche.id.slice(0, 8).toUpperCase();
 
   return (
@@ -305,12 +288,17 @@ export function VueFicheClient({
         </section>
 
         <section className="rounded-xl border bg-card p-4 sm:p-5">
-          <h2 className="text-sm font-medium">Pièce d&apos;identité</h2>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            Valider exige d&apos;avoir vu une pièce ; un compte sans pièce
-            reste bloqué, sauf attestation au comptoir. Une pièce déposée par un
-            compte déjà validé se statue sous sa vignette, sans toucher à son
-            accès.
+          <div className="flex flex-wrap items-baseline justify-between gap-2">
+            <h2 className="text-sm font-medium">Pièce d&apos;identité</h2>
+            {nbACrevoir > 0 ? (
+              <span className="text-[11px] text-muted-foreground">
+                {nbACrevoir} à statuer
+              </span>
+            ) : null}
+          </div>
+          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+            Valider exige d&apos;avoir vu une pièce ; un compte sans pièce reste
+            bloqué, sauf attestation au comptoir.
           </p>
           {fiche.pieces.length === 0 ? (
             <p

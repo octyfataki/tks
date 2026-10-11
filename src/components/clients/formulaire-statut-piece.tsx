@@ -37,7 +37,7 @@ export function FormulaireStatutPiece({
   const [refusOuvert, setRefusOuvert] = useState(false);
 
   return (
-    <div className="mt-3 border-t border-dashed pt-3">
+    <div className="border-t border-dashed px-3 py-2">
       {refusOuvert ? (
         <form action={action} className="flex flex-col gap-2">
           <input type="hidden" name="compteId" value={compteId} />
@@ -59,12 +59,13 @@ export function FormulaireStatutPiece({
           </div>
           <MessageResultat resultat={resultat} />
           <div className="flex flex-wrap gap-2">
-            <Button type="submit" variant="destructive" disabled={enCours}>
+            <Button type="submit" size="sm" variant="destructive" disabled={enCours}>
               <XIcon />
-              {enCours ? "Refus…" : "Refuser cette pièce"}
+              {enCours ? "Refus…" : "Confirmer le refus"}
             </Button>
             <Button
               type="button"
+              size="sm"
               variant="outline"
               onClick={() => setRefusOuvert(false)}
               disabled={enCours}
@@ -74,29 +75,28 @@ export function FormulaireStatutPiece({
           </div>
         </form>
       ) : (
-        <form action={action} className="flex flex-col gap-2">
+        <form action={action} className="flex flex-wrap items-center gap-2">
           <input type="hidden" name="compteId" value={compteId} />
           <input type="hidden" name="pieceId" value={pieceId} />
           <input type="hidden" name="statut" value="ACCEPTEE" />
-          <p className="text-xs leading-relaxed text-muted-foreground">
-            Le compte reste validé : seul ce document est tranché.
-          </p>
           <MessageResultat resultat={resultat} />
-          <div className="flex flex-wrap gap-2">
-            <Button type="submit" disabled={enCours}>
-              <CheckIcon />
-              {enCours ? "Acceptation…" : "Accepter cette pièce"}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setRefusOuvert(true)}
-              disabled={enCours}
-            >
-              <XIcon />
-              Refuser
-            </Button>
-          </div>
+          <Button type="submit" size="sm" disabled={enCours}>
+            <CheckIcon />
+            {enCours ? "Acceptation…" : "Accepter"}
+          </Button>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => setRefusOuvert(true)}
+            disabled={enCours}
+          >
+            <XIcon />
+            Refuser
+          </Button>
+          <span className="text-[11px] text-muted-foreground">
+            Le compte reste validé.
+          </span>
         </form>
       )}
     </div>
