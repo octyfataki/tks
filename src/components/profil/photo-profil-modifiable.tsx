@@ -128,7 +128,7 @@ export function PhotoProfilModifiable({ nom, avatarUrl }: { nom: string; avatarU
   return (
     <div className="shrink-0">
       <div className="group relative">
-        <Avatar className="size-16 sm:size-20">
+        <Avatar className="size-24 sm:size-20">
           {photoAffichee ? <AvatarImage src={photoAffichee} alt={nom} /> : null}
           <AvatarFallback className="bg-primary/10 text-lg font-semibold text-primary">
             {initiales(nom)}
@@ -143,6 +143,13 @@ export function PhotoProfilModifiable({ nom, avatarUrl }: { nom: string; avatarU
         >
           <CameraIcon className="size-5" aria-hidden />
         </button>
+        {/* Mobile : pas de survol, donc pastille caméra permanente (masquée dès sm, où le survol la révèle). */}
+        <span
+          aria-hidden
+          className="pointer-events-none absolute -right-1 -bottom-1 flex size-7 items-center justify-center rounded-full border bg-card text-muted-foreground shadow-sm sm:hidden"
+        >
+          <CameraIcon className="size-4" aria-hidden />
+        </span>
       </div>
 
       <Dialog open={ouvert} onOpenChange={(v) => (v ? setOuvert(true) : fermer())}>
