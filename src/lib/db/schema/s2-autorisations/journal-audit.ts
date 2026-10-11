@@ -13,6 +13,11 @@ import {
 //   l'UUID d'invitation existant joue déjà ce rôle d'op_id côté S1.
 // - `horodatageLocal` : heure de l'appareil, conservée telle quelle.
 // - `recuLe` : heure de réception serveur. Les deux restent visibles.
+// - `contesteId` (S2 issue 15) : identifiant de la ligne que la présente
+//   ligne corrige — le fil « erreur → correction », remontable sans deviner.
+//   NULLABLE (une action normale ne conteste rien), sans FK : une contrainte
+//   casserait l'insertion hors-ligne (S8 traverse tout). L'existence de la
+//   ligne contestée est contrôlée par l'application, à l'écriture.
 // - La consultation du journal n'est pas journalisée (sinon boucle).
 export const journalAudit = mysqlTable(
   "journal_audit",
@@ -30,12 +35,14 @@ export const journalAudit = mysqlTable(
     recuLe: timestamp("recu_le", { fsp: 3 }).defaultNow().notNull(),
     statut: varchar("statut", { length: 16 }).notNull().default("REUSSIE"),
     motif: varchar("motif", { length: 255 }),
+    contesteId: varchar("conteste_id", { length: 36 }),
   },
   (table) => [
     index("journal_audit_acteur_idx").on(table.acteurId),
     index("journal_audit_entite_idx").on(table.entite, table.entiteId),
     index("journal_audit_type_idx").on(table.typeAction),
     index("journal_audit_recu_idx").on(table.recuLe),
+    index("journal_audit_conteste_idx").on(table.contesteId),
   ],
 );
 
