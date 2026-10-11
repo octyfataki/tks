@@ -24,6 +24,11 @@ describe("PaletteRecherche", () => {
     const icone = screen.getByRole("button", { name: "Rechercher…" });
     expect(icone).toBeInTheDocument();
     expect(icone).not.toHaveTextContent("⌘K");
+    expect(icone).toHaveClass("lg:hidden");
+    expect(screen.getByRole("button", { name: /ctrl\+k/i })).toHaveClass(
+      "hidden",
+      "lg:inline-flex",
+    );
     fireEvent.click(icone);
     expect(
       screen.getByRole("dialog", { name: "Recherche" }),
