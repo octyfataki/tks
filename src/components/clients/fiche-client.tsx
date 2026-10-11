@@ -180,7 +180,7 @@ export function VueFicheClient({
         ) : null}
       </header>
 
-      <div className="grid items-start gap-4 lg:grid-cols-2">
+      <div className="flex flex-col gap-4">
         <section className="rounded-xl border bg-card p-4 sm:p-5">
           <h2 className="text-sm font-medium">Identité du compte</h2>
           <p className="mt-0.5 text-xs text-muted-foreground">
@@ -274,6 +274,21 @@ export function VueFicheClient({
       </div>
 
       <section className="rounded-xl border bg-card p-4 sm:p-5">
+        <h2 className="text-sm font-medium">Annotations</h2>
+        <p className="mt-0.5 text-xs text-muted-foreground">
+          Repères posés à la main : ni note, ni score, ni calcul. Retirer
+          ajoute l&apos;écriture inverse, tracée — rien n&apos;est effacé.
+        </p>
+        <div className="mt-3">
+          <FormulairesEtiquettes
+            compteId={fiche.id}
+            actives={etiquettesActives}
+            peutAnnoter={peutAnnoter}
+          />
+        </div>
+      </section>
+
+      <section className="rounded-xl border bg-card p-4 sm:p-5">
         <h2 className="text-sm font-medium">Actions</h2>
         <p className="mt-0.5 text-xs text-muted-foreground">
           Chaque décision est journalisée : qui, quand, quel compte, sur
@@ -333,21 +348,6 @@ export function VueFicheClient({
             ) : null}
           </div>
         )}
-      </section>
-
-      <section className="rounded-xl border bg-card p-4 sm:p-5">
-        <h2 className="text-sm font-medium">Annotations</h2>
-        <p className="mt-0.5 text-xs text-muted-foreground">
-          Repères posés à la main : ni note, ni score, ni calcul. Retirer
-          ajoute l&apos;écriture inverse, tracée — rien n&apos;est effacé.
-        </p>
-        <div className="mt-3">
-          <FormulairesEtiquettes
-            compteId={fiche.id}
-            actives={etiquettesActives}
-            peutAnnoter={peutAnnoter}
-          />
-        </div>
       </section>
 
       <section className="rounded-xl border border-dashed bg-card p-4 sm:p-5">
