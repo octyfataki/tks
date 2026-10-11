@@ -201,6 +201,25 @@
   }
 }
 
+/* Barre de progression des navigations (nprogress).
+   Reprend la palette du thème : la barre suit --primary, comme les jauges de
+   durée des paramètres, et non le bleu #29d de la bibliothèque. Le cercle
+   tournant est retiré côté JS (showSpinner: false) et la traînée lumineuse
+   ici, pour rester sur le même trait fin que le reste de l'application. */
+#nprogress .bar {
+  background: var(--primary);
+  height: 2px;
+  z-index: 1080;
+}
+#nprogress .peg {
+  display: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  #nprogress .bar {
+    transition: none !important;
+  }
+}
+
 /* Curseur de durée (invitations) : piste remplie jusqu'à la valeur,
    pouce fond uni + anneau primary, lisible en clair comme en sombre.
    Le remplissage webkit passe par --tks-range-track (style inline) ;
