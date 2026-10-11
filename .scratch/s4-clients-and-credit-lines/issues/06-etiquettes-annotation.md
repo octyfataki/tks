@@ -29,7 +29,10 @@ Une étiquette est un repère opérationnel posé par un humain autorisé
       jamais stocké.
 - [ ] Chaque geste est **journalisé** (`annotation.poser`,
       `annotation.retirer`) dans la même transaction : journal indisponible
-      = geste annulé. Le résumé du journal reste lisible (S2).
+      = geste annulé. Le résumé du journal reste lisible (S2). L'entité
+      tracée est le compte (`entite_id` fait 36 caractères : pas
+      d'identifiant composite `compte:etiquette`, le détail vit dans
+      `avant`/`apres`).
 - [ ] Une pose contestée depuis le journal n'ouvre pas de corrective : on
       retire **depuis la fiche**, l'écriture inverse est déjà tracée.
 - [ ] La table est **réplicable** (invariant 9) : `id` généré sur
@@ -43,6 +46,8 @@ Une étiquette est un repère opérationnel posé par un humain autorisé
       n'annote jamais** (aucun pouvoir métier, GLOSSARY — comme
       `taux.saisir`, S3).
 - [ ] Un code inconnu n'affiche **jamais de brut** : ni badge, ni bouton.
+- [ ] Tout le feedback (succès comme refus) passe par les **toasts**,
+      pas de message inline — comme la création d'agent.
 
 **Tests :** dérivation (le plus récent gagne, égalité par `recuLe`,
 inconnus ignorés, vide, plusieurs comptes), liste fermée (contenu,

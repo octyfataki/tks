@@ -1,8 +1,9 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useEffect, useRef } from "react";
 import { PlusIcon, XIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { toast } from "@/components/ui/toast";
 import {
   ETIQUETTES_FERMEES,
   type Etiquette,
@@ -18,8 +19,9 @@ const ETAT_INITIAL: ResultatAnnotation | null = null;
 
 /**
  * Un bouton-bascule par étiquette de la liste fermée. Inactive → « poser »,
- * active → « retirer » (écriture inverse, jamais de suppression). L'erreur
- * éventuelle s'affiche sous le bouton concerné, sans casser les autres.
+ * active → « retirer » (écriture inverse, jamais de suppression). Tout le
+ * feedback (succès comme refus) passe par les toasts : pas de message
+ * inline — le bouton reste compact dans la fiche.
  */
 function BoutonEtiquette({
   compteId,
@@ -38,7 +40,26 @@ function BoutonEtiquette({
     active ? retirerEtiquetteAction : poserEtiquetteAction,
     ETAT_INITIAL,
   );
-  const erreur = resultat && !resultat.ok ? resultat.erreur : null;
+  const dernierResultat = useRef<ResultatAnnotation | null>(null);
+
+  useEffect(() => {
+    if (!resultat || dernierResultat.current === resultat) return;
+    dernierResultat.current = resultat;
+    if (resultat.ok) {
+      toast.add({
+        type: "success",
+        title: active
+          ? `Étiquette « ${libelle} » retirée`
+          : `Étiquette « ${libelle} » posée`,
+      });
+    } else {
+      toast.add({
+        type: "error",
+        title: active ? "Étiquette non retirée" : "Étiquette non posée",
+        description: resultat.erreur,
+      });
+    }
+  }, [resultat, active, libelle]);
 
   return (
     <form action={formAction} className="inline-flex flex-col gap-1">
@@ -63,11 +84,6 @@ function BoutonEtiquette({
           {active ? "— actif, cliquer pour retirer" : "— inactif, cliquer pour poser"}
         </span>
       </button>
-      {erreur ? (
-        <span role="alert" className="text-[11px] font-medium text-destructive">
-          {erreur}
-        </span>
-      ) : null}
     </form>
   );
 }

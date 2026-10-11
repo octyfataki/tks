@@ -6,14 +6,22 @@ import { EtiquettesBadge, PastilleEtiquette } from "./etiquettes-badge";
 // Un code inconnu n'affiche rien.
 
 describe("PastilleEtiquette", () => {
-  it("affiche le libellé français de l'étiquette", () => {
+  it("affiche le libellé français de l'étiquette avec sa coche", () => {
     render(<PastilleEtiquette code="BON_PAYEUR" />);
     expect(screen.getByText("Bon payeur")).toBeInTheDocument();
+    expect(screen.getByText("Bon payeur").querySelector("svg")).not.toBeNull();
   });
 
   it("un code inconnu n'affiche rien", () => {
     const { container } = render(<PastilleEtiquette code="MAUVAIS_PAYEUR" />);
     expect(container).toBeEmptyDOMElement();
+  });
+
+  it("en variante pastille (tableaux) : libellé seul, sans coche", () => {
+    render(<PastilleEtiquette code="BON_PAYEUR" variant="pastille" />);
+    const badge = screen.getByText("Bon payeur");
+    expect(badge).toBeInTheDocument();
+    expect(badge.querySelector("svg")).toBeNull();
   });
 });
 

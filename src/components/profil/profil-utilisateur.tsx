@@ -233,13 +233,13 @@ export function ProfilUtilisateur({
     : 0;
 
   return (
-    <section aria-label="Mon compte" className={cn("w-full", className)}>
+    <section aria-label="Mon compte" className={cn("w-full min-w-0", className)}>
       <header className="rounded-xl border bg-card p-4 sm:p-6">
         <div className="flex flex-col gap-5 sm:flex-row">
-          <div className="flex min-w-0 flex-1 items-center gap-4">
+          <div className="flex min-w-0 flex-1 flex-col items-center gap-3 text-center sm:flex-row sm:gap-4 sm:text-left">
             <PhotoProfilModifiable nom={nom} avatarUrl={avatarUrl} />
             <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
                 <h1 className="min-w-0 break-words text-xl font-semibold tracking-tight">{nom}</h1>
                 <Badge variant="secondary" className="rounded-full">
                   {libelleRole(compte)}
@@ -248,7 +248,7 @@ export function ProfilUtilisateur({
               <p className="mt-1 min-w-0 break-words text-sm text-muted-foreground">
                 {email} · {precisionRole(compte)}
               </p>
-              <p className="mt-1.5 flex flex-wrap items-center gap-1.5 text-xs text-muted-foreground">
+              <p className="mt-1.5 flex flex-wrap items-center justify-center gap-1.5 text-xs text-muted-foreground sm:justify-start">
                 {matricule ? (
                   <span className="inline-flex items-center gap-1">
                     <FingerprintIcon className="size-3.5" aria-hidden />
@@ -272,7 +272,7 @@ export function ProfilUtilisateur({
             <div className="min-w-0">
               <dt className="text-xs text-muted-foreground">Matricule</dt>
               <dd className="mt-0.5 flex items-center gap-1 text-sm font-medium text-foreground">
-                <span className="truncate">{matricule ?? "—"}</span>
+                <span className="min-w-0 truncate">{matricule ?? "—"}</span>
                 {matricule ? <BoutonCopierMatricule valeur={matricule} className="size-5 shrink-0" /> : null}
               </dd>
             </div>
@@ -283,8 +283,8 @@ export function ProfilUtilisateur({
         </div>
       </header>
 
-      <div className="mt-4 grid items-start gap-4 lg:grid-cols-3">
-        <div className="flex flex-col gap-4 lg:col-span-2">
+      <div className="mt-4 grid grid-cols-1 items-start gap-4 lg:grid-cols-3">
+        <div className="flex min-w-0 flex-col gap-4 lg:col-span-2">
           <section aria-label="Coordonnées" className="rounded-xl border bg-card p-4 sm:p-5">
             <SectionModifiable
               titre="Coordonnées"
@@ -387,7 +387,7 @@ export function ProfilUtilisateur({
           ) : null}
         </div>
 
-        <div className="flex flex-col gap-4">
+        <div className="flex min-w-0 flex-col gap-4">
           <section aria-label="Sécurité" className="rounded-xl border bg-card p-4 sm:p-5">
             <TitreCarte titre="Sécurité" verrou="lecture seule : la sécurité se gère hors de cette fiche" />
             <div className="mt-4 flex items-center justify-between gap-2">
@@ -402,7 +402,7 @@ export function ProfilUtilisateur({
               </Badge>
             </div>
             {appareilSecondFacteur ? (
-              <p className="mt-3 text-xs text-muted-foreground">
+              <p className="mt-3 break-words text-xs text-muted-foreground">
                 Appareil déclaré :{" "}
                 <span className="font-medium text-foreground">{appareilSecondFacteur}</span>
               </p>
@@ -450,12 +450,12 @@ export function ProfilUtilisateur({
                   {sessionsAffichees.map((s) => (
                     <div
                       key={s.id}
-                      className="rounded-lg border px-3 py-2 text-xs"
+                      className="min-w-0 rounded-lg border px-3 py-2 text-xs"
                       title={s.appareil || "Appareil inconnu"}
                     >
                       <dt className="sr-only">Session</dt>
                       <dd className="flex items-center justify-between gap-2">
-                        <span className="truncate font-medium">
+                        <span className="min-w-0 truncate font-medium">
                           {(s.appareil || "Appareil inconnu").slice(0, 48)}
                         </span>
                         {s.id === sessionActuelleId ? (

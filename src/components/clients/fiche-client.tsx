@@ -180,8 +180,8 @@ export function VueFicheClient({
         ) : null}
       </header>
 
-      <div className="grid items-start gap-4 lg:grid-cols-2">
-        <section className="rounded-xl border bg-card p-4 sm:p-5">
+      <div className="grid items-start gap-4 lg:grid-cols-3">
+        <section className="rounded-xl border bg-card p-4 sm:p-5 lg:col-span-2 min-w-0">
           <h2 className="text-sm font-medium">Identité du compte</h2>
           <p className="mt-0.5 text-xs text-muted-foreground">
             Un compte est une connexion : le téléphone en est la clé. Le
@@ -247,30 +247,47 @@ export function VueFicheClient({
           </div>
         </section>
 
-        <section className="rounded-xl border bg-card p-4 sm:p-5">
-          <h2 className="text-sm font-medium">Pièce d&apos;identité</h2>
-          <p className="mt-0.5 text-xs text-muted-foreground">
-            Valider exige d&apos;avoir vu une pièce ; un compte sans pièce
-            reste bloqué, sauf attestation au comptoir.
-          </p>
-          {fiche.pieces.length === 0 ? (
-            <p
-              role="note"
-              className="mt-3 rounded-lg border border-amber-600/40 bg-amber-600/5 p-3 text-xs leading-relaxed"
-            >
-              <span className="font-semibold">
-                Aucune pièce déposée pour l&apos;instant.
-              </span>{" "}
-              Le client la dépose depuis sa page d&apos;attente.
+        <div className="flex min-w-0 flex-col gap-4">
+          <section className="rounded-xl border bg-card p-4 sm:p-5">
+            <h2 className="text-sm font-medium">Pièce d&apos;identité</h2>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Valider exige d&apos;avoir vu une pièce ; un compte sans pièce
+              reste bloqué, sauf attestation au comptoir.
             </p>
-          ) : (
-            <div className="mt-3 flex flex-col gap-2">
-              {fiche.pieces.map((p) => (
-                <Piece key={p.id} piece={p} nom={nom} />
-              ))}
+            {fiche.pieces.length === 0 ? (
+              <p
+                role="note"
+                className="mt-3 rounded-lg border border-amber-600/40 bg-amber-600/5 p-3 text-xs leading-relaxed"
+              >
+                <span className="font-semibold">
+                  Aucune pièce déposée pour l&apos;instant.
+                </span>{" "}
+                Le client la dépose depuis sa page d&apos;attente.
+              </p>
+            ) : (
+              <div className="mt-3 flex flex-col gap-2">
+                {fiche.pieces.map((p) => (
+                  <Piece key={p.id} piece={p} nom={nom} />
+                ))}
+              </div>
+            )}
+          </section>
+
+          <section className="rounded-xl border bg-card p-4 sm:p-5">
+            <h2 className="text-sm font-medium">Annotations</h2>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Repères posés à la main : ni note, ni score, ni calcul. Retirer
+              ajoute l&apos;écriture inverse, tracée — rien n&apos;est effacé.
+            </p>
+            <div className="mt-3">
+              <FormulairesEtiquettes
+                compteId={fiche.id}
+                actives={etiquettesActives}
+                peutAnnoter={peutAnnoter}
+              />
             </div>
-          )}
-        </section>
+          </section>
+        </div>
       </div>
 
       <section className="rounded-xl border bg-card p-4 sm:p-5">
@@ -333,21 +350,6 @@ export function VueFicheClient({
             ) : null}
           </div>
         )}
-      </section>
-
-      <section className="rounded-xl border bg-card p-4 sm:p-5">
-        <h2 className="text-sm font-medium">Annotations</h2>
-        <p className="mt-0.5 text-xs text-muted-foreground">
-          Repères posés à la main : ni note, ni score, ni calcul. Retirer
-          ajoute l&apos;écriture inverse, tracée — rien n&apos;est effacé.
-        </p>
-        <div className="mt-3">
-          <FormulairesEtiquettes
-            compteId={fiche.id}
-            actives={etiquettesActives}
-            peutAnnoter={peutAnnoter}
-          />
-        </div>
       </section>
 
       <section className="rounded-xl border border-dashed bg-card p-4 sm:p-5">
