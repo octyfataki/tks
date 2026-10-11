@@ -348,6 +348,12 @@ export const GROUPES_CLIENT: GroupeSuggestions[] = [
         href: "/clients/profil",
       },
       {
+        etiquette: "Paramètres",
+        motsCles: ["paramètres", "réglages", "session", "mot de passe", "thème", "synchronisation", "appareil"],
+        icone: SettingsIcon,
+        href: "/clients/settings",
+      },
+      {
         etiquette: "Aide",
         motsCles: ["aide", "raccourcis", "dossier", "commande"],
         icone: CircleHelpIcon,

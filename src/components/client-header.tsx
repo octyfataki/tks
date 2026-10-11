@@ -29,6 +29,10 @@ const FIL_ARIANE_PAR_CHEMIN: Record<string, Segment[]> = {
     { etiquette: "Votre compte", href: "/clients" },
     { etiquette: "Mon compte" },
   ],
+  "/clients/settings": [
+    { etiquette: "Votre compte", href: "/clients" },
+    { etiquette: "Paramètres" },
+  ],
   "/clients/aide": [
     { etiquette: "Votre compte", href: "/clients" },
     { etiquette: "Aide" },

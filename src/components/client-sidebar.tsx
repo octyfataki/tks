@@ -23,6 +23,7 @@ import {
   GaugeIcon,
   LayoutDashboardIcon,
   ScaleIcon,
+  SettingsIcon,
 } from "lucide-react"
 
 const groups: { label: string; items: NavItem[] }[] = [
@@ -94,6 +95,11 @@ const groups: { label: string; items: NavItem[] }[] = [
   {
     label: "Système",
     items: [
+      {
+        title: "Paramètres",
+        url: "/clients/settings",
+        icon: <SettingsIcon />,
+      },
       {
         title: "Aide",
         url: "/clients/aide",
