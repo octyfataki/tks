@@ -12,6 +12,7 @@ import {
   typePieceValide,
 } from "./pieces-fichiers";
 import type { StatutPiece } from "./fiche-client";
+import { lignesEcrites } from "./resultat-mysql";
 
 // Dépôt de pièce d'identité client (S1-03) : le client dépose depuis
 // l'application (image compressée côté client, ou PDF). Le fichier vit
@@ -142,7 +143,7 @@ export async function statuerPiece(
   refusMotif: string | null,
   ex: ExecuteurDb,
 ): Promise<number> {
-  const resultat = (await ex
+  const resultat = await ex
     .update(piecesIdentiteClients)
     .set({ vuePar: adminId, vueLe: new Date(), statutPiece: statut, refusMotif })
     .where(
@@ -150,6 +151,6 @@ export async function statuerPiece(
         eq(piecesIdentiteClients.id, pieceId),
         eq(piecesIdentiteClients.statutPiece, "EN_ATTENTE"),
       ),
-    )) as { affectedRows?: number };
-  return resultat.affectedRows ?? 0;
+    );
+  return lignesEcrites(resultat);
 }

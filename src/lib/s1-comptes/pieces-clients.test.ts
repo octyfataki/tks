@@ -6,6 +6,7 @@ import {
   typePieceValide,
   verdictFichierPiece,
 } from "./pieces-fichiers";
+import { lignesEcrites } from "./resultat-mysql";
 
 describe("verdictFichierPiece", () => {
   it("accepte une image JPEG conforme", () => {
@@ -90,5 +91,36 @@ describe("etatPieceDeposable", () => {
     expect(etatPieceDeposable("REVOQUE")).toBe(false);
     expect(etatPieceDeposable("SUSPENDU")).toBe(false);
     expect(etatPieceDeposable("")).toBe(false);
+  });
+});
+
+// Régression : `db.update()` sous mysql2 renvoie `[ResultSetHeader, ...]`.
+// Lire `affectedRows` à la racine donne `undefined`, donc « 0 ligne »,
+// donc « pièce déjà tranchée » alors que l'écriture venait de réussir —
+// et la transaction s'annulait. La fonction s'appuie sur la forme réelle,
+// relevée sur le pilote.
+describe("lignesEcrites", () => {
+  const enteteReel = (affectedRows: number) => [
+    { fieldCount: 0, affectedRows, insertId: 0, changedRows: affectedRows },
+    null,
+  ];
+
+  it("lit le nombre de lignes dans la forme renvoyée par mysql2", () => {
+    expect(lignesEcrites(enteteReel(1))).toBe(1);
+    expect(lignesEcrites(enteteReel(0))).toBe(0);
+  });
+
+  it("ne confond jamais une écriture réussie avec un refus", () => {
+    expect(lignesEcrites(enteteReel(1))).not.toBe(0);
+  });
+
+  it("tolère aussi la forme objet, pour un pilote qui la rendrait", () => {
+    expect(lignesEcrites({ affectedRows: 3 })).toBe(3);
+  });
+
+  it("renvoie 0 sur une forme inconnue plutôt que de mentir", () => {
+    expect(lignesEcrites(undefined)).toBe(0);
+    expect(lignesEcrites(null)).toBe(0);
+    expect(lignesEcrites({})).toBe(0);
   });
 });
