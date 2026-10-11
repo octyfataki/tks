@@ -33,6 +33,23 @@ n'est pas un dépôt git. Les artefacts présents sont :
    etc.), demander explicitement l'autorisation à l'utilisateur et attendre sa
    validation. Cela vaut pour les dépendances de production comme de
    développement. En cas de doute, ne pas installer.
+7. Après chaque travail, fournir systématiquement :
+   - un **résumé** (périmètre livré, écarts assumés, fichiers clés, vérifs
+     exécutées avec leurs résultats) ;
+   - un **protocole de test humain** pour l'interface web : comment lancer,
+     quel parcours cliquer, ce qu'on doit voir à chaque étape, et quoi
+     remonter (design qui déplaît, libellé, placement). Le test automatisé
+     ne remplace jamais l'œil humain sur le design.
+8. Appeler les skills disponibles quand la tâche correspond :
+   - `@frontend-design` — toute UI nouvelle ou modifiée : plan design
+     (palette, type, layout) avant de coder, auto-critique après ;
+   - `@clean-code` — pendant l'écriture et la refactorisation ;
+   - `@code-review` + `@code-review-and-quality` — avant tout merge/PR :
+     revue 5 axes (correction, lisibilité, architecture, sécurité,
+     performance), findings sévéritisés, jamais de « LGTM » sans preuve.
+9. **Ne jamais merger sans ton « OK » explicite.** Préparer la PR et la
+   revue, puis attendre ta validation écrite avant `gh pr merge`. Sans
+   « OK », on s'arrête à la PR prête.
 
 ## Agent skills
 
