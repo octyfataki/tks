@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toast";
 import { ThemeProvider } from "@/components/theme-provider";
 import { AppSplash } from "@/components/app-splash";
+import { ProgressionNavigation } from "@/components/progression-navigation";
 import { cn } from "@/lib/utils";
 
 const inter = Inter({subsets:['latin'],variable:'--font-sans'});
@@ -38,7 +39,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       suppressHydrationWarning
       className={cn("h-full", "antialiased", geistSans.variable, geistMono.variable, "font-sans", inter.variable)}
     >
-      <body className="min-h-full flex flex-col"><ThemeProvider defaultTheme="system"><TooltipProvider>{children}</TooltipProvider><Toaster /></ThemeProvider><AppSplash /></body>
+      <body className="min-h-full flex flex-col"><ProgressionNavigation /><ThemeProvider defaultTheme="system"><TooltipProvider>{children}</TooltipProvider><Toaster /></ThemeProvider><AppSplash /></body>
     </html>
   );
 }
