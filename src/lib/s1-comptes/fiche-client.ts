@@ -7,8 +7,8 @@
 // lecteur injecté, donc testable sans environnement. Le lecteur réel vit
 // dans fiche-client-base.ts.
 
-/** Verdict porté par une pièce d'identité : ces trois valeurs, rien d'autre. */
-export const STATUTS_PIECE = ["EN_ATTENTE", "ACCEPTEE", "REFUSEE"] as const;
+/** Verdict porté par une pièce d'identité : ces quatre valeurs, rien d'autre. */
+export const STATUTS_PIECE = ["EN_ATTENTE", "ACCEPTEE", "REFUSEE", "RETIREE"] as const;
 export type StatutPiece = (typeof STATUTS_PIECE)[number];
 
 export function statutPieceValide(valeur: string): valeur is StatutPiece {
@@ -98,13 +98,24 @@ export function pieceAValider(
 }
 
 /**
- * Une pièce attend-elle encore un verdict humain ? Seul cas où le
- * distributeur peut statuer : acceptée ou refusée, elle est tranchée.
- * Un statut inconnu compte comme à revoir : mieux vaut le montrer que
- * le cacher.
+ * Une pièce attend-elle encore un verdict humain ? Seuls `ACCEPTEE`,
+ * `REFUSEE` et `RETIREE` sont tranchées. Un statut inconnu compte comme à
+ * revoir : mieux vaut le montrer que le cacher.
  */
 export function pieceARevoir(piece: Pick<PieceFicheClient, "statutPiece">): boolean {
-  return piece.statutPiece !== "ACCEPTEE" && piece.statutPiece !== "REFUSEE";
+  return !["ACCEPTEE", "REFUSEE", "RETIREE"].includes(piece.statutPiece);
+}
+
+/**
+ * Le client peut-il retirer cette pièce (ticket 11) ? Une pièce en attente
+ * est hors de sa portée : on ne retire pas ce qu'un humain est en train de
+ * juger. Seule une pièce refusée, que le client a déjà fait trancher et
+ * qu'il remplace, se retire.
+ */
+export function pieceRetirable(
+  piece: Pick<PieceFicheClient, "statutPiece">,
+): boolean {
+  return piece.statutPiece === "REFUSEE";
 }
 
 /**

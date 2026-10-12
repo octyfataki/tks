@@ -20,6 +20,7 @@ import {
   verdictRevocationLien,
 } from "@/lib/db/schema/s1-comptes";
 import { enregistrerEvenement } from "@/lib/s2-autorisations/journal";
+import { lignesEcrites } from "./resultat-mysql";
 
 // Couche applicative staff minimal (S1) : bootstrap technique, création du
 // principal, invitation / acceptation agent. Tout le métier non couvert
@@ -1124,11 +1125,7 @@ export async function definirMotDePassePremierAcces(input: {
           eq(account.providerId, "credential"),
         ),
       );
-    // mysql2 renvoie [ResultSetHeader, ...] : affectedRows vit en [0].
-    const entete = (Array.isArray(resultat) ? resultat[0] : resultat) as unknown as {
-      affectedRows?: number;
-    };
-    if (entete?.affectedRows !== 1) {
+    if (lignesEcrites(resultat) !== 1) {
       throw new StaffError("NON_AUTORISE", "compte introuvable côté auth");
     }
     await tx

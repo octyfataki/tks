@@ -6,6 +6,7 @@ import {
   peutOuvrirFicheClient,
   pieceAValider,
   pieceARevoir,
+  pieceRetirable,
   revuePiecePossible,
   statutPieceValide,
   STATUTS_PIECE,
@@ -131,7 +132,23 @@ describe("décisions d'affichage de la fiche", () => {
     expect(revuePiecePossible({ etat: "VALIDE", pieces: [] })).toBe(false);
   });
 
-  it("connaît les trois statuts de pièce — rien d'autre", () => {
+  it("ne statue pas sur une pièce retirée : elle n'attend plus personne", () => {
+    expect(pieceARevoir({ statutPiece: "RETIREE" })).toBe(false);
+    expect(
+      revuePiecePossible({ etat: "VALIDE", pieces: [{ statutPiece: "RETIREE" }] }),
+    ).toBe(false);
+  });
+
+  it("ne retire qu'une pièce refusée, et une seule fois", () => {
+    expect(pieceRetirable({ statutPiece: "REFUSEE" })).toBe(true);
+    // Une pièce en attente est hors de la portée du client : on ne retire
+    // pas ce qu'un humain est en train de juger.
+    expect(pieceRetirable({ statutPiece: "EN_ATTENTE" })).toBe(false);
+    expect(pieceRetirable({ statutPiece: "ACCEPTEE" })).toBe(false);
+    expect(pieceRetirable({ statutPiece: "RETIREE" })).toBe(false);
+  });
+
+  it("connaît les statuts de pièce — rien d'autre", () => {
     for (const statut of STATUTS_PIECE) {
       expect(statutPieceValide(statut)).toBe(true);
     }

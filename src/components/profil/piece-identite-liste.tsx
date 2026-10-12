@@ -1,5 +1,15 @@
-import { CheckIcon, EyeIcon, FileTextIcon, ImageIcon, XIcon } from "lucide-react";
-import type { StatutPiece } from "@/lib/s1-comptes/fiche-client";
+import {
+  CheckIcon,
+  EyeIcon,
+  FileTextIcon,
+  ImageIcon,
+  XIcon,
+} from "lucide-react";
+import {
+  pieceRetirable,
+  type StatutPiece,
+} from "@/lib/s1-comptes/fiche-client";
+import { BoutonRetirerPiece } from "./bouton-retirer-piece";
 
 /** Pièce d'identité du compte connecté, telle que montrée sur son profil. */
 export type PieceIdentiteProfil = {
@@ -32,17 +42,26 @@ export function ListePiecesIdentite({
 }: {
   pieces: PieceIdentiteProfil[];
 }) {
+  // Ticket 11 : une pièce retirée ne compte plus — elle disparaît de la
+  // lecture courante du client. Le distributeur, lui, continue de la voir
+  // sur la fiche (cachet « Retirée »).
+  const visibles = pieces.filter((piece) => piece.statutPiece !== "RETIREE");
   return (
     <ul className="mt-3 flex flex-col gap-2">
-      {pieces.map((piece) => {
+      {visibles.map((piece) => {
         const estImage = piece.mime.startsWith("image/");
+        // Le bouton de retrait est un frère du lien, jamais son enfant :
+        // un bouton dans un lien ouvre le document en plus d'agir.
         return (
-          <li key={piece.id}>
+          <li
+            key={piece.id}
+            className="rounded-lg border bg-card transition-colors has-[a:hover]:border-primary"
+          >
             <a
               href={`/api/pieces-clients/${piece.id}`}
               target="_blank"
               rel="noreferrer"
-              className="flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors hover:border-primary"
+              className="flex items-center gap-3 p-3"
             >
               {estImage ? (
                 // eslint-disable-next-line @next/next/no-img-element -- aperçu local authentifié, pas d'optimisation CDN
@@ -94,6 +113,11 @@ export function ListePiecesIdentite({
                 ) : null}
               </span>
             </a>
+            {pieceRetirable(piece) ? (
+              <div className="border-t border-dashed px-3 py-2">
+                <BoutonRetirerPiece pieceId={piece.id} />
+              </div>
+            ) : null}
           </li>
         );
       })}
