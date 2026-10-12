@@ -11,9 +11,13 @@ import {
   piecesIdentiteClients,
   transitionCompteClientValide,
 } from "@/lib/db/schema/s1-comptes";
-import { statuerPiece } from "@/lib/s1-comptes/pieces-clients";
+import {
+  compteClientConnecte,
+  retirerPiece,
+  statuerPiece,
+} from "@/lib/s1-comptes/pieces-clients";
 import { typePieceValide } from "@/lib/s1-comptes/pieces-fichiers";
-import { statutPieceValide } from "@/lib/s1-comptes/fiche-client";
+import { statutPieceValide, pieceRetirable, type StatutPiece } from "@/lib/s1-comptes/fiche-client";
 import {
   enregistrerEvenement,
   journaliserRefusContestation,
@@ -354,6 +358,78 @@ export async function statuerPieceIdentiteAction(
   // Le motif se lit sur le profil du client : il doit le voir sans recharger.
   revalidatePath("/clients/profil");
   return { ok: true, compteId };
+}
+
+/**
+ * Le client retire une pièce qu'il avait déposée et qui a été refusée
+ * (ticket 11). Il ne retire que ce qui a déjà été jugé : une pièce en
+ * attente reste hors de sa portée.
+ *
+ * Rien n'est supprimé : la pièce passe `RETIREE`, son fichier et son motif
+ * restent, la fiche du distributeur continue de les montrer. Le retrait
+ * est journalisé (`piece.retirer`) dans la même transaction que l'écriture.
+ */
+export async function retirerPieceIdentiteAction(
+  _precedent: ResultatDecision | null,
+  donnees: FormData,
+): Promise<ResultatDecision> {
+  const compte = await compteClientConnecte();
+  if (!compte) {
+    return {
+      ok: false,
+      erreur: "Connectez-vous avec votre compte client pour retirer une pièce.",
+    };
+  }
+  const pieceId = String(donnees.get("pieceId") ?? "").trim();
+  if (pieceId === "") return { ok: false, erreur: "Pièce exigée." };
+
+  const pieces = await db
+    .select({
+      id: piecesIdentiteClients.id,
+      compteClientId: piecesIdentiteClients.compteClientId,
+      statutPiece: piecesIdentiteClients.statutPiece,
+    })
+    .from(piecesIdentiteClients)
+    .where(eq(piecesIdentiteClients.id, pieceId))
+    .limit(1);
+  const piece = pieces[0];
+  if (!piece || piece.compteClientId !== compte.id) {
+    return { ok: false, erreur: "Pièce inconnue pour ce compte." };
+  }
+  if (!pieceRetirable({ statutPiece: piece.statutPiece as StatutPiece })) {
+    return {
+      ok: false,
+      erreur: "Seule une pièce refusée peut être retirée, et une seule fois.",
+    };
+  }
+
+  try {
+    await db.transaction(async (tx) => {
+      const ecrites = await retirerPiece(pieceId, compte.id, tx);
+      if (ecrites === 0) throw new Error("Pièce déjà retirée.");
+      const trace = await enregistrerEvenement(
+        {
+          acteurId: compte.id,
+          roleAuMoment: "CLIENT",
+          typeAction: "piece.retirer",
+          entite: "compte_client",
+          entiteId: compte.id,
+          avant: { statutPiece: piece.statutPiece },
+          apres: { statutPiece: "RETIREE", pieceId },
+        },
+        tx,
+      );
+      if (!trace.ok) throw new Error("Journal indisponible.");
+    });
+  } catch (erreur) {
+    if (erreur instanceof Error && erreur.message === "Pièce déjà retirée.") {
+      return { ok: false, erreur: erreur.message };
+    }
+    return { ok: false, erreur: "Retrait impossible : journal indisponible." };
+  }
+  revaliderLesDeuxEspaces();
+  revalidatePath("/clients/profil");
+  return { ok: true, compteId: compte.id };
 }
 
 /**

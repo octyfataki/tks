@@ -13,6 +13,7 @@ export {
   type PieceIdentiteProfil,
 } from "./piece-identite-liste";
 export { RemplacerPieceIdentite } from "./remplacer-piece-identite";
+export { BoutonRetirerPiece } from "./bouton-retirer-piece";
 export { ProfilSquelette } from "./profil-squelette";
 export { ActivationSecondFacteur } from "./activation-second-facteur";
 export { DesactivationSecondFacteur } from "./desactivation-second-facteur";

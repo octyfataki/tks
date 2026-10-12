@@ -58,6 +58,9 @@ function CachetPiece({ piece }: { piece: PieceFicheClient }) {
   if (piece.statutPiece === "REFUSEE") {
     return <Cachet encre="revoque">Refusée</Cachet>;
   }
+  if (piece.statutPiece === "RETIREE") {
+    return <Cachet encre="expire">Retirée</Cachet>;
+  }
   return <Cachet encre="attente">À revoir</Cachet>;
 }
 

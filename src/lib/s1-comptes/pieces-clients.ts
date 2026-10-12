@@ -128,6 +128,34 @@ export async function lirePiecesCompte(compteClientId: string) {
 }
 
 /**
+ * Retire une pièce refusée par le client qui la remplace (ticket 11).
+ * Rien n'est supprimé : la ligne reste, le fichier reste sur le disque, et
+ * le motif de refus reste lisible. Retirer, c'est dire « celle-là ne
+ * compte plus » — pas l'effacer.
+ *
+ * L'écriture est gardée par le statut attendu : une pièce déjà retirée,
+ * ou jamais refusée, ne peut pas l'être deux fois. Renvoie le nombre de
+ * lignes écrites.
+ */
+export async function retirerPiece(
+  pieceId: string,
+  compteId: string,
+  ex: ExecuteurDb,
+): Promise<number> {
+  const resultat = await ex
+    .update(piecesIdentiteClients)
+    .set({ statutPiece: "RETIREE" })
+    .where(
+      and(
+        eq(piecesIdentiteClients.id, pieceId),
+        eq(piecesIdentiteClients.compteClientId, compteId),
+        eq(piecesIdentiteClients.statutPiece, "REFUSEE"),
+      ),
+    );
+  return lignesEcrites(resultat);
+}
+
+/**
  * Marque la pièce vue par l'humain qui tranche, et lui donne son verdict
  * (dans sa transaction). Valider un compte sur une pièce, c'est aussi
  * l'accepter : un seul état, jamais deux vérités.

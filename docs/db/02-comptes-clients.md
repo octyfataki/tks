@@ -21,6 +21,28 @@ Validation exige pièce vue humain, journalisée qui/quand/quelle pièce (S1).
 
 Aucun chemin vers `VALIDE` sans `piece_id` — verrouillé par test applicatif + contrainte `NOT NULL`.
 
+### Verdict d'une pièce (tickets 10 et 11)
+
+Une pièce porte son propre verdict, distinct de « un humain l'a ouverte » :
+
+* `statut_piece VARCHAR(32) NOT NULL DEFAULT 'EN_ATTENTE'` — `EN_ATTENTE` /
+  `ACCEPTEE` / `REFUSEE` / `RETIREE`. La liste fermée est vérifiée par
+  l'application (`STATUTS_PIECE` dans `s1-comptes/fiche-client.ts`) : une
+  valeur hors liste est ramenée à `EN_ATTENTE` à la lecture, jamais rendue
+  telle quelle.
+* `refus_motif TEXT NULL` — ce que le client doit corriger, quand
+  `REFUSEE`. Jamais exigé ailleurs.
+* `vue_par` / `vue_le` restent **ce qu'ils disaient déjà** : qui a ouvert le
+  document, et quand. Un refus suppose d'avoir vu.
+
+Le retrait (`RETIREE`) ne supprime **ni la ligne ni le fichier** : le
+client dit « celle-là ne compte plus », il n'efface rien (invariant 10).
+Seule une pièce `REFUSEE` est retirable, et une fois — une pièce en attente
+est hors de la portée du client.
+
+`RETIREE` n'a demandé **aucune migration** : la colonne existe depuis le
+ticket 10, c'est sa liste de valeurs qui s'est élargie.
+
 ## Rattachement (rappel, détaillé en S4)
 
 `rattachements : compte_client_id UNIQUE FK, dossier_id FK, par_staff_id FK, at` — 1 compte -> au plus 1 dossier, 1 dossier -> au plus 1 compte. Désignation par nom affiché (nom+adresse+solde), jamais téléphone seul.
