@@ -3,7 +3,7 @@
 **What to build:** Un client ouvre l'application, s'inscrit avec son numéro de
 téléphone et un mot de passe, se connecte, et tombe sur un écran qui lui dit que
 son compte attend une vérification et quelle pièce fournir. Il ne peut rien faire
-d'autre : pas de dossier, pas de solde, pas de commande — pas même prépayée.
+d'autre : pas de profil, pas de solde, pas de commande — pas même prépayée.
 
 Cette tranche pose aussi le **squelette** : application web installable, base de
 données réelle, migrations, CI, et la **couture de test** — couche applicative

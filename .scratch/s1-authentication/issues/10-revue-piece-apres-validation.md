@@ -13,7 +13,7 @@ et aucun geste ne permet de le faire)
 ## Contexte
 
 Depuis l'issue #24 (PR #25), un compte client `VALIDE` peut **remplacer** sa
-pièce d'identité depuis `/clients/profil`. L'ancienne pièce reste au dossier,
+pièce d'identité depuis `/clients/profil`. L'ancienne pièce reste au profil,
 et la fiche du distributeur la signale « Déposée après validation — à revoir ».
 
 Mais aucun geste n'existe pour traiter cette pièce. La fiche

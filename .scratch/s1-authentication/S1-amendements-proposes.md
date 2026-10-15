@@ -1,5 +1,8 @@
 # S1 — Amendements proposés pour le modèle compte/client
 
+**Statut : appliqué dans `spec.md` (PR 1).** Document conservé comme historique
+de la refonte ; la spec canonique ci-dessus fait foi.
+
 **Nature :** note de modification proposée, pas une réécriture de S1. Le fichier source S1
 n'était pas parmi les documents disponibles ; les formulations ci-dessous doivent être
 intégrées à ses sections exactes après examen de la version canonique.

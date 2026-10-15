@@ -107,8 +107,8 @@ La matrice exacte des rôles autorisés reste à confirmer. Les permissions ne d
 7. Quelle est la procédure de récupération du compte si le téléphone est perdu ou réattribué ?
 8. Quelle stratégie de migration permet de transformer les dossiers existants en profils clients sans créer de doublons ni modifier les soldes ?
 
-## Limite de cette révision
+## Traçabilité
 
-Le fichier S1 source n'a pas été fourni dans les documents disponibles. Ce ticket définit donc les
-contrats attendus de S1, mais ne remplace pas sa spécification complète. Les modifications
-S1 à appliquer sont récapitulées dans `S1-amendements-proposes.md`.
+Les contrats S1 attendus par ce ticket sont appliqués dans
+`.scratch/s1-authentication/spec.md` (PR 1) à partir de
+`S1-amendements-proposes.md`, conservé comme historique de la refonte.

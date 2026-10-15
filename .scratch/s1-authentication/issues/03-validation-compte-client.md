@@ -31,10 +31,10 @@ décision est juste, et la conception doit faire le reste.
 - [ ] Un compte validé franchit la barrière que les autres ne franchissent pas. La
       barrière est **une seule vérification nommée**, celle que tous les écrans
       métier réutiliseront — c'est elle que S5 viendra consommer.
-- [ ] Un compte validé mais **non rattaché** ne voit aucun dossier et aucun solde.
-      Valider n'est pas rattacher : la validation dit « cette personne est un
-      client », le rattachement dit « cette personne est *ce* client ». Le
-      rattachement appartient à S4, qui possède la fiche dossier.
+- [ ] Un compte validé mais **sans autorisation d'accès** ne voit aucun profil et aucun solde.
+      Valider n'est pas autoriser : la validation dit « cette personne est un
+      client », la confirmation dit « cette personne est *ce* client ». La
+      confirmation appartient à S4 (ticket 02), qui possède le profil client.
 - [ ] Le client en attente reste connecté et **voit son état avancer** sans avoir à
       se réinscrire.
 - [ ] **Dans cette tranche, seul un administrateur peut valider**, parce que c'est
