@@ -2,11 +2,6 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
-// S4-T1 (issue #34) — test structurel de la table des profils clients :
-// le client métier est la boutique, le compte n'est qu'un moyen d'accès
-// (spec S4 refondue, issue #32). Échoue dès que la migration ajoute une
-// contrainte d'unicité sur le nom ou le contact, un dérivé stocké, ou perd
-// un index — exactement le jour où la promesse cesserait d'être vraie.
 describe("S4 — les profils clients portent l'identité boutique, par la base", () => {
   const migration = readFileSync(
     resolve(process.cwd(), "drizzle/0019_misty_drax.sql"),
