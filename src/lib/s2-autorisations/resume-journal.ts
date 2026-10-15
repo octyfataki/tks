@@ -1,9 +1,3 @@
-// S2-05 (issue #13) — résumé lisible d'un événement du journal d'audit.
-// Pur, sans E/S : prend le contenu déjà lu (avant/après décodés ou JSON brut,
-// noms résolus par l'appelant) et formule une phrase métier. Retourne `null`
-// quand rien de spécifique n'est formulable — l'appelant retombe alors sur le
-// code brut, jamais sur une phrase inventée.
-
 export type NomsConnus = ReadonlyMap<string, string>;
 
 function estObjet(valeur: unknown): valeur is Record<string, unknown> {
@@ -41,7 +35,6 @@ function nomDe(id: string | null, noms: NomsConnus | undefined): string {
   return noms?.get(id) ?? id;
 }
 
-/** Libellé humain d'une entité enregistrée (code brut conservé ailleurs). */
 export function nomEntite(entite: string): string {
   switch (entite) {
     case "compte_client":
@@ -71,11 +64,6 @@ function formaterMontant(valeur: number): string {
   return new Intl.NumberFormat("fr-FR").format(valeur);
 }
 
-/**
- * Phrase métier d'un événement. `noms` associe un identifiant de compte
- * (staff ou client) à son nom affichable déjà résolu — sans lui, l'UUID est
- * repris tel quel plutôt qu'inventé.
- */
 export function resumerEvenement(
   input: {
     typeAction: string;
@@ -126,8 +114,6 @@ export function resumerEvenement(
     }
     case "annotation.poser":
     case "annotation.retirer": {
-      // Le libellé est figé dans la trace à l'écriture ; le code brut sert
-      // de repli pour les lignes antérieures.
       const code = texte(apresO?.["etiquette"]);
       const libelle = texte(apresO?.["libelle"]) ?? code ?? "étiquette inconnue";
       const compte = texte(apresO?.["compteClientId"]);

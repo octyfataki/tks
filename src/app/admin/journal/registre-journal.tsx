@@ -25,27 +25,20 @@ import { ContestationLigne } from "./contestation-ligne";
 export type LigneJournal = {
   id: string;
   acteurId: string | null;
-  /** Nom affichable de l'auteur, résolu à la lecture (null si introuvable). */
   auteurNom: string | null;
   auteurEmail: string | null;
   role: string;
   typeAction: string;
   entite: string;
   entiteId: string | null;
-  /** Enregistrement visé, formulé lisible (nom/téléphone résolu si connu). */
   entiteLibelle: string;
-  /** Phrase métier de l'action, null si rien de formulable (retombée code). */
   resume: string | null;
-  /** Ligne contestée par la présente correction (null = action normale). */
   contesteId: string | null;
-  /** Nombre de corrections liées à la présente ligne. */
   nbCorrections: number;
   avant: string | null;
   apres: string | null;
   appareilId: string | null;
-  /** Horloge de l'appareil, conservée telle quelle (ISO). */
   ecritLe: string;
-  /** Réception serveur (ISO). */
   recuLe: string;
   statut: string;
   motif: string | null;
@@ -73,7 +66,6 @@ function etiquette(
   return valeurs.find((v) => v.valeur === actif)?.etiquette ?? valeurs[0].etiquette;
 }
 
-/** Libellé humain d'un rôle au moment de l'action (vocabulaire GLOSSARY). */
 function nomRole(role: string): string {
   switch (role) {
     case "ADMIN_PRINCIPAL":
@@ -89,7 +81,6 @@ function nomRole(role: string): string {
   }
 }
 
-/** Phrase d'action à partir du code enregistré — le code brut reste visible. */
 function verbeAction(typeAction: string): string {
   const table: Record<string, string> = {
     "permission.accorder": "a accordé la permission",
@@ -122,7 +113,6 @@ function estEchouee(ligne: LigneJournal): boolean {
   return ligne.statut !== "REUSSIE";
 }
 
-/** Écart entre l'horloge de l'appareil et la réception serveur, en minutes. */
 function ecartMinutes(ligne: LigneJournal): number {
   return Math.round(
     (new Date(ligne.recuLe).getTime() - new Date(ligne.ecritLe).getTime()) /
@@ -165,7 +155,6 @@ function cellule(valeur: string): string {
   return `"${valeur.replace(/"/g, '""')}"`;
 }
 
-/** Export CSV des lignes filtrées, 100 % client, BOM UTF-8 pour Excel. */
 function exporterCSV(lignes: LigneJournal[]) {
   const entete =
     "Reçu le;Écrit le;Auteur;Rôle;Action;Résumé;Entité;Correction de;Statut;Motif;Appareil";
@@ -202,15 +191,6 @@ function texteRecherche(ligne: LigneJournal): string {
   return `${ligne.id} ${ligne.contesteId ?? ""} ${ligne.typeAction} ${ligne.entite} ${ligne.entiteLibelle} ${nomRole(ligne.role)} ${verbeAction(ligne.typeAction)} ${ligne.resume ?? ""} ${ligne.auteurNom ?? ""} ${ligne.acteurId ?? ""} ${ligne.motif ?? ""}`.toLowerCase();
 }
 
-/**
- * Registre du journal d'audit : les 50 dernières lignes reçues, filtrables
- * et dépliables pour la preuve complète (auteur résolu, résumé lisible,
- * double horodatage, appareil, avant/après — S2, S2-05 issue #13).
- *
- * Même dessin que les registres d'invitations : barre d'outils en carte
- * (recherche, filtre état, tri, export), tableau à lignes dépliables,
- * pagination locale. Lecture seule partout : le journal est append-only.
- */
 export function RegistreJournal({ lignes }: { lignes: LigneJournal[] }) {
   const [recherche, setRecherche] = React.useState("");
   const [etat, setEtat] = React.useState("");

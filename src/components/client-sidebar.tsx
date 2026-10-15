@@ -115,21 +115,12 @@ export type UtilisateurSidebarClient = {
   avatar?: string
 }
 
-/**
- * Navigation de l'espace client. Mêmes primitives que les espaces
- * administrateur et agent de service (NavMain, NavUser, BrandLogo),
- * contenu restreint au sien : dossier client, statut et plafond (S4),
- * commandes et preuves de paiement (S5), paiements et soldes (S6).
- * Les écrans métier arrivent avec S4 à S6 ; en attendant, seuls
- * « Votre compte », « Aide » et « Mon compte » existent.
- */
 export function ClientSidebar({
   utilisateur,
   profilUrl = "/clients/profil",
   ...props
 }: React.ComponentProps<typeof Sidebar> & {
   utilisateur?: UtilisateurSidebarClient
-  /** Destination de « Mon compte » dans l'encart utilisateur. */
   profilUrl?: string
 }) {
   return (

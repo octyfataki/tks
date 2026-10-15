@@ -1,18 +1,7 @@
-/**
- * Bootstrap du tout premier compte : l'ADMIN_TECHNIQUE du développeur.
- * Refusé dès qu'un compte staff existe (voir bootstrapAdminTechnique).
- *
- * Usage :
- *   BOOTSTRAP_ADMIN_EMAIL=moi@exemple.cd BOOTSTRAP_ADMIN_PASSWORD=... pnpm db:bootstrap-technical-admin
- *
- * La suite (création du compte ADMIN_PRINCIPAL du distributeur) se fait par
- * cet admin technique via creerAdminPrincipal — jamais par import (S10).
- */
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import { bootstrapAdminTechnique } from "../src/lib/s1-comptes/staff";
 
-// Charge .env.local sans dépendance (tsx n'inclut pas dotenv).
 const envFile = join(process.cwd(), ".env.local");
 if (existsSync(envFile)) {
   for (const line of readFileSync(envFile, "utf8").split("\n")) {

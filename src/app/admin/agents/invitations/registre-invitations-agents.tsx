@@ -73,7 +73,6 @@ function dateCourte(iso: string): string {
   return new Date(iso).toLocaleDateString("fr-FR");
 }
 
-/** Export CSV des lignes filtrées, 100 % client, BOM UTF-8 pour Excel. */
 function exporterCSV(lignes: LigneInvitationAgent[]) {
   const entete = "Lien;État;Envoyé le;Expire le;Envoyé par";
   const corps = lignes.map((ligne) => {
@@ -108,12 +107,6 @@ function texteRecherche(ligne: LigneInvitationAgent): string {
   return `/invite/${ligne.jeton} ${ligne.envoyePar}`.toLowerCase();
 }
 
-/**
- * Bouton « Révoquer » d'un lien en attente : confirmation obligatoire, la
- * révocation est définitive (le lien ne servira plus, un nouveau lien
- * passe par une nouvelle génération). Même dessin que la révocation d'un
- * compte (InterrupteurAgent).
- */
 function BoutonRevoquerInvitation({ invitationId }: { invitationId: string }) {
   const [ouvert, setOuvert] = React.useState(false);
   const [erreur, setErreur] = React.useState<string | null>(null);
@@ -173,19 +166,6 @@ function BoutonRevoquerInvitation({ invitationId }: { invitationId: string }) {
   );
 }
 
-/**
- * Registre des liens d'invitation agents : copier un lien en attente,
- * générer un nouveau lien quand l'ancien a expiré (on ne réactive jamais
- * un lien). Les comptes déjà créés vivent dans la liste des agents.
- *
- * Même dessin que le registre des invitations administrateurs
- * (/admin/invitations) : barre d'outils en carte (recherche, filtre état,
- * tri, export, nouveau lien), tableau à lignes dépliables, pagination
- * locale. Seule la colonne voie manque — il n'y a ici qu'une voie.
- *
- * `lectureSeule` : tout le monde voit le registre, mais seuls ceux qui ont
- * la permission peuvent copier ou générer des liens.
- */
 export function RegistreInvitationsAgents({
   lignes,
   lectureSeule = false,

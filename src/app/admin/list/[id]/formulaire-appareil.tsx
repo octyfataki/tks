@@ -10,11 +10,6 @@ import {
   type ResultatModificationAppareil,
 } from "./actions";
 
-/**
- * Renomme l'étiquette du second facteur. Seul le libellé est
- * écrit — le secret du second facteur ne transite jamais par ce formulaire (S2-04).
- * La garde réelle est côté serveur.
- */
 export function FormulaireAppareil({
   id,
   nomAppareilInitial,

@@ -6,11 +6,6 @@ import {
   verdictRevocationLien,
 } from "../db/schema/s1-comptes/validation";
 
-// Issue #1 (07-revocation-lien-admin) : la révocation d'un lien
-// d'invitation administrateur principal (voie `lien`) et d'un lien de
-// premier accès (voie `fiche`) partage la même règle pure, testée ici sans
-// base : révocation invalide l'acceptation, non-autorisé refusé,
-// idempotence, non-régression expiré/consommé.
 describe("révocation d'un lien d'invitation (issue #1)", () => {
   const maintenant = new Date("2026-06-01T12:00:00Z").getTime();
   const futur = new Date("2026-06-10T12:00:00Z");
@@ -25,14 +20,12 @@ describe("révocation d'un lien d'invitation (issue #1)", () => {
   it("révocation invalide l'acceptation : un lien révoqué est refusé même avant expiration", () => {
     const lien = { consommeLe: null, revoqueLe: passe, expireLe: futur };
     expect(etatLienInvitation(lien, maintenant)).toBe("revoque");
-    // Le verdict ne rouvre jamais la voie : seule une régénération le peut.
     expect(verdictRevocationLien(lien, maintenant)).toBe("DEJA_REVOQUE");
   });
 
   it("double révocation idempotente : déjà révoqué = même état, pas d'erreur", () => {
     const lien = { consommeLe: null, revoqueLe: passe, expireLe: futur };
     expect(verdictRevocationLien(lien, maintenant)).toBe("DEJA_REVOQUE");
-    // La décision humaine fait foi : révoqué reste révoqué après expiration.
     const apresExpiration = {
       consommeLe: null,
       revoqueLe: passe,

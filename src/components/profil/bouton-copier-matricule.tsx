@@ -4,7 +4,6 @@ import * as React from "react";
 import { CheckIcon, CopyIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-/** Petit bouton copie du matricule, avec retour « Copié ». */
 export function BoutonCopierMatricule({
   valeur,
   className,

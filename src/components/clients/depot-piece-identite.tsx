@@ -14,7 +14,6 @@ import {
 import { TYPES_PIECE, typePieceValide } from "@/lib/s1-comptes/pieces-fichiers";
 import { cn } from "@/lib/utils";
 
-/** Pièce déjà déposée, telle qu'affichée sous le formulaire. */
 export type PieceDeposeeApercu = {
   id: string;
   typePiece: string;
@@ -23,10 +22,8 @@ export type PieceDeposeeApercu = {
   deposeLe: string;
 };
 
-/** Issue d'un dépôt : reçu, ou refusé avec son motif en clair. */
 export type IssueDepotPiece = { ok: true } | { ok: false; erreur: string };
 
-/** Image compressée côté client : 1600px max, JPEG 0.85, proportions gardées. */
 async function compresserImage(fichier: File): Promise<File> {
   const url = URL.createObjectURL(fichier);
   try {
@@ -60,20 +57,11 @@ async function compresserImage(fichier: File): Promise<File> {
 
 const ACCEPTE = "image/jpeg,image/png,image/webp,.pdf";
 
-/** « 120 Ko », « 2,4 Mo » : l'ordre de grandeur suffit au comptoir. */
 function formaterTaille(octets: number): string {
   if (octets < 1024 * 1024) return `${Math.max(1, Math.round(octets / 1024))} Ko`;
   return `${(octets / (1024 * 1024)).toLocaleString("fr-FR", { maximumFractionDigits: 1 })} Mo`;
 }
 
-/**
- * Formulaire de dépôt d'une pièce d'identité, partagé par la page
- * d'attente (/pending, premier dépôt) et le profil client
- * (/clients/profil, remplacement). Le PDF part tel quel (5 Mo au plus),
- * l'image est compressée avant envoi. `deposer` est l'appel serveur du
- * parent (import dynamique : ce module reste importable sans base) ;
- * après un dépôt réussi, le parent recharge (`onPieceDeposee`).
- */
 export function FormulaireDepotPiece({
   pieces,
   deposer,
@@ -103,7 +91,6 @@ export function FormulaireDepotPiece({
   const [erreurLocale, setErreurLocale] = React.useState<string | null>(null);
   const apercuRef = React.useRef<string | null>(null);
 
-  // L'URL de la vignette est révoquée au remplacement et au démontage.
   React.useEffect(
     () => () => {
       if (apercuRef.current) URL.revokeObjectURL(apercuRef.current);

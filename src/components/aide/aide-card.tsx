@@ -9,12 +9,6 @@ import {
 import { cn } from "@/lib/utils";
 import type { AideRaccourci } from "@/lib/aide-content";
 
-/**
- * Une carte = un raccourci. Titre + description, carte entière cliquable
- * quand l'écran existe ; inerte avec pastille « Bientôt » sinon.
- * Composition Card complète (Header + Title + Description), jamais de
- * lien mort.
- */
 export function AideRaccourciCard({ raccourci }: { raccourci: AideRaccourci }) {
   if (!raccourci.href) {
     return (

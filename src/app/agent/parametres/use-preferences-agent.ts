@@ -9,11 +9,6 @@ import {
   type PreferencesAgent,
 } from "./preferences";
 
-/**
- * Préférences d'appareil partagées par les sections de /agent/parametres
- * (appareil + notifications). Lecture unique du `localStorage` après
- * montage, écriture à chaque mise à jour. Rien ne part au serveur.
- */
 export function usePreferencesAgent() {
   const [preferences, setPreferences] =
     useState<PreferencesAgent>(PREFERENCES_DEFAUT);
@@ -42,7 +37,6 @@ export function usePreferencesAgent() {
         serialiserPreferences(suivantes),
       );
     } catch {
-      // Stockage indisponible (navigation privée) : réglage de séance.
     }
   }
 

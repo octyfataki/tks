@@ -37,7 +37,6 @@ export function NavUser({
     email: string
     avatar?: string
   }
-  /** Destination de « Mon compte ». Sans elle, l'entrée reste inerte. */
   profilUrl?: string
 }) {
   const { isMobile, setOpenMobile } = useSidebar()
@@ -56,9 +55,6 @@ export function NavUser({
         <DropdownMenu>
           <DropdownMenuTrigger
             render={
-              // Le déclencheur n'est pas un lien : fermer le tiroir ici
-              // démonterait le Sheet et donc le menu déroulant qui vient
-              // de s'ouvrir. La fermeture se fait sur « Mon compte ».
               <SidebarMenuButton
                 size="lg"
                 fermeAuClicMobile={false}
@@ -106,8 +102,6 @@ export function NavUser({
                 disabled={!profilUrl}
                 onClick={() => {
                   if (!profilUrl) return
-                  // Sur mobile, le tiroir est resté ouvert sous le menu :
-                  // on le ferme avant de naviguer.
                   if (isMobile) setOpenMobile(false)
                   router.push(profilUrl)
                 }}

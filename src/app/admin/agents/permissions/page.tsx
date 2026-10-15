@@ -7,15 +7,6 @@ import { PermissionRefusee } from "@/components/permission-refusee";
 import { listerSocle } from "@/lib/s2-autorisations/autorisations";
 import { SoclePermissions } from "./matrice-permissions";
 
-/**
- * /admin/agents/permissions — Socle de base commun à tous les agents.
- * Ce qui est accordé ici s'applique à tous les agents de service, y
- * compris ceux créés après. L'individuel (fiche de chaque agent) ne fait
- * qu'ajouter des exceptions. Effectif = socle ∪ individuel.
- * Lecture seule sans le droit de gérer (S2 : seul un administrateur
- * principal VALIDE accorde — les bascules appellent les server actions
- * qui recontrôlent).
- */
 export default async function PermissionsGlobalesPage() {
   const session = await auth.api.getSession({ headers: await headers() });
   const userId = session?.user?.id ?? "";

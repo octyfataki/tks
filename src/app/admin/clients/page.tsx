@@ -19,7 +19,6 @@ const FILTRES_VALIDES = [
 ] as const;
 const TRIS_VALIDES = ["anciens", "nom-az"] as const;
 
-/** Lignes par page du registre. */
 const LIGNES_PAR_PAGE = 10;
 
 type FiltreCompte = (typeof FILTRES_VALIDES)[number];
@@ -31,14 +30,6 @@ const ETAT_PAR_FILTRE: Record<FiltreCompte, string> = {
   revoque: "REVOQUE",
 };
 
-/**
- * /admin/clients — Registre des comptes clients (connexions).
- *
- * Un compte est une connexion (email + téléphone, le téléphone est la
- * clé). Le dossier financier vit ailleurs : ici aucun solde, aucune
- * dette, aucun plafond. Le bandeau de tête rappelle la file des comptes
- * en attente — un compte non validé ne peut rien faire.
- */
 export default async function ListeComptesClientsPage({
   searchParams,
 }: {
@@ -204,9 +195,6 @@ export default async function ListeComptesClientsPage({
                 : `en attente depuis ${plusAncien} jours`}{" "}
             · pièce d&apos;identité exigée.
           </span>
-          {/* Ticket de guichet : le libellé d'un côté, le numéro de la
-              file de l'autre, séparés par un pointillé perforé. Le compteur
-              quitte le texte et devient le numéro du ticket. */}
           <Link
             href="/admin/clients/validation"
             aria-label={`Ouvrir la file de validation, ${enAttente.length} compte${enAttente.length > 1 ? "s" : ""} en attente`}

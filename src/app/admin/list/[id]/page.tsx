@@ -52,7 +52,6 @@ function dateLongue(valeur: Date): string {
   });
 }
 
-/** Lien de premier accès en attente : non consommé et non expiré. */
 function premierAccesEnAttente(
   acces: { expireLe: Date; consommeLe: Date | null } | undefined,
   maintenant: number = Date.now(),
@@ -89,16 +88,6 @@ function LigneVerrouillee({
   );
 }
 
-/**
- * /admin/list/[id] — Fiche d'un compte d'administration.
- * Bandeau registre (identité + matricule) puis zones à crayon : chaque
- * carte corrige ses propres informations — coordonnées (nom, téléphone),
- * sécurité (étiquette de l'appareil 2FA). Email, rôle, état et secrets
- * verrouillés : rôle immuable (S2 : révocation + recréation), email =
- * identifiant de confiance, 2FA et mot de passe jamais visibles par un
- * administrateur technique (S2-04). Traçabilité et accès en lecture.
- * Un identifiant inconnu ou hors administration rend 404.
- */
 export default async function ProfilAdminPage({
   params,
 }: {
@@ -110,8 +99,6 @@ export default async function ProfilAdminPage({
   const session = await auth.api.getSession({ headers: entetes });
   const userId = session?.user?.id;
 
-  // Le créateur se résout en seconde requête : les jointures aliasées sur
-  // la même table font s'effondrer le typage Drizzle en never[].
   const lignes = await db
     .select({
       id: comptesStaff.id,
@@ -175,10 +162,6 @@ export default async function ProfilAdminPage({
   const dernierAcces = acces[0];
   const accesEnAttente = premierAccesEnAttente(dernierAcces);
 
-  // Correction par zone : même autorisation que la création — administrateur
-  // technique ou principal, toujours VALIDE — et jamais sur un compte
-  // révoqué (définitif). Le titulaire peut retoucher son propre affichage ;
-  // la révocation, elle, reste interdite sur soi-même (garde du composant).
   const lignesMoi = userId
     ? await db
         .select({

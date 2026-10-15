@@ -5,9 +5,6 @@ import { demanderDestination } from "@/lib/destination-connexion";
 import { toast } from "@/components/ui/toast";
 import { Verify2faForm } from "./verify-2fa-form";
 
-// L'envoi passe par POST /api/2fa/envoyer-code (fetch natif) avec la méthode
-// demandée ; la vérification reste sur le client better-auth ; la
-// destination est résolue côté serveur.
 vi.mock("@/lib/auth-client", () => ({
   authClient: { twoFactor: { verifyOtp: vi.fn() } },
 }));
@@ -16,7 +13,6 @@ vi.mock("@/lib/destination-connexion", () => ({
   demanderDestination: vi.fn(),
 }));
 
-// Hors App Router, `useRouter` lève : on le remplace par un poussoir espionné.
 const pousser = vi.fn();
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: pousser, refresh: vi.fn() }),
@@ -30,10 +26,6 @@ function simulerEnvoiOk(methode: string = "sms") {
   } as never);
 }
 
-// Garantie anti-martèlement : après un envoi, le bouton se verrouille 60 s
-// avec compte à rebours visible, puis se rouvre. La garde serveur
-// (3 envois/minute, src/lib/auth.ts) reste l'autorité ; ici on teste le
-// retour visible qui empêche les clics répétés.
 describe("Verify2faForm — délai anti-renvoi", () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -57,11 +49,9 @@ describe("Verify2faForm — délai anti-renvoi", () => {
     });
     expect(fetch).toHaveBeenCalledTimes(1);
 
-    // Bouton verrouillé avec compte à rebours, pas réutilisable.
     const verrou = screen.getByRole("button", { name: "Renvoyer dans 60 s" });
     expect(verrou).toBeDisabled();
 
-    // Le compteur décrémente chaque seconde.
     await act(async () => {
       vi.advanceTimersByTime(1000);
     });
@@ -69,14 +59,12 @@ describe("Verify2faForm — délai anti-renvoi", () => {
       screen.getByRole("button", { name: "Renvoyer dans 59 s" }),
     ).toBeDisabled();
 
-    // Au bout des 60 s, le renvoi se rouvre.
     await act(async () => {
       vi.advanceTimersByTime(59_000);
     });
     expect(
       screen.getByRole("button", { name: "Renvoyer le code" }),
     ).toBeEnabled();
-    // Un seul appel réseau malgré l'attente : rien n'est reparti tout seul.
     expect(fetch).toHaveBeenCalledTimes(1);
   });
 
@@ -94,16 +82,12 @@ describe("Verify2faForm — délai anti-renvoi", () => {
       );
     });
 
-    // Pas de compte à rebours : l'utilisateur peut réessayer aussitôt.
     expect(
       screen.getByRole("button", { name: "Recevoir le code" }),
     ).toBeEnabled();
   });
 });
 
-// La méthode n'est pas décorative : l'onglet choisi décide où part le code
-// (POST /api/2fa/envoyer-code { methode }), et le libellé de confirmation
-// suit le même choix.
 describe("Verify2faForm — méthode d'envoi demandée", () => {
   beforeEach(() => {
     vi.useFakeTimers();
@@ -171,7 +155,6 @@ describe("Verify2faForm — méthode d'envoi demandée", () => {
       );
     });
 
-    // Aucun renvoi possible sur un défi mort : retour au login.
     expect(pousser).toHaveBeenCalledWith("/sign-in");
     expect(
       screen.getByRole("button", { name: "Recevoir le code" }),
@@ -179,9 +162,6 @@ describe("Verify2faForm — méthode d'envoi demandée", () => {
   });
 });
 
-// Comme la connexion sans second facteur : un code valide affiche le toast
-// de succès puis mène à l'espace. Sans toast, la redirection est muette et
-// l'utilisateur ne sait pas que la connexion a abouti.
 describe("Verify2faForm — connexion réussie", () => {
   beforeEach(() => {
     vi.stubGlobal("fetch", vi.fn());

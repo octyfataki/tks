@@ -43,11 +43,6 @@ import { cn } from "@/lib/utils";
 import { accorderSocleAction, appliquerSocleLotAction, retirerSocleAction } from "../actions";
 import { LIBELLES_PERMISSION } from "../[id]/permissions-agent";
 
-/**
- * Groupes métier des 18 permissions : le distributeur raisonne
- * « que peut-il toucher », pas en codes. Jamais de numérotation —
- * ce n'est pas une séquence.
- */
 const GROUPES: { titre: string; detail: string; permissions: string[] }[] = [
   {
     titre: "Clients",
@@ -199,11 +194,6 @@ function BasculeSocle({
   );
 }
 
-/**
- * Une carte par permission : état lisible d'un coup d'œil (bordure et
- * mot d'état), description courte (3 lignes max), interrupteur en
- * pied de carte. Mémoïsée : seule la carte basculée se réaffiche.
- */
 const CarteSocle = React.memo(function CarteSocle({
   permission,
   accordee,
@@ -285,11 +275,6 @@ const CarteSocle = React.memo(function CarteSocle({
   );
 });
 
-/**
- * Un bloc par partie métier : titre, couverture et jauge, puis grille
- * de cartes. Aucune liste d'agents ici — ce qui est accordé vaut pour
- * chacun, y compris les nouveaux. Les exceptions se gèrent sur la fiche.
- */
 export function SoclePermissions({ initiales }: { initiales: string[] }) {
   const [socle, setSocle] = React.useState<string[]>(initiales);
   const [message, setMessage] = React.useState<string | null>(null);
@@ -353,14 +338,6 @@ export function SoclePermissions({ initiales }: { initiales: string[] }) {
     setTri("");
   }
 
-  /** Lot en cours : un seul aller-retour serveur, état indéterminé. */
-
-  /**
-   * Préremplissage en lot (équivalent du « Ajouter ») : la liste des 18
-   * permissions est fermée, on ne peut donc pas en créer — on remplit le
-   * socle d'un coup, en un seul aller-retour serveur (un seul revalidate,
-   * chaque accord/retrait restant journalisé un par un côté serveur).
-   */
   function appliquerLot(cible: "profil" | "tout" | "rien") {
     demarrerLot(async () => {
       const resultat = await appliquerSocleLotAction(cible);
@@ -586,7 +563,6 @@ export function SoclePermissions({ initiales }: { initiales: string[] }) {
   );
 }
 
-/** Alias conservé pour les imports existants. */
 export const MatricePermissions = SoclePermissions;
 export type LigneMatrice = { id: string; nom: string; email: string; permissions: string[] };
 export const PERMISSIONS_QUOTIDIEN = [

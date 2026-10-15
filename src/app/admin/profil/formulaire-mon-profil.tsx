@@ -10,11 +10,6 @@ import {
   type ResultatModificationMonProfil,
 } from "./actions";
 
-/**
- * Corrige le nom affiché + le téléphone contact du compte connecté.
- * Email, rôle, état et secrets exclus (verrouillés dans la fiche).
- * La garde réelle est côté serveur.
- */
 export function FormulaireMonProfil({
   nomInitial,
   telephoneInitial,

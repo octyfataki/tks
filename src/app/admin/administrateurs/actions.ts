@@ -24,11 +24,6 @@ export type ResultatCreationAdmin = ResultatAction<{
 
 export type ResultatInvitationAdmin = ResultatAction<{ lien: string }>;
 
-/**
- * Créateur autorisé explicite : administrateur technique ou principal
- * VALIDE (même prédicat que creerAdminPrincipal / ouvrirPremierAccesAdmin
- * côté lib — défense en profondeur, refus tôt avec message clair).
- */
 async function createurPrincipalConnecte(): Promise<string | null> {
   const session = await auth.api.getSession({ headers: await headers() });
   const userId = session?.user?.id;
@@ -60,13 +55,6 @@ function messageErreur(code: ErreurStaff): string {
   }
 }
 
-/**
- * Crée un compte ADMIN_PRINCIPAL (le distributeur, qui gère les dossiers
- * clients). Appelée depuis /admin/create par un administrateur
- * technique ou un administrateur principal validé (S1 : peutCreerAdminPrincipal).
- * Le contrôle réel est dans creerAdminPrincipal — ici on ne fait que
- * résoudre le créateur depuis la session.
- */
 export async function creerAdministrateurPrincipalAction(
   _precedent: ResultatCreationAdmin | null,
   donnees: FormData,
@@ -77,9 +65,6 @@ export async function creerAdministrateurPrincipalAction(
   const nomComplet = `${prenom} ${nom}`.trim();
   const motDePasseSaisi = String(donnees.get("motDePasse") ?? "");
   const telephone = String(donnees.get("telephone") ?? "").trim();
-  // Lien de premier accès coché : aucun secret n'est choisi ni transmis —
-  // un secret aléatoire jamais révélé verrouille le compte jusqu'à ce que
-  // la personne choisisse elle-même son mot de passe via le lien.
   const lienDemande = donnees.get("lienPremierAcces") === "on";
   const motDePasse = lienDemande
     ? randomBytes(32).toString("hex")
@@ -129,12 +114,6 @@ export async function creerAdministrateurPrincipalAction(
   }
 }
 
-/**
- * Génère un lien d'invitation ADMIN_PRINCIPAL (usage unique, durée limitée).
- * La personne crée elle-même son compte via /invite/[jeton] : elle choisit
- * son email + mot de passe, le rôle vient du lien. Même autorisation que la
- * création directe.
- */
 export async function creerLienInvitationAdminAction(
   _precedent: ResultatInvitationAdmin | null,
   donnees: FormData,

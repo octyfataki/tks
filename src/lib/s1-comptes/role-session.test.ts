@@ -25,7 +25,6 @@ describe("destinationApresConnexion", () => {
     ["administrateur technique", tech, "/admin"],
     ["agent de service", agent, "/agent"],
     ["client validé", client, "/clients"],
-    // La barrière S1-01 : un compte non validé ne franchit jamais /clients.
     ["client en attente", clientEnAttente, "/pending"],
     ["client refusé", clientRefuse, "/pending"],
     ["client révoqué", clientRevoque, "/sign-in"],
@@ -81,8 +80,6 @@ describe("redirectionAcces", () => {
   );
 
   it("ne crée jamais de boucle de redirection", () => {
-    // Le renvoi pointe toujours vers l'espace propre au profil : la garde de
-    // cette destination-là laisse donc entrer.
     for (const profil of [admin, tech, agent, client, anonyme, inconnu, adminRevoque]) {
       for (const espace of ["ADMIN", "AGENT", "CLIENTS"] as const) {
         const destination = redirectionAcces(profil, espace);
@@ -91,7 +88,7 @@ describe("redirectionAcces", () => {
           : destination === "/agent" ? "AGENT"
           : destination === "/clients" ? "CLIENTS"
           : null;
-        if (espaceVise === null) continue; // /sign-in et /pending ne sont pas des espaces gardés
+        if (espaceVise === null) continue;
         expect(redirectionAcces(profil, espaceVise)).toBeNull();
       }
     }

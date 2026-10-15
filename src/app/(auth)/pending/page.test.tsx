@@ -21,7 +21,6 @@ vi.mock("@/lib/auth-client", () => ({
   signOut: vi.fn(),
 }));
 
-// La server action tire db + env (DATABASE_URL) : hors sujet ici, on la coupe.
 vi.mock("./actions-depot", () => ({
   deposerPieceIdentiteAction: vi.fn(),
 }));

@@ -31,13 +31,6 @@ function texte(valeur: unknown): string | null {
   return typeof valeur === "string" && valeur !== "" ? valeur : null;
 }
 
-/**
- * Contestation d'une ligne du journal : propose les actions correctives
- * applicables (S2 issue 15), chacune exécutée comme une NOUVELLE ligne liée
- * (`contesteId`) avec motif obligatoire — jamais une suppression ni une
- * modification. Un refus (permission manquante) est lui-même journalisé
- * comme échec par l'action appelée.
- */
 export function ContestationLigne({
   ligne,
 }: {

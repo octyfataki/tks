@@ -1,10 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { correctivesPour } from "@/lib/s2-autorisations/contestation";
 
-// S2 issue 15 — la contestation ne propose que des correctifs réels, jamais
-// un bouton mensonger. Chaque cas part des codes réellement enregistrés par
-// les appelants d'enregistrerEvenement.
-
 describe("S2 — correctives proposées depuis le journal", () => {
   it("propose la révocation du compte pour une validation", () => {
     const resultat = correctivesPour({

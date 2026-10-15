@@ -25,8 +25,6 @@ describe("états du compte client", () => {
   });
 
   it("l'inscription part en attente : seul EN_ATTENTE naît", () => {
-    // Garde-fou de lecture : le défaut base est EN_ATTENTE_VALIDATION
-    // (voir comptes-clients.ts), et la couche clients le pose explicitement.
     expect(estEtatClient("EN_ATTENTE_VALIDATION")).toBe(true);
   });
 
@@ -78,8 +76,6 @@ describe("téléphone du compte client", () => {
   });
 
   it("normalisation canonique : deux écritures du même numéro sont le même compte", () => {
-    // La forme stockée et comparée ne contient que des chiffres (+ initial
-    // optionnel) : l'unicité ne se contourne pas par des espaces.
     expect(normaliserTelephoneClient("+243 815 000 000")).toBe("+243815000000");
     expect(normaliserTelephoneClient("+243-815-000-000")).toBe("+243815000000");
     expect(normaliserTelephoneClient("+243 (815) 000 000")).toBe("+243815000000");

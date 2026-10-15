@@ -8,11 +8,6 @@ export const metadata: Metadata = {
     "Créances des clients et reste à payer dérivé au taux en vigueur.",
 };
 
-/**
- * Créances et dettes (espace agent). La page existe ; le suivi des
- * dettes — ancienneté sur la date de la créance — arrive avec S6.
- * Montants dérivés, jamais saisis (invariant 1). Aucune écriture ici.
- */
 export default function AgentCreancesPage() {
   return (
     <div className="flex flex-1 flex-col">

@@ -1,12 +1,6 @@
 import { Skeleton } from "@/components/ui/skeleton";
 import { Card, CardContent } from "@/components/ui/card";
 
-/**
- * /admin/agents/invitations — état de chargement dédié : même structure
- * que le registre (en-tête, barre d'outils en carte, tableau à 6
- * colonnes). Le skeleton hérité du segment parent montrait des cartes
- * agents — rien à voir avec cette page.
- */
 export default function InvitationsAgentsChargement() {
   return (
     <div

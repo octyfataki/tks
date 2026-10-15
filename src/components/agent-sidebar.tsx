@@ -103,21 +103,12 @@ export type UtilisateurSidebarAgent = {
   avatar?: string
 }
 
-/**
- * Navigation de l'espace agent de service. Même primitives que la
- * navigation administrateur (NavMain, NavUser, BrandLogo), contenu
- * restreint au terrain : comptes clients (registre + validation au
- * comptoir, permission `client.valider`), commandes, preuves de paiement,
- * encaissements, créances. Les écrans métier restants arrivent avec S4
- * à S6 ; en attendant, les pages existent et annoncent la suite.
- */
 export function AgentSidebar({
   utilisateur,
   profilUrl = "/agent/profil",
   ...props
 }: React.ComponentProps<typeof Sidebar> & {
   utilisateur?: UtilisateurSidebarAgent
-  /** Destination de « Mon compte » dans l'encart utilisateur. */
   profilUrl?: string
 }) {
   return (

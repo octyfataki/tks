@@ -15,20 +15,10 @@ import { nomAffiche } from "../list/affichage-admin";
 const FILTRES_VALIDES = ["valide", "suspendu", "revoque", "sans-permission"] as const;
 const TRIS_VALIDES = ["anciens", "nom-az", "nom-za"] as const;
 
-/** Cartes par page de la grille. */
 const CARTES_PAR_PAGE = 9;
 
 export type FiltreAgent = (typeof FILTRES_VALIDES)[number];
 
-/**
- * /admin/agents — Agents de service en cartes : identité, état, nombre de
- * permissions, traçabilité. Recherche (?q=), filtre (?filtre=), tri (?tri=)
- * et pagination (?page=) côté serveur.
- *
- * Le badge « sans permission » est le point d'entrée d'embauche : un agent
- * créé n'a rien (S2 zéro par défaut), le distributeur lui accorde ensuite
- * une par une depuis la fiche ou la matrice globale.
- */
 export default async function ListeAgentsPage({
   searchParams,
 }: {

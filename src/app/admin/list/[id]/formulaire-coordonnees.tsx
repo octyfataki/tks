@@ -10,11 +10,6 @@ import {
   type ResultatModificationCoordonnees,
 } from "./actions";
 
-/**
- * Corrige le nom affiché + le téléphone contact d'un compte
- * d'administration. Email, rôle, état et secrets exclus (verrouillés dans
- * la fiche). La garde réelle est côté serveur.
- */
 export function FormulaireCoordonnees({
   id,
   nomInitial,

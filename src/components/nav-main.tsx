@@ -43,13 +43,6 @@ function SoonBadge() {
   )
 }
 
-/**
- * Collapsible contrôlé : l'état d'ouverture est initialisé une seule fois au
- * montage (via `defaultOpen`) puis géré localement. Cela évite l'avertissement
- * Base UI « changing the default open state of an uncontrolled Collapsible »
- * qui survient quand `defaultOpen` est recalculé à chaque rendu (ex. dépendance
- * à `usePathname()`).
- */
 function NavCollapsibleItem({
   item,
   defaultOpen,
@@ -81,9 +74,6 @@ export function NavMain({
   items: NavItem[]
 }) {
   const pathname = usePathname()
-  // usePathname ignore les paramètres (?cible=…) : les deux entrées
-  // « Inviter » partagent /admin/invites. On compare l'URL complète pour
-  // surligner la bonne (administrateur principal vs agent de service).
   const parametres = useSearchParams()
   const actuel = parametres.toString()
     ? `${pathname}?${parametres}`
@@ -125,7 +115,6 @@ export function NavMain({
           const groupeActif =
             actuel === item.url ||
             item.items.some((subItem) => subItem.url === actuel)
-          // Groupe « Bientôt » (sans destination) : simple déplieur, aucun lien.
           if (item.soon) {
             return (
               <NavCollapsibleItem
@@ -162,9 +151,6 @@ export function NavMain({
               </NavCollapsibleItem>
             )
           }
-          // Groupe avec destination : le libellé navigue vers item.url, le
-          // chevron déplie le sous-menu. Avant, tout le parent n'était qu'un
-          // déplieur et son url était ignorée (clic sans redirection).
           return (
             <NavCollapsibleItem
               key={item.title}

@@ -3,18 +3,11 @@ import { profilSession } from "@/lib/s1-comptes/profil-session";
 import { peutCreerAdminPrincipal } from "@/lib/db/schema/s1-comptes";
 
 export default async function Page() {
-  // La garde /admin garantit une session staff VALIDE.
-  // L'administrateur technique (ou principal) validé crée l'administrateur
-  // principal qui gère les dossiers clients. La garde /admin garantit déjà
-  // l'espace ADMIN ; ici on n'affiche que le raccourci.
   const profil = await profilSession();
   const peutCreerPrincipal =
     profil.type === "STAFF" &&
     peutCreerAdminPrincipal(profil.role, profil.etat);
 
-  // Le shell SidebarProvider + AppSidebar + AdminHeader vit dans
-  // /admin/layout : ici, uniquement le contenu, pour que la sidebar et
-  // l'en-tête persistent pendant la navigation client-side.
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 pt-4">
         {peutCreerPrincipal ? (

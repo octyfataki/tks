@@ -9,7 +9,6 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 
-/** Fenêtre de pages : première, dernière, page courante ± 1, « … » entre. */
 function pagesAutour(page: number, totalPages: number): (number | "…")[] {
   const proches = new Set([1, totalPages, page - 1, page, page + 1]);
   const triees = [...proches]
@@ -24,11 +23,6 @@ function pagesAutour(page: number, totalPages: number): (number | "…")[] {
   return sortie;
 }
 
-/**
- * Pied de la grille /admin/list : Précédent | numéros | Suivant.
- * `hrefBase` porte déjà les choix (?q=, ?filtre=, ?tri=), la page
- * s'ajoute en ?page=. Rendu serveur : que des liens, aucun état client.
- */
 export function PaginationListe({
   page,
   totalPages,
@@ -36,7 +30,6 @@ export function PaginationListe({
 }: {
   page: number;
   totalPages: number;
-  /** Lien de la liste sans ?page=, ex. « /admin/list?q=x ». */
   hrefBase: string;
 }) {
   if (totalPages <= 1) return null;

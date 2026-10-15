@@ -44,16 +44,12 @@ const FIL_ARIANE_PAR_CHEMIN: Record<string, Segment[]> = {
 };
 
 function segmentsPourChemin(chemin: string): Segment[] {
-  // Profil d'un administrateur : /admin/list/[id] — l'identifiant n'est
-  // jamais affiché tel quel dans le fil d'Ariane.
   if (chemin.startsWith("/admin/list/")) {
     return [
       { etiquette: "Administrateurs principaux", href: "/admin/list" },
       { etiquette: "Profil" },
     ];
   }
-  // Fiche d'un compte client : /admin/clients/[id] — l'identifiant n'est
-  // jamais affiché tel quel dans le fil d'Ariane.
   if (
     chemin.startsWith("/admin/clients/") &&
     chemin !== "/admin/clients/validation"
@@ -73,11 +69,6 @@ function segmentsPourChemin(chemin: string): Segment[] {
   ];
 }
 
-/**
- * En-tête fixe de l'espace administrateur. Monté une seule fois dans
- * /admin/layout : il persiste pendant la navigation client-side, seul le
- * contenu sous lui change. Le fil d'Ariane est déduit du chemin courant.
- */
 export function AdminHeader() {
   const chemin = usePathname();
   const segments = segmentsPourChemin(chemin);
@@ -89,7 +80,6 @@ export function AdminHeader() {
         orientation="vertical"
         className="mr-1 data-vertical:h-4 data-vertical:self-auto"
       />
-      {/* Mobile : le fil d'Ariane est masqué, le logo garde le repère du site. */}
       <BrandLogo height={24} className="shrink-0 md:hidden" />
       <DashboardHeader
         className="min-w-0 flex-1"

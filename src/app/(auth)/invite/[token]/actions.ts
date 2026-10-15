@@ -11,9 +11,6 @@ import {
   accepterInvitationAgent,
 } from "@/lib/s1-comptes/staff";
 
-// Validation zod de la frontière (cette action) : mêmes seuils que la
-// couche staff (défense en profondeur) — email normalisé, mot de passe
-// d'au moins 8 caractères, nom exigé.
 const SchemaAcceptation = z.object({
   jeton: z.string().min(1, "lien inconnu"),
   email: z
@@ -28,12 +25,6 @@ const SchemaAcceptation = z.object({
   telephone: z.string().optional(),
 });
 
-// S1-04 + écart assumé (invitation ADMIN_PRINCIPAL) : consommation du jeton
-// côté serveur (en ligne). On lit le rôle cible du lien puis on délègue au
-// chemin d'acceptation correspondant — chaque chemin vérifie le rôle (un lien
-// AGENT ne produit jamais un admin, et inversement). Usage unique : rejouer
-// le même jeton est refusé explicitement, jamais de double compte
-// (transaction). L'acceptation hors-ligne viendra avec S8/outbox.
 export async function accepterInvitation(input: {
   jeton: string;
   email: string;

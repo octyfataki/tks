@@ -38,17 +38,7 @@ export function ThemeProvider({
   defaultTheme = DEFAULT_THEME,
   storageKey = THEME_STORAGE_KEY,
 }: ThemeProviderProps) {
-  // Le premier rendu DOIT être identique à celui du serveur, donc il part
-  // toujours de `defaultTheme` ; la valeur stockée est lue après montage.
-  // Lire le stockage ici (initialiseur paresseux) rendait le premier rendu
-  // client différent du HTML serveur dès que la valeur stockée s'écartait du
-  // défaut : React signalait alors un désaccord d'hydratation sur le sélecteur
-  // de thème (aria-checked, classes), et React ne le corrige pas.
-  // Même démarche que `usePreferencesClient`.
   const [theme, setThemeState] = React.useState<Theme>(defaultTheme)
-  // Résolution volontairement constante au premier rendu : interroger
-  // `prefers-color-scheme` ici diverge aussi du serveur, qui ne voit que
-  // « clair ». L'effet ci-dessous corrige la valeur après le montage.
   const [resolvedTheme, setResolvedTheme] = React.useState<ResolvedTheme>(
     defaultTheme === "dark" ? "dark" : "light"
   )
@@ -56,10 +46,6 @@ export function ThemeProvider({
   const stockeLu = React.useRef(false)
 
   React.useEffect(() => {
-    // Première passe : on reprend la valeur stockée. Tant qu'elle n'est pas
-    // connue, on ne touche pas au DOM — le script inline de <head> a déjà
-    // posé la bonne classe avant le premier paint, la réappliquer ici
-    // provoquerait un clignotement clair/sombre au chargement.
     if (!stockeLu.current) {
       stockeLu.current = true
       let stocke: Theme = defaultTheme
@@ -69,10 +55,8 @@ export function ThemeProvider({
           stocke = brut
         }
       } catch {
-        // Stockage indisponible (navigation privée) : on garde le défaut.
       }
       if (stocke !== theme) {
-        // L'effet va repartir avec le bon thème et appliquer le DOM.
         setThemeState(stocke)
         return
       }
@@ -99,7 +83,6 @@ export function ThemeProvider({
       try {
         window.localStorage.setItem(storageKey, next)
       } catch {
-        // stockage indisponible (navigation privée) : on ignore
       }
     },
     [storageKey]

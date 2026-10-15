@@ -6,19 +6,6 @@ import {
   varchar,
 } from "drizzle-orm/mysql-core";
 
-// S2 issue 01 — journal d'audit append-only.
-// L'immuabilité est garantie par la base (triggers BEFORE UPDATE / BEFORE
-// DELETE qui rejettent, voir migration), pas par l'application.
-// - `id` : généré sur l'appareil (UUID), jamais attribué par la base —
-//   l'UUID d'invitation existant joue déjà ce rôle d'op_id côté S1.
-// - `horodatageLocal` : heure de l'appareil, conservée telle quelle.
-// - `recuLe` : heure de réception serveur. Les deux restent visibles.
-// - `contesteId` (S2 issue 15) : identifiant de la ligne que la présente
-//   ligne corrige — le fil « erreur → correction », remontable sans deviner.
-//   NULLABLE (une action normale ne conteste rien), sans FK : une contrainte
-//   casserait l'insertion hors-ligne (S8 traverse tout). L'existence de la
-//   ligne contestée est contrôlée par l'application, à l'écriture.
-// - La consultation du journal n'est pas journalisée (sinon boucle).
 export const journalAudit = mysqlTable(
   "journal_audit",
   {

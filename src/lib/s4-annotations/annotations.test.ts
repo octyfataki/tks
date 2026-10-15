@@ -4,10 +4,6 @@ import {
   type EvenementAnnotation,
 } from "@/lib/s4-annotations/derivation";
 
-// S4 issue #7 — l'état courant se dérive du journal append-only, il ne se
-// stocke pas. Le plus récent d'une paire (compte, étiquette) décide ;
-// l'égalité d'horodatage se tranche par l'heure de réception.
-
 function evenement(
   partiel: Partial<EvenementAnnotation> & { compteClientId: string },
 ): EvenementAnnotation {

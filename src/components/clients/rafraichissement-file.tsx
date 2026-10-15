@@ -5,26 +5,13 @@ import { useRouter } from "next/navigation";
 import { RefreshCwIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-/**
- * L'autre sens de la communication : quand le client dépose une pièce
- * depuis /pending, la file de validation doit le voir sans rechargement
- * manuel. Scrutation douce (router.refresh + retour d'onglet +
- * reconnexion), jamais de boucle quand l'onglet est caché. Hors-ligne :
- * le refresh échoue en silence, les données gardées restent lisibles.
- *
- * Par défaut la file chaude (10 s) ; les listes utilisent le libellé
- * « liste » avec 30 s.
- */
 export function RafraichissementFile({
   etiquette = "Actualiser la file",
   suivi = "File",
   intervalleMs = 10000,
 }: {
-  /** Libellé du bouton. */
   etiquette?: string;
-  /** Préfixe du message de suivi. */
   suivi?: string;
-  /** Scrutation douce en ms. */
   intervalleMs?: number;
 } = {}) {
   const routeur = useRouter();
@@ -39,7 +26,6 @@ export function RafraichissementFile({
       routeur.refresh();
       setActualiseLe(new Date());
     } finally {
-      // Le refresh serveur n'a pas de promesse : on retombe vite.
       window.setTimeout(() => setEnCours(false), 600);
     }
   }, [routeur]);

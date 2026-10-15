@@ -18,17 +18,6 @@ import { PermissionRefusee } from "@/components/permission-refusee";
 import { FormulaireInvitationAdmin } from "../administrateurs/formulaire-invitation";
 import { FormulaireInvitationAgent } from "./formulaire";
 
-/**
- * /admin/invites — Invitations par lien (?cible=admin|agent, défaut agent).
- * Les deux voies partagent la même page car la sidebar y envoie les deux
- * entrées (« Inviter un administrateur principal » et « Inviter un
- * agent ») : un onglet par rôle cible, chacun avec son autorisation S1.
- * Le lien fixe le rôle, jamais l'identifiant : la personne choisit
- * elle-même son email et son mot de passe. Usage unique, durée [1, 30].
- *
- * Le shell SidebarProvider + AdminHeader vit dans /admin/layout : ici,
- * uniquement le contenu.
- */
 export default async function InviterPage({
   searchParams,
 }: {
@@ -63,8 +52,6 @@ export default async function InviterPage({
 
   const seulOnglet = peutInviterAdmin && !peutInviterAgentRole ? "admin" : null;
 
-  // Un seul rôle autorisé (administrateur technique) : pas d'onglets,
-  // le formulaire suffit.
   if (seulOnglet) {
     return (
       <div className="flex flex-1 flex-col">
@@ -80,9 +67,6 @@ export default async function InviterPage({
 
   return (
     <div className="flex flex-1 flex-col">
-      {/* key = remonte l'onglet quand ?cible change : defaultValue seul est
-          ignoré après le premier montage en navigation client (sidebar
-          « Inviter un administrateur principal » ↔ « Inviter un agent »). */}
       <Tabs
         key={ongletDefaut}
         defaultValue={ongletDefaut}

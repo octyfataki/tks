@@ -13,15 +13,6 @@ import {
 } from "@/lib/db/schema/s1-comptes";
 import { StaffError, type ErreurStaff } from "./staff";
 
-// Complément S1 (stories 2-4, 11-13) : second facteur staff et clients,
-// pièces staff, accès temporaires reset. IDs générés côté appareil
-// (offline-first, ADR-0006).
-// Le code OTP vit dans better-auth `two_factor` (chiffré) ; ici seule la traçabilité.
-// NON EXPOSÉ : aucune server action ne les appelle encore. Le contrôle du
-// demandeur vit quand même ici (comme staff.ts) pour que le câblage futur
-// ne puisse pas oublier l'autorisation.
-
-/** Le demandeur gère le second facteur / les resets (ADMIN_PRINCIPAL VALIDE). */
 async function demandeurFacteurValide(demandeurId: string) {
   const demandeurs = await db
     .select()
@@ -38,9 +29,6 @@ function erreur(code: ErreurStaff, message: string): StaffError {
   return new StaffError(code, message);
 }
 
-/** Déclare le facteur OTP d'un compte staff (méthode nommée : « Code par SMS »,
- * « Code par email »). Tout rôle staff VALIDE : administrateurs comme agent
- * de service (issue #3, optionnel pour tous). Un seul actif par compte. */
 export async function declarerFacteur2faAdmin(input: {
   compteStaffId: string;
   nomAppareil: string;
@@ -78,7 +66,6 @@ export async function declarerFacteur2faAdmin(input: {
   return { id };
 }
 
-/** Remplace un facteur perdu : ancien désactivé, nouveau actif. Pas de bypass. */
 export async function remplacerFacteur2faAdmin(input: {
   demandeurId: string;
   compteStaffId: string;
@@ -120,7 +107,6 @@ export async function remplacerFacteur2faAdmin(input: {
   return { id, remplace: ancien.id };
 }
 
-/** Conserve la pièce d'identité vue par un humain (réutilisable au 2e reset). */
 export async function deposerPieceIdentiteStaff(input: {
   compteStaffId: string;
   typePiece: string;
@@ -146,7 +132,6 @@ export async function deposerPieceIdentiteStaff(input: {
   return { id };
 }
 
-/** Ouvre un accès temporaire reset : pièce obligatoire, durée courte. */
 export async function ouvrirAccesTemporaireResetStaff(input: {
   compteStaffCible: string;
   ouvertPar: string;
@@ -184,8 +169,6 @@ export async function ouvrirAccesTemporaireResetStaff(input: {
   return { id, expireLe };
 }
 
-/** Consomme l'accès dès le nouveau mot de passe choisi. Scope vérifié ailleurs :
- *  ce jeton n'ouvre que le choix du mot de passe (S1-T05). */
 export async function consommerAccesTemporaireResetStaff(id: string) {
   const rows = await db
     .select()

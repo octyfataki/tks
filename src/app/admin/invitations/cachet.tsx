@@ -1,11 +1,5 @@
 import { cn } from "@/lib/utils";
 
-/**
- * Cachet tamponné portant un statut. L'élément mémorable du registre :
- * une encre par état (ambre = en attente, vert = fait, neutre = expiré,
- * rouge = révoqué), légèrement de travers comme un vrai tampon
- * administratif.
- */
 export function Cachet({
   encre,
   children,

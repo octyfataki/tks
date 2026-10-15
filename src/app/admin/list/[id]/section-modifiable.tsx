@@ -4,13 +4,6 @@ import * as React from "react";
 import { PencilIcon, XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-/**
- * Carte à en-tête crayon (modèle de la maquette : un ✎ par zone).
- * Au repos : la lecture seule. Crayon cliqué : le formulaire de la zone.
- * Quand la zone n'est pas modifiable (compte révoqué, aucun appareil
- * déclaré, droits insuffisants), le crayon reste visible mais désactivé
- * avec son motif — jamais un cul-de-sac silencieux.
- */
 export function SectionModifiable({
   titre,
   description,
@@ -26,7 +19,6 @@ export function SectionModifiable({
   motifVerrouille: string;
   lecture: React.ReactNode;
   formulaire: React.ReactNode;
-  /** Change à chaque enregistrement : le formulaire repart des valeurs fraîches. */
   cleRepli?: string;
 }) {
   const [ouvert, setOuvert] = React.useState(false);

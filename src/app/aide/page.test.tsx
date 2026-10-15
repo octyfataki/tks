@@ -3,10 +3,6 @@ import { describe, expect, it } from "vitest";
 import { AideContenu } from "@/components/aide/aide-contenu";
 import { AIDE_SECTIONS } from "@/lib/aide-content";
 
-/**
- * Routes réellement servies (vérifiées dans src/app). Un raccourci ne doit
- * pointer que vers l'une d'elles : jamais de lien mort.
- */
 const ROUTES_EXISTANTES = new Set([
   "/",
   "/sign-in",

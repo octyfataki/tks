@@ -1,13 +1,3 @@
-/**
- * Îlot client de la page d'aide : recherche + filtre par niveau
- * (Aide Client, Aide Agent, Aide Admin). Seul composant "use client" du
- * parcours : les sections et le rappel « Bientôt » restent des données
- * statiques sérialisables.
- *
- * Barre d'outils alignée sur /admin/invitations (registre-invitations) :
- * même Card, même recherche, mêmes menus Filtrer / Trier — sans les
- * boutons Exporter ni Inviter, inutiles ici.
- */
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
@@ -99,7 +89,6 @@ function trierLabels<T extends { label?: string; entree?: string }>(
   return entrees;
 }
 
-/** Une rubrique = un niveau : titre, phrase, grille de cartes cliquables. */
 function AideRubrique({
   section,
   mots,
@@ -159,7 +148,6 @@ export function AideExplorer({
   niveauFixe,
 }: {
   sections: AideSectionNiveau[];
-  /** Verrouille l'annuaire sur un niveau : filtre et rappel cachés. */
   niveauFixe?: AideNiveau;
 }) {
   const [recherche, setRecherche] = useState("");

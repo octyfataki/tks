@@ -1,9 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
-/**
- * /admin/journal — état de chargement : même structure que la page
- * (titre, barre d'outils, tableau du registre, pagination).
- */
 export default function JournalChargement() {
   return (
     <div

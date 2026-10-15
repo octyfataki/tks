@@ -27,10 +27,6 @@ function pagesAutour(page: number, totalPages: number): (number | "…")[] {
   return sortie;
 }
 
-/**
- * Tableau des administrateurs + pagination (?page=) + état vide.
- * Colonnes réduites sur mobile (téléphone et créateur masqués).
- */
 export function TableauAdmins({
   lignes,
   page,

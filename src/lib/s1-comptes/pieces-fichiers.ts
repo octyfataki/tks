@@ -1,14 +1,8 @@
-// Règles pures des fichiers de pièce d'identité (S1-03) : ni base, ni
-// framework — testées sans environnement. Le contrôle réel est serveur
-// (pieces-clients.ts) ; le client ne fait que pré-filtrer.
-
 export const TYPES_PIECE = ["CNI", "PASSEPORT", "PERMIS", "AUTRE"] as const;
 export type TypePiece = (typeof TYPES_PIECE)[number];
 
-/** PDF accepté en l'état. */
 export const MIME_PDF = "application/pdf";
 
-/** Plafonds serveur : image 3 Mo, PDF 5 Mo. */
 export const TAILLE_MAX_IMAGE_OCTETS = 3 * 1024 * 1024;
 export const TAILLE_MAX_PDF_OCTETS = 5 * 1024 * 1024;
 
@@ -23,21 +17,12 @@ export function typePieceValide(valeur: string): valeur is TypePiece {
   return (TYPES_PIECE as readonly string[]).includes(valeur);
 }
 
-/**
- * Qui peut encore déposer une pièce : un compte en attente, refusé, ou
- * validé qui remplace sa pièce. Un compte validé reste validé après ce
- * redépôt : l'ancienne pièce reste au dossier (jamais supprimée) et la
- * nouvelle est « à revoir » par un humain. Jamais un compte révoqué.
- */
 export function etatPieceDeposable(etat: string): boolean {
   return (
     etat === "EN_ATTENTE_VALIDATION" || etat === "REFUSE" || etat === "VALIDE"
   );
 }
 
-/**
- * Verdict pur sur un fichier candidat : extension, type et taille.
- */
 export function verdictFichierPiece(input: {
   nom: string;
   mime: string;

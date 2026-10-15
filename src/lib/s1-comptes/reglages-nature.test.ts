@@ -5,9 +5,6 @@ import {
   peutModifierReglageNature,
 } from "../db/schema/s1-comptes/validation";
 
-// /admin/parametres — l'autorisation d'écriture est scindée par nature de
-// réglage (S2 §Frontière : l'administrateur technique ne touche ni taux,
-// ni plafond, ni promotion). Matrice pure, sans base.
 describe("autorisation des réglages par nature", () => {
   it("la seule clé existante est technique", () => {
     expect(NATURE_REGLAGE).toEqual({ duree_invitation_jours: "TECHNIQUE" });

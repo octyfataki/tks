@@ -4,10 +4,6 @@ import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { deconnecterAutresSessionsAction } from "@/app/admin/profil/actions";
 
-/**
- * Coupe les autres sessions du compte connecté, partout sauf ici.
- * La session courante survit : on reste connecté après le geste.
- */
 export function BoutonDeconnexionAutres({ nbAutres }: { nbAutres: number }) {
   const [message, setMessage] = React.useState<string | null>(null);
   const [enCours, demarrer] = React.useTransition();

@@ -3,8 +3,6 @@ import { act, fireEvent, render } from "@testing-library/react";
 import { getSession } from "@/lib/auth-client";
 import { GardienSession } from "./gardien-session";
 
-// Le réseau et la navigation sont neutralisés : on vérifie la décision
-// (rediriger ou non), pas better-auth ni Next.
 vi.mock("@/lib/auth-client", () => ({
   getSession: vi.fn(),
   signIn: vi.fn(),
@@ -18,9 +16,6 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: pousser, refresh: rafraichir }),
 }));
 
-// Session morte sans déconnexion (expiration, révocation, autre onglet) :
-// l'espace doit renvoyer vers /sign-in au lieu de rester affiché.
-// Hors-ligne (requête rejetée) : aucun verdict, aucune redirection.
 describe("GardienSession", () => {
   beforeEach(() => {
     vi.useFakeTimers();

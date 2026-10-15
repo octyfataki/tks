@@ -1,6 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
-/** /admin/agents — état de chargement : même structure que la page. */
 export default function ListeAgentsChargement() {
   return (
     <div

@@ -11,16 +11,10 @@ import {
 import { enregistrerEvenement } from "@/lib/s2-autorisations/journal";
 import { StaffError } from "./staff";
 
-// Couche applicative des réglages (/admin/parametres). Lecture : tout admin
-// de l'espace /admin. Écriture : autorisation scindée par nature de réglage
-// (validation.ts — TECHNIQUE : les deux admins ; METIER : principal seul,
-// S2 §Frontière), chaque écriture journalisée avant/après (invariant 8).
-
 const VALEURS_DEFAUT: Record<CleReglage, string> = {
   duree_invitation_jours: String(DEFAUT_DUREE_INVITATION_JOURS),
 };
 
-/** Lit un réglage : la valeur stockée, ou le défaut si absent. */
 export async function lireReglage(cle: CleReglage): Promise<string> {
   const lignes = await db
     .select({ valeur: reglages.valeur })
@@ -29,7 +23,6 @@ export async function lireReglage(cle: CleReglage): Promise<string> {
   return lignes[0]?.valeur ?? VALEURS_DEFAUT[cle];
 }
 
-/** Durée par défaut d'un lien d'invitation, en jours, bornée [1, 30]. */
 export async function lireDureeInvitationJours(): Promise<number> {
   return normaliserDureeInvitationJours(
     await lireReglage("duree_invitation_jours"),

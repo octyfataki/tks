@@ -24,8 +24,6 @@ export default async function InvitePage({
   const invitation = lignes[0];
   const estAdmin = invitation?.roleCible === "ADMIN_PRINCIPAL";
 
-  // Un lien révoqué, expiré ou déjà utilisé est refusé avant même le
-  // formulaire : aucun compte ne peut naître d'un lien annulé.
   if (invitation) {
     // eslint-disable-next-line react-hooks/purity -- lecture unique de l'horloge en composant serveur
     const etat = etatLienInvitation(invitation, Date.now());

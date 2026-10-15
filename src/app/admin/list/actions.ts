@@ -17,7 +17,6 @@ import type { ResultatAction } from "@/lib/resultat-action";
 
 export type ResultatRevocation = ResultatAction;
 
-/** Codes de présentation locaux des actions sur comptes d'administration. */
 type CodeListAction =
   | "NON_AUTORISE"
   | "SOI_MEME"
@@ -49,7 +48,6 @@ function messageErreur(code: CodeListAction): string {
   }
 }
 
-/** Nombre de comptes d'un rôle encore VALIDE en dehors de la cible. */
 async function nbValidesSauf(
   role: "ADMIN_PRINCIPAL" | "ADMIN_TECHNIQUE",
   saufId: string,
@@ -67,13 +65,6 @@ async function nbValidesSauf(
   return autres[0]?.n ?? 0;
 }
 
-/**
- * Révoque un compte d'administration (VALIDE → REVOQUE, définitif :
- * REVOQUE = inutilisable, aucun retour — rouvrir un accès passe par
- * révocation + recréation, S2). Garde-fous : même autorisation que la
- * création, jamais soi-même, jamais le dernier administrateur
- * technique validé. Écriture tracée à brancher au journal S2.
- */
 export async function revoquerAdministrateurAction(
   id: string,
 ): Promise<ResultatRevocation> {
@@ -157,15 +148,6 @@ export async function revoquerAdministrateurAction(
   return { ok: true };
 }
 
-/**
- * Suspend un compte d'administration (VALIDE → SUSPENDU, réversible).
- * Le compte ne se connecte plus et ses sessions sont tuées aussitôt,
- * mais le retour vers VALIDE existe (lever la suspension) — pour un
- * malentendu, pas pour un départ. Garde-fous : même autorisation que
- * la révocation, jamais soi-même, jamais un compte REVOQUE, jamais le
- * dernier administrateur technique ou principal validé. Écriture
- * tracée (S2, invariant 8).
- */
 export async function suspendreAdministrateurAction(
   id: string,
 ): Promise<ResultatRevocation> {
@@ -254,13 +236,6 @@ export async function suspendreAdministrateurAction(
   return { ok: true };
 }
 
-/**
- * Lève la suspension d'un compte d'administration (SUSPENDU → VALIDE).
- * Même autorisation que suspendre, jamais soi-même : on ne se
- * dé-suspend pas tout seul. Seule une suspension se lève — un compte
- * VALIDE n'a rien à lever, un REVOQUE ne revient jamais. Écriture
- * tracée (S2, invariant 8).
- */
 export async function leverSuspensionAdministrateurAction(
   id: string,
 ): Promise<ResultatRevocation> {

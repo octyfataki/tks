@@ -39,12 +39,6 @@ const zones = [
   },
 ];
 
-/**
- * Espace agent de service — écran d'accueil. Contenu seul : la coquille
- * (navigation + en-tête) vit dans /agent/layout et persiste pendant la
- * navigation. Les trois zones décrivent la journée de l'agent ; les
- * fonctions métier arrivent avec S4 à S6, les pages existent déjà.
- */
 export default function AgentDashboardPage() {
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 pt-4">

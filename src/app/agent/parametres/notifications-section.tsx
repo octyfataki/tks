@@ -30,10 +30,6 @@ type EtatPermission =
   | "accordee"
   | "refusee";
 
-/**
- * Permission navigateur lue une fois après montage (rendu serveur :
- * `demande` par défaut, corrigé côté client sans désaccord visible).
- */
 function usePermissionNotification(): {
   etat: EtatPermission;
   demander: () => void;
@@ -62,13 +58,11 @@ function usePermissionNotification(): {
         );
       }
     } catch {
-      // Navigateur ancien (rappel synchrone indisponible) : on relit l'état.
       try {
         setEtat(
           Notification.permission === "granted" ? "accordee" : "refusee",
         );
       } catch {
-        // API通知 inaccessible : on reste sur la demande.
       }
     }
   }
@@ -76,12 +70,6 @@ function usePermissionNotification(): {
   return { etat, demander };
 }
 
-/**
- * Demande d'activation des signaux du navigateur, en tête de section.
- * Trois issues honnêtes : accordée (pastille), refusée (marche à suivre
- * dans les réglages du site — le navigateur interdit de redemander),
- * en attente (bouton de demande). Renvoyée nulle quand l'API n'existe pas.
- */
 function DemandeActivation() {
   const { etat, demander } = usePermissionNotification();
 
@@ -134,19 +122,6 @@ function DemandeActivation() {
   );
 }
 
-/**
- * Signaux de l'appareil, par événement (section Notifications).
- *
- * Mise en page « réglages de notifications » : carte de demande
- * d'activation, puis colonne de groupe à gauche (titre + description),
- * lignes d'événements au centre (interrupteur + intitulé), menu du canal à
- * droite (son + vibration, vibration, silencieuse). `localStorage`
- * uniquement, via `usePreferencesAgent` : sur un téléphone partagé au
- * comptoir, ces réglages valent pour l'appareil.
- *
- * Honnêteté d'étape : les événements branchés sur S3, S5 et S8 le disent
- * (« branché avec… ») — aucun signal n'est promis avant son consommateur.
- */
 export function NotificationsSection() {
   const { preferences, chargees, mettreAJour } = usePreferencesAgent();
 

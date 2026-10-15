@@ -94,11 +94,6 @@ describe("etatPieceDeposable", () => {
   });
 });
 
-// Régression : `db.update()` sous mysql2 renvoie `[ResultSetHeader, ...]`.
-// Lire `affectedRows` à la racine donne `undefined`, donc « 0 ligne »,
-// donc « pièce déjà tranchée » alors que l'écriture venait de réussir —
-// et la transaction s'annulait. La fonction s'appuie sur la forme réelle,
-// relevée sur le pilote.
 describe("lignesEcrites", () => {
   const enteteReel = (affectedRows: number) => [
     { fieldCount: 0, affectedRows, insertId: 0, changedRows: affectedRows },

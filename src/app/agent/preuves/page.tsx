@@ -8,11 +8,6 @@ export const metadata: Metadata = {
     "Preuves de paiement téléversées par les clients : valider ou refuser.",
 };
 
-/**
- * Preuves de paiement (espace agent). La page existe ; la validation
- * des preuves téléversées par les clients arrive avec S5. Aucune
- * écriture ici.
- */
 export default function AgentPreuvesPage() {
   return (
     <div className="flex flex-1 flex-col">

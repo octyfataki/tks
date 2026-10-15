@@ -3,12 +3,6 @@ import { AideExplorer } from "@/components/aide/aide-explorer";
 import { Separator } from "@/components/ui/separator";
 import { AIDE_SECTIONS, type AideNiveau } from "@/lib/aide-content";
 
-/**
- * Contenu commun de la page d'aide : hero, annuaire, mémos.
- * Synchrone et sans session : testable tel quel. `niveau` verrouille
- * l'annuaire sur un seul niveau (pages d'aide des espaces) ; absent,
- * les trois niveaux s'affichent avec le filtre.
- */
 export function AideContenu({ niveau }: { niveau?: AideNiveau }) {
   return (
     <>

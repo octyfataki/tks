@@ -8,6 +8,4 @@ export const authClient = createAuthClient({
   plugins: [twoFactorClient()],
 });
 
-// S1 : aucune création de Compte via le navigateur. `signUp` n'est pas
-// exporté : l'inscription client passe par /sign-up, le staff par invitation.
 export const { signIn, signOut, useSession, getSession } = authClient;

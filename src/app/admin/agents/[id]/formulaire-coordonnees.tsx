@@ -10,11 +10,6 @@ import {
   type ResultatModificationCoordonneesAgent,
 } from "./actions";
 
-/**
- * Corrige le nom affiché + le téléphone contact d'un agent de service.
- * Email, rôle, état et secrets exclus (verrouillés dans la fiche). La
- * garde réelle est côté serveur.
- */
 export function FormulaireCoordonneesAgent({
   id,
   nomInitial,

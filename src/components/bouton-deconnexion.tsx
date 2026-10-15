@@ -8,10 +8,6 @@ import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";
 import { cn } from "@/lib/utils";
 
-// Bouton de déconnexion réutilisable pour les espaces sans sidebar
-// (/agent, /clients). Même logique que NavUser : signOut, toast,
-// retour vers /sign-in. La sidebar admin garde son entrée dans le menu
-// utilisateur, ici le bouton est visible directement.
 export function BoutonDeconnexion({ className }: { className?: string }) {
   const router = useRouter();
   const [enCours, setEnCours] = useState(false);

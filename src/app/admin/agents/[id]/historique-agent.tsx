@@ -17,12 +17,6 @@ function dateHeure(valeur: Date): string {
   });
 }
 
-/**
- * Historique d'un agent de service : les événements du journal d'audit
- * qui le concernent (entité) ou qu'il a lui-même provoqués (acteur :
- * inscription par lien, par exemple), plus récents d'abord. Lecture
- * seule — l'append-only reste garanti par la base, comme sur /admin/journal.
- */
 export async function HistoriqueAgent({ agentId }: { agentId: string }) {
   const evenements = await db
     .select()

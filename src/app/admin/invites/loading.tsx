@@ -1,11 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
-/**
- * /admin/invites — état de chargement (skeleton) : placeholder affiché
- * pendant que la page serveur (session + garde + liens) se résout. Même
- * structure que le formulaire : en-tête titre + actions, carte formulaire
- * à gauche, cartes aperçu, étapes et liens récents à droite.
- */
 export default function InvitationAgentChargement() {
   return (
     <div

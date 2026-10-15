@@ -23,15 +23,11 @@ import { Input } from "@/components/ui/input"
 import { cn } from "@/lib/utils"
 
 export type TauxEnVigueur = {
-  /** Francs pour 1 USD. */
   valeur: number
-  /** Date ISO (AAAA-MM-JJ) du taux en vigueur. */
   dateSaisie: string
-  /** Qui a saisi le taux, si connu. */
   saisiPar?: string
 }
 
-/** Retour d'une tentative de saisie : succès muet, ou refus affichable. */
 export type ResultatSaisieTaux = { ok: true } | { ok: false; erreur: string }
 
 function formaterDateDuJour(date: Date): string {
@@ -52,7 +48,6 @@ function formaterMontant(valeur: number): string {
 const classePastille =
   "h-7 items-center gap-1.5 rounded-full border border-border bg-card px-3 text-xs font-medium whitespace-nowrap"
 
-/** Pastille non interactive : la date du jour, calculée côté client. */
 export function DateDuJour({ className }: { className?: string }) {
   const aujourdHui = new Date()
   return (
@@ -68,15 +63,6 @@ export function DateDuJour({ className }: { className?: string }) {
   )
 }
 
-/**
- * Pastille du taux en vigueur + modal du taux du jour.
- *
- * Le modal s'ouvre pour tout le monde : il montre le taux, sa date et son
- * auteur. La saisie n'est proposée qu'avec la permission `taux.saisir` ;
- * sans elle, le modal est en lecture seule. Sans `onEnregistrer`, le
- * formulaire est inerte — c'est le cas tant que la persistance n'est pas
- * câblée (le composant branché vit dans `TauxDuJourAuto`).
- */
 export function TauxDuJour({
   taux = null,
   peutSaisir = true,
@@ -84,9 +70,7 @@ export function TauxDuJour({
   className,
 }: {
   taux?: TauxEnVigueur | null
-  /** Sans la permission `taux.saisir`, le modal s'ouvre en lecture seule. */
   peutSaisir?: boolean
-  /** Appelé avec la valeur validée. Absent = saisie pas encore câblée. */
   onEnregistrer?: (
     valeur: number
   ) => ResultatSaisieTaux | Promise<ResultatSaisieTaux>

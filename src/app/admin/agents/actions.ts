@@ -50,12 +50,6 @@ async function staffConnecte() {
   return lignes[0] ?? null;
 }
 
-/**
- * Crée un agent de service en direct (comptoir). Seul un administrateur
- * principal VALIDE (S1 : peutInviterAgent). Zéro permission par défaut —
- * le compte s'authentifie mais ne fait rien tant que le distributeur
- * n'accorde rien (S2). Le contrôle réel est dans creerAgent.
- */
 export async function creerAgentAction(
   _precedent: ResultatAction | null,
   donnees: FormData,
@@ -108,12 +102,6 @@ export async function creerAgentAction(
   }
 }
 
-/**
- * Révoque un agent (VALIDE → REVOQUE, définitif : aucun retour — rouvrir
- * un accès passe par révocation + recréation, S2). Garde-fous : même
- * autorisation que la création, jamais soi-même, jamais deux fois.
- * Journalisée (S2 issue 01).
- */
 export async function revoquerAgentAction(
   id: string,
   contesteId?: string | null,
@@ -121,8 +109,6 @@ export async function revoquerAgentAction(
   const moi = await staffConnecte();
   if (!moi || !peutInviterAgent(moi.role, moi.etat)) {
     const erreur = "Seul un administrateur principal validé peut révoquer un agent.";
-    // S2 issue 15 — un refus opposé à une contestation est journalisé comme
-    // échec, lié à la ligne contestée.
     if (contesteId) {
       await journaliserRefusContestation({
         acteurId: moi?.id ?? null,
@@ -185,13 +171,6 @@ export async function revoquerAgentAction(
   return { ok: true };
 }
 
-/**
- * Suspend un agent (VALIDE → SUSPENDU, réversible). Le compte ne se
- * connecte plus et ses sessions sont tuées aussitôt, mais le retour
- * vers VALIDE existe — pour un malentendu, pas pour un départ.
- * Garde-fous : même autorisation que la révocation, jamais soi-même,
- * jamais sur un compte REVOQUE. Journalisée (S2 issue 01).
- */
 export async function suspendreAgentAction(
   id: string,
   contesteId?: string | null,
@@ -199,8 +178,6 @@ export async function suspendreAgentAction(
   const moi = await staffConnecte();
   if (!moi || !peutInviterAgent(moi.role, moi.etat)) {
     const erreur = "Seul un administrateur principal validé peut suspendre un agent.";
-    // S2 issue 15 — un refus opposé à une contestation est journalisé comme
-    // échec, lié à la ligne contestée.
     if (contesteId) {
       await journaliserRefusContestation({
         acteurId: moi?.id ?? null,
@@ -273,12 +250,6 @@ export async function suspendreAgentAction(
   return { ok: true };
 }
 
-/**
- * Lève la suspension d'un agent (SUSPENDU → VALIDE). Même autorisation
- * que suspendre, jamais soi-même : on ne se dé-suspend pas tout seul.
- * Seule une suspension se lève — un REVOQUE ne revient jamais.
- * Journalisée (S2 issue 01).
- */
 export async function leverSuspensionAgentAction(id: string): Promise<ResultatAction> {
   const moi = await staffConnecte();
   if (!moi || !peutInviterAgent(moi.role, moi.etat)) {
@@ -326,11 +297,6 @@ export async function leverSuspensionAgentAction(id: string): Promise<ResultatAc
   return { ok: true };
 }
 
-/**
- * Crée un NOUVEAU lien d'invitation agent (jamais de réactivation d'un
- * lien expiré ou consommé — « renvoyer » = générer). Même autorisation
- * que l'invitation.
- */
 export async function creerInvitationAgentAction(): Promise<ResultatAction> {
   const moi = await staffConnecte();
   if (!moi || !peutInviterAgent(moi.role, moi.etat)) {
@@ -348,13 +314,6 @@ export async function creerInvitationAgentAction(): Promise<ResultatAction> {
   }
 }
 
-/**
- * Révoque un lien d'invitation agent encore en attente (définitif : le lien
- * ne servira plus, un nouveau lien passe par une nouvelle génération).
- * Même autorisation que l'invitation (S1 : peutInviterAgent — le contrôle
- * réel, y compris l'état du lien, est dans revoquerInvitation).
- * Journalisée (S2).
- */
 export async function revoquerInvitationAgentAction(
   invitationId: string,
 ): Promise<ResultatAction> {
@@ -380,7 +339,6 @@ export async function revoquerInvitationAgentAction(
         case "INVITATION_DEJA_CONSOMMEE":
           return { ok: false, erreur: "Lien déjà utilisé — rien à révoquer." };
         case "INVITATION_REVOQUEE":
-          // Idempotence : révoquer deux fois = même état, pas d'erreur.
           revalidatePath("/admin/agents/invitations");
           return { ok: true };
         case "INVITATION_EXPIREE":
@@ -411,8 +369,6 @@ function erreurAutorisation(erreur: unknown): string {
       case "CONTESTEE_INTROUVABLE":
         return "Ligne contestée introuvable — la correction est refusée.";
       default: {
-        // Exhaustivité : si un code est ajouté à ErreurAutorisation,
-        // la compilation casse ici jusqu'au mapping explicite.
         const _exhaustif: never = erreur.code;
         return _exhaustif;
       }
@@ -421,7 +377,6 @@ function erreurAutorisation(erreur: unknown): string {
   return "Opération impossible.";
 }
 
-/** Accorde une permission à un agent (S2 issue 03). */
 export async function accorderPermissionAction(
   agentId: string,
   permission: string,
@@ -440,7 +395,6 @@ export async function accorderPermissionAction(
   }
 }
 
-/** Retire une permission à un agent. Le retrait fait foi. */
 export async function retirerPermissionAction(
   agentId: string,
   permission: string,
@@ -449,8 +403,6 @@ export async function retirerPermissionAction(
   const moi = await staffConnecte();
   if (!moi || !peutGererPermissions(moi.role, moi.etat)) {
     const erreur = erreurAutorisation(new AutorisationError("NON_AUTORISE", ""));
-    // S2 issue 15 — un refus opposé à une contestation est journalisé comme
-    // échec, lié à la ligne contestée.
     if (contesteId) {
       await journaliserRefusContestation({
         acteurId: moi?.id ?? null,
@@ -474,7 +426,6 @@ export async function retirerPermissionAction(
   }
 }
 
-/** Applique le profil d'embauche (raccourci : ajoute les manquantes). */
 export async function appliquerProfilAction(agentId: string): Promise<ResultatAction> {
   const moi = await staffConnecte();
   if (!moi || !peutGererPermissions(moi.role, moi.etat)) {
@@ -490,7 +441,6 @@ export async function appliquerProfilAction(agentId: string): Promise<ResultatAc
   }
 }
 
-/** Accorde une permission du socle à tous les agents (y compris futurs). */
 export async function accorderSocleAction(permission: string): Promise<ResultatAction> {
   const moi = await staffConnecte();
   if (!moi || !peutGererPermissions(moi.role, moi.etat)) {
@@ -505,7 +455,6 @@ export async function accorderSocleAction(permission: string): Promise<ResultatA
   }
 }
 
-/** Retire une permission du socle (tous les agents la perdent, sauf exception fiche). */
 export async function retirerSocleAction(
   permission: string,
   contesteId?: string | null,
@@ -513,8 +462,6 @@ export async function retirerSocleAction(
   const moi = await staffConnecte();
   if (!moi || !peutGererPermissions(moi.role, moi.etat)) {
     const erreur = erreurAutorisation(new AutorisationError("NON_AUTORISE", ""));
-    // S2 issue 15 — un refus opposé à une contestation est journalisé comme
-    // échec, lié à la ligne contestée.
     if (contesteId) {
       await journaliserRefusContestation({
         acteurId: moi?.id ?? null,
@@ -541,12 +488,6 @@ export type ResultatLotSocle =
   | { ok: true; ajoutees: string[]; retirees: string[] }
   | { ok: false; erreur: string };
 
-/**
- * Préremplit le socle en un seul aller-retour (profil, tout ou rien).
- * Un seul revalidate à la fin au lieu d'un par permission : le lot des 18
- * ne coûte qu'une revalidation et chaque accord/retrait reste journalisé
- * un par un côté serveur.
- */
 export async function appliquerSocleLotAction(
   cible: "profil" | "tout" | "rien",
 ): Promise<ResultatLotSocle> {
@@ -564,8 +505,6 @@ export async function appliquerSocleLotAction(
           await retirerSocle(moi.id, permission);
           retirees.push(permission);
         } catch (erreur) {
-          // Déjà retirée entre-temps : on continue. Toute autre panne
-          // annule le lot (aucun succès partiel annoncé à tort).
           if (erreur instanceof AutorisationError && erreur.code === "NON_ACCORDEE") {
             continue;
           }
@@ -579,7 +518,6 @@ export async function appliquerSocleLotAction(
           await accorderSocle(moi.id, permission);
           ajoutees.push(permission);
         } catch (erreur) {
-          // Déjà au socle : on continue. Toute autre panne annule le lot.
           if (erreur instanceof AutorisationError && erreur.code === "DEJA_ACCORDEE") {
             continue;
           }

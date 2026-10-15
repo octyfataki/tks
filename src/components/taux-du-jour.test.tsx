@@ -30,7 +30,6 @@ describe("TauxDuJour", () => {
     expect(
       screen.getByText(/aucun taux saisi aujourd'hui/i),
     ).toBeInTheDocument();
-    // Sans onEnregistrer (tranche S3 à venir), la saisie reste inerte.
     expect(
       screen.getByRole("button", { name: "Enregistrer" }),
     ).toBeDisabled();
@@ -52,7 +51,6 @@ describe("TauxDuJour", () => {
     expect(
       await screen.findByRole("dialog", { name: "Taux du jour" }),
     ).toBeInTheDocument();
-    // Pas de formulaire de saisie : la permission `taux.saisir` manque.
     expect(
       screen.queryByRole("button", { name: "Enregistrer" }),
     ).not.toBeInTheDocument();

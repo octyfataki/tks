@@ -5,12 +5,6 @@ import { useRouter } from "next/navigation";
 import { Trash2Icon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-/**
- * Retrait d'une pièce refusée, depuis le profil du client (ticket 11).
- * Le geste est définitif pour lui — d'où la confirmation avant de
- * partir : on ne retire pas ce qu'un humain est en train de juger, et
- * une pièce retirée ne revient pas dans la file.
- */
 export function BoutonRetirerPiece({ pieceId }: { pieceId: string }) {
   const router = useRouter();
   const [confirme, setConfirme] = React.useState(false);
@@ -23,9 +17,6 @@ export function BoutonRetirerPiece({ pieceId }: { pieceId: string }) {
     try {
       const donnees = new FormData();
       donnees.set("pieceId", pieceId);
-      // Import au moment du geste : ce module tire la base, il ne doit
-      // pas être chargé au simple affichage de la page (même parti pris que
-      // le dépôt de pièce sur /pending).
       const { retirerPieceIdentiteAction } = await import(
         "@/components/clients/actions"
       );
@@ -34,8 +25,6 @@ export function BoutonRetirerPiece({ pieceId }: { pieceId: string }) {
         router.refresh();
         return;
       }
-      // Échec : le formulaire reste ouvert avec l'alerte. Refermer ici
-      // démonterait le message d'erreur avec le formulaire.
       setErreur(issue.erreur);
     } finally {
       setEnCours(false);

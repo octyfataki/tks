@@ -1,12 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
-/**
- * /clients/settings — état de chargement (skeleton) : même coquille que la
- * page (contenu seul, le shell sidebar + ClientHeader vit dans
- * /clients/layout). Reprend la structure en 4 sections sans inventer de
- * contenu : titre, pastilles, cartes Sécurité, Synchro, Appareil,
- * Notifications.
- */
 export default function ParametresChargement() {
   return (
     <div className="flex w-full flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">

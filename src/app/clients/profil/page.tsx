@@ -19,16 +19,6 @@ import { statutPieceValide } from "@/lib/s1-comptes/fiche-client";
 import { FormulaireMonProfil } from "@/app/admin/profil/formulaire-mon-profil";
 import { and, desc, eq, gt } from "drizzle-orm";
 
-// Mon compte (espace client) : le même composant ProfilUtilisateur, nourri
-// par la session et les tables clients. Le dossier rattaché arrivera avec
-// S4 ; en attendant, l'état vide normatif s'affiche (aucun dossier, aucun
-// solde). La carte Pièce d'identité montre les pièces déposées par le
-// compte (route authentifiée, propriétaire autorisé) et propose leur
-// remplacement : l'ancienne reste au dossier, la nouvelle est à revoir,
-// le compte reste validé (issue #24). Second facteur : optionnel, activé
-// par le client lui-même depuis
-// ici (compte VALIDE), code par SMS vers son téléphone ou par email
-// (issue #3). La garde /clients n'y laisse entrer que les comptes VALIDE.
 export default async function ClientsProfilPage() {
   const entetes = await headers();
   const session = await auth.api.getSession({ headers: entetes });

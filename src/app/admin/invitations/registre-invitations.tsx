@@ -40,7 +40,6 @@ import {
   revoquerPremierAccesAdminAction,
 } from "./actions";
 
-/** Une ligne du registre, sérialisée par la page (dates ISO, état figé). */
 export type LigneRegistre =
   | {
       voie: "lien";
@@ -102,7 +101,6 @@ function dateCourte(iso: string): string {
   return new Date(iso).toLocaleDateString("fr-FR");
 }
 
-/** Export CSV des lignes filtrées, 100 % client, BOM UTF-8 pour Excel. */
 function exporterCSV(lignes: LigneRegistre[]) {
   const entete =
     "Voie;Personne;Email;Téléphone;État;Lien;Envoyé le;Expire le;Envoyé par";
@@ -171,12 +169,6 @@ function CachetEtat({ ligne }: { ligne: LigneRegistre }) {
   );
 }
 
-/**
- * Bouton « Révoquer » d'un lien en attente (voie `lien` ou voie `fiche`) :
- * confirmation obligatoire, la révocation est définitive (le lien ne
- * servira plus — un nouveau lien passe par une nouvelle génération ou un
- * renvoi). Même dessin que la révocation d'un lien agent.
- */
 function BoutonRevoquerLien({
   voie,
   id,
@@ -246,13 +238,6 @@ function BoutonRevoquerLien({
   );
 }
 
-/**
- * Registre unique des invitations : liens à faire suivre et fiches déjà
- * remplies mélangés dans un seul tableau, ligne dépliable pour le détail
- * et la suite à donner. Recherche, filtres, tri et pagination 100 %
- * locaux : le volume d'invitations d'administrateurs reste dérisoire,
- * une seule lecture serveur suffit et chaque frappe répond aussitôt.
- */
 export function RegistreInvitations({ lignes }: { lignes: LigneRegistre[] }) {
   const [recherche, setRecherche] = React.useState("");
   const [voie, setVoie] = React.useState("");

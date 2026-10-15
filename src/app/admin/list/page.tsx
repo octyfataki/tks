@@ -25,21 +25,8 @@ const FILTRES_VALIDES = [
 ] as const;
 const TRIS_VALIDES = ["anciens", "nom-az", "nom-za"] as const;
 
-/** Cartes par page de la grille. */
 const CARTES_PAR_PAGE = 9;
 
-/**
- * /admin/list — Comptes d'administration en cartes : administrateurs
- * principaux (le distributeur) et administrateurs techniques (diagnostic
- * et déblocage, aucun pouvoir métier). Les agents de service ont leur
- * propre liste.
- *
- * Filtrage (?q=, ?filtre=), tri (?tri=) et pagination (?page=)
- * appliqués côté serveur — le volume d'administrateurs reste dérisoire,
- * une seule lecture suffit. L'interrupteur de chaque carte suspend
- * (réversible, après confirmation) ou révoque (définitif, après
- * confirmation), jamais le titulaire lui-même.
- */
 export default async function ListeAdminsPage({
   searchParams,
 }: {
@@ -64,10 +51,6 @@ export default async function ListeAdminsPage({
     : null;
   const estFiltre = recherche !== "" || filtreDemande !== null;
 
-  // Le nom vit dans better-auth (table user), le second facteur dans
-  // facteurs_2fa_admin. Le créateur se résout en seconde requête : les
-  // jointures aliasées sur la même table font s'effondrer le typage
-  // Drizzle en never[]. La session démarre tôt (requêtes indépendantes).
   const entetes = await headers();
   const sessionPromise = auth.api.getSession({ headers: entetes });
   const lignesBrutes = await db
@@ -113,8 +96,6 @@ export default async function ListeAdminsPage({
   const lignesTriees = trierLignes(lignesFiltrees, triDemande);
   const total = lignesBrutes.length;
 
-  // Pagination (?page=) : page validée puis bornée, hrefBase reconstruit
-  // sans ?page= pour les liens du pied.
   const totalPages = Math.max(1, Math.ceil(lignesTriees.length / CARTES_PAR_PAGE));
   const pageDemandee = Math.floor(Number(filtres.page));
   const page =
@@ -132,7 +113,6 @@ export default async function ListeAdminsPage({
   const chaineConservee = conserves.toString();
   const hrefBase = chaineConservee ? `/admin/list?${chaineConservee}` : "/admin/list";
 
-  // Export CSV : toutes les lignes filtrées (pas seulement la page).
   const exportLignes = lignesTriees.map((ligne) => {
     const nom = nomAffiche(ligne);
     return {
@@ -154,8 +134,6 @@ export default async function ListeAdminsPage({
     };
   });
 
-  // Interrupteur d'état : le titulaire ne révoque jamais son propre
-  // compte — son identifiant staff est résolu depuis la session.
   const session = await sessionPromise;
   const lignesMoi = session?.user?.id
     ? await db

@@ -215,7 +215,6 @@ export function AppSidebar({
   ...props
 }: React.ComponentProps<typeof Sidebar> & {
   utilisateur?: UtilisateurSidebar
-  /** Destination de « Mon compte » dans l'encart utilisateur. */
   profilUrl?: string
 }) {
   return (

@@ -2,10 +2,6 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 
-/**
- * Mon compte — état de chargement : même structure que la page
- * (bandeau d'identité, colonne large + colonne empilée).
- */
 export function ProfilSquelette({ className }: { className?: string }) {
   return (
     <section

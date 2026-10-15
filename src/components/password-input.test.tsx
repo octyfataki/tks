@@ -2,9 +2,6 @@ import { describe, expect, it } from "vitest";
 import { fireEvent, render, screen } from "@testing-library/react";
 import { PasswordInput } from "./password-input";
 
-// La bascule œil ne fait que changer le type du champ et son libellé :
-// aucun déplacement au clic (régression : l'effet d'enfoncement du bouton
-// générique écrasait le centrage vertical).
 describe("PasswordInput", () => {
   it("bascule entre masqué et visible au clic", () => {
     const { container } = render(
@@ -33,8 +30,6 @@ describe("PasswordInput", () => {
     const bouton = screen.getByRole("button", {
       name: "Afficher le mot de passe",
     });
-    // Pas le bouton générique (dont l'enfoncement `active:translate-y-px`
-    // écrasait le centrage) : un <button> natif centré une fois pour toutes.
     expect(bouton.tagName).toBe("BUTTON");
     expect(bouton.getAttribute("data-slot")).toBeNull();
     expect(bouton.className).toMatch(/-translate-y-1\/2/);

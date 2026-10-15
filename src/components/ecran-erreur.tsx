@@ -4,33 +4,14 @@ import { BrandLogo } from "@/components/brand-logo";
 import { cn } from "@/lib/utils";
 
 export type EcranErreurProps = {
-  /** Grand repère typographique : "404" ou "Erreur". Élément mémorable unique. */
   code: string;
-  /** Titre lu par les lecteurs d'écran (h1). Voix active, sans jargon Excel. */
   titre: string;
-  /** Une seule phrase : ce qui s'est passé et que les chiffres sont intacts. */
   message: string;
-  /** Boutons d'action (Liens et réessai fournis par l'appelant). */
   actions: ReactNode;
-  /** Teinte du repère : neutre pour une page introuvable, erreur sinon. */
   tonalite?: "neutre" | "erreur";
   className?: string;
 };
 
-/**
- * Coquille unique des pages d'échec (404, erreur, erreur globale).
- *
- * Scène « liaison interrompue » : à gauche l'explication alignée à
- * gauche sous un repère géant traversé par une ligne pointillée qui se
- * rompt — la liaison a lâché. À droite un reçu de continuité qui liste
- * ce qui reste intact (commandes, créances, paiements). La perforation
- * verticale qui sépare les deux panneaux est l'unique élément
- * mémorable ; tout le reste est silencieux.
- *
- * Aucun JS client, aucun appel réseau — affichable hors-ligne.
- * Reprend les couleurs du thème, sans nouvelle palette ni nouvelle
- * police.
- */
 export function EcranErreur({
   code,
   titre,
@@ -49,7 +30,6 @@ export function EcranErreur({
         className,
       )}
     >
-      {/* Fond en points du thème, très atténué — identique au login. */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0"
@@ -63,7 +43,6 @@ export function EcranErreur({
             "radial-gradient(ellipse 80% 70% at 50% 50%, black 20%, transparent 80%)",
         }}
       />
-      {/* Anneau lointain, seule présence décorative hors déchirure. */}
       <div
         aria-hidden
         className="pointer-events-none absolute -bottom-40 -left-40 size-[28rem] rounded-full border"
@@ -77,7 +56,6 @@ export function EcranErreur({
         aria-labelledby="ecran-erreur-titre"
         className="tks-ticket-enter relative z-10 mx-auto grid w-full max-w-5xl items-stretch gap-10 lg:grid-cols-[1.2fr_.8fr] lg:gap-0"
       >
-        {/* Panneau explication */}
         <div className="flex flex-col justify-center lg:pr-12">
           <BrandLogo height={28} />
           <p
@@ -92,7 +70,6 @@ export function EcranErreur({
             {enErreur ? "Liaison interrompue" : "Adresse introuvable"}
           </p>
 
-          {/* Repère géant traversé par la ligne qui se rompt. */}
           <div className="relative mt-4">
             <p
               aria-hidden
@@ -156,9 +133,7 @@ export function EcranErreur({
           </p>
         </div>
 
-        {/* Perforation + reçu de continuité */}
         <div className="relative flex flex-col justify-center lg:pl-12">
-          {/* Encoches de la perforation, décoratives. */}
           <span
             aria-hidden
             className="absolute top-1/2 -left-3 hidden size-6 -translate-y-1/2 rounded-full border bg-background lg:block"

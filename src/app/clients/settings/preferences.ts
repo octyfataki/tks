@@ -1,19 +1,7 @@
-/**
- * Préférences d'appareil du client (/clients/settings).
- *
- * Stockage local uniquement (`localStorage`), jamais synchronisé : ce sont
- * des réglages du téléphone, pas des écritures métier.
- *
- * Le thème passe par `ThemeProvider` (clé `tks-theme`) ; le reste vit sous
- * la clé unique ci-dessous. Le parse est tolérant : toute valeur illisible
- * retombe sur les défauts, jamais d'écran cassé.
- */
-
 export const CLE_PREFERENCES_CLIENT = "tks-client-preferences";
 
 export type DensiteListes = "confortable" | "compacte";
 
-/** Canal d'un signal sur l'appareil : combine avec les interrupteurs son / vibration. */
 export type CanalNotification = "son-vibration" | "vibration" | "silencieuse";
 
 export const CANAUX_NOTIFICATION: { valeur: CanalNotification; etiquette: string }[] = [
@@ -22,7 +10,6 @@ export const CANAUX_NOTIFICATION: { valeur: CanalNotification; etiquette: string
   { valeur: "silencieuse", etiquette: "Silencieuse" },
 ];
 
-/** Clés stables des événements configurables. */
 export type CleNotificationClient =
   | "commandes"
   | "paiements"
@@ -31,7 +18,6 @@ export type CleNotificationClient =
   | "synchronisation";
 
 export type ReglageNotification = {
-  /** L'événement déclenche un signal sur l'appareil. */
   actif: boolean;
   canal: CanalNotification;
 };
@@ -96,9 +82,7 @@ export const CATALOGUE_NOTIFICATIONS: {
 ];
 
 export type PreferencesClient = {
-  /** Densité des listes (commandes, paiements), servie par S5 et S6. */
   densite: DensiteListes;
-  /** Signaux par événement, appareil uniquement. */
   notifications: NotificationsClient;
 };
 
@@ -153,7 +137,6 @@ function lireNotifications(valeur: unknown): NotificationsClient {
   };
 }
 
-/** Parse tolérant : objet partiel ou illisible -> défauts complétés. */
 export function lirePreferences(valeur: unknown): PreferencesClient {
   if (typeof valeur !== "object" || valeur === null) {
     return { ...PREFERENCES_DEFAUT };

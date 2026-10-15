@@ -7,8 +7,6 @@ import {
   definirMotDePassePremierAcces,
 } from "@/lib/s1-comptes/staff";
 
-// Validation zod de la frontière (cette page) : jeton présent, mot de passe
-// d'au moins 8 caractères. La couche staff revérifie (défense en profondeur).
 const SchemaPremierAcces = z.object({
   jeton: z.string().min(1, "lien inconnu"),
   password: z
@@ -16,9 +14,6 @@ const SchemaPremierAcces = z.object({
     .min(8, "mot de passe d'au moins 8 caractères exigé"),
 });
 
-// Consommation d'un lien de premier accès : définit le mot de passe,
-// marque le lien consommé. Usage unique, 24 h — même codes d'échec que
-// les invitations, pour des messages homogènes.
 export async function choisirMotDePassePremierAcces(input: {
   jeton: string;
   password: string;

@@ -19,15 +19,6 @@ import { desactiverSecondFacteurAction } from "@/app/admin/profil/actions";
 
 type Etape = "confirmation" | "termine";
 
-/**
- * Désactive le second facteur OTP du compte connecté (tout compte VALIDE,
- * staff comme client, depuis sa page profil — issue #5) : mot de passe exigé
- * et vérifié par better-auth (`twoFactor.disable`), puis traçabilité marquée
- * inactive côté serveur (aucune ligne supprimée). Miroir de
- * l'activation : prouve que c'est bien le titulaire avant de retirer une
- * protection. Après désactivation, la connexion suivante se fait au mot de
- * passe seul, sans code.
- */
 export function DesactivationSecondFacteur() {
   const router = useRouter();
   const [ouvert, setOuvert] = React.useState(false);

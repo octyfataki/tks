@@ -22,16 +22,10 @@ export const db = drizzle(pool, {
 
 export type Db = typeof db;
 
-/** Ferme le pool (scripts, tests) : libère les connexions et laisse sortir. */
 export async function fermerPool(): Promise<void> {
   await pool.end();
 }
 
-/**
- * Transaction en cours et exécuteur de requêtes (base ou transaction).
- * Les couches lib écrivent via l'exécuteur pour englober état métier +
- * trace d'audit dans une seule transaction.
- */
 export type TransactionDb = Parameters<
   Parameters<typeof db.transaction>[0]
 >[0];

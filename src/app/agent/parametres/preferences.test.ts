@@ -5,8 +5,6 @@ import {
   serialiserPreferences,
 } from "./preferences";
 
-// Préférences d'appareil : stockage local, jamais synchronisé. Le parse ne
-// casse jamais l'écran : toute valeur illisible retombe sur les défauts.
 describe("lirePreferences", () => {
   it("retombe sur les défauts quand il n'y a rien de lisible", () => {
     for (const valeur of [null, undefined, "texte", 42, []]) {

@@ -9,17 +9,6 @@ import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { profilSession } from "@/lib/s1-comptes/profil-session";
 import { redirectionAcces } from "@/lib/s1-comptes/role-session";
 
-/**
- * Garde d'accès à /clients : l'espace du client, et du client seulement.
- * Un staff qui s'y glisse est renvoyé dans son propre espace, un anonyme
- * au login. Inversement, un client poussé vers /admin est renvoyé ici.
- *
- * Coquille persistante : SidebarProvider + ClientSidebar + ClientHeader
- * vivent ici, pas dans les pages — même parti pris que /admin/layout et
- * /agent/layout. Le layout persiste pendant la navigation client-side,
- * seul le contenu sous l'en-tête change. L'en-tête est fixe (sticky)
- * pour tout l'espace /clients.
- */
 export default async function ClientsLayout({
   children,
 }: {
@@ -29,8 +18,6 @@ export default async function ClientsLayout({
   const redirection = redirectionAcces(profil, "CLIENTS");
   if (redirection) redirect(redirection);
 
-  // Nom affiché dans l'encart utilisateur : celui du compte connecté,
-  // avec replis neutres si la session est illisible.
   const session = await auth.api.getSession({ headers: await headers() });
   const email = session?.user?.email ?? "";
   const nom =

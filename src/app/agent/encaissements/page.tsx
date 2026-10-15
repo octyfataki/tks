@@ -8,10 +8,6 @@ export const metadata: Metadata = {
     "Encaisser au comptoir, en espèces ou en mobile money, et suivre les paiements.",
 };
 
-/**
- * Encaissements (espace agent). La page existe ; le paiement
- * multi-devises et son solde arrivent avec S6. Aucune écriture ici.
- */
 export default function AgentEncaissementsPage() {
   return (
     <div className="flex flex-1 flex-col">

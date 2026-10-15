@@ -1,11 +1,3 @@
-/**
- * Validation du changement de mot de passe (agent de service).
- *
- * Règle unique : même exigence qu'à l'inscription — au moins 8 caractères
- * (`minPasswordLength` dans `src/lib/auth.ts`) — plus la confirmation qui
- * doit correspondre. Pure et testée sans réseau.
- */
-
 export function validerChangementMotDePasse(input: {
   actuel: string;
   nouveau: string;
@@ -33,12 +25,6 @@ export type ForceMotDePasse = {
   etiquette: string;
 };
 
-/**
- * Force du nouveau mot de passe, affichée en direct sous le champ.
- * Cohérente avec la règle de validation : moins de 8 caractères, c'est
- * toujours « Trop court ». Au-delà, longueur et variété font monter le
- * niveau. Pure et testée.
- */
 export function evaluerForceMotDePasse(motDePasse: string): ForceMotDePasse {
   if (motDePasse.length < 8) {
     return { niveau: 0, etiquette: "Trop court" };

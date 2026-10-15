@@ -34,9 +34,6 @@ async function recevoirLeCode() {
   });
 }
 
-// Issue #3 : le second facteur est optionnel pour tous et s'active depuis
-// sa page profil, par SMS ou par email. SMS sans numéro = repli email
-// explicite, jamais de code perdu ni de blocage.
 describe("ActivationSecondFacteur — méthode et repli", () => {
   afterEach(() => {
     vi.clearAllMocks();
@@ -64,7 +61,6 @@ describe("ActivationSecondFacteur — méthode et repli", () => {
     fireEvent.click(screen.getByRole("button", { name: "Activer le second facteur" }));
     motDePasse("mot-de-passe-sûr");
     await recevoirLeCode();
-    // Pas de blocage : l'étape email s'affiche, avec le repli annoncé.
     expect(screen.getByLabelText("Code reçu par email")).toBeInTheDocument();
     expect(screen.getByText(/repli : aucun numéro de contact/i)).toBeInTheDocument();
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();

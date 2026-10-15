@@ -3,15 +3,6 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 
-/**
- * État de synchronisation vu par l'agent de service (S8).
- *
- * Honnêteté d'étape : la file durable, le compteur d'écritures en attente,
- * la date de dernière synchronisation et la file des photos arrivent avec
- * S8 — aucun chiffre n'est inventé ici. Seul l'état réseau est réel
- * (`navigator.onLine`), et la synchronisation manuelle reste désactivée
- * tant que le point de convergence n'existe pas.
- */
 function useEtatReseau(): boolean {
   const [enLigne, setEnLigne] = useState<boolean>(() =>
     typeof navigator === "undefined" ||

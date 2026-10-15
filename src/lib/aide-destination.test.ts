@@ -2,10 +2,6 @@ import { describe, expect, it } from "vitest";
 import { destinationAide } from "@/lib/aide-content";
 import type { Profil } from "@/lib/s1-comptes/role-session";
 
-/**
- * Le répartiteur /aide envoie chaque type d'utilisateur connecté sur l'aide
- * de son niveau — jamais en accès libre, jamais sur un autre niveau.
- */
 describe("destinationAide", () => {
   it("envoie l'anonyme et l'inconnu à la connexion", () => {
     expect(destinationAide({ type: "ANONYME" })).toBe("/sign-in");

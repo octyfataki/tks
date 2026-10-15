@@ -11,9 +11,6 @@ import { ActivationSecondFacteur, DesactivationSecondFacteur } from "@/component
 import { and, desc, eq, gt } from "drizzle-orm";
 import { headers } from "next/headers";
 
-// Mon compte (espace distributeur) : contenu seul, le shell sidebar +
-// AdminHeader vit dans /admin/layout. Données issues de la session et des
-// tables staff, jamais saisies (S4 branchera le dossier client rattaché ici).
 export default async function AdminProfilPage() {
   const entetes = await headers();
   const session = await auth.api.getSession({ headers: entetes });
@@ -33,8 +30,6 @@ export default async function AdminProfilPage() {
       ? { type: "STAFF", role: profil.role, etat: profil.etat }
       : { type: "CLIENT" };
 
-  // Données réelles du compte connecté : téléphone, matricule, ancienneté,
-  // second facteur. Replis neutres si illisible : on n'invente rien.
   let telephone: string | null = null;
   let matricule: string | null = null;
   let creeLe: Date | null = null;
@@ -89,8 +84,6 @@ export default async function AdminProfilPage() {
     }
   }
 
-  // Sessions encore valides du compte connecté : d'où on est connecté,
-  // depuis quand, jusqu'à quand. Le secret ne s'affiche jamais.
   let sessions: SessionEnCoursProfil[] = [];
   if (userId) {
     const lignesSessions = await db

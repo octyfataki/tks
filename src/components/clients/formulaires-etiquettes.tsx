@@ -16,11 +16,6 @@ import {
 
 const ETAT_INITIAL: ResultatAnnotation | null = null;
 
-/**
- * Un bouton-bascule par étiquette de la liste fermée. Inactive → « poser »,
- * active → « retirer » (écriture inverse, jamais de suppression). L'erreur
- * éventuelle s'affiche sous le bouton concerné, sans casser les autres.
- */
 function BoutonEtiquette({
   compteId,
   code,
@@ -72,11 +67,6 @@ function BoutonEtiquette({
   );
 }
 
-/**
- * Zone d'annotation d'un compte client : toutes les étiquettes de la liste
- * fermée, avec leur état. Sans la permission `client.annoter`, la zone
- * explique le refus au lieu d'afficher des boutons sans effet.
- */
 export function FormulairesEtiquettes({
   compteId,
   actives,

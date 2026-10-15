@@ -35,17 +35,6 @@ export const metadata: Metadata = {
     "Paramètres du client : session, mot de passe, synchronisation et réglages de l'appareil.",
 };
 
-/**
- * Paramètres de l'espace client. Contenu seul : la coquille
- * (navigation + ClientHeader) vit dans /clients/layout, qui garantit déjà
- * un compte client VALIDE.
- *
- * Même parti pris que la page agent (« fiche de poste ») : colonne unique
- * alignée à gauche, pastilles d'état dans l'en-tête (session côté serveur,
- * réseau en direct), puis sections différenciées par icône — Sécurité,
- * Synchro, Appareil, Notifications. Aucun pouvoir métier ici : ni taux, ni
- * plafond, ni promotion.
- */
 export default async function ClientsParametresPage() {
   const session = await auth.api.getSession({ headers: await headers() });
   const expiration = decrireExpiration(session?.session?.expiresAt ?? null);

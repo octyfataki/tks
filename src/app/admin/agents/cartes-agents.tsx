@@ -16,12 +16,6 @@ export type CarteAgent = {
   estMoi: boolean;
 };
 
-/**
- * Grille de cartes des agents de service : nom + email en tête, badges
- * état/permissions, traçabilité, puis « Voir la fiche » et l'interrupteur
- * d'état (suspension réversible ou révocation définitive, après
- * confirmation).
- */
 export function CartesAgents({ cartes }: { cartes: CarteAgent[] }) {
   return (
     <div className="grid items-start gap-4 sm:grid-cols-2 xl:grid-cols-3">

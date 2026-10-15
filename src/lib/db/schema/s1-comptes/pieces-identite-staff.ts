@@ -1,10 +1,5 @@
 import { index, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
 
-// S1 stories 11-13 + docs/db/01-admin-comptes.md §6.
-// Pièce d'identité vue par un humain pour un compte staff (reset, validation).
-// Aucun chemin sensible sans piece_id : la pièce est conservée et réutilisable
-// lors d'une deuxième demande. reference_image = chemin/objet stocké, jamais
-// le binaire en base.
 export const piecesIdentiteStaff = mysqlTable(
   "pieces_identite_staff",
   {

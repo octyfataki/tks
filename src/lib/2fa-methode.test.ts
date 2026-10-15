@@ -5,10 +5,6 @@ import {
   lireDefi2fa,
 } from "./2fa-methode";
 
-// La clé de préférence doit reprendre le jeton BRUT (sans signature) :
-// better-auth compare avec la valeur de getSignedCookie, qui s'arrête au
-// dernier « . ». Avec la valeur signée complète, la préférence n'est jamais
-// retrouvée — et l'envoi retombe en silence sur les deux méthodes.
 const JETON = "2fa-WKDKhWRH-0hL5VxcDUt9";
 const SIGNATURE = `${JETON}.${"A".repeat(43)}=`;
 

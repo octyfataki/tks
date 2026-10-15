@@ -12,12 +12,6 @@ function dateHeure(valeur: Date): string {
   });
 }
 
-/**
- * Dernier lien de mot de passe de l'agent, s'il n'est ni consommé ni
- * révoqué : rappel d'expiration + coupe-circuit. Rien se s'affiche
- * quand aucun lien ne court — le formulaire de génération vit juste
- * au-dessus, dans la même zone.
- */
 export async function LienMotDePasseEnAttente({ agentId }: { agentId: string }) {
   const lignes = await db
     .select({

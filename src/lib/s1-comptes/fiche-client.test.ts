@@ -105,7 +105,6 @@ describe("décisions d'affichage de la fiche", () => {
   });
 
   it("repère une pièce déposée après la validation du compte", () => {
-    // Le verdict est porté par la pièce, plus déduit d'une date.
     expect(pieceARevoir({ statutPiece: "EN_ATTENTE" })).toBe(true);
     expect(pieceARevoir({ statutPiece: "ACCEPTEE" })).toBe(false);
     expect(pieceARevoir({ statutPiece: "REFUSEE" })).toBe(false);
@@ -115,7 +114,6 @@ describe("décisions d'affichage de la fiche", () => {
     expect(
       revuePiecePossible({ etat: "VALIDE", pieces: [{ statutPiece: "EN_ATTENTE" }] }),
     ).toBe(true);
-    // Compte à trancher : son chemin reste la validation de compte.
     expect(
       revuePiecePossible({
         etat: "EN_ATTENTE_VALIDATION",
@@ -125,7 +123,6 @@ describe("décisions d'affichage de la fiche", () => {
     expect(
       revuePiecePossible({ etat: "REFUSE", pieces: [{ statutPiece: "EN_ATTENTE" }] }),
     ).toBe(false);
-    // Rien à revoir : pas de boutons.
     expect(
       revuePiecePossible({ etat: "VALIDE", pieces: [{ statutPiece: "ACCEPTEE" }] }),
     ).toBe(false);
@@ -141,8 +138,6 @@ describe("décisions d'affichage de la fiche", () => {
 
   it("ne retire qu'une pièce refusée, et une seule fois", () => {
     expect(pieceRetirable({ statutPiece: "REFUSEE" })).toBe(true);
-    // Une pièce en attente est hors de la portée du client : on ne retire
-    // pas ce qu'un humain est en train de juger.
     expect(pieceRetirable({ statutPiece: "EN_ATTENTE" })).toBe(false);
     expect(pieceRetirable({ statutPiece: "ACCEPTEE" })).toBe(false);
     expect(pieceRetirable({ statutPiece: "RETIREE" })).toBe(false);

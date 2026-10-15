@@ -17,8 +17,6 @@ vi.mock("@/app/(auth)/pending/actions-depot", () => ({
   deposerPieceIdentiteAction: vi.fn(),
 }));
 
-// Retirer une pièce est définitif pour le client : rien ne part sans
-// qu'il l'ait confirmé explicitement.
 describe("BoutonRetirerPiece", () => {
   beforeEach(() => {
     vi.clearAllMocks();

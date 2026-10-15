@@ -16,16 +16,6 @@ type EtatTaux = {
   peutSaisir: boolean;
 };
 
-/**
- * Pastille du taux, branchée : elle lit le taux du jour et la permission de
- * la personne connectée au montage (server action), puis enregistre la
- * saisie. Un échec de lecture retombe en lecture seule sans inventer de
- * taux — le taux est un paramètre résolu à la lecture, jamais une valeur
- * par défaut (S3, ADR-0001).
- *
- * Vit dans l'en-tête des trois espaces (administrateur, agent, client) :
- * seule la permission décide si le modal propose la saisie.
- */
 export function TauxDuJourAuto({ className }: { className?: string }) {
   const [etat, setEtat] = React.useState<EtatTaux | null>(null);
 

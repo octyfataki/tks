@@ -1,8 +1,3 @@
-// Environnement validé au démarrage : échec rapide avec message clair
-// plutôt qu'erreur obscure du driver à la première requête.
-// Contrat : voir .env.example (DATABASE_URL toujours, BETTER_AUTH_SECRET
-// exigé en production).
-
 function exiger(nom: string): string {
   const valeur = process.env[nom];
   if (!valeur) {

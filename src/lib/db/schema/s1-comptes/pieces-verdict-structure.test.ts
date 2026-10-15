@@ -2,11 +2,6 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
-// Ticket 10 — une pièce d'identité porte son propre verdict, distinct de
-// la « vue » (qui a ouvert le document). Ce test échoue dès qu'une des
-// deux colonnes disparaît, devient nullable, ou que le backfill des pièces
-// déjà vues est retiré : exactement le jour où la fiche afficherait « à
-// revoir » sans jamais proposer de verdict.
 describe("Ticket 10 — le verdict d'une pièce est stocké, pas déduit", () => {
   const migration = readFileSync(
     resolve(process.cwd(), "drizzle/0018_stale_silver_sable.sql"),

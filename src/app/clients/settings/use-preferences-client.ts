@@ -9,11 +9,6 @@ import {
   type PreferencesClient,
 } from "./preferences";
 
-/**
- * Préférences d'appareil partagées par les sections de /clients/settings
- * (appareil + notifications). Lecture unique du `localStorage` après
- * montage, écriture à chaque mise à jour. Rien ne part au serveur.
- */
 export function usePreferencesClient() {
   const [preferences, setPreferences] =
     useState<PreferencesClient>(PREFERENCES_DEFAUT);
@@ -42,7 +37,6 @@ export function usePreferencesClient() {
         serialiserPreferences(suivantes),
       );
     } catch {
-      // Stockage indisponible (navigation privée) : réglage de séance.
     }
   }
 

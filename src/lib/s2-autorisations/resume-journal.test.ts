@@ -4,10 +4,6 @@ import {
   resumerEvenement,
 } from "@/lib/s2-autorisations/resume-journal";
 
-// S2-05 (issue #13) — le résumé rend la ligne lisible sans inventer.
-// Chaque cas part des charges réellement enregistrées par les appelants
-// d'enregistrerEvenement (taux, clients, autorisations).
-
 describe("S2 — résumé lisible du journal", () => {
   it("formule le taux saisi avec jour et valeur", () => {
     expect(

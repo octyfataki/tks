@@ -12,25 +12,6 @@ import { joursAttente } from "@/components/clients/affichage-client";
 import { FileValidation } from "@/components/clients/file-validation";
 import { RafraichissementFile } from "./rafraichissement-file";
 
-/**
- * /admin/clients/validation — File des comptes clients à trancher (S1-03).
- *
- * Même dessin que le registre des comptes : bandeau de file avec ticket,
- * tableau dense, cachets d'état, lignes dépliables. Ici chaque ligne est
- * un compte bloqué : la ligne dépliée est le guichet — la pièce déposée
- * par le client (image ou PDF) à voir, puis les gestes : valider sur
- * pièce, refuser avec motif (réversible), attester au comptoir, révoquer
- * le compte suspect (définitif — la « suppression » de la file, sans
- * effacement physique : REVOQUE, journalisé). Les refusés restent
- * dans la file avec leur motif : un compte REFUSE peut toujours être
- * validé plus tard (GLOSSARY), sur sa pièce ou au comptoir. Les plus
- * anciens d'abord : personne ne reste coincé sans qu'on le voie. Sans
- * pièce déposée, valider sur pièce est impossible : le guichet le dit,
- * mais l'attestation au comptoir reste ouverte.
- *
- * Valider n'est pas rattacher : un compte validé non rattaché ne voit
- * toujours aucun dossier et aucun solde.
- */
 export default async function ValidationComptesClientsPage() {
   const lignesBrutes = await db
     .select({
@@ -67,8 +48,6 @@ export default async function ValidationComptesClientsPage() {
     piecesBrutes.map((piece) => [piece.compteClientId, piece]),
   );
 
-  // Horloge lue une fois par requête (composant serveur) : stable pendant
-  // le rendu.
   // eslint-disable-next-line react-hooks/purity -- lecture unique de l'horloge en composant serveur
   const maintenant = Date.now();
   const plusAncien =
@@ -87,8 +66,6 @@ export default async function ValidationComptesClientsPage() {
       inscritLe: ligne.createdAt,
       piece: dernierePiece.get(ligne.id) ?? null,
     }))
-    // Les attentes d'abord, les refusés à revoir ensuite ; ancienneté
-    // dans chaque groupe.
     .sort((a, b) => {
       const rang = (etat: string) => (etat === "REFUSE" ? 1 : 0);
       return (

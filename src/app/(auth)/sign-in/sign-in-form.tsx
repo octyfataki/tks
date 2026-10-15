@@ -11,16 +11,6 @@ import { Input } from "@/components/ui/input";
 import { PasswordInput } from "@/components/password-input";
 import { toast } from "@/components/ui/toast";
 
-// S1 : connexion unique email + mot de passe pour tous — client comme staff.
-// Quand le compte a un second facteur actif, Better Auth répond
-// `twoFactorRedirect` et on envoie vers /verify-2fa (optionnel pour tous,
-// issue #3). Sans facteur actif : mot de passe seul. Pas d'écran d'attente :
-// le bouton porte l'état (« Connexion… », désactivé) pendant l'appel.
-// Après connexion, la destination n'est pas devinée : le serveur relit
-// comptes_staff et comptes_clients et renvoie /admin, /agent, /clients ou
-// /pending (compte client en attente ou refusé, qui reste connecté).
-// Tout le feedback (succès, refus, 2FA) passe par les toasts : pas de
-// message inline sous les champs.
 export function SignInForm() {
   const router = useRouter();
   const [chargement, setChargement] = useState(false);
@@ -28,8 +18,6 @@ export function SignInForm() {
   async function versSonEspace() {
     const { destination, code } = await demanderDestination();
     if (code === "REVOQUE" || code === "SUSPENDU") {
-      // Le compte existe mais n'a plus le droit de rien faire : on ferme la
-      // session ouverte à l'instant plutôt que de la laisser traîner.
       await authClient.signOut().catch(() => undefined);
       toast.add({
         type: "error",
@@ -42,8 +30,6 @@ export function SignInForm() {
       return;
     }
     if (code === "EN_ATTENTE" || code === "REFUSE") {
-      // Compte client non validé : il reste connecté et voit son état
-      // avancer sur /pending — sans se réinscrire (S1-01, S1-03).
       toast.add({
         type: "info",
         title:

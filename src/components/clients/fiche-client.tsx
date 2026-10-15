@@ -46,11 +46,6 @@ function cachetEtat(etat: string): {
   return { encre: "attente", libelle: "En attente" };
 }
 
-/**
- * Verdict d'une pièce, tamponné comme l'état du compte : même encre, même
- * registre. Un agent lit des cachets, pas des pastilles — et le document
- * porte le sien, en haut à droite, comme sur une pièce papier.
- */
 function CachetPiece({ piece }: { piece: PieceFicheClient }) {
   if (piece.statutPiece === "ACCEPTEE") {
     return <Cachet encre="fait">Acceptée</Cachet>;
@@ -64,7 +59,6 @@ function CachetPiece({ piece }: { piece: PieceFicheClient }) {
   return <Cachet encre="attente">À revoir</Cachet>;
 }
 
-/** Aperçu d'une pièce : image à voir, PDF à ouvrir (route authentifiée). */
 function Piece({
   piece,
   nom,
@@ -73,9 +67,7 @@ function Piece({
 }: {
   piece: PieceFicheClient;
   nom: string;
-  /** Compte propriétaire : le verdict se porte sur sa pièce. */
   compteDuPiece: string;
-  /** Le compte est validé et la pièce attend un verdict. */
   peutStatuer: boolean;
 }) {
   const estImage = piece.mime.startsWith("image/");
@@ -131,16 +123,6 @@ function Piece({
   );
 }
 
-/**
- * Fiche d'un compte client (issue #9), partagée par l'espace admin et
- * l'espace agent. Un compte est une connexion (téléphone = clé) ; le
- * dossier financier vit en S4. Montre l'identité, la ou les pièces
- * d'identité, les étiquettes d'annotation (S4 issue #7, badge visible et
- * zone de pose/retrait), et la zone Actions — qui réutilise les gestes
- * existants de `actions.ts` (valider / refuser / attester / révoquer),
- * jamais réécrits. Les actions de dossier (S4) sont annoncées différées :
- * pas de bouton mort.
- */
 export function VueFicheClient({
   fiche,
   maintenant,
@@ -150,11 +132,8 @@ export function VueFicheClient({
 }: {
   fiche: FicheClient;
   maintenant: number;
-  /** Retour vers la liste des comptes de l'espace courant. */
   listeHref: string;
-  /** Étiquettes actives du compte, dérivées du journal append-only. */
   etiquettesActives: readonly string[];
-  /** Vrai si le lecteur tient la permission `client.annoter`. */
   peutAnnoter: boolean;
 }) {
   const nom = nomAffiche({ nom: fiche.nom, email: fiche.email });
@@ -162,8 +141,6 @@ export function VueFicheClient({
   const enAttente = fiche.etat === "EN_ATTENTE_VALIDATION";
   const tranchable = etatTranchable(fiche.etat);
   const piece = pieceAValider(fiche);
-  // Compte déjà validé et pièce déposée depuis : le distributeur statue
-  // sur la pièce seule, jamais sur le compte (ticket 10).
   const revuePossible = revuePiecePossible(fiche);
   const nbACrevoir = fiche.pieces.filter(pieceARevoir).length;
   const matricule = fiche.id.slice(0, 8).toUpperCase();

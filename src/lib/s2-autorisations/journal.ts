@@ -3,18 +3,10 @@ import { eq } from "drizzle-orm";
 import { db, type ExecuteurDb } from "@/lib/db/client";
 import { journalAudit } from "@/lib/db/schema/s2-autorisations";
 
-// S2 issue 01 — écriture append-only. Appelée par chaque action métier.
-// Ne lit jamais le journal (la consultation n'est pas journalisée).
-// `horodatageLocal` conservé tel quel : le serveur ne le réécrit pas.
-// S2 issue 15 — `contesteId` lie une correction à la ligne contestée (fil
-// « erreur → correction »). La ligne contestée doit exister : un lien vers
-// une ligne inconnue est refusé (échec fermé), jamais écrit à l'aveugle.
-
 export type ResultatJournal =
   | { ok: true; id: string }
   | { ok: false; erreur: string };
 
-/** Ligne contestée introuvable : cause vraie, jamais masquée. */
 export const ERREUR_CONTESTEE_INTROUVABLE = "Ligne contestée introuvable.";
 
 export async function enregistrerEvenement(
@@ -27,11 +19,9 @@ export async function enregistrerEvenement(
     avant?: unknown;
     apres?: unknown;
     appareilId?: string | null;
-    /** Horloge de l'appareil ; défaut = maintenant (action en ligne). */
     horodatageLocal?: Date;
     statut?: "REUSSIE" | "ECHOUEE";
     motif?: string | null;
-    /** Ligne contestée par la présente correction (défaut : aucune). */
     contesteId?: string | null;
   },
   ex: ExecuteurDb = db,
@@ -70,12 +60,6 @@ export async function enregistrerEvenement(
   }
 }
 
-/**
- * S2 issue 15 — trace d'un refus opposé à une contestation depuis le
- * journal (permission manquante) : une ligne ÉCHOUÉE liée à la ligne
- * contestée, pour que le refus lui-même soit auditable. Best effort :
- * n'échoue jamais, ne masque jamais l'erreur d'origine.
- */
 export async function journaliserRefusContestation(
   input: {
     acteurId?: string | null;
@@ -91,6 +75,5 @@ export async function journaliserRefusContestation(
   try {
     await enregistrerEvenement({ ...input, statut: "ECHOUEE" }, ex);
   } catch {
-    // Best effort : le refus reste refusé même si sa trace échoue.
   }
 }

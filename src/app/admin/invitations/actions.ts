@@ -1,9 +1,5 @@
 "use server";
 
-// Voie ADMIN : /admin/invitations — liens à rôle cible ADMIN_PRINCIPAL et
-// premiers accès. Les liens AGENT vivent dans ../invites/actions.ts et
-// ../agents/actions.ts (voie AGENTS).
-
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { eq } from "drizzle-orm";
@@ -35,13 +31,6 @@ async function staffConnecteAutorise(): Promise<{ id: string } | null> {
   return { id: moi.id };
 }
 
-/**
- * Rouvre un lien de premier accès pour un compte administrateur principal
- * dont le lien a expiré (ou a déjà servi). Même autorisation que la
- * création directe (S1 : peutCreerAdminPrincipal) — le contrôle réel est
- * dans ouvrirPremierAccesAdmin. Usage unique, 24 h, choix du mot de
- * passe uniquement, aucune session ouverte.
- */
 export async function rouvrirPremierAccesAction(
   _precedent: ResultatRenvoiAcces | null,
   donnees: FormData,
@@ -50,8 +39,6 @@ export async function rouvrirPremierAccesAction(
   if (!cibleId) {
     return { ok: false, erreur: "Compte introuvable." };
   }
-  // Pré-contrôle explicite (même prédicat que ouvrirPremierAccesAdmin
-  // côté lib : peutInviterAdminPrincipal ≡ peutCreerAdminPrincipal).
   const moi = await staffConnecteAutorise();
   if (!moi) {
     return {
@@ -72,13 +59,6 @@ export async function rouvrirPremierAccesAction(
   }
 }
 
-/**
- * Révoque un lien d'invitation administrateur principal encore en attente
- * (voie `lien`). Réservée à un administrateur technique ou un
- * administrateur principal VALIDE (S1 : peutInviterAdminPrincipal — le
- * contrôle réel est dans revoquerInvitation). Idempotente : révoquer deux
- * fois = même état, pas d'erreur. Journalisée (S2 : invitation.revoquer).
- */
 export async function revoquerInvitationAdminAction(
   invitationId: string,
 ): Promise<ResultatRevocation> {
@@ -114,8 +94,6 @@ export async function revoquerInvitationAdminAction(
         case "INVITATION_EXPIREE":
           return { ok: false, erreur: "Lien expiré — générez-en un nouveau." };
         case "INVITATION_REVOQUEE":
-          // Garde-fou : revoquerInvitation est idempotente et ne jette plus,
-          // mais une double révocation reste un succès (même état).
           revalidatePath("/admin/invitations");
           return { ok: true };
         default:
@@ -126,11 +104,6 @@ export async function revoquerInvitationAdminAction(
   }
 }
 
-/**
- * Révoque un lien de premier accès (voie `fiche`) encore en attente.
- * Même autorisation que le lien : administrateur technique ou principal
- * VALIDE. Idempotente, journalisée (invitation.revoquer).
- */
 export async function revoquerPremierAccesAdminAction(
   accesId: string,
 ): Promise<ResultatRevocation> {

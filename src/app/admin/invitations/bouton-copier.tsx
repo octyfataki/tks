@@ -3,7 +3,6 @@
 import * as React from "react";
 import { Button } from "@/components/ui/button";
 
-/** Bouton « Copier » pour un lien d'invitation. */
 export function BoutonCopierLien({ lien }: { lien: string }) {
   const [copie, setCopie] = React.useState(false);
   return (

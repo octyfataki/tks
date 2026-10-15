@@ -12,12 +12,6 @@ import { lireStatutCompte, type StatutCompte } from "./statut-compte";
 import { demanderDestination } from "@/lib/destination-connexion";
 import { cn } from "@/lib/utils";
 
-// S1 : la page est la fiche de comptoir — le papier que le distributeur
-// garde sur son bureau. Une colonne étroite, un tampon comme seul geste
-// fort, des lignes de registre. Le récapitulatif vient de la session
-// (clé `tks-inscription` posée par /sign-up, jamais le mot de passe).
-// S1-03 : un compte REFUSE garde la même fiche mais le tampon dit le
-// refus et le motif dit comment le corriger, sans réinscription.
 type Recap = {
   name?: string;
   email?: string;
@@ -56,7 +50,6 @@ const MOT_STATUT: Record<Etape["statut"], string> = {
   avenir: "Plus tard",
 };
 
-/** Le tampon du distributeur : le seul geste fort de la page. */
 function Tampon({ estRefuse }: { estRefuse: boolean }) {
   return (
     <span
@@ -72,7 +65,6 @@ function Tampon({ estRefuse }: { estRefuse: boolean }) {
   );
 }
 
-/** Une ligne du registre : étiquette à gauche, valeur à droite. */
 function LigneFiche({
   etiquette,
   valeur,
@@ -94,23 +86,12 @@ function LigneFiche({
 
 export default function PendingVue() {
   const routeur = useRouter();
-  // Initialisé une fois côté client : pas d'effet, pas de rendu en cascade.
-  // En prérendu serveur, le récapitulatif est vide puis hydraté.
   const [recap] = useState<Recap>(() => lireRecap());
-  // Statut serveur (état + motif) : source unique partagée avec le dépôt.
-  // C'est aussi le canal qui fait communiquer /pending avec
-  // /admin/clients/validation : la décision de l'administrateur (valider /
-  // refuser) y arrive via GET /api/mon-compte/piece.
   const [statut, setStatut] = useState<StatutCompte | null>(null);
   const [compteurStatut, setCompteurStatut] = useState(0);
 
   const chargerStatut = useCallback(async () => {
     const lu = await lireStatutCompte();
-    // Hors-ligne : une coupure réseau ressemble à « non connecté ».
-    // On garde le dernier statut connecté connu plutôt que de
-    // déconnecter la fiche à tort (offline-first). Seule une réponse
-    // explicite du serveur (connecte: false sans horsLigne) fait retomber
-    // la fiche — par exemple après une déconnexion dans un autre onglet.
     setStatut((precedent) => {
       if (lu.connecte) return lu;
       if (lu.horsLigne) {
@@ -125,9 +106,6 @@ export default function PendingVue() {
   useEffect(() => {
     let actif = true;
     chargerStatut().catch(() => {});
-    // Scrutation : l'administrateur tranche depuis
-    // /admin/clients/validation pendant que le client attend ici.
-    // Sans elle, la fiche resterait figée jusqu'au rechargement manuel.
     const minuteur = window.setInterval(() => {
       if (document.visibilityState === "visible") chargerStatut().catch(() => {});
     }, 8000);
@@ -157,9 +135,6 @@ export default function PendingVue() {
   const estValide =
     statut !== null && statut.connecte && statut.etat === "VALIDE";
 
-  // L'autre sens de la communication : un compte validé dans
-  // /admin/clients/validation n'attend plus — il rejoint son espace.
-  // La destination vient du serveur (rôle + état), jamais devinée ici.
   useEffect(() => {
     if (!estValide) return;
     let actif = true;
@@ -175,12 +150,6 @@ export default function PendingVue() {
     };
   }, [estValide, routeur]);
 
-  // Garde client : la fiche suit la session. Un anonyme sans récapitulatif
-  // local (juste après /sign-up) n'a rien à y lire : il retourne à la
-  // connexion. Le serveur fait déjà ce tri à l'arrivée ; ici on couvre la
-  // perte de session pendant que la page est ouverte (déconnexion ailleurs,
-  // session expirée). Le hors-ligne ne déclenche rien : la fiche connue
-  // reste affichée (offline-first).
   const aRecap =
     recap.name !== undefined ||
     recap.email !== undefined ||
@@ -202,9 +171,6 @@ export default function PendingVue() {
 
   const session = statut !== null && statut.connecte ? statut : null;
 
-  // L'identité vient de la session connectée d'abord : la fiche suit le
-  // compte, pas l'onglet. Le récapitulatif local n'est qu'un repli (juste
-  // après l'inscription, avant la première connexion).
   const nom = session?.nom ?? recap.name;
   const email = session?.email ?? recap.email;
   const telephone = session?.telephone ?? recap.telephone;
@@ -281,7 +247,6 @@ export default function PendingVue() {
 
   return (
     <div className="relative flex min-h-dvh flex-col bg-background">
-      {/* Fond pointillé du thème, très atténué, + halo or en haut */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0"

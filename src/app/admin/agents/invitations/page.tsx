@@ -11,15 +11,6 @@ import {
   type LigneInvitationAgent,
 } from "./registre-invitations-agents";
 
-/**
- * /admin/agents/invitations — Liens d'invitation agents (voie lien
- * uniquement : l'agent choisit lui-même email + mot de passe). Les comptes
- * déjà créés vivent dans /admin/agents.
- *
- * Lecture : tout administrateur validé (technique ou principal) voit le
- * registre. Écriture (nouveau lien, copier) : réservé à l'administrateur
- * principal validé (S1 : peutInviterAgent).
- */
 export default async function InvitationsAgentsPage() {
   const session = await auth.api.getSession({ headers: await headers() });
   const userId = session?.user?.id ?? "";

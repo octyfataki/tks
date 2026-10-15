@@ -10,13 +10,6 @@ import { ActivationSecondFacteur, DesactivationSecondFacteur } from "@/component
 import { and, desc, eq, gt } from "drizzle-orm";
 import { headers } from "next/headers";
 
-// Mon compte (espace agent) : contenu seul, la coquille navigation +
-// AgentHeader vit dans /agent/layout. Même ProfilUtilisateur que
-// l'espace distributeur, nourri par la session et les tables staff.
-// Modifiables par l'agent lui-même (compte VALIDE) : nom, téléphone,
-// photo, autres sessions. Second facteur : optionnel, activé par
-// l'agent lui-même depuis ici (compte VALIDE), comme les autres
-// profils (issue #3).
 export default async function AgentProfilPage() {
   const entetes = await headers();
   const session = await auth.api.getSession({ headers: entetes });
@@ -36,8 +29,6 @@ export default async function AgentProfilPage() {
       ? { type: "STAFF", role: profil.role, etat: profil.etat }
       : { type: "CLIENT" };
 
-  // Données réelles du compte connecté : téléphone, matricule, ancienneté,
-  // second facteur. Replis neutres si illisible : on n'invente rien.
   let telephone: string | null = null;
   let matricule: string | null = null;
   let creeLe: Date | null = null;
@@ -92,8 +83,6 @@ export default async function AgentProfilPage() {
     }
   }
 
-  // Sessions encore valides du compte connecté : d'où on est connecté,
-  // depuis quand, jusqu'à quand. Le secret ne s'affiche jamais.
   let sessions: SessionEnCoursProfil[] = [];
   if (userId) {
     const lignesSessions = await db
@@ -111,8 +100,6 @@ export default async function AgentProfilPage() {
     sessions = lignesSessions;
   }
 
-  // Auto-correction autorisée sur son propre compte VALIDE, tous rôles
-  // staff (garde réelle côté modifierMonProfilAction).
   const peutModifierCoordonnees =
     profil.type === "STAFF" && profil.etat === "VALIDE";
 

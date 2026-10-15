@@ -8,16 +8,6 @@ import { chargerFicheClient } from "@/lib/s1-comptes/fiche-client-base";
 import { etiquettesActivesParCompte } from "@/lib/s4-annotations/annotations";
 import { VueFicheClient } from "@/components/clients/fiche-client";
 
-/**
- * /admin/clients/[id] — Fiche d'un compte client (issue #9).
- *
- * L'accès est déjà gardé par /admin/layout (administrateur principal ou
- * technique VALIDE) : un client ou un agent n'atteint jamais cette page.
- * Seul l'administrateur principal annote : le technique n'a aucun pouvoir
- * métier (GLOSSARY), il voit la fiche sans la zone de geste.
- * Un identifiant inconnu rend 404 — aucune fuite de données d'un autre
- * compte. La fiche ne montre jamais de solde, de dette ni de plafond.
- */
 export default async function FicheCompteClientAdminPage({
   params,
 }: {

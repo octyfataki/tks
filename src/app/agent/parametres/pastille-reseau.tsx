@@ -4,13 +4,6 @@ import { useEffect, useState } from "react";
 import { WifiIcon, WifiOffIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
-/**
- * Pastille réseau en direct pour l'en-tête de /agent/parametres.
- *
- * Seule info du bandeau d'état qui n'existe nulle part ailleurs en un
- * coup d'œil : la session a déjà son badge (« Poste prêt » /
- * « Session à renouveler ») et la file vit dans la section Synchro.
- */
 export function PastilleReseau() {
   const [enLigne, setEnLigne] = useState<boolean>(() =>
     typeof navigator === "undefined" ||

@@ -7,7 +7,6 @@ vi.mock("@/lib/s1-comptes/profil-session", () => ({
   profilSession: vi.fn(),
 }));
 
-/** next/navigation#redirect lance une erreur dont le digest porte l'URL. */
 async function destinationDe(profil: Profil): Promise<string> {
   vi.mocked(profilSession).mockResolvedValueOnce(profil);
   const erreur = await Home().catch((e: unknown) => e);

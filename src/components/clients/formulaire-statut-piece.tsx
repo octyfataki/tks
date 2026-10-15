@@ -7,11 +7,6 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { statuerPieceIdentiteAction, type ResultatDecision } from "./actions";
 
-// Verdict sur une pièce déposée par un compte déjà validé (ticket 10).
-// Le geste porte sur la pièce, pas sur le compte : accepter ne change
-// rien à l'état du client, refuser ne l'enferme pas. Replier le refus
-// garde la pièce lisible d'un coup d'œil au comptoir : on ne laisse pas
-// un champ de saisie ouvert sous chaque document.
 const ETAT_INITIAL: ResultatDecision | null = null;
 
 function MessageResultat({ resultat }: { resultat: ResultatDecision | null }) {

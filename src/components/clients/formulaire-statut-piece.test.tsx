@@ -7,8 +7,6 @@ vi.mock("./actions", () => ({
   statuerPieceIdentiteAction: vi.fn(() => Promise.resolve({ ok: true })),
 }));
 
-// Verdict sur une pièce d'un compte déjà validé : le compte n'est jamais
-// touché, seul le document l'est. Le refus porte un motif obligatoire.
 describe("FormulaireStatutPiece", () => {
   it("propose d'accepter la pièce", () => {
     render(<FormulaireStatutPiece compteId="c1" pieceId="p1" />);

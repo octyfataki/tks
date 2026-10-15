@@ -10,13 +10,6 @@ import {
   type ResultatLienMotDePasse,
 } from "./actions";
 
-/**
- * Génère un lien de réinitialisation de mot de passe pour un agent
- * (mot de passe oublié) : jeton unique, 24 h, choix du mot de passe
- * uniquement. Le lien s'affiche une seule fois, prêt à copier — à
- * transmettre à l'agent par un canal sûr, jamais par copier-coller
- * public. La garde réelle est côté serveur.
- */
 export function FormulaireLienMotDePasse({ id }: { id: string }) {
   const [resultat, action, enCours] = useActionState(
     genererLienMotDePasseAgentAction.bind(null, id),

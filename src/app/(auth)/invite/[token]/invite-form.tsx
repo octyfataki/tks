@@ -13,9 +13,6 @@ import { PasswordInput } from "@/components/password-input";
 import { Input } from "@/components/ui/input";
 import { accepterInvitation } from "./actions";
 
-// S1-04 : l'invité choisit email + mot de passe, le rôle vient du lien
-// (agent de service ou administrateur principal). Jeton à usage unique,
-// expiré ou consommé -> refus affiché.
 export function InviteForm({
   jeton,
   estAdmin = false,

@@ -6,11 +6,6 @@ import {
   valeurTauxValide,
 } from "../db/schema/s3-devises/validation";
 
-// S3 — décisions pures du taux du jour, sans base : le jour civil de
-// Kinshasa, la validité d'une valeur de taux, et la part de l'autorisation
-// qui ne dépend que de (rôle, état). Le reste de l'autorisation (permission
-// `taux.saisir`) vit dans autoriserSaisieTaux, retesté par les actions.
-
 describe("dateDuJourKinshasa", () => {
   it("donne le jour civil AAAA-MM-JJ à Kinshasa (UTC+1)", () => {
     expect(
@@ -19,7 +14,6 @@ describe("dateDuJourKinshasa", () => {
   });
 
   it("bascule de jour à la minuit de Kinshasa, pas à celle de l'UTC", () => {
-    // 23h30 UTC du 10 = 00h30 le 11 à Kinshasa.
     expect(
       dateDuJourKinshasa(new Date("2026-10-10T23:30:00Z")),
     ).toBe("2026-10-11");

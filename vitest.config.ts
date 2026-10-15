@@ -10,8 +10,6 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      // Chemin natif explicite : `new URL("./src", import.meta.url).pathname`
-      // renvoie "/C:/...%20..." sous Windows et la résolution casse.
       "@": resolve(process.cwd(), "src"),
     },
   },

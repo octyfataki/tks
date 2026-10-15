@@ -5,9 +5,6 @@ import { BrandLogo } from "@/components/brand-logo";
 
 type AuthShellProps = {
   title: string;
-  /** Conservé pour compatibilité d'API mais non affiché : le panneau
-   *  gauche ne garde que le titre et le formulaire, le contexte vit
-   *  dans le panneau droit. */
   description?: string;
   children: ReactNode;
   sideTitle?: string;
@@ -21,16 +18,6 @@ const DEFAUT_POINTS = [
   "Au comptoir comme sur le terrain, même sans réseau",
 ];
 
-/**
- * Coquille commune aux maquettes S1 (statique, non câblée).
- * Mise en page inspirée d'une référence split (formulaire + panneau
- * contexte) : à gauche le formulaire, à droite un rappel S1 avec
- * cercles décoratifs aux couleurs du thème. Tous les comptes utilisent
- * email + mot de passe, avec une seule inscription publique : /sign-up
- * est réservée aux clients. L'agent de service passe par son
- * lien d'invitation, l'administrateur par bootstrap ou création interne.
- * Aucun bouton OAuth : S1 l'interdit.
- */
 export function AuthShell({
   title,
   description,
@@ -41,7 +28,6 @@ export function AuthShell({
 }: AuthShellProps) {
   return (
     <div className="relative flex min-h-full flex-1 items-center justify-center overflow-hidden bg-background px-4 py-6">
-      {/* Fond en points du thème, très atténué */}
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0"
@@ -56,7 +42,6 @@ export function AuthShell({
         }}
       />
       <div className="relative z-10 grid w-full max-w-4xl overflow-hidden rounded-2xl border bg-card shadow-lg lg:grid-cols-[1.1fr_1fr]">
-        {/* Panneau formulaire */}
         <div className="flex flex-col p-5 sm:p-6">
           <div className="mb-5">
             <Link href="/" aria-label="TKS — accueil" className="inline-flex">
@@ -78,7 +63,6 @@ export function AuthShell({
           <div className="mt-4 flex-1">{children}</div>
         </div>
 
-        {/* Panneau contexte */}
         <div className="relative hidden flex-col justify-center overflow-hidden bg-muted p-6 lg:flex">
           <div
             aria-hidden
