@@ -32,7 +32,7 @@ flowchart LR
 | `src/app/` | Routes App Router (public, auth, admin, agent, clients, api) |
 | `src/components/` | UI shadcn + headers/sidebars par rôle + taux du jour |
 | `src/lib/` | Logique métier (`comptes`, `autorisations`, `devises`, `annotations` — anc. `s1-comptes`, `s2-autorisations`, `s3-devises`, `s4-annotations`) + `auth.ts`, `db/` |
-| `src/socole/architecture/` | Garde-fous : `inventaire.ts` (lit `src/`), `contraintes.ts` (interdits) |
+| `src/platform/architecture/` | Garde-fous : `inventory.ts` (lit `src/`), `constraints.ts` (interdits) |
 | `src/hooks/use-mobile.ts` | Détection mobile |
 | `drizzle/` | Migrations SQL (`0000_` → `0018_`) + `meta/` |
 | `scripts/` | `bootstrap-technical-admin.ts` |
@@ -203,7 +203,7 @@ Vocabulaire normatif : `GLOSSARY.md` (4 acteurs : distributeur, client, agent de
 
 - **Composants rôle** : `admin-header.tsx`, `agent-header/sidebar.tsx`, `client-header/sidebar.tsx`, `app-sidebar.tsx`, `dashboard-header.tsx`, `team-switcher.tsx`, `nav-main/projects/user.tsx`, `palette-recherche.tsx`.
 - **Session/état** : `gardien-session.tsx`, `app-loader.tsx`, `app-splash.tsx`, `progression-navigation.tsx` (+ `nprogress`), `mode-toggle.tsx`, `theme-provider.tsx`.
-- **Tests** : `vitest run` — `tests/` (app, components, lib, socole, `proxy.test.ts`) + colocalisés `src/**/*.test.*`. Garde-fous socle dans `src/socole/architecture/`.
+- **Tests** : `vitest run` — `tests/` (app, components, lib, platform, `proxy.test.ts`) + colocalisés `src/**/*.test.*`. Garde-fous socle dans `src/platform/architecture/`.
 - **Commandes** : `pnpm dev / build / start / lint / test`, `db:generate`, `db:migrate`, `db:bootstrap-technical-admin`.
 
 ## 9. Par où commencer

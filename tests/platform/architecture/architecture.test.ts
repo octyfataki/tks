@@ -4,8 +4,8 @@ import {
   fichiersEcrivants,
   fichiersImportant,
   lireSrc,
-} from "@/socole/architecture/inventaire";
-import { DETTE, DETTE_NUMEROTEE, EXCEPTIONS_TESTS, MECANISMES_A_POSER, plancher } from "@/socole/architecture/contraintes";
+} from "@/platform/architecture/inventory";
+import { DETTE, DETTE_NUMEROTEE, EXCEPTIONS_TESTS, MECANISMES_A_POSER, plancher } from "@/platform/architecture/constraints";
 
 /**
  * P0 — Les garde-fous de l'architecture.
@@ -170,7 +170,7 @@ describe("P0 — la dette déclarée ne peut pas devenir permanente", () => {  i
 
   it("chaque mécanisme vise bien une couche du socle ou de l'infrastructure", () => {
     const horsCible = MECANISMES_A_POSER.filter(
-      (m) => !/^(socole|infrastructure)\//.test(m.cible),
+      (m) => !/^(platform|infrastructure)\//.test(m.cible),
     ).map((m) => `${m.nom} → ${m.cible}`);
     expect(
       horsCible,
@@ -190,7 +190,7 @@ describe("P0 — la dépendance descend, jamais ne remonte", () => {
       .map((f) => f.chemin);
 
   it("le socle n'importe jamais l'interface ni les modules", () => {
-    const trouvees = coupables("socole/");
+    const trouvees = coupables("platform/");
     expect(
       trouvees,
       `Le socle est le mécanisme. Il ne connaît ni l'interface ni les modules, ` +

@@ -17,7 +17,7 @@
  * à le voir.
  *
  * La seule chose qui ne doit pas arriver : une entrée de dette qui perd sa
- * date d'expiration. C'est vérifié par un test, dans `tests/socole/`.
+ * date d'expiration. C'est vérifié par un test, dans `tests/platform/`.
  */
 
 /** Une dette mesurée. `purge` dit la phase qui la fait disparaître. */
@@ -106,37 +106,37 @@ export const MECANISMES_A_POSER: {
   {
     nom: "Porte d'écriture",
     aujourdhui: "aucune — 15 fichiers écrivent en base",
-    cible: "socole/ecriture",
+    cible: "platform/writes",
     phase: "P1",
   },
   {
     nom: "Fichiers déposés",
     aujourdhui: "quatre voies, aucune abstraction",
-    cible: "socole/fichiers",
+    cible: "platform/files",
     phase: "P0b",
   },
   {
     nom: "Contrôle d'accès",
-    aujourdhui: "lib/autorisations + PERMISSIONS_FERMEES",
-    cible: "socole/autorisation",
+    aujourdhui: "lib/authorizations + PERMISSIONS_FERMEES",
+    cible: "platform/authorization",
     phase: "P2",
   },
   {
     nom: "Moteur de transitions",
     aujourdhui: "une fonction par entité, dispersée",
-    cible: "socole/transition",
+    cible: "platform/transition",
     phase: "P3",
   },
   {
     nom: "Journal d'audit",
-    aujourdhui: "lib/autorisations/audit-log",
-    cible: "socole/audit-log",
+    aujourdhui: "lib/authorizations/audit-log",
+    cible: "platform/audit-log",
     phase: "P3",
   },
   {
     nom: "Modèle monétaire",
-    aujourdhui: "lib/devises + validation.ts",
-    cible: "socole/argent",
+    aujourdhui: "lib/currencies + validation.ts",
+    cible: "platform/money",
     phase: "P3",
   },
   {

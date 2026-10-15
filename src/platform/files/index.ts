@@ -1,7 +1,7 @@
 import { randomUUID } from "node:crypto";
 
-import { politiqueDe, POLITIQUE } from "./politique";
-import { stockage, type PiloteStockage } from "./stockage";
+import { politiqueDe, POLITIQUE } from "./policy";
+import { stockage, type PiloteStockage } from "./storage";
 import {
   categorieConnue,
   FichierError,
@@ -166,6 +166,6 @@ export async function supprimer(
 
 export { categorieConnue, FichierError } from "./types";
 export type { CategorieFichier, ContenuFichier, FichierDepose, FichierLu } from "./types";
-export { cleValide, piloteDisque, stockage } from "./stockage";
-export type { PiloteStockage } from "./stockage";
-export { POLITIQUE } from "./politique";
+export { cleValide, piloteDisque, stockage } from "./storage";
+export type { PiloteStockage } from "./storage";
+export { POLITIQUE } from "./policy";

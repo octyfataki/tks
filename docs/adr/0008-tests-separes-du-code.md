@@ -16,7 +16,7 @@ les garder là :
 
 - `src/app/` est l'arborescence du routeur Next.js. Quatorze fichiers
   `*.test.tsx` y cohabitaient avec les pages, sans raison.
-- Les garde-fous d'architecture (`src/socole/architecture/`) mesurent la
+- Les garde-fous d'architecture (`src/platform/architecture/`) mesurent la
   dette du dépôt. En comptant aussi des tests, ils comptaient des fichiers
   qui ne sont pas du produit : 19 tests vivaient sous `lib/s1-…` et
   `lib/s2-…` et gonflaient la mesure. Le plancher `cheminsNumerotes`
@@ -32,7 +32,7 @@ les garder là :
 3. **Les tests importent le code par l'alias `@/`, jamais par un chemin
    relatif.** Un test n'est plus le voisin de son sujet : il doit le nommer.
 4. **La règle est vérifiée par un test**, dans
-   `tests/socole/architecture/architecture.test.ts`. Ce n'est pas une
+   `tests/platform/architecture/architecture.test.ts`. Ce n'est pas une
    recommandation : un test déposé dans `src/` fait échouer la suite.
 
 ## Alternatives écartées
