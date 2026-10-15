@@ -10,7 +10,6 @@ import {
   retirerPermissionAction,
 } from "../actions";
 
-/** Libellés métier des 18 permissions (vocabulaire GLOSSARY, jamais technique seul). */
 export const LIBELLES_PERMISSION: Record<string, { titre: string; detail: string }> = {
   "taux.saisir": { titre: "Saisir le taux", detail: "Taux du jour 1 USD = X CDF." },
   "creance.creer": { titre: "Créer une créance", detail: "Dette née d'une commande crédit servie." },
@@ -32,11 +31,6 @@ export const LIBELLES_PERMISSION: Record<string, { titre: string; detail: string
   "journal.consulter": { titre: "Consulter le journal", detail: "Lire l'audit de l'activité." },
 };
 
-/**
- * Interrupteur d'une permission : accordée (ON) ou non (OFF). Chaque
- * bascule appelle la server action une par une — attribuer en masse
- * passe par le profil d'embauche, pas par ici.
- */
 export function InterrupteurPermission({
   agentId,
   permission,
@@ -114,7 +108,6 @@ export function InterrupteurPermission({
   );
 }
 
-/** Résumé + bouton d'application du profil d'embauche (raccourci). */
 export function ProfilEmbauche({
   agentId,
   detenues,

@@ -1,9 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton";
 
-/**
- * /admin/list — état de chargement : même structure que la page
- * (titre, barre d'outils, grille de cartes, pagination).
- */
 export default function ListeAdminsChargement() {
   return (
     <div

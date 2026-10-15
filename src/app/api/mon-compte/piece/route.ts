@@ -5,13 +5,6 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
 import { comptesClients } from "@/lib/db/schema/s1-comptes";
 
-/**
- * GET /api/mon-compte/piece — état du dépôt pour le client connecté :
- * état du compte, motif de refus éventuel, pièces déjà déposées, et
- * identité de la session (nom, email, téléphone, date d'inscription) pour
- * que /pending affiche la fiche du compte connecté sans dépendre du
- * récapitulatif local. Anonyme ou staff : `{ connecte: false }`, sans détail.
- */
 export async function GET() {
   const session = await auth.api.getSession({ headers: await headers() });
   const userId = session?.user?.id;

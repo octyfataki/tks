@@ -6,7 +6,6 @@ import {
 } from "@/components/taux-actions";
 import { TauxDuJourAuto } from "./taux-du-jour-auto";
 
-// Les server actions tirent db + env (DATABASE_URL) : hors sujet ici.
 vi.mock("@/components/taux-actions", () => ({
   chargerTauxDuJourAction: vi.fn(),
   enregistrerTauxDuJourAction: vi.fn(),
@@ -15,10 +14,6 @@ vi.mock("@/components/taux-actions", () => ({
 const charger = vi.mocked(chargerTauxDuJourAction);
 const enregistrer = vi.mocked(enregistrerTauxDuJourAction);
 
-/**
- * S3 — pastille branchée : lecture du taux + permission au montage, saisie
- * journalisée au bouton, refus serveur affiché dans le modal.
- */
 describe("TauxDuJourAuto", () => {
   it("affiche le taux chargé et propose la saisie à un compte autorisé", async () => {
     charger.mockResolvedValue({
@@ -106,7 +101,6 @@ describe("TauxDuJourAuto", () => {
     expect(
       screen.getByRole("dialog", { name: "Taux du jour" }),
     ).toBeInTheDocument();
-    // La pastille garde le taux en vigueur, pas la valeur refusée.
     expect(screen.getByText("1 USD = 2 300 CDF")).toBeInTheDocument();
   });
 

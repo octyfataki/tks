@@ -1,7 +1,3 @@
-// Poste des formulaires de connexion : la session better-auth ne porte pas le
-// rôle, c'est le serveur qui résout la destination. Repli sur /sign-in si le
-// réseau lâche — on ne devine jamais un espace à l'aveugle.
-
 export type CodeDestination =
   | "OK"
   | "REVOQUE"

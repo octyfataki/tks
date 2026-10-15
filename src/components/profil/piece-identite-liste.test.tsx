@@ -9,8 +9,6 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
 }));
 
-// La liste des pièces du profil client tire l'action de retrait, qui est
-// une server action : coupée ici, le test porte sur l'affichage.
 vi.mock("@/components/clients/actions", () => ({
   retirerPieceIdentiteAction: vi.fn(),
 }));
@@ -50,8 +48,6 @@ const pieces: PieceIdentiteProfil[] = [
   },
 ];
 
-// La carte Pièce d'identité du profil client : le client revoit ce qu'il
-// a déposé, sans apprendre qui l'a vu ni quand.
 describe("ListePiecesIdentite", () => {
   it("lie chaque pièce à la route authentifiée du propriétaire", () => {
     render(<ListePiecesIdentite pieces={pieces} />);
@@ -73,17 +69,12 @@ describe("ListePiecesIdentite", () => {
     expect(container.querySelectorAll("img")).toHaveLength(2);
   });
 
-  // Le bouton de retrait n'est jamais dans le lien de la vignette :
-  // un bouton dans un lien ouvre le document en plus d'agir.
   it("rend le bouton de retrait hors du lien", () => {
     render(<ListePiecesIdentite pieces={pieces} />);
     const bouton = screen.getByRole("button", { name: /retirer cette pièce/i });
     expect(bouton.closest("a")).toBeNull();
   });
 
-  // Ticket 11 : le retrait ne s'ouvre que sur une pièce refusée. Sur une
-  // pièce acceptée ou en attente, il n'y a rien à retirer — pas de bouton
-  // qui finirait en erreur.
   it("ne propose le retrait que sur une pièce refusée", () => {
     render(<ListePiecesIdentite pieces={pieces} />);
     expect(
@@ -91,8 +82,6 @@ describe("ListePiecesIdentite", () => {
     ).toHaveLength(1);
   });
 
-  // Ticket 11 : une pièce retirée ne compte plus — elle disparaît de
-  // la lecture courante du client (le distributeur continue de la voir).
   it("ne montre pas une pièce retirée", () => {
     render(<ListePiecesIdentite pieces={pieces} />);
     expect(screen.queryByText("Retirée")).toBeNull();

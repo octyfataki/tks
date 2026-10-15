@@ -42,12 +42,6 @@ const ETAPES_APRES = [
   },
 ];
 
-/**
- * Création directe d'un agent de service (comptoir : l'agent est présent,
- * fiche remplie ensemble). Rôle fixé AGENT, état VALIDE, zéro permission.
- * Le lien d'invitation reste l'autre voie (agent distant qui crée lui-même
- * son compte via /invite/[jeton]).
- */
 export function FormulaireAgent() {
   const [resultat, action, enCours] = useActionState(creerAgentAction, ETAT_INITIAL);
   const [prenom, setPrenom] = React.useState("");
@@ -58,8 +52,6 @@ export function FormulaireAgent() {
   const [motDePasseVisible, setMotDePasseVisible] = React.useState(false);
   const dernierResultat = React.useRef<ResultatAction | null>(null);
 
-  // Tout le feedback (succès comme refus) passe par les toasts : pas de
-  // message inline. Succès -> formulaire réinitialisé pour enchaîner.
   React.useEffect(() => {
     if (!resultat || dernierResultat.current === resultat) return;
     dernierResultat.current = resultat;

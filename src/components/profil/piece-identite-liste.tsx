@@ -11,13 +11,11 @@ import {
 } from "@/lib/s1-comptes/fiche-client";
 import { BoutonRetirerPiece } from "./bouton-retirer-piece";
 
-/** Pièce d'identité du compte connecté, telle que montrée sur son profil. */
 export type PieceIdentiteProfil = {
   id: string;
   typePiece: string;
   mime: string;
   statutPiece: StatutPiece;
-  /** Ce qu'il faut corriger, quand la pièce est refusée. */
   refusMotif: string | null;
   deposeLe: Date | string;
 };
@@ -32,26 +30,16 @@ function dateCourte(valeur: Date | string): string {
   });
 }
 
-/**
- * Les pièces du client, vues par lui seul (route authentifiée, le
- * propriétaire est autorisé). Image en vignette, PDF à ouvrir — même
- * parti pris que la fiche côté distributeur, sans la date de vision.
- */
 export function ListePiecesIdentite({
   pieces,
 }: {
   pieces: PieceIdentiteProfil[];
 }) {
-  // Ticket 11 : une pièce retirée ne compte plus — elle disparaît de la
-  // lecture courante du client. Le distributeur, lui, continue de la voir
-  // sur la fiche (cachet « Retirée »).
   const visibles = pieces.filter((piece) => piece.statutPiece !== "RETIREE");
   return (
     <ul className="mt-3 flex flex-col gap-2">
       {visibles.map((piece) => {
         const estImage = piece.mime.startsWith("image/");
-        // Le bouton de retrait est un frère du lien, jamais son enfant :
-        // un bouton dans un lien ouvre le document en plus d'agir.
         return (
           <li
             key={piece.id}

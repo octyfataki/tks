@@ -10,7 +10,6 @@ import { etiquettesActivesParCompte } from "@/lib/s4-annotations/annotations";
 import { VueFicheClient } from "@/components/clients/fiche-client";
 import { PermissionRefusee } from "@/components/permission-refusee";
 
-/** Agent connecté : son id staff, ou null. Le layout garantit AGENT VALIDE. */
 async function agentConnecte(): Promise<{ id: string } | null> {
   const session = await auth.api.getSession({ headers: await headers() });
   const userId = session?.user?.id;
@@ -23,14 +22,6 @@ async function agentConnecte(): Promise<{ id: string } | null> {
   return lignes[0] ?? null;
 }
 
-/**
- * /agent/clients/[id] — Fiche d'un compte client (issue #9), au comptoir.
- *
- * Exige la permission `client.valider` (socle ou individuelle) : sans
- * elle, PermissionRefusee, comme le registre et la file. Un identifiant
- * inconnu rend 404 — aucune fuite de données d'un autre compte. La fiche
- * réutilise les gestes de `actions.ts` et ne montre jamais de solde.
- */
 export default async function FicheCompteClientAgentPage({
   params,
 }: {

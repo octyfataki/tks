@@ -45,13 +45,6 @@ async function idStaffConnecte(): Promise<string | null> {
   return lignes[0]?.id ?? null;
 }
 
-/**
- * Corrige le nom + téléphone de contact d'un compte d'administration
- * (support livraison : coquille, oubli). Rôle, email, état et secrets ne
- * passent jamais par ici — voir modifierAdminSupport : une erreur de
- * rôle ou d'email se corrige par révocation + recréation tracées.
- * Chaque correction est journalisée (admin.modifier, avant/après).
- */
 export async function modifierCoordonneesAdminAction(
   id: string,
   _precedent: ResultatModificationCoordonnees | null,
@@ -84,11 +77,6 @@ export async function modifierCoordonneesAdminAction(
   }
 }
 
-/**
- * Renomme l'étiquette du second facteur (« Code par SMS »). Seul le libellé
- * est écrit : le secret du second facteur ne passe jamais par ici (S2-04). Même autorisation que la correction des coordonnées, jamais sur
- * un compte révoqué. Correction journalisée (avant/après).
- */
 export async function modifierAppareil2faAction(
   id: string,
   _precedent: ResultatModificationAppareil | null,

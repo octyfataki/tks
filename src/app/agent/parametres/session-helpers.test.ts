@@ -4,8 +4,6 @@ import {
   decrireExpiration,
 } from "./session-helpers";
 
-// S1 : expiration temporelle bornée, coupure réseau sans effet. On vérifie
-// l'affichage de l'échéance et le seuil d'avertissement (story 19).
 describe("decrireExpiration", () => {
   const maintenant = new Date("2026-10-01T08:00:00Z");
 

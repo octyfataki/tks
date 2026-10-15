@@ -1,9 +1,5 @@
 "use server";
 
-// Voie AGENTS : /admin/invites + /admin/agents/invitations — liens à rôle
-// cible AGENT uniquement. Les liens ADMIN_PRINCIPAL et premiers accès
-// vivent dans ../invitations/actions.ts (voie ADMIN).
-
 import { revalidatePath } from "next/cache";
 import { headers } from "next/headers";
 import { eq } from "drizzle-orm";
@@ -36,13 +32,6 @@ function messageErreur(code: ErreurStaff): string {
   }
 }
 
-/**
- * Génère un lien d'invitation AGENT (usage unique, durée limitée).
- * L'agent crée lui-même son compte via /invite/[jeton] : il choisit son
- * email + mot de passe, le rôle AGENT vient du lien. Même autorisation que
- * S1 : seul un administrateur principal VALIDE invite (peutInviterAgent —
- * le contrôle réel est dans creerInvitationAgent).
- */
 export async function creerLienInvitationAgentAction(
   _precedent: ResultatInvitationAgent | null,
   donnees: FormData,

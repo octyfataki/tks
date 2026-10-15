@@ -6,15 +6,6 @@ import {
   varchar,
 } from "drizzle-orm/mysql-core";
 
-// S1 issue #3 (second facteur optionnel pour tous) + docs/db/02-comptes-clients.md.
-// Traçabilité métier du second facteur client, miroir de
-// `facteurs_2fa_admin` : le code OTP lui-même reste dans la table
-// `two_factor` de better-auth (chiffrée) — ici on ne garde que :
-// quel compte client, quelle méthode nommée (« Code par SMS »,
-// « Code par email »), actif ou remplacé, par qui (le titulaire lui-même).
-// Un seul facteur actif par compte client (compteClientId UNIQUE).
-// Pas de FK base : identités répliquées offline-first (ADR-0006), lien vérifié
-// côté applicatif. Seul un compte `VALIDE` s'enrôle (garde applicative).
 export const facteurs2faClients = mysqlTable(
   "facteurs_2fa_clients",
   {

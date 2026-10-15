@@ -4,17 +4,6 @@ import { renderToString } from "react-dom/server";
 import { ThemeProvider, useTheme } from "./theme-provider";
 import { THEME_STORAGE_KEY } from "./theme-script";
 
-/**
- * Régression : `ThemeProvider` lisait `localStorage` dans l'initialiseur
- * paresseux de `useState`. Cet initialiseur tourne aussi pendant
- * l'hydratation, donc le premier rendu client partait du thème stocké alors
- * que le HTML serveur avait été rendu avec le thème par défaut : React
- * signalait un désaccord d'hydratation (aria-checked et classes du sélecteur
- * de thème sur /clients/settings) sans le corriger.
- *
- * Le premier rendu ne doit donc rien lire au stockage : celui-ci n'est lu
- * qu'après le montage.
- */
 function Panneau() {
   const { theme, resolvedTheme, setTheme } = useTheme();
   return (
@@ -63,9 +52,6 @@ describe("ThemeProvider", () => {
   });
 
   it("ne lit pas le stockage au premier rendu", () => {
-    // Le rendu « serveur » s'exécute ici dans jsdom : un initialiseur qui
-    // consulte localStorage verrait « dark » et s'écarterait du HTML que le
-    // serveur produit réellement (où il n'y a pas de stockage).
     window.localStorage.setItem(THEME_STORAGE_KEY, "dark");
     const html = renderToString(
       <ThemeProvider defaultTheme="system">

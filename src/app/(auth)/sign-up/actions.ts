@@ -4,9 +4,6 @@ import { z } from "zod";
 import type { ResultatAction } from "@/lib/resultat-action";
 import { ClientError, inscrireClient } from "@/lib/s1-comptes/clients";
 
-// Validation zod de la frontière (cette action) : mêmes seuils que la
-// couche clients (défense en profondeur) — email normalisé, téléphone
-// exigé, mot de passe d'au moins 8 caractères, nom exigé.
 const SchemaInscription = z.object({
   email: z
     .string()
@@ -20,11 +17,6 @@ const SchemaInscription = z.object({
   telephone: z.string().trim().min(1, "numéro de téléphone exigé"),
 });
 
-// S1-01 : inscription publique d'un client. Le compte créé est
-// EN_ATTENTE_VALIDATION — il ne peut rien faire tant qu'un humain ne l'a
-// pas validé sur pièce d'identité (S1-03). Aucune session n'est ouverte
-// ici : le client se connecte ensuite et atterrit sur /pending.
-// L'inscription hors-ligne viendra avec S8/outbox.
 export async function inscrireCompteClient(input: {
   email: string;
   password: string;

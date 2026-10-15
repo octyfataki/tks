@@ -4,13 +4,6 @@ import {
   etiquettesOrdonnees,
 } from "./etiquettes";
 
-// Issue #7 — dérivation pure des étiquettes actives, sans E/S : testée
-// sans base (voir annotations.test.ts). L'événement le plus récent d'une
-// paire (compte, étiquette) décide : `POSEE` = badge affiché, `RETIREE` =
-// rien. Tri par horodatage de l'appareil, puis par heure de réception en
-// cas d'égalité (conflit hors-ligne, ADR-0005).
-
-/** Un événement d'annotation, tel que lu en base (ou construit en test). */
 export type EvenementAnnotation = {
   compteClientId: string;
   etiquette: string;
@@ -19,9 +12,6 @@ export type EvenementAnnotation = {
   recuLe: Date;
 };
 
-/**
- * Dérive, à partir du journal append-only, les étiquettes actives par compte.
- */
 export function deriverEtiquettesActives(
   evenements: readonly EvenementAnnotation[],
 ): Map<string, string[]> {

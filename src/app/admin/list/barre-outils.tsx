@@ -59,7 +59,6 @@ function cellule(valeur: string): string {
   return `"${valeur.replace(/"/g, '""')}"`;
 }
 
-/** Export CSV des lignes affichées (filtres inclus), 100 % client, BOM UTF-8 pour Excel. */
 function exporterCSV(lignes: LigneExport[]) {
   const entete =
     "Nom;Email;Téléphone;Rôle;État;Second facteur;Créé par;Créé le";
@@ -86,16 +85,9 @@ function exporterCSV(lignes: LigneExport[]) {
   URL.revokeObjectURL(url);
 }
 
-/**
- * Barre d'outils de /admin/list sur une seule ligne : recherche, filtre,
- * tri, export et ajout. Volontairement simple : un choix unique par
- * menu, état 100 % dans l'URL (?q=, ?filtre=, ?tri=), filtrage et tri
- * calculés côté serveur par la page.
- */
 export function BarreOutilsListe({
   exportLignes,
 }: {
-  /** Lignes affichées, sérialisées par la page pour l'export CSV. */
   exportLignes: LigneExport[];
 }) {
   const router = useRouter();
@@ -106,10 +98,6 @@ export function BarreOutilsListe({
   const filtre = params.get("filtre") ?? "";
   const tri = params.get("tri") ?? "";
 
-  // Saisie contrôlée sans remontage : le champ garde le focus pendant
-  // la frappe (aucune key), la navigation attend la fin de la frappe.
-  // Quand l'URL change d'ailleurs (retour arrière), le champ se
-  // réinitialise — sauf pendant la frappe, pour ne jamais écraser le texte.
   const champRef = React.useRef<HTMLInputElement>(null);
   const [recherche, setRecherche] = React.useState(q);
   React.useEffect(() => {
@@ -129,8 +117,6 @@ export function BarreOutilsListe({
       if (valeur === null || valeur === "") prochains.delete(cle);
       else prochains.set(cle, valeur);
     }
-    // Un choix modifié repart de la première page (cette barre ne pose
-    // jamais ?page= elle-même).
     prochains.delete("page");
     const chaine = prochains.toString();
     router.replace(chaine ? `${chemin}?${chaine}` : chemin, { scroll: false });

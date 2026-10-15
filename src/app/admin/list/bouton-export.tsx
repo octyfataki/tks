@@ -8,10 +8,6 @@ function cellule(valeur: string | null): string {
   return `"${(valeur ?? "").replace(/"/g, '""')}"`;
 }
 
-/**
- * Exporte la vue filtrée au format CSV (nom, email, téléphone, rôle, état,
- * créé le, créé par). 100 % client : aucun appel réseau, BOM UTF-8 pour Excel.
- */
 export function BoutonExport({ lignes }: { lignes: LigneAdmin[] }) {
   function exporter() {
     const entete = "Nom;Email;Téléphone;Rôle;État;Créé le;Créé par";

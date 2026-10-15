@@ -11,11 +11,6 @@ export type OngletAdmin = {
   actif: boolean;
 };
 
-/**
- * Onglets à compteurs (état dans l'URL, partageable) + recherche serveur
- * (?q= sur nom, email, téléphone). Présentation pure : les totaux et les
- * hrefs sont calculés par la page.
- */
 export function FiltresAdmins({
   onglets,
   recherche,
@@ -23,7 +18,6 @@ export function FiltresAdmins({
 }: {
   onglets: OngletAdmin[];
   recherche: string;
-  /** Paramètres à conserver quand on cherche (rôle, état). */
   conserves: { role?: string; etat?: string };
 }) {
   return (

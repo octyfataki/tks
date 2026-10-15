@@ -1,7 +1,3 @@
-// Fiche d'un compte client (issue #9) : lecteur réel, branché sur la base.
-// Séparé du module pur `fiche-client.ts` pour que ce dernier reste testable
-// sans DATABASE_URL. Un compte est une connexion ; jamais de solde.
-
 import { desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { user } from "@/lib/db/schema/auth-schema";
@@ -16,7 +12,6 @@ import {
   type LecteurFicheClient,
 } from "./fiche-client";
 
-/** Lecteur réel : identité du compte, puis ses pièces (récentes d'abord). */
 export const lecteurFicheDb: LecteurFicheClient = {
   async lireIdentite(compteId) {
     const lignes = await db
@@ -52,8 +47,6 @@ export const lecteurFicheDb: LecteurFicheClient = {
       .from(piecesIdentiteClients)
       .where(eq(piecesIdentiteClients.compteClientId, compteId))
       .orderBy(desc(piecesIdentiteClients.createdAt));
-    // La colonne est un texte libre en base : une valeur hors liste fermée
-    // est ramenée à EN_ATTENTE plutôt que rendue tel quel à l'écran.
     return lignes.map((ligne) => ({
       ...ligne,
       statutPiece: statutPieceValide(ligne.statutPiece)
@@ -63,7 +56,6 @@ export const lecteurFicheDb: LecteurFicheClient = {
   },
 };
 
-/** Charge la fiche d'un compte depuis la base. Identifiant inconnu → null. */
 export function chargerFicheClient(compteId: string): Promise<FicheClient | null> {
   return lireFicheClient(lecteurFicheDb, compteId);
 }

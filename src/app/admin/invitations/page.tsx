@@ -14,19 +14,6 @@ import { PermissionRefusee } from "@/components/permission-refusee";
 import { RegistreInvitations, type LigneRegistre } from "./registre-invitations";
 import { etatLienInvitation } from "@/lib/db/schema/s1-comptes/validation";
 
-/**
- * /admin/invitations — Registre unique des invitations envoyées pour un
- * compte administrateur principal (le distributeur). Liens à faire suivre
- * (l'invité remplit tout via /invite/[jeton]) et fiches déjà remplies
- * (nom, email, téléphone renseignés à la création, reste le mot de passe
- * via /premier-acces/[jeton]) y sont mélangés : c'est la voie, pas la
- * table d'origine, qui organise la lecture.
- *
- * Les comptes créés avec mot de passe transmis directement n'apparaissent
- * pas ici : il n'y a plus rien en attente, leur place est dans /admin/list.
- * Réservé à un administrateur technique ou principal VALIDE (S1 :
- * peutInviterAdminPrincipal — même règle que la création directe).
- */
 export default async function InvitationsEnvoyeesPage() {
   const session = await auth.api.getSession({ headers: await headers() });
   const userId = session?.user?.id ?? "";
@@ -111,8 +98,6 @@ export default async function InvitationsEnvoyeesPage() {
     createurs.map((c) => [c.id, c.nom?.trim() || c.email]),
   );
 
-  // Horloge lue une fois par requête (composant serveur) : stable pendant
-  // le rendu, pas de re-rendu imprévisible côté serveur.
   // eslint-disable-next-line react-hooks/purity -- lecture unique de l'horloge en composant serveur
   const maintenant = Date.now();
   const lignes: LigneRegistre[] = [

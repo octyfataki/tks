@@ -8,11 +8,6 @@ import { cn } from "@/lib/utils";
 import { type DensiteListes } from "./preferences";
 import { usePreferencesClient } from "./use-preferences-client";
 
-/**
- * Miniature « fenêtre navigateur » pour le choix visuel du thème.
- * Clair : fenêtre claire ; Sombre : fenêtre sombre ; Système : moitié
- * claire, moitié sombre. Purement décorative (`aria-hidden` côté appel).
- */
 function ApercuTheme({ variante }: { variante: Theme }) {
   if (variante === "system") {
     return (
@@ -70,15 +65,6 @@ function MiniFenetre({ sombre }: { sombre: boolean }) {
   );
 }
 
-/**
- * Préférences d'appareil du client.
- *
- * Thème via `ThemeProvider`, densité en `localStorage`
- * (clé `tks-client-preferences`). Rien ne part au serveur.
- *
- * La densité sera consommée par les listes de commandes (S5) et de
- * paiements (S6) quand elles arriveront.
- */
 export function AppareilSection() {
   const { theme, setTheme } = useTheme();
   const { preferences, chargees, mettreAJour } = usePreferencesClient();

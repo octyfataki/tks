@@ -57,7 +57,6 @@ function cellule(valeur: string): string {
   return `"${valeur.replace(/"/g, '""')}"`;
 }
 
-/** Export CSV des lignes affichées (filtres inclus), 100 % client, BOM UTF-8 pour Excel. */
 function exporterCSV(lignes: LigneExportAgent[]) {
   const entete = "Nom;Email;Téléphone;Rôle;État;Permissions;Créé par;Créé le";
   const corps = lignes.map((ligne) =>
@@ -81,10 +80,6 @@ function exporterCSV(lignes: LigneExportAgent[]) {
   URL.revokeObjectURL(url);
 }
 
-/**
- * Barre d'outils de /admin/agents : recherche, filtre, tri, export et
- * ajout (création directe ou lien d'invitation). État 100 % dans l'URL.
- */
 export function BarreOutilsAgents({
   exportLignes,
 }: {

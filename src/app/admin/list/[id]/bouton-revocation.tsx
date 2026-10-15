@@ -13,12 +13,6 @@ import {
 } from "@/components/ui/dialog";
 import { revoquerAdministrateurAction } from "../actions";
 
-/**
- * Zone dangereuse (bas de fiche) : révocation définitive d'un compte
- * d'administration, volontairement éloignée des gestes courants.
- * Confirmation exigée, jamais sur son propre compte, jamais sur un
- * compte déjà révoqué.
- */
 export function BoutonRevocation({
   id,
   nom,

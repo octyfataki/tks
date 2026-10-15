@@ -13,12 +13,6 @@ import {
 } from "@/components/ui/dialog";
 import { revoquerAgentAction } from "../actions";
 
-/**
- * Zone dangereuse (bas de fiche) : révocation définitive d'un agent de
- * service, volontairement éloignée des gestes courants. Confirmation
- * exigée, jamais sur son propre compte, jamais sur un compte déjà
- * révoqué. Ses permissions tombent avec le compte.
- */
 export function BoutonRevocationAgent({
   id,
   nom,

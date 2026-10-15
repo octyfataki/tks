@@ -14,16 +14,9 @@ export type CarteAdmin = {
   facteurActif: boolean | null;
   creeParNom: string;
   creeLe: Date;
-  /** Le titulaire ne révoque jamais son propre compte. */
   estMoi: boolean;
 };
 
-/**
- * Grille de cartes des comptes d'administration : nom + email en tête,
- * initiales en logo, badges rôle/état/second facteur, traçabilité, puis
- * « Voir le profil » et l'interrupteur d'état (suspension réversible ou
- * révocation définitive, après confirmation).
- */
 export function CartesAdmins({ cartes }: { cartes: CarteAdmin[] }) {
   return (
     <div className="grid items-start gap-4 sm:grid-cols-2 xl:grid-cols-3">

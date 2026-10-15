@@ -11,10 +11,6 @@ import {
 } from "@/lib/db/schema/s2-autorisations";
 import { enregistrerEvenement, ERREUR_CONTESTEE_INTROUVABLE } from "./journal";
 
-// S2 issues 02-03 — socle global + individuel, une par une.
-// Effectif = socle ∪ individuel. Absence des deux = refus.
-// Permission inconnue = refus. Un agent créé n'a rien en individuel.
-
 export type ErreurAutorisation =
   | "NON_AUTORISE"
   | "PERMISSION_INCONNUE"
@@ -32,19 +28,12 @@ export class AutorisationError extends Error {
   }
 }
 
-/**
- * Trace d'audit dans la transaction en cours : si le journal échoue,
- * l'opération entière est annulée — jamais de mutation sans trace
- * (échec fermé, invariant S2).
- */
 async function tracer(
   ex: ExecuteurDb,
   evenement: Parameters<typeof enregistrerEvenement>[0],
 ): Promise<void> {
   const trace = await enregistrerEvenement(evenement, ex);
   if (!trace.ok) {
-    // Cause vraie : une correction vers une ligne inconnue le dit, le
-    // reste reste un échec fermé générique.
     if (trace.erreur === ERREUR_CONTESTEE_INTROUVABLE) {
       throw new AutorisationError(
         "CONTESTEE_INTROUVABLE",
@@ -55,7 +44,6 @@ async function tracer(
   }
 }
 
-/** Doublon d'insertion concurrent (contrainte d'unicité MySQL). */
 function estDoublon(erreur: unknown): boolean {
   const code = (erreur as { code?: unknown })?.code;
   if (code === "ER_DUP_ENTRY") return true;
@@ -72,7 +60,6 @@ async function staffParId(id: string) {
   return lignes[0] ?? null;
 }
 
-/** Socle global : les permissions accordées à tous les agents. */
 export async function listerSocle(): Promise<Permission[]> {
   const lignes = await db
     .select({ permission: permissionsSocleAgents.permission })
@@ -83,7 +70,6 @@ export async function listerSocle(): Promise<Permission[]> {
     .sort();
 }
 
-/** L'agent tient-il la permission en individuel (hors socle) ? */
 async function aPermissionIndividuelle(
   agentId: string,
   permission: string,
@@ -101,7 +87,6 @@ async function aPermissionIndividuelle(
   return lignes.length > 0;
 }
 
-/** Le socle accorde-t-il cette permission à tous ? */
 async function aPermissionSocle(permission: string): Promise<boolean> {
   const lignes = await db
     .select({ permission: permissionsSocleAgents.permission })
@@ -111,7 +96,6 @@ async function aPermissionSocle(permission: string): Promise<boolean> {
   return lignes.length > 0;
 }
 
-/** Vérifie qu'un agent tient une permission (socle ou individuel, inconnue = faux). */
 export async function aPermission(
   agentId: string,
   permission: string,
@@ -121,7 +105,6 @@ export async function aPermission(
   return aPermissionIndividuelle(agentId, permission);
 }
 
-/** Permissions individuelles d'un agent (hors socle, vide par défaut). */
 export async function listerPermissions(agentId: string): Promise<Permission[]> {
   const lignes = await db
     .select({ permission: permissionsAgents.permission })
@@ -133,7 +116,6 @@ export async function listerPermissions(agentId: string): Promise<Permission[]> 
     .sort();
 }
 
-/** Permissions effectives d'un agent : socle ∪ individuel. */
 export async function listerPermissionsEffectives(
   agentId: string,
 ): Promise<Permission[]> {
@@ -160,7 +142,6 @@ async function agentValide(agentId: string) {
   return agent;
 }
 
-/** Accorde une permission à un agent précis. Chaque geste est journalisé. */
 export async function accorderPermission(
   gestionnaireId: string,
   agentId: string,
@@ -197,11 +178,6 @@ export async function accorderPermission(
   });
 }
 
-/**
- * Retire une permission individuelle. Ne touche jamais au socle : une
- * permission du socle reste accordée à tous — pour la retirer à un seul
- * agent, retirez-la du socle (page globale) ou assumez l'addition.
- */
 export async function retirerPermission(
   gestionnaireId: string,
   agentId: string,
@@ -243,7 +219,6 @@ export async function retirerPermission(
   });
 }
 
-/** Accorde une permission du socle à tous les agents (y compris futurs). */
 export async function accorderSocle(
   gestionnaireId: string,
   permission: string,
@@ -271,7 +246,6 @@ export async function accorderSocle(
   });
 }
 
-/** Retire une permission du socle (tous les agents la perdent, sauf exception individuelle). */
 export async function retirerSocle(
   gestionnaireId: string,
   permission: string,
@@ -300,13 +274,6 @@ export async function retirerSocle(
   });
 }
 
-/**
- * Applique le profil prédéfini d'embauche : insère les permissions
- * manquantes à l'effectif (socle ∪ individuel), sans toucher aux autres.
- * Raccourci, pas contrainte. Tout-ou-rien : un doublon concurrent est
- * ignoré (déjà accordée entre-temps), toute autre panne annule le lot —
- * `ajoutees` reflète ce qui a persisté.
- */
 export async function appliquerProfilAgent(
   gestionnaireId: string,
   agentId: string,

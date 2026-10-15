@@ -14,16 +14,6 @@ import {
   SidebarTrigger,
 } from "./sidebar";
 
-/**
- * Régression : sur mobile le tiroir de navigation restait ouvert après le
- * clic sur un lien. La coquille (SidebarProvider) persiste pendant la
- * navigation client-side, et rien ne remettait `openMobile` à false : le
- * Sheet restait donc affiché par-dessus la page d'arrivée.
- *
- * `useIsMobile` lit `window.innerWidth` et s'appuie sur `matchMedia`, absent
- * de jsdom : on le stube ici plutôt que globalement, aucun autre test de la
- * suite n'a besoin d'un viewport.
- */
 function viewportMobile() {
   Object.defineProperty(window, "innerWidth", {
     configurable: true,
@@ -103,8 +93,6 @@ describe("Sidebar sur mobile", () => {
   });
 
   it("laisse le tiroir ouvert sur un bouton qui ne navigue pas", () => {
-    // Le cas des groupes « Bientôt » et du déclencheur du menu utilisateur :
-    // fermer le Sheet les démonterait au lieu de laisser l'action se faire.
     render(<TiroirDeTest />);
     fireEvent.click(screen.getByRole("button", { name: /toggle sidebar/i }));
     fireEvent.click(screen.getByRole("button", { name: "Opérations" }));
@@ -117,8 +105,6 @@ describe("Sidebar sur mobile", () => {
       value: 1280,
     });
     render(<TiroirDeTest />);
-    // Hors mobile, le tiroir n'existe pas : le contenu est rendu directement,
-    // un clic sur un lien ne doit changer ni l'un ni l'autre.
     expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("link", { name: "Gestion des clients" }));
     expect(screen.getByRole("link", { name: "Gestion des clients" })).toBeInTheDocument();

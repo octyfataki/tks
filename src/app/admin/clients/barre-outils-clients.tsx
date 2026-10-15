@@ -55,7 +55,6 @@ function cellule(valeur: string): string {
   return `"${valeur.replace(/"/g, '""')}"`;
 }
 
-/** Export CSV des comptes affichés (filtres inclus), 100 % client, BOM UTF-8 pour Excel. */
 function exporterCSV(lignes: LigneExportClient[]) {
   const entete = "Nom;Email;Téléphone;État;Inscrit le;Attente (j);Validé le;Motif refus";
   const corps = lignes.map((ligne) =>
@@ -81,11 +80,6 @@ function exporterCSV(lignes: LigneExportClient[]) {
   URL.revokeObjectURL(url);
 }
 
-/**
- * Barre d'outils de /admin/clients : recherche (nom, email, téléphone —
- * le téléphone est la clé du compte), filtre d'état, tri, export.
- * État 100 % dans l'URL (?q=, ?filtre=, ?tri=), filtrage côté serveur.
- */
 export function BarreOutilsClients({
   exportLignes,
 }: {

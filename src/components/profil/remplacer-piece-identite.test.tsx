@@ -10,9 +10,6 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
 }));
 
-// Remplacement depuis le profil : replié par défaut, le formulaire
-// partagé se déplie au clic, sans la galerie des pièces déjà déposées
-// (la carte les montre déjà).
 describe("RemplacerPieceIdentite", () => {
   it("déplie le formulaire de remplacement au clic", () => {
     render(<RemplacerPieceIdentite />);

@@ -6,10 +6,6 @@ import { profilSession } from "@/lib/s1-comptes/profil-session";
 import { destinationApresConnexion } from "@/lib/s1-comptes/role-session";
 import { Verify2faForm } from "./verify-2fa-form";
 
-// /verify-2fa n'a de sens qu'en plein défi 2FA : cookie de défi présent, pas
-// encore de session. Déjà connecté → son espace (le bouton retour ne doit
-// pas rouvrir un formulaire mort). Anonyme sans défi → /sign-in : sans défi,
-// chaque envoi comme chaque vérification échoue en « vérification expirée ».
 export default async function Verify2faPage() {
   const profil = await profilSession();
   if (profil.type !== "ANONYME") redirect(destinationApresConnexion(profil));

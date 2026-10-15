@@ -11,11 +11,6 @@ type ErreurGlobaleProps = {
   retry?: () => void;
 };
 
-/**
- * Frontière d'erreur racine : remplace le layout quand celui-ci échoue,
- * donc rend ses propres balises <html> et <body>. Même contenu que la
- * frontière de segment, coquille autonome sans dépendance au layout.
- */
 export default function ErreurGlobale({ error, reset, retry }: ErreurGlobaleProps) {
   useEffect(() => {
     console.error(error);

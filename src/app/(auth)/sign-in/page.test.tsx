@@ -7,7 +7,6 @@ vi.mock("@/lib/s1-comptes/profil-session", () => ({
   profilSession: vi.fn(),
 }));
 
-/** next/navigation#redirect lance une erreur dont le digest porte l'URL. */
 async function destinationDe(profil: Profil): Promise<string> {
   vi.mocked(profilSession).mockResolvedValueOnce(profil);
   const erreur = await SignInPage().catch((e: unknown) => e);
@@ -15,8 +14,6 @@ async function destinationDe(profil: Profil): Promise<string> {
   return (erreur as Error & { digest?: string }).digest ?? "";
 }
 
-// Déjà connecté → son espace. INCONNU reste sur place : rediriger vers
-// /sign-in depuis /sign-in bouclerait.
 describe("page sign-in", () => {
   it("renvoie un administrateur connecté vers son espace", async () => {
     expect(

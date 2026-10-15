@@ -37,14 +37,6 @@ export type ResultatAnnotation = ResultatAction<{
   etiquette: string;
 }>;
 
-/**
- * Connecté et autorisé à trancher un compte client (S1-03) :
- * - ADMIN_PRINCIPAL ou ADMIN_TECHNIQUE VALIDE, ou
- * - AGENT VALIDE avec la permission `client.valider` (socle ou individuelle).
- *
- * Jamais un client, jamais un compte suspendu ou révoqué, jamais un agent
- * sans la permission.
- */
 async function peutTrancher(): Promise<{ id: string; role: string } | null> {
   const session = await auth.api.getSession({ headers: await headers() });
   const userId = session?.user?.id;
@@ -81,36 +73,20 @@ function lireCompteId(donnees: FormData): string | null {
   return brut === "" ? null : brut;
 }
 
-/**
- * S2 issue 15 — ligne contestée depuis le journal (champ caché du
- * formulaire de contestation, absent des parcours normaux). `null` =
- * parcours normal, sans lien.
- */
 function lireContesteId(donnees: FormData): string | null {
   const brut = String(donnees.get("contesteId") ?? "").trim();
   return brut === "" ? null : brut;
 }
 
-/** Revalide les deux espaces : la décision peut venir de l'un ou l'autre. */
 function revaliderLesDeuxEspaces() {
   revalidatePath("/admin/clients");
   revalidatePath("/admin/clients/validation");
   revalidatePath("/agent/clients");
   revalidatePath("/agent/clients/validation");
-  // Les fiches sont des routes dynamiques : le motif + « page » revalide
-  // toutes les fiches ouvertes (Next 16 l'exige pour un segment dynamique).
   revalidatePath("/admin/clients/[id]", "page");
   revalidatePath("/agent/clients/[id]", "page");
 }
 
-/**
- * Valide un compte client sur la pièce vue par l'humain qui tranche. La
- * pièce est désignée par son identifiant (déposée par le client dans
- * l'application), jamais par une référence tapée : vide ou étrangère au
- * compte = refusé, aucun chemin ne produit VALIDE sans pièce vue. Succès
- * apparent sans écriture impossible : pièce marquée vue, état et journal
- * partent dans une seule transaction, journal indisponible = tout annulé.
- */
 export async function validerCompteClientAction(
   _precedent: ResultatDecision | null,
   donnees: FormData,
@@ -187,11 +163,6 @@ export async function validerCompteClientAction(
   return { ok: true, compteId };
 }
 
-/**
- * Refuse un compte client avec un motif obligatoire. Le motif est stocké sur
- * le compte et affiché au client, qui peut corriger puis être validé plus
- * tard sans ressaisie (REFUSE → VALIDE reste ouvert).
- */
 export async function refuserCompteClientAction(
   _precedent: ResultatDecision | null,
   donnees: FormData,
@@ -252,19 +223,6 @@ export async function refuserCompteClientAction(
   return { ok: true, compteId };
 }
 
-/**
- * Statue sur une pièce d'identité déposée par un compte déjà VALIDE
- * (ticket 10) : l'accepter, ou la refuser avec un motif que le client
- * lira sur son profil et pourra corriger.
- *
- * Le compte n'est **jamais** touché : valider une pièce de remplacement ne
- * change pas l'identité validée au comptoir. Seule la pièce porte un
- * verdict. Un compte en attente ou refusé passe par sa propre validation
- * (ticket 03) — les deux gestes ne se recouvrent pas.
- *
- * Verdict et journal partent dans une seule transaction : journal
- * indisponible = rien n'est écrit, jamais un « accepté » sans trace.
- */
 export async function statuerPieceIdentiteAction(
   _precedent: ResultatDecision | null,
   donnees: FormData,
@@ -322,9 +280,6 @@ export async function statuerPieceIdentiteAction(
   const refusMotif = statut === "REFUSEE" ? motif : null;
   try {
     await db.transaction(async (tx) => {
-      // Gardé par le statut attendu : si quelqu'un a statué la pièce entre
-      // la lecture et l'écriture, aucune ligne n'est touchée et le journal
-      // s'annule avec — jamais deux verdicts sur le même document.
       const ecrites = await statuerPiece(
         pieceId,
         trancheur.id,
@@ -355,20 +310,10 @@ export async function statuerPieceIdentiteAction(
     return { ok: false, erreur: "Verdict impossible : journal indisponible." };
   }
   revaliderLesDeuxEspaces();
-  // Le motif se lit sur le profil du client : il doit le voir sans recharger.
   revalidatePath("/clients/profil");
   return { ok: true, compteId };
 }
 
-/**
- * Le client retire une pièce qu'il avait déposée et qui a été refusée
- * (ticket 11). Il ne retire que ce qui a déjà été jugé : une pièce en
- * attente reste hors de sa portée.
- *
- * Rien n'est supprimé : la pièce passe `RETIREE`, son fichier et son motif
- * restent, la fiche du distributeur continue de les montrer. Le retrait
- * est journalisé (`piece.retirer`) dans la même transaction que l'écriture.
- */
 export async function retirerPieceIdentiteAction(
   _precedent: ResultatDecision | null,
   donnees: FormData,
@@ -432,14 +377,6 @@ export async function retirerPieceIdentiteAction(
   return { ok: true, compteId: compte.id };
 }
 
-/**
- * Valide un compte client sur pièce physique vue au comptoir, sans dépôt
- * numérique. Le client venu avec sa pièce ne repart pas bredouille parce
- * que personne ne l'a déposée : l'agent ou l'administrateur atteste l'avoir
- * vue (type coché en liste fermée, jamais saisi librement) et tranche.
- * L'invariant tient — aucun VALIDE sans pièce vue, et la vue est tracée
- * (qui, quand, quel compte, quel type) dans le journal.
- */
 export async function validerCompteClientComptoirAction(
   _precedent: ResultatDecision | null,
   donnees: FormData,
@@ -497,27 +434,12 @@ export async function validerCompteClientComptoirAction(
   return { ok: true, compteId };
 }
 
-/**
- * Révoque un compte client suspect (EN_ATTENTE_VALIDATION → REVOQUE ou
- * REFUSE → REVOQUE, définitif : aucun retour — rouvrir passe par
- * réinscription, GLOSSARY « Compte »).
- *
- * C'est la « suppression » de la file : aucune suppression physique —
- * invariant 10 (on n'efface jamais, on trace) et journal immuable (invariant
- * 8). Le compte sort de la file (la file ne liste que EN_ATTENTE_VALIDATION +
- * REFUSE), reste visible dans la liste des comptes avec le filtre
- * « Révoqués », et la décision est journalisée (`client.revoquer`, qui,
- * quand, quel compte, motif). Le motif est obligatoire et conservé sur le
- * compte.
- */
 export async function revoquerCompteClientAction(
   _precedent: ResultatDecision | null,
   donnees: FormData,
 ): Promise<ResultatDecision> {
   const trancheur = await peutTrancher();
   if (!trancheur) {
-    // S2 issue 15 — un refus opposé à une contestation est journalisé comme
-    // échec, lié à la ligne contestée.
     const contesteId = lireContesteId(donnees);
     if (contesteId) {
       const session = await auth.api.getSession({ headers: await headers() });
@@ -589,8 +511,6 @@ export async function revoquerCompteClientAction(
       if (!trace.ok) throw new Error(trace.erreur);
     });
   } catch (erreur) {
-    // Cause vraie : une contestation vers une ligne inconnue le dit, le
-    // reste reste un échec fermé générique.
     if (
       erreur instanceof Error &&
       erreur.message === ERREUR_CONTESTEE_INTROUVABLE
@@ -603,16 +523,6 @@ export async function revoquerCompteClientAction(
   return { ok: true, compteId };
 }
 
-/**
- * Connecté et autorisé à annoter un compte client (S4 issue #7) :
- * - ADMIN_PRINCIPAL VALIDE (le distributeur annote toujours),
- * - AGENT VALIDE avec la permission `client.annoter` (socle ou individuelle).
- *
- * L'administrateur technique n'annote jamais : aucun pouvoir métier
- * (GLOSSARY « Administrateur technique »), comme `rolePeutSaisirTaux` (S3).
- * Même forme que `peutTrancher`, autre permission : lire n'exige rien,
- * écrire exige `client.annoter`.
- */
 async function peutAnnoter(): Promise<{ id: string; role: string } | null> {
   const session = await auth.api.getSession({ headers: await headers() });
   const userId = session?.user?.id;
@@ -660,12 +570,6 @@ function messageAnnotation(code: string): string {
   }
 }
 
-/**
- * Pose une étiquette sur un compte client (S4 issue #7). Liste fermée :
- * un code inconnu est refusé, jamais enregistré. L'écriture est
- * append-only et journalisée dans la même transaction (couche
- * `s4-annotations`) : journal indisponible = geste annulé.
- */
 export async function poserEtiquetteAction(
   _precedent: ResultatAnnotation | null,
   donnees: FormData,
@@ -692,11 +596,6 @@ export async function poserEtiquetteAction(
   return { ok: true, compteId, etiquette };
 }
 
-/**
- * Retire une étiquette d'un compte client (S4 issue #7). Aucune ligne
- * n'est supprimée : l'écriture inverse est ajoutée et tracée
- * (invariant 10). Même autorisation et mêmes échecs fermés que la pose.
- */
 export async function retirerEtiquetteAction(
   _precedent: ResultatAnnotation | null,
   donnees: FormData,

@@ -4,8 +4,6 @@ import {
   validerChangementMotDePasse,
 } from "./mot-de-passe-validation";
 
-// Même exigence qu'à l'inscription : 8 caractères minimum, confirmation
-// identique. Aucun appel réseau dans ces tests.
 describe("validerChangementMotDePasse", () => {
   const valide = {
     actuel: "ancien-mot-de-passe",

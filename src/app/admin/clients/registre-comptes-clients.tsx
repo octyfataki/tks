@@ -28,13 +28,6 @@ function cachetEtat(etat: string): {
   return { encre: "attente", libelle: "En attente" };
 }
 
-/**
- * Tableau des comptes clients, même dessin que le registre des invitations
- * agents : lignes dépliables, Cachet tamponné par état, chiffres en
- * tabulaires. Une ligne = une connexion (téléphone = clé du compte).
- * Aucune colonne d'argent : ni solde, ni dette, ni plafond, ni devise —
- * le dossier financier vit ailleurs (S4, tables inexistantes à ce jour).
- */
 export function RegistreComptesClients({
   lignes,
   maintenant,

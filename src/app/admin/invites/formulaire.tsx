@@ -41,20 +41,9 @@ const ETAPES_APRES = [
   },
 ];
 
-/**
- * Invitation d'un agent de service : même coquille visuelle que
- * l'invitation d'un administrateur principal (titre + actions, carte à
- * gauche, aperçu + étapes à droite). À gauche, la durée du lien (presets
- * + saisie libre) et le rôle fixé AGENT. À droite, l'aperçu vivant du lien
- * et les étapes. L'historique complet vit dans /admin/agents/invitations
- * (recherche, filtres, pagination) : ce formulaire ne liste plus les liens
- * passés. Rien d'inventé côté métier : usage unique, expiration choisie
- * [1, 30], rôle fixé par le lien (anti-escalade).
- */
 export function FormulaireInvitationAgent({
   defautJours,
 }: {
-  /** Durée pré-remplie : le réglage en vigueur (/admin/parametres). */
   defautJours: number;
 }) {
   const [resultat, action, enCours] = useActionState(
@@ -69,8 +58,6 @@ export function FormulaireInvitationAgent({
   const [expirationEstimee, setExpirationEstimee] = React.useState("");
   const lienCree = resultat && resultat.ok ? resultat.lien : null;
   React.useEffect(() => {
-    // Aperçu vivant : date dérivée de la durée saisie (effet = lecture
-    // d'horloge hors rendu, conforme react-hooks/purity).
     // eslint-disable-next-line react-hooks/set-state-in-effect -- aperçu dérivé, pas de boucle
     setExpirationEstimee(
       new Date(

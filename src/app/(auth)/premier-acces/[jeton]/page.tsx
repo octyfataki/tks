@@ -3,13 +3,6 @@ import { AuthShell } from "@/components/auth-shell";
 import { lirePremierAcces } from "@/lib/s1-comptes/staff";
 import { PremierAccesForm } from "./premier-acces-form";
 
-/**
- * /premier-acces/[jeton] — la personne créée par lien choisit elle-même son
- * mot de passe. Page PUBLIQUE (hors /admin : l'invité n'a pas de session).
- * Portée stricte : le lien n'ouvre aucune session et ne contourne pas la
- * 2FA — après ce choix, connexion normale email + mot de passe + OTP (SMS ou email).
- * Usage unique, 24 h, états d'échec explicites.
- */
 export default async function PremierAccesPage({
   params,
 }: {

@@ -50,11 +50,6 @@ function dateLongue(valeur: Date): string {
   });
 }
 
-/**
- * /admin/agents/[id] — Fiche d'un agent de service : identité, traçabilité,
- * état, et ses permissions une par une. Un identifiant inconnu ou non-agent
- * rend 404 : un compte ne se consulte jamais par une autre porte.
- */
 export default async function FicheAgentPage({
   params,
 }: {
@@ -87,9 +82,6 @@ export default async function FicheAgentPage({
   const nom = nomAffiche({ nom: compte.nom, email: compte.email });
   const matricule = compte.id.slice(0, 8).toUpperCase();
 
-  // Lectures indépendantes en parallèle : créateur, permissions
-  // (individuel + socle), dernière inscription, dernière connexion, moi.
-  // Seule l'invitation d'origine dépend de l'inscription : elle suit.
   const [lignesCreateur, detenues, socle, inscriptions, dernieres, session] =
     await Promise.all([
       compte.creePar
@@ -126,8 +118,6 @@ export default async function FicheAgentPage({
     : "Lien d'invitation";
   const ensemble = new Set(detenues);
 
-  // Origine : le lien d'invitation qui a créé l'agent (journal
-  // agent.inscrire), sinon création directe au comptoir.
   const invitationId = (
     inscriptions[0]?.apres as { invitation?: string } | null
   )?.invitation;
@@ -146,7 +136,6 @@ export default async function FicheAgentPage({
     ? `Lien d'invitation du ${dateCourte(invitation.createdAt)}`
     : "Création directe au comptoir";
 
-  // Dernière connexion : session la plus récente, tous appareils.
   const derniereConnexion = dernieres[0]?.creeLe ?? null;
   const ensembleSocle = new Set(socle);
   const effectives = [...new Set([...socle, ...detenues])].sort();

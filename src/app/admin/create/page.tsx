@@ -7,12 +7,6 @@ import { peutCreerAdminPrincipal } from "@/lib/db/schema/s1-comptes";
 import { PermissionRefusee } from "@/components/permission-refusee";
 import { FormulaireAdministrateurPrincipal } from "../administrateurs/formulaire";
 
-/**
- * /admin/create — Créer un administrateur principal (création directe).
- * Le shell SidebarProvider + AdminHeader vit dans /admin/layout : ici,
- * uniquement le contenu. Réservé à un administrateur technique ou
- * principal validé (S1 : peutCreerAdminPrincipal).
- */
 export default async function NouveauAdministrateurPage() {
   const session = await auth.api.getSession({ headers: await headers() });
   const userId = session?.user?.id ?? "";

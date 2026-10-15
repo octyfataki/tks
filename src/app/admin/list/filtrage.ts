@@ -10,7 +10,6 @@ export type FiltreDemande =
 
 export type TriDemande = "anciens" | "nom-az" | "nom-za";
 
-/** Sous-ensemble de colonnes qu'exigent le filtrage et le tri. */
 export type LigneFiltrable = {
   role: string;
   etat: string;
@@ -21,7 +20,6 @@ export type LigneFiltrable = {
   createdAt: Date;
 };
 
-/** Filtre unique (?filtre=) + recherche (?q=, normalisée ici). */
 export function filtrerLignes<T extends LigneFiltrable>(
   lignes: T[],
   recherche: string,
@@ -51,7 +49,6 @@ export function filtrerLignes<T extends LigneFiltrable>(
   });
 }
 
-/** Tri (?tri=), défaut : plus récents. Ne mute jamais l'entrée. */
 export function trierLignes<T extends LigneFiltrable>(
   lignes: T[],
   tri: TriDemande | null,

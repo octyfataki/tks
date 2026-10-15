@@ -4,14 +4,6 @@ import * as React from "react";
 import { useRouter } from "next/navigation";
 import { getSession } from "@/lib/auth-client";
 
-// Une session peut mourir sans déconnexion explicite : expiration (7 jours),
-// révocation ou suspension par un administrateur, déconnexion dans un autre
-// onglet, cookies effacés. Le layout serveur ne revérifie qu'à la navigation :
-// entre deux navigations, la page resterait affichée avec une session morte
-// et chaque action échouerait au lieu de renvoyer vers la connexion.
-// Ce gardien revérifie la session au retour d'onglet, à la reconnexion et
-// toutes les minutes : session absente → /sign-in. Hors-ligne (requête
-// rejetée) : on ne conclut rien, la page reste lisible (offline-first).
 const DELAI_VERIFICATION_MS = 60_000;
 
 export function GardienSession() {
@@ -24,7 +16,6 @@ export function GardienSession() {
     try {
       ({ data: session } = await getSession());
     } catch {
-      // Hors-ligne : pas de verdict, pas de redirection.
       return;
     }
     if (!session) {

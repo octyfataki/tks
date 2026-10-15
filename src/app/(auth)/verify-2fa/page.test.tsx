@@ -21,7 +21,6 @@ function simulerCookies(valeurs: Array<{ name: string; value: string }>) {
   } as never);
 }
 
-/** next/navigation#redirect lance une erreur dont le digest porte l'URL. */
 async function destinationDe(profil: Profil): Promise<string> {
   vi.mocked(profilSession).mockResolvedValueOnce(profil);
   const erreur = await Verify2faPage().catch((e: unknown) => e);
@@ -29,8 +28,6 @@ async function destinationDe(profil: Profil): Promise<string> {
   return (erreur as Error & { digest?: string }).digest ?? "";
 }
 
-// /verify-2fa n'a de sens qu'en plein défi : déjà connecté → son espace,
-// anonyme sans défi → /sign-in. Seul le défi en cours reste sur place.
 describe("page verify-2fa", () => {
   it("renvoie un administrateur connecté vers son espace", async () => {
     simulerCookies([]);

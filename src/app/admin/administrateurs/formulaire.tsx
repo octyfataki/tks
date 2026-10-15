@@ -94,14 +94,6 @@ function TitreSection({ numero, titre }: { numero: string; titre: string }) {
   );
 }
 
-/**
- * Création d'un administrateur principal : la sidebar reste visible (coquille
- * SidebarProvider de la page). Formulaire en deux temps (01 Identité, 02
- * Accès) avec icônes réactives au focus, mot de passe affichable, jauge de
- * force et rôle en carte sélectionnée. À droite, l'aperçu vivant du compte
- * et le parcours après-création. Rien d'inventé côté métier : prénom + nom,
- * email, mot de passe initial, rôle fixé, 2FA obligatoire.
- */
 export function FormulaireAdministrateurPrincipal() {
   const [resultat, action, enCours] = useActionState(
     creerAdministrateurPrincipalAction,

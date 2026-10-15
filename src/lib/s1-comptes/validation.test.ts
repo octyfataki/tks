@@ -57,7 +57,6 @@ describe("règles staff", () => {
     expect(peutInviterAgent("ADMIN_TECHNIQUE", "VALIDE")).toBe(false);
     expect(peutInviterAgent("ADMIN_PRINCIPAL", "REVOQUE")).toBe(false);
     expect(roleCibleInvitationValide("AGENT")).toBe(true);
-    // Écart assumé à S1-spec (lien admin demandé explicitement).
     expect(roleCibleInvitationValide("ADMIN_PRINCIPAL")).toBe(true);
     expect(roleCibleInvitationValide("ADMIN_TECHNIQUE")).toBe(false);
     expect(roleCibleInvitationValide("CLIENT")).toBe(false);
@@ -86,7 +85,6 @@ describe("règles staff", () => {
         maintenant,
       ),
     ).toBe("expire");
-    // La décision humaine fait foi : révoqué reste révoqué après expiration.
     expect(
       etatLienInvitation(
         { consommeLe: null, revoqueLe: passe, expireLe: passe },

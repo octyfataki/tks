@@ -1,7 +1,3 @@
-// Validation pure de la photo de compte (aucun accès base, testable seul).
-// Photo compressée côté client (~256px, JPEG) ou illustration de la galerie
-// (SVG) : on plafonne à 400 Ko décodés pour ne jamais gonfler la table `user`
-// (même esprit que la preuve de paiement : photo compressée, plafonnée).
 export const MAX_OCTETS_PHOTO_PROFIL = 400 * 1024;
 
 const PREFIXES_AUTORISES = [
@@ -23,7 +19,6 @@ export function photoProfilValide(valeur: string): boolean {
 
 export type DonneesDataUrl = { mime: "jpeg" | "png" | "webp" | "svg"; base64: string };
 
-/** Découpe un dataURL validé en mime + charge base64 (pur, testable). */
 export function decoderDataUrlPhoto(valeur: string): DonneesDataUrl | null {
   if (valeur.startsWith("data:image/jpeg;base64,")) {
     return { mime: "jpeg", base64: valeur.slice("data:image/jpeg;base64,".length) };
@@ -40,13 +35,11 @@ export function decoderDataUrlPhoto(valeur: string): DonneesDataUrl | null {
   return null;
 }
 
-/** Nom de fichier sûr pour un avatar (anti traversée de chemin). */
 export function nomFichierAvatar(userId: string, extension: "jpg" | "svg"): string {
   const sur = userId.replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 64) || "compte";
   return `${sur}.${extension}`;
 }
 
-/** Fabrique une illustration de galerie (dégradé abstrait, 256px). */
 function illustration(first: string, second: string, third: string): string {
   const svg =
     `<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256">` +
@@ -65,7 +58,6 @@ function illustration(first: string, second: string, third: string): string {
 
 export type IllustrationGalerie = { nom: string; src: string };
 
-/** Galerie proposée dans la fenêtre de choix (même esprit que la maquette). */
 export const GALERIE_PHOTOS_PROFIL: IllustrationGalerie[] = [
   { nom: "Aurore", src: illustration("#ef4444", "#ec4899", "#a78bfa") },
   { nom: "Lagune", src: illustration("#8b5cf6", "#2dd4bf", "#a78bfa") },

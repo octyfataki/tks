@@ -12,12 +12,6 @@ function dateHeure(valeur: Date): string {
   });
 }
 
-/**
- * Sessions actives d'un agent : d'où il est connecté, depuis quand,
- * jusqu'à quand — et le coupe-circuit « Déconnecter partout ».
- * Lecture seule (+ action tracée) : le secret de session ne s'affiche
- * jamais, seul l'appareil et l'adresse suffisent au diagnostic.
- */
 export async function SessionsAgent({
   betterAuthUserId,
   agentId,

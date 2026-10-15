@@ -11,17 +11,10 @@ type PasswordInputProps = {
   minLength?: number;
   required?: boolean;
   placeholder?: string;
-  /** Mode contrôlé (jauge de force en direct) : absent = non contrôlé. */
   value?: string;
   onChange?: (valeur: string) => void;
 };
 
-/** Champ mot de passe avec bascule afficher/masquer (icône œil). Bouton
- * natif, pas le bouton générique : son effet d'enfoncement
- * (`active:translate-y-px`, plus spécifique) écraserait le centrage
- * `-translate-y-1/2` et ferait sauter l'œil à chaque clic. Ici aucun
- * mouvement au clic, simple fondu de couleur au survol — même parti que les
- * bascules sœurs des formulaires. */
 export function PasswordInput({
   id,
   name,

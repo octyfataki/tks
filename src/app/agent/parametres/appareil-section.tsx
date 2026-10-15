@@ -8,11 +8,6 @@ import { cn } from "@/lib/utils";
 import { type DensiteComptoir } from "./preferences";
 import { usePreferencesAgent } from "./use-preferences-agent";
 
-/**
- * Miniature « fenêtre navigateur » pour le choix visuel du thème.
- * Clair : fenêtre claire ; Sombre : fenêtre sombre ; Système : moitié
- * claire, moitié sombre. Purement décorative (`aria-hidden` côté appel).
- */
 function ApercuTheme({ variante }: { variante: Theme }) {
   if (variante === "system") {
     return (
@@ -70,16 +65,6 @@ function MiniFenetre({ sombre }: { sombre: boolean }) {
   );
 }
 
-/**
- * Préférences d'appareil de l'agent de service.
- *
- * Thème via `ThemeProvider`, densité en `localStorage`
- * (clé `tks-agent-preferences`). Rien ne part au serveur : sur un téléphone
- * partagé au comptoir, ces réglages valent pour l'appareil.
- *
- * La densité sera consommée par la caisse rapide
- * et la file d'attente (S5) quand elles arriveront.
- */
 export function AppareilSection() {
   const { theme, setTheme } = useTheme();
   const { preferences, chargees, mettreAJour } = usePreferencesAgent();

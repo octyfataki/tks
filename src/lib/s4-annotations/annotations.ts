@@ -7,14 +7,6 @@ import { enregistrerEvenement } from "@/lib/s2-autorisations/journal";
 import { estEtiquetteConnue, etiquetteParCode } from "./etiquettes";
 import { deriverEtiquettesActives } from "./derivation";
 
-// Issue #7 — lecture et écriture des annotations clients.
-//
-// Écriture append-only : poser puis retirer sont deux lignes, jamais une
-// mise à jour ni une suppression (invariant 10). L'état courant se dérive
-// (`derivation.ts`, pur, testé sans base), il ne se stocke pas. Toute
-// écriture embarque sa trace d'audit dans la même transaction : journal
-// indisponible = geste annulé.
-
 export type ErreurAnnotation =
   | "COMPTE_INTROUVABLE"
   | "ETIQUETTE_INCONNUE"
@@ -28,7 +20,6 @@ export class AnnotationError extends Error {
   }
 }
 
-/** Étiquettes actives des comptes demandés. Un seul aller-retour en base. */
 export async function etiquettesActivesParCompte(
   compteIds: readonly string[],
 ): Promise<Map<string, string[]>> {
@@ -55,11 +46,6 @@ async function compteExiste(compteClientId: string): Promise<boolean> {
   return lignes.length > 0;
 }
 
-/**
- * Consigne un geste d'annotation (pose ou retrait) : une ligne append-only
- * et sa trace d'audit, dans la même transaction. `typeAction` reprend le
- * vocabulaire de l'action ; l'entité tracée est l'annotation du compte.
- */
 async function consignerAnnotation(input: {
   compteClientId: string;
   etiquette: string;
@@ -74,8 +60,6 @@ async function consignerAnnotation(input: {
   }
   const horodatageLocal = input.horodatageLocal ?? new Date();
   const ex = input.ex ?? db;
-  // Le libellé français est figé dans la trace : le résumé du journal
-  // (S2) reste lisible sans dépendre de la liste applicative.
   const libelle =
     etiquetteParCode(input.etiquette)?.libelle ?? input.etiquette;
   const trace = await enregistrerEvenement(
@@ -110,7 +94,6 @@ async function consignerAnnotation(input: {
   });
 }
 
-/** Pose une étiquette sur un compte client. Écriture inverse = retirer. */
 export async function poserEtiquette(input: {
   acteurId: string;
   roleAuMoment: string;
@@ -129,10 +112,6 @@ export async function poserEtiquette(input: {
   });
 }
 
-/**
- * Retire une étiquette d'un compte client. Aucune ligne n'est supprimée :
- * on ajoute l'écriture inverse, tracée (invariant 10).
- */
 export async function retirerEtiquette(input: {
   acteurId: string;
   roleAuMoment: string;

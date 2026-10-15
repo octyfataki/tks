@@ -3,15 +3,9 @@ import { cn } from "@/lib/utils";
 
 type BrandLogoProps = {
   className?: string;
-  /** Hauteur en px. La largeur suit le ratio du logo (~1.84:1). */
   height?: number;
 };
 
-/**
- * Logo TKS unique, fond transparent.
- * - `/brand/logo.png` : ambre sur transparent, lisible en clair ET en sombre.
- * Pas de bascule light/dark — une seule image partout.
- */
 export function BrandLogo({ className, height = 32 }: BrandLogoProps) {
   const width = Math.round(height * 1.84);
   return (

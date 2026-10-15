@@ -18,13 +18,6 @@ import {
   suspendreAdministrateurAction,
 } from "./actions";
 
-/**
- * Interrupteur d'état d'un compte d'administration (design cartes).
- * VALIDE (ON) : cliquer propose suspendre (réversible) ou révoquer
- * (définitif). SUSPENDU : cliquer propose lever la suspension ou
- * révoquer. REVOQUE (OFF) : toujours désactivé, aucun retour. Le
- * titulaire ne touche jamais à son propre compte.
- */
 export function InterrupteurEtat({
   id,
   nom,
@@ -36,10 +29,8 @@ export function InterrupteurEtat({
   id: string;
   nom: string;
   etat: "VALIDE" | "SUSPENDU" | "REVOQUE";
-  /** Switch non cliquable (ex. son propre compte). */
   desactive?: boolean;
   motifDesactive?: string;
-  /** Masque la révocation (reléguée en zone dangereuse en bas de page). */
   sansRevocation?: boolean;
 }) {
   const [ouvert, setOuvert] = React.useState(false);

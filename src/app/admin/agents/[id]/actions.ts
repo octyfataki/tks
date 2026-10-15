@@ -34,14 +34,6 @@ function messageErreur(code: ErreurStaff): string {
   }
 }
 
-/**
- * Corrige le nom + téléphone de contact d'un agent de service
- * (support terrain : coquille, oubli). Rôle, email, état et secrets ne
- * passent jamais par ici — voir modifierAgentSupport : une erreur de
- * rôle se corrige par révocation + recréation, l'email par
- * modifierEmailAgentAction (confirmé deux fois). Chaque
- * correction est journalisée (agent.modifier, avant/après).
- */
 export async function modifierCoordonneesAgentAction(
   id: string,
   _precedent: ResultatModificationCoordonneesAgent | null,
@@ -83,12 +75,6 @@ export async function modifierCoordonneesAgentAction(
   }
 }
 
-/**
- * Change l'email (identifiant de connexion) d'un agent. Exige la
- * confirmation explicite (`confirmation === "oui"`, posée par le
- * dialogue de confirmation) en plus de la saisie : on ne change pas
- * une clé de compte par accident. Journalisé (agent.modifier).
- */
 export async function modifierEmailAgentAction(
   id: string,
   _precedent: ResultatModificationCoordonneesAgent | null,
@@ -133,12 +119,6 @@ export async function modifierEmailAgentAction(
 
 export type ResultatLienMotDePasse = ResultatAction<{ lien: string }>;
 
-/**
- * Génère un lien de réinitialisation de mot de passe pour un agent
- * (mot de passe oublié) : jeton unique, 24 h, choix du mot de passe
- * uniquement, aucune session ouverte. Le lien s'affiche une seule fois,
- * à transmettre à l'agent. Journalisé (agent.lien_mdp).
- */
 export async function genererLienMotDePasseAgentAction(
   id: string,
 ): Promise<ResultatLienMotDePasse> {
@@ -160,9 +140,6 @@ export async function genererLienMotDePasseAgentAction(
     revalidatePath(`/admin/agents/${id}`);
     return { ok: true, lien: `/premier-acces/${acces.jeton}` };
   } catch (erreur) {
-    // ouvrirLienMotDePasseAgent ne jette que NON_AUTORISE (acteur non
-    // autorisé ou cible non éligible) : mappé explicitement, le reste est
-    // une panne inconnue.
     if (erreur instanceof StaffError && erreur.code === "NON_AUTORISE") {
       return { ok: false, erreur: "Lien impossible : compte non éligible (agent validé exigé)." };
     }
@@ -188,12 +165,6 @@ async function idPrincipalConnecte(): Promise<string | null> {
   return moi.id;
 }
 
-/**
- * Coupe toutes les sessions d'un agent, partout, tout de suite
- * (appareil volé, doute sur qui détient l'accès). Seul un
- * administrateur principal validé agit, cible AGENT. Tracé
- * (agent.deconnecter, nombre de sessions coupées).
- */
 export async function deconnecterPartoutAgentAction(
   id: string,
 ): Promise<ResultatOperationSimple> {
@@ -247,12 +218,6 @@ export async function deconnecterPartoutAgentAction(
   return { ok: true };
 }
 
-/**
- * Révoque un lien de réinitialisation encore en attente (fuite,
- * erreur de destinataire). Même autorisation que la génération :
- * seul un administrateur principal validé. Journalisé
- * (invitation.revoquer, comme tout lien).
- */
 export async function revoquerLienMotDePasseAgentAction(
   accesId: string,
 ): Promise<ResultatOperationSimple> {
@@ -271,8 +236,6 @@ export async function revoquerLienMotDePasseAgentAction(
   } catch (erreur) {
     if (erreur instanceof StaffError) {
       if (erreur.code === "INVITATION_REVOQUEE") {
-        // Idempotence : révoquer deux fois = même état, pas d'erreur
-        // (même contrat que les autres révocations de lien).
         revalidatePath("/admin/agents");
         return { ok: true };
       }

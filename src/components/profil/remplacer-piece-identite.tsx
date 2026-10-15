@@ -10,13 +10,6 @@ import {
 } from "@/components/clients/depot-piece-identite";
 import { deposerPieceIdentiteAction } from "@/app/(auth)/pending/actions-depot";
 
-/**
- * Remplacement de la pièce depuis le profil client (compte VALIDE).
- * Replié par défaut (« Remplacer ma pièce ») : le formulaire partagé se
- * déplie au clic. L'ancienne pièce n'est jamais supprimée — fichier et
- * ligne restent au dossier — et le compte reste validé : la nouvelle
- * pièce est à revoir par un humain.
- */
 export function RemplacerPieceIdentite() {
   const router = useRouter();
   const [ouvert, setOuvert] = React.useState(false);

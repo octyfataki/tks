@@ -1,9 +1,3 @@
-/**
- * Statut du compte client pour /pending (S1-03).
- * Source unique : GET /api/mon-compte/piece — état du compte, motif de
- * refus éventuel, identité de la session et pièces déjà déposées.
- * Anonyme ou staff : non connecté.
- */
 export type StatutCompte =
   | { connecte: false; horsLigne?: boolean }
   | {
@@ -48,9 +42,6 @@ export async function lireStatutCompte(): Promise<StatutCompte> {
       pieces: Array.isArray(donnees.pieces) ? donnees.pieces : [],
     };
   } catch {
-    // Coupure réseau : on le signale pour ne pas confondre avec un
-    // anonyme (session absente) — /pending garde la fiche connue
-    // hors-ligne au lieu de renvoyer vers /sign-in à tort.
     return { connecte: false as const, horsLigne: true };
   }
 }

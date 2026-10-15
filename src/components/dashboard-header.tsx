@@ -34,34 +34,21 @@ import {
 import { cn } from "@/lib/utils"
 
 export type DashboardHeaderProps = {
-  /** Fil d'Ariane de la page visitée, à gauche. Chaque page fournit ses segments. */
   filAriane?: React.ReactNode
-  /** Action métier principale, à droite (ex. lien « Comptes à valider »). */
   action?: React.ReactNode
-  /** Cible du bouton d'aide — l'aide de l'espace courant. */
   aideHref?: string
-  /** Panneau de notifications. Défaut : celui de l'espace administrateur. */
   notifications?: React.ReactNode
-  /** Recherche. Défaut : palette au périmètre administrateur. */
   recherche?: React.ReactNode
   className?: string
 }
 
 export type ElementNotification = {
-  /** Libellé affiché, vocabulaire du domaine (GLOSSARY.md). */
   etiquette: string
   icone: LucideIcon
-  /** Destination. Absente = écran pas encore construit, bouton désactivé. */
   href?: string
-  /** Raccourci explicite pour désactiver sans retirer l'écran. */
   desactive?: boolean
 }
 
-/**
- * Tiroir de notifications, piloté par son contenu : chaque espace
- * (administrateur, agent de service) fournit ses écrans, le tiroir ne
- * connaît que des étiquettes et des destinations.
- */
 export function PanneauNotifications({
   elements,
   voirTout,
@@ -163,11 +150,6 @@ function NotificationsAdmin() {
   )
 }
 
-/**
- * Raccourcis de la journée au comptoir : servir, encaisser, valider.
- * Chaque entrée mène à une page agent qui existe — pas de lien
- * « voir tout », l'espace agent n'a pas de page de notifications.
- */
 export const ELEMENTS_NOTIFICATIONS_AGENT: ElementNotification[] = [
   {
     etiquette: "Comptes à valider",
@@ -186,12 +168,6 @@ export const ELEMENTS_NOTIFICATIONS_AGENT: ElementNotification[] = [
   },
 ]
 
-/**
- * Raccourcis de l'espace client : dossier, commandes, soldes. Seul
- * « Votre compte » existe aujourd'hui ; les deux autres s'affichent
- * désactivés tant que S5 et S6 ne sont pas construites — jamais de
- * lien mort.
- */
 export const ELEMENTS_NOTIFICATIONS_CLIENT: ElementNotification[] = [
   {
     etiquette: "Votre compte et solde",
@@ -248,12 +224,10 @@ export function DashboardHeader({
       data-slot="dashboard-header"
       className={cn("flex w-full items-center gap-2", className)}
     >
-      {/* Fil d'Ariane de la page visitée, à gauche. */}
       {filAriane ? (
         <div className="hidden min-w-0 flex-1 md:block">{filAriane}</div>
       ) : null}
 
-      {/* Actions à droite, recherche à l'extrême droite. */}
       <div className="ml-auto flex shrink-0 items-center gap-2">
         {action}
         <DateDuJour />

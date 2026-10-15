@@ -50,8 +50,6 @@ const FIL_ARIANE_PAR_CHEMIN: Record<string, Segment[]> = {
 };
 
 function segmentsPourChemin(chemin: string): Segment[] {
-  // Dossier d'un client : /agent/clients/[id] — l'identifiant n'est
-  // jamais affiché tel quel dans le fil d'Ariane.
   if (
     chemin.startsWith("/agent/clients/") &&
     chemin !== "/agent/clients/validation"
@@ -71,16 +69,6 @@ function segmentsPourChemin(chemin: string): Segment[] {
   ];
 }
 
-/**
- * En-tête fixe de l'espace agent de service. Monté une seule fois dans
- * /agent/layout : il persiste pendant la navigation client-side, seul le
- * contenu sous lui change. Le fil d'Ariane est déduit du chemin courant.
- *
- * Même coquille que l'espace administrateur (DashboardHeader) : date du
- * jour, taux du jour (saisie proposée quand la permission `taux.saisir`
- * est accordée, lecture seule sinon), notifications au périmètre du
- * comptoir, aide de l'espace agent, recherche au périmètre agent.
- */
 export function AgentHeader() {
   const chemin = usePathname();
   const segments = segmentsPourChemin(chemin);
@@ -92,7 +80,6 @@ export function AgentHeader() {
         orientation="vertical"
         className="mr-1 data-vertical:h-4 data-vertical:self-auto"
       />
-      {/* Mobile : le fil d'Ariane est masqué, le logo garde le repère du site. */}
       <BrandLogo height={24} className="shrink-0 md:hidden" />
       <DashboardHeader
         className="min-w-0 flex-1"

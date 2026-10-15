@@ -1,14 +1,5 @@
 import type { ReactNode } from "react";
 
-/**
- * Encart d'écran à venir dans l'espace agent. La page existe et la
- * navigation y mène, mais la fonction métier arrive avec sa spec (S4 à
- * S6) : l'encart dit quoi, et ce qui viendra. Aucune action métier, aucun
- * appel réseau, aucune lecture BDD — affichage seul.
- *
- * Vocabulaire : GLOSSARY (dossier client, commande, preuve de paiement,
- * paiement, créance — jamais shop, vente, réalisation, facture).
- */
 export function AgentBientot({
   icone,
   titre,
@@ -18,7 +9,6 @@ export function AgentBientot({
   icone: ReactNode;
   titre: string;
   texte: string;
-  /** Ce qui viendra, et avec quelle spec. */
   suite: string;
 }) {
   return (

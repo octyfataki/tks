@@ -16,13 +16,6 @@ import type { ResultatAction } from "@/lib/resultat-action";
 
 export type ResultatDureeInvitation = ResultatAction<{ jours: number }>;
 
-/**
- * Enregistre la durée de validité par défaut d'un lien d'invitation
- * (1–30 jours). Réglage TECHNIQUE : administrateur technique ou principal,
- * toujours VALIDE — le contrôle réel est dans definirReglage, ici on ne
- * fait que résoudre l'auteur depuis la session. Chaque écriture est
- * journalisée (reglage.modifier) dans definirReglage.
- */
 export async function enregistrerDureeInvitationAction(
   _precedent: ResultatDureeInvitation | null,
   donnees: FormData,

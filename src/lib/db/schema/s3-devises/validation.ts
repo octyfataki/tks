@@ -1,16 +1,6 @@
-// S3 — règles pures du taux de change, sans base ni réseau (testables
-// isolément, comme s1-comptes/validation). Le reste — lecture, écriture,
-// autorisation par permission — vit dans src/lib/s3-devises/taux.ts.
-
 export const FUSEAU_KINSHASA = "Africa/Kinshasa";
-/** Borne haute de la colonne `valeur` (INT UNSIGNED MySQL). */
 export const VALEUR_TAUX_MAX = 4_294_967_295;
 
-/**
- * Jour civil courant à Kinshasa, en AAAA-MM-JJ. Le foyer fait foi : un taux
- * saisi à 23 h heure de Kinshasa appartient à la journée qui se termine là,
- * pas à celle du serveur (UTC).
- */
 export function dateDuJourKinshasa(maintenant: Date = new Date()): string {
   const parties = new Intl.DateTimeFormat("en-CA", {
     timeZone: FUSEAU_KINSHASA,
@@ -23,7 +13,6 @@ export function dateDuJourKinshasa(maintenant: Date = new Date()): string {
   return `${lire("year")}-${lire("month")}-${lire("day")}`;
 }
 
-/** Un jour valide : AAAA-MM-JJ et une date calendaire réelle. */
 export function jourValide(jour: string): boolean {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(jour)) return false;
   const [annee, mois, quantieme] = jour.split("-").map(Number);
@@ -37,7 +26,6 @@ export function jourValide(jour: string): boolean {
   );
 }
 
-/** Une valeur de taux : entier strictement positif, tenant dans INT UNSIGNED. */
 export function valeurTauxValide(valeur: unknown): valeur is number {
   return (
     typeof valeur === "number" &&
@@ -47,11 +35,6 @@ export function valeurTauxValide(valeur: unknown): valeur is number {
   );
 }
 
-/**
- * Décision pure d'autorisation selon le seul couple (rôle, état).
- * Renvoie `null` quand la décision dépend d'une permission individuelle
- * (agent) — la couche applicative tranche alors par `aPermission`.
- */
 export function rolePeutSaisirTaux(
   role: string,
   etat: string,

@@ -16,9 +16,6 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn(), refresh: vi.fn() }),
 }));
 
-// Mon compte, sans onglets : tout est visible en lecture seule, dans le même
-// langage que la fiche /admin/list/[id]. On vérifie l'affichage conditionnel
-// par type d'utilisateur, et l'absence de termes interdits (GLOSSARY).
 describe("ProfilUtilisateur", () => {
   it("affiche le compte client sans dossier avec l'état vide normatif", () => {
     render(

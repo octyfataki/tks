@@ -4,10 +4,6 @@ import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { revoquerLienMotDePasseAgentAction } from "./actions";
 
-/**
- * Révoque un lien de réinitialisation encore en attente (fuite,
- * erreur de destinataire). Le lien devient définitivement inutilisable.
- */
 export function BoutonRevoquerLien({ accesId }: { accesId: string }) {
   const [message, setMessage] = React.useState<string | null>(null);
   const [enCours, demarrer] = React.useTransition();

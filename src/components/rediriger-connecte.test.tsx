@@ -13,8 +13,6 @@ vi.mock("next/navigation", () => ({
   usePathname: () => "/sign-up",
 }));
 
-// Miroir du GardienSession pour les pages publiques : déjà connecté → son
-// espace ; INCONNU (anonyme, réseau coupé) → on reste, sans verdict.
 describe("RedirigerConnecte", () => {
   afterEach(() => {
     vi.clearAllMocks();

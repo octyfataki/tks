@@ -29,14 +29,6 @@ async function agentConnecte(): Promise<{ id: string } | null> {
   return lignes[0] ?? null;
 }
 
-/**
- * /agent/clients/validation — File des comptes clients à trancher, au
- * comptoir (S1-03). Même guichet que /admin/clients/validation : pièce à
- * voir, valider sur pièce, refuser avec motif (réversible), attester au
- * comptoir, révoquer le suspect (définitif). Exige la permission
- * `client.valider`. Valider n'est pas rattacher : un compte validé non
- * rattaché ne voit toujours aucun dossier et aucun solde.
- */
 export default async function AgentValidationComptesClientsPage() {
   const agent = await agentConnecte();
   if (!agent || !(await aPermission(agent.id, "client.valider"))) {

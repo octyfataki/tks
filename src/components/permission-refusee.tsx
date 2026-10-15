@@ -1,12 +1,5 @@
 import { ShieldAlertIcon } from "lucide-react"
 
-/**
- * Écran de permission refusée : remplace l'ancien simple `<p>` gris par un
- * panneau informatif qui dit quoi, pourquoi, et quoi faire.
- *
- * Conçu pour l'admin technique qui atterrit sur une page sans avoir le droit
- * d'agir — le message doit être clair, pas un mur.
- */
 export function PermissionRefusee({
   titre,
   detail,

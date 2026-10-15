@@ -3,11 +3,6 @@
 import { useState } from "react";
 import { FileTextIcon } from "lucide-react";
 
-/**
- * Vignette d'une pièce d'identité. Un fichier introuvable ou illisible ne
- * doit pas casser la fiche : l'image cède la place à l'icône du document,
- * aux mêmes dimensions, pour que le verdict reste lisible.
- */
 export function VignettePiece({
   pieceId,
   mime,

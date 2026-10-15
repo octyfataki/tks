@@ -8,7 +8,6 @@ import {
 } from "./formulaires-decision";
 import { TYPES_PIECE } from "@/lib/s1-comptes/pieces-fichiers";
 
-// Les server actions tirent db + env (DATABASE_URL) : hors sujet ici.
 vi.mock("./actions", () => ({
   validerCompteClientAction: vi.fn(),
   refuserCompteClientAction: vi.fn(),
@@ -16,12 +15,6 @@ vi.mock("./actions", () => ({
   revoquerCompteClientAction: vi.fn(),
 }));
 
-/**
- * S1-03 : quatre gestes au guichet — valider sur pièce déposée, refuser
- * avec motif (réversible), attester la vue au comptoir, révoquer le
- * compte suspect (définitif). Aucun ne doit exiger autre chose que son
- * propre justificatif.
- */
 describe("formulaires de décision", () => {
   it("valide sur la pièce désignée, sans champ à saisir", () => {
     render(<FormulaireValider compteId="c1" pieceId="p1" />);

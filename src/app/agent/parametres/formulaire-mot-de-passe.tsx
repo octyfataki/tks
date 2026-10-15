@@ -34,20 +34,6 @@ const TEXTE_FORCE: Record<NiveauForceMotDePasse, string> = {
   4: "text-emerald-600 dark:text-emerald-400",
 };
 
-/**
- * Changement de mot de passe de l'agent de service.
- *
- * better-auth exige le mot de passe actuel et révoque les autres sessions
- * (`revokeOtherSessions`) : sur un téléphone partagé au comptoir, changer
- * son mot de passe coupe les sessions ouvertes ailleurs.
- *
- * Retour en direct : jauge de force sous le nouveau mot de passe et
- * contrôle de correspondance sous la confirmation — la validation
- * bloquante reste celle de `validerChangementMotDePasse` à l'envoi.
- *
- * Limite honnête : l'opération exige le réseau. Hors-ligne, elle attendra
- * la file durable de S8 — le formulaire le dit et se désactive sans réseau.
- */
 export function FormulaireMotDePasse() {
   const [enCours, setEnCours] = useState(false);
   const [erreur, setErreur] = useState<string | null>(null);

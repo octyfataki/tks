@@ -8,10 +8,6 @@ export const metadata: Metadata = {
     "File d'attente et caisse rapide : servir les commandes des clients.",
 };
 
-/**
- * Commandes (espace agent). La page existe ; la file d'attente, le
- * verrou local et la caisse rapide arrivent avec S5. Aucune écriture ici.
- */
 export default function AgentCommandesPage() {
   return (
     <div className="flex flex-1 flex-col">

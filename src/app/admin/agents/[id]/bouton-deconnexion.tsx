@@ -4,12 +4,6 @@ import * as React from "react";
 import { Button } from "@/components/ui/button";
 import { deconnecterPartoutAgentAction } from "./actions";
 
-/**
- * Coupe toutes les sessions d'un agent, partout, tout de suite
- * (appareil volé, doute sur qui détient l'accès). L'agent se
- * reconnecte avec son mot de passe actuel — sauf compte suspendu
- * ou révoqué, qui reste fermé. Tracé au journal.
- */
 export function BoutonDeconnexionPartout({
   id,
   nbSessions,

@@ -19,12 +19,6 @@ import {
   type ResultatModificationCoordonneesAgent,
 } from "./actions";
 
-/**
- * Change l'email (identifiant de connexion) d'un agent de service.
- * L'email est la clé du compte : la saisie seule ne suffit pas, un
- * dialogue affiche ancien → nouveau et exige une confirmation
- * explicite. La garde réelle (unicité comprise) est côté serveur.
- */
 export function FormulaireEmailAgent({
   id,
   emailInitial,

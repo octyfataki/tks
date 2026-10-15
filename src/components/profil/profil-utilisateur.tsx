@@ -12,18 +12,6 @@ import {
 } from "./piece-identite-liste";
 import { SectionModifiable } from "@/app/admin/list/[id]/section-modifiable";
 
-// Mon compte : affichage seul, piloté par la session.
-// Parti pris (maquettes Hang Minh + Sara Smith) :
-// - bandeau d'identité en deux zones : qui (avatar, nom, pastille de rôle,
-//   ligne de suivi avec point d'état) puis repères (matricule, téléphone,
-//   email, rôle), séparés par un filet vertical ;
-// - cartes au titre souligné d'un filet, crayon visible mais désactivé
-//   (lecture seule, jamais un cul-de-sac silencieux) ;
-// - colonne de gauche large (coordonnées), colonne de droite empilée
-//   (sécurité, mission, traçabilité), comme la seconde maquette.
-// Vocabulaire : GLOSSARY (compte, dossier client, jamais shop / vente /
-// réalisation). Affichage seul : aucune écriture directe (invariant 1).
-
 export type CompteProfil =
   | { type: "CLIENT" }
   | {
@@ -38,7 +26,6 @@ export type DossierRattacheProfil = {
   adresse?: string | null;
 };
 
-/** Session better-auth encore valide : appareil et adresse suffisent, jamais le secret. */
 export type SessionEnCoursProfil = {
   id: string;
   appareil?: string | null;
@@ -55,31 +42,18 @@ export type ProfilUtilisateurProps = {
   compte: CompteProfil;
   dossier?: DossierRattacheProfil | null;
   secondFacteurActif?: boolean | null;
-  /** Étiquette de l'appareil déclaré, quand le second facteur est configuré. */
   appareilSecondFacteur?: string | null;
-  /** Matricule court (8 premiers caractères de l'identifiant staff). */
   matricule?: string | null;
-  /** Date de création du compte. */
   creeLe?: Date | string | null;
-  /** Qui a créé le compte, libellé prêt à afficher. */
   creePar?: string | null;
-  /** Sessions encore valides du compte connecté (vide = aucune). */
   sessions?: SessionEnCoursProfil[] | null;
-  /** Identifiant de la session courante (marquée « Cet appareil »). */
   sessionActuelleId?: string | null;
-  /** Zone de correction nom + téléphone (son propre compte, espace admin). */
   formulaireCoordonnees?: ReactNode;
-  /** Correction autorisée (compte VALIDE, droits suffisants) ? */
   peutModifierCoordonnees?: boolean;
-  /** Motif affiché quand le crayon est désactivé. */
   motifCoordonneesVerrouillees?: string;
-  /** Change à chaque enregistrement : le formulaire repart des valeurs fraîches. */
   cleCoordonnees?: string;
-  /** Activation du second facteur (carte Sécurité, page profil). */
   formulaireSecondFacteur?: ReactNode;
-  /** Pièces d'identité du compte, client uniquement (absent = non chargé). */
   piecesIdentite?: PieceIdentiteProfil[] | null;
-  /** Remplacement de la pièce (carte Pièce d'identité, profil client). */
   formulairePieceIdentite?: ReactNode;
   className?: string;
 };

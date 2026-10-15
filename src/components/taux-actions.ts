@@ -15,18 +15,9 @@ import {
 } from "@/lib/s3-devises/taux";
 import type { ResultatAction } from "@/lib/resultat-action";
 
-// Server actions du taux du jour, branchées sur la pastille d'en-tête. La
-// lecture résout aussi la permission, pour que le modal s'ouvre en lecture
-// seule sans `taux.saisir` (S3, test navigateur). L'écriture délègue toute
-// l'autorité à la couche applicative et ne renvoie qu'un résultat affichable.
-
-/** Taux affiché par la pastille (vocabulaire de `TauxDuJour`). */
 export type TauxAffiche = {
-  /** Francs pour 1 USD. */
   valeur: number;
-  /** Jour de saisie, AAAA-MM-JJ. */
   dateSaisie: string;
-  /** Nom de l'auteur, si connu. */
   saisiPar?: string;
 };
 
@@ -44,7 +35,6 @@ type CompteCourant = {
   nom: string;
 };
 
-/** Compte staff de la session en cours, ou `null` (client, visiteur). */
 async function compteCourant(): Promise<CompteCourant | null> {
   const session = await auth.api.getSession({ headers: await headers() });
   const utilisateurId = session?.user?.id;
@@ -63,11 +53,6 @@ async function compteCourant(): Promise<CompteCourant | null> {
   return { ...compte, nom: session?.user?.name ?? "" };
 }
 
-/**
- * Lit le taux du jour et dit si la personne connectée peut le saisir. Toute
- * panne renvoie un échec affichable : la pastille retombe alors en lecture
- * seule sans inventer de taux.
- */
 export async function chargerTauxDuJourAction(): Promise<ResultatChargementTaux> {
   try {
     const [taux, compte] = await Promise.all([
@@ -106,10 +91,6 @@ function messageTaux(erreur: TauxError): string {
   }
 }
 
-/**
- * Saisit le taux du jour. Refus lisible si la personne n'est pas autorisée,
- * si le jour porte déjà un autre taux, ou si le journal est indisponible.
- */
 export async function enregistrerTauxDuJourAction(
   valeur: number,
 ): Promise<ResultatEnregistrementTaux> {
@@ -122,8 +103,6 @@ export async function enregistrerTauxDuJourAction(
       saisiParId: compte.id,
       valeur,
     });
-    // Les trois espaces montent la même pastille : revalider pour que tout
-    // écran serveur lisant le taux voie la nouvelle valeur.
     revalidatePath("/admin", "layout");
     revalidatePath("/agent", "layout");
     revalidatePath("/clients", "layout");

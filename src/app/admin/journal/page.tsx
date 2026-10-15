@@ -25,13 +25,6 @@ function texteJson(valeur: unknown): string | null {
   }
 }
 
-/**
- * /admin/journal — Lecture du journal d'audit : les 50 derniers événements,
- * dans le même dessin que les registres d'invitations (barre d'outils en
- * carte, tableau à lignes dépliables, pagination locale).
- * La consultation n'est pas journalisée (sinon boucle — S2 issue 01).
- * Append-only garanti par la base : lecture seule, aucun bouton d'écriture.
- */
 export default async function JournalPage() {
   const session = await auth.api.getSession({ headers: await headers() });
   const userId = session?.user?.id ?? "";
@@ -58,11 +51,6 @@ export default async function JournalPage() {
     .orderBy(desc(journalAudit.recuLe))
     .limit(LIGNES);
 
-  // S2 issue 15 — fil « erreur → correction ». Les corrections des lignes
-  // affichées (leurs `conteste_id` pointent vers elles) et les lignes
-  // contestées par les corrections affichées (hors fenêtre des 50 si
-  // anciennes) sont chargées avec, pour que le fil se remonte dans les deux
-  // sens sans deviner. Lecture seule, comme le reste de la page.
   const idsAffiches = evenements.map((e) => e.id);
   const lignesCorrections =
     idsAffiches.length > 0
@@ -95,11 +83,6 @@ export default async function JournalPage() {
       : [];
   const toutes = [...lignesContestees, ...evenements];
 
-  // S2-05 (issue #13) — résolution des identités à la lecture (aucune
-  // écriture au journal, schéma inchangé). `acteurId` vise `comptes_staff.id` ;
-  // le nom affichable vit sur `user` via `betterAuthUserId` (même pattern que
-  // lireTauxDuJour). Les identifiants concernés (agent visé, compte client
-  // visé) sont résolus dans les mêmes requêtes pour formuler le résumé.
   const idsActeurs = [
     ...new Set(
       toutes.map((e) => e.acteurId).filter((id): id is string => !!id),
@@ -176,8 +159,6 @@ export default async function JournalPage() {
       },
       nomsStaff,
     );
-    // Libellé de l'enregistrement visé : nom ou téléphone résolu quand il
-    // existe, identifiant brut sinon (jamais inventé).
     let entiteLibelle = nomEntite(e.entite);
     if (e.entite === "compte_client" && e.entiteId) {
       const telephone = telephonesClients.get(e.entiteId);

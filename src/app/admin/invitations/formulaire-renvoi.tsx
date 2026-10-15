@@ -11,11 +11,6 @@ import {
 
 const ETAT_INITIAL: ResultatRenvoiAcces | null = null;
 
-/**
- * Renvoie un lien de premier accès quand le précédent a expiré (ou a déjà
- * servi). Le nouveau lien apparaît sous le bouton, prêt à copier : usage
- * unique, 24 h, choix du mot de passe uniquement.
- */
 export function FormulaireRenvoiAcces({
   cibleId,
   nom,

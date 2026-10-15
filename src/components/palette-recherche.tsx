@@ -43,12 +43,9 @@ import { Kbd } from "@/components/ui/kbd"
 import { cn } from "@/lib/utils"
 
 export type Suggestion = {
-  /** Libellé affiché, vocabulaire du domaine (GLOSSARY.md). */
   etiquette: string
-  /** Synonymes de recherche, sans aucun terme interdit du glossaire. */
   motsCles?: string[]
   icone: LucideIcon
-  /** Destination. Absente = écran pas encore construit (tranches S4+). */
   href?: string
 }
 
@@ -57,13 +54,6 @@ export type GroupeSuggestions = {
   elements: Suggestion[]
 }
 
-/**
- * Points de recherche de la palette, calqués sur le menu et les specs :
- * - Pilotage et Accès : les écrans qui existent déjà ;
- * - Clients et crédit (S4), Opérations (S5–S6), Trésorerie et taux (S3, S7) :
- *   affichés désactivés avec « Bientôt » tant que la tranche n'est pas
- *   construite — jamais de lien mort.
- */
 const GROUPES_ADMIN: GroupeSuggestions[] = [
   {
     titre: "Pilotage",
@@ -193,11 +183,6 @@ const GROUPES_ADMIN: GroupeSuggestions[] = [
   },
 ]
 
-/**
- * Points de recherche de l'espace agent de service, calqués sur la
- * navigation terrain : servir, encaisser, valider. Chaque entrée mène
- * à une page qui existe — aucun lien mort, aucun « Bientôt ».
- */
 export const GROUPES_AGENT: GroupeSuggestions[] = [
   {
     titre: "Pilotage",
@@ -281,12 +266,6 @@ export const GROUPES_AGENT: GroupeSuggestions[] = [
   },
 ]
 
-/**
- * Points de recherche de l'espace client, calqués sur sa navigation :
- * dossier client, statut et plafond (S4), commandes et preuves de
- * paiement (S5), paiements et soldes (S6). Seuls les écrans qui
- * existent portent un `href` — le reste s'affiche « Bientôt ».
- */
 export const GROUPES_CLIENT: GroupeSuggestions[] = [
   {
     titre: "Pilotage",
@@ -371,7 +350,6 @@ export function PaletteRecherche({
 }: {
   placeholder?: string
   className?: string
-  /** Périmètre de recherche : administrateur par défaut, agent si fourni. */
   groupes?: GroupeSuggestions[]
 }) {
   const router = useRouter()
@@ -395,10 +373,6 @@ export function PaletteRecherche({
 
   return (
     <>
-      {/*
-       * Mobile et tablette : icône seule. Pas de clavier physique, donc pas
-       * de raccourci ⌘K à annoncer — le champ complet reste au bureau.
-       */}
       <Button
         type="button"
         variant="outline"

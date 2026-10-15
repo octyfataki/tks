@@ -1,14 +1,6 @@
 export const THEME_STORAGE_KEY = "tks-theme"
 export const DEFAULT_THEME = "system" as const
 
-/**
- * Script inline exécuté avant le premier paint (dans <head> du layout
- * serveur). Il pose la classe `.dark` en synchrone pour éviter le flash :
- * le provider client prend ensuite le relais sans toucher au DOM au mount
- * si la valeur est déjà correcte.
- *
- * Volontairement sans dépendance : il doit rester du JS brut sérialisable.
- */
 export function getThemeInitScript(
   storageKey: string = THEME_STORAGE_KEY,
   defaultTheme: string = DEFAULT_THEME

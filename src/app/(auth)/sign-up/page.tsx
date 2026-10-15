@@ -17,24 +17,6 @@ import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/toast";
 import { inscrireCompteClient } from "./actions";
 
-// S1-01 (câblée) : inscription réservée aux clients, en une seule
-// page — nom complet, email, téléphone, mot de passe — puis dépôt de la pièce
-// d'identité juste après la soumission (second écran, même page /sign-up).
-// La soumission crée réellement le compte en EN_ATTENTE_VALIDATION via la
-// server action (utilisateur auth + ligne comptes_clients en transaction) :
-// la validation reste humaine, sur pièce vue par un humain (comptoir ou
-// pièce déposée ici). Aucune session n'est ouverte à l'inscription : le
-// client se connecte ensuite et atterrit sur /pending.
-// Les infos saisies sont mémorisées en session (clé `tks-inscription`, sans le
-// mot de passe) pour que /pending affiche le récapitulatif et l'avancement.
-// Aucune auto-inscription staff : administrateur (bootstrap, ou création par
-// un administrateur existant via `creerAdminPrincipal`) et agent de service
-// (lien d'invitation /invite/[token]) ne passent jamais par /sign-up.
-// Le proxy bloque toujours `/api/auth/sign-up` en public : l'inscription ne
-// passe jamais par le endpoint better-auth, seulement par la server action.
-// Le téléphone est la clé métier unique du compte (refus de doublon) ; il
-// reste un simple contact non-unique sur le dossier financier S4, jamais la
-// clé du dossier (GLOSSARY, invariant de séparation).
 const CLE_INSCRIPTION = "tks-inscription";
 const VERSION_INSCRIPTION = 1;
 
@@ -57,7 +39,6 @@ function memoriserInscription(patch: Record<string, string | number>) {
       JSON.stringify({ v: VERSION_INSCRIPTION, data: { ...data, ...patch } }),
     );
   } catch {
-    // Stockage indisponible : la maquette continue sans récapitulatif.
   }
 }
 
@@ -104,7 +85,6 @@ export default function SignUpPage() {
         champ instanceof HTMLInputElement ? champ.files?.[0] : undefined;
       memoriserInscription({ piece: fichier?.name ?? "comptoir" });
       setChargement(true);
-      // Maquette : latence simulée pour rendre l'état de chargement visible.
       await new Promise((r) => setTimeout(r, 600));
       router.push("/pending");
     },

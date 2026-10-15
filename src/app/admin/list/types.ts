@@ -1,5 +1,3 @@
-// Ligne d'admin telle qu'affichée dans /admin/list. Dates sérialisées
-// (ISO) pour traverser la frontière serveur → client (export CSV).
 export type LigneAdmin = {
   id: string;
   nom: string;

@@ -1,18 +1,10 @@
-// S2 issue 15 — quelles actions correctives une ligne du journal admet-elle ?
-// Pur, sans E/S : la page journal l'utilise pour proposer (ou expliquer
-// l'absence de) la contestation. Toute correction proposée ici s'exécute
-// comme une NOUVELLE ligne liée (`contesteId`) — jamais une suppression ni
-// une modification (invariants 8 et 10).
-
 export type CorrectiveProposee = {
-  /** Clé stable, reprise par l'interface pour appeler le bon geste. */
   cle:
     | "client.revoquer"
     | "permission.retirer"
     | "permission.socle.retirer"
     | "agent.suspendre"
     | "agent.revoquer";
-  /** Libellé du bouton, vocabulaire GLOSSARY. */
   libelle: string;
 };
 
@@ -20,11 +12,6 @@ export type ContestationPossible =
   | { contestable: true; correctives: CorrectiveProposee[] }
   | { contestable: false; explication: string };
 
-/**
- * Correctives applicables à une ligne RÉUSSIE. Une ligne échouée n'a rien
- * produit : la contester n'aurait aucun sens. Une action inconnue n'offre
- * rien plutôt qu'un bouton mensonger.
- */
 export function correctivesPour(input: {
   typeAction: string;
   statut: string;

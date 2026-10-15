@@ -129,7 +129,6 @@
   }
 }
 
-/* Ticket d'attente (/pending) : une seule entrée en fondu, jamais rejouée. */
 @keyframes tks-ticket-enter {
   from {
     opacity: 0;
@@ -149,7 +148,6 @@
   }
 }
 
-/* Chargeur générique (AppLoader) : 100 % CSS, sans JS client. */
 @keyframes tks-loader-orbit {
   to {
     transform: rotate(360deg);
@@ -201,13 +199,6 @@
   }
 }
 
-/* Barre de progression des navigations (nprogress).
-   La barre reprend le primary du site (--primary) : elle suit le thème en
-   clair comme en sombre, sans couleur codée en dur. Le cercle tournant est
-   retiré côté JS (showSpinner: false) et la traînée lumineuse ici.
-   `body` devant le sélecteur : même spécificité que la bibliothèque,
-   c'est l'ordre d'import qui trancherait — ici notre règle gagne toujours,
-   en dev comme en build. */
 body #nprogress .bar {
   background: var(--primary);
   height: 2px;
@@ -222,10 +213,6 @@ body #nprogress .peg {
   }
 }
 
-/* Curseur de durée (invitations) : piste remplie jusqu'à la valeur,
-   pouce fond uni + anneau primary, lisible en clair comme en sombre.
-   Le remplissage webkit passe par --tks-range-track (style inline) ;
-   Firefox utilise range-progress. */
 .tks-range {
   -webkit-appearance: none;
   appearance: none;

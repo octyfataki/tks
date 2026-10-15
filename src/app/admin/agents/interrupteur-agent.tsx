@@ -18,12 +18,6 @@ import {
   suspendreAgentAction,
 } from "./actions";
 
-/**
- * Interrupteur d'état d'un agent de service. VALIDE (ON) : cliquer
- * propose suspendre (réversible) ou révoquer (définitif). SUSPENDU :
- * cliquer propose lever la suspension ou révoquer. REVOQUE (OFF) :
- * toujours désactivé, aucun retour.
- */
 export function InterrupteurAgent({
   id,
   nom,
@@ -37,7 +31,6 @@ export function InterrupteurAgent({
   etat: "VALIDE" | "SUSPENDU" | "REVOQUE";
   desactive?: boolean;
   motifDesactive?: string;
-  /** Masque la révocation (reléguée en zone dangereuse en bas de page). */
   sansRevocation?: boolean;
 }) {
   const [ouvert, setOuvert] = React.useState(false);

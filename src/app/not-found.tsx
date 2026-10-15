@@ -9,11 +9,6 @@ export const metadata: Metadata = {
     "Cette page n'existe pas ou a été déplacée. Vos commandes, créances et paiements sont inchangés.",
 };
 
-/**
- * Page 404 (composant serveur : aucun JS client, affichable hors-ligne).
- * Vocabulaire GLOSSARY : commande, créance, paiement. Jamais shop,
- * réalisation, vente, facture ni virtuel.
- */
 export default function Introuvable() {
   return (
     <EcranErreur

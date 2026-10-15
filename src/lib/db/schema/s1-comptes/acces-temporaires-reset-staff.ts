@@ -6,11 +6,6 @@ import {
   varchar,
 } from "drizzle-orm/mysql-core";
 
-// S1 stories 11-13 + docs/db/01-admin-comptes.md §5.
-// Reset staff par admin principal, sur pièce d'identité vue (pieceId NOT NULL).
-// Accès temporaire : courte durée, scope limité au choix du mot de passe
-// (vérifié applicatif), révoqué dès le nouveau mot de passe (consommeLe).
-// Tant qu'ouvert, avertissement visible (avertissementAffiche).
 export const accesTemporairesResetStaff = mysqlTable(
   "acces_temporaires_reset_staff",
   {

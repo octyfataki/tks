@@ -1,10 +1,5 @@
 import Link from "next/link";
 
-// Espace client — écran d'accueil. Contenu seul : la coquille navigation +
-// ClientHeader vit dans /clients/layout et persiste pendant la navigation.
-// Le dossier client, la ligne de crédit et les commandes sont le sujet de
-// S4 : on pose ici l'espace, sa porte, et la destination de connexion d'un
-// client.
 export default function ClientsAccueilPage() {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">

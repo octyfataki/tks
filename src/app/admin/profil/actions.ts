@@ -38,13 +38,8 @@ export type ResultatDeconnexionAutres =
   | { ok: true; coupees: number }
   | { ok: false; erreur: string };
 
-// Dev (option C) : les photos téléversées vivent sur disque sous
-// `public/avatars/` (ignoré par git), la colonne `user.image` ne garde que
-// l'URL (`/avatars/<id>.jpg`). Les illustrations de la galerie (SVG
-// minuscules) restent en dataURL, sans fichier.
 const DOSSIER_AVATARS = path.join(process.cwd(), "public", "avatars");
 
-/** Supprime un ancien fichier d'avatar local (chemin `/avatars/...` uniquement). */
 async function supprimerFichierAvatar(ancienneImage: string | null): Promise<void> {
   if (!ancienneImage?.startsWith("/avatars/")) return;
   const nom = path.basename(ancienneImage);
@@ -52,15 +47,9 @@ async function supprimerFichierAvatar(ancienneImage: string | null): Promise<voi
   try {
     await rm(path.join(DOSSIER_AVATARS, nom), { force: true });
   } catch {
-    // Fichier déjà absent : la base reste la source de vérité.
   }
 }
 
-/**
- * Modifie la photo du compte connecté (lui seul). Le client envoie déjà une
- * image compressée (canvas 256px, JPEG) ; le serveur recompresse avec sharp
- * (256px cover, JPEG q80) pour garantir le gabarit, puis écrit le fichier.
- */
 export async function modifierPhotoProfilAction(
   _precedent: ResultatPhotoProfil | null,
   donnees: FormData,
@@ -123,7 +112,6 @@ export async function modifierPhotoProfilAction(
   return { ok: true, inchange: false };
 }
 
-/** Retire la photo du compte connecté (fichier + référence, retour aux initiales). */
 export async function supprimerPhotoProfilAction(): Promise<ResultatPhotoProfil> {
   const session = await auth.api.getSession({ headers: await headers() });
   const userId = session?.user?.id;
@@ -139,27 +127,6 @@ export async function supprimerPhotoProfilAction(): Promise<ResultatPhotoProfil>
   return { ok: true, inchange: false };
 }
 
-/**
- * Corrige le nom affiché + le téléphone contact du compte connecté (lui
- * seul). Même périmètre que la fiche /admin/list/[id] : nom + téléphone
- * uniquement. Ouvert à tout compte staff VALIDE (administrateurs comme
- * agents de service) sur son PROPRE compte — l'auto-correction est
- * autorisée sans risque de verrouillage ; les pouvoirs de gestion
- * (corriger autrui) restent réservés par peutModifierAdmin. Email, rôle,
- * état et secrets ne passent jamais par ici (révocation + recréation
- * tracées).
- *
- * Sans journal d'audit dans cette branche : la correction sera journalisée
- * (avant/après) quand la couche S2 arrivera (invariant 8).
- */
-/**
- * Branche client de `modifierMonProfilAction` : nom + téléphone du compte
- * connecté (lui seul), compte `VALIDE` exigé. Le téléphone est la clé du
- * compte client : forme canonique obligatoire (jamais vide, jamais de
- * séparateurs stockés) et unicité vérifiée contre les autres comptes
- * avant écriture — la contrainte unique en base reste le dernier rempart,
- * pas le premier message.
- */
 async function modifierMonProfilClient(
   donnees: FormData,
   userId: string,
@@ -250,8 +217,6 @@ export async function modifierMonProfilAction(
   if (!moi) {
     return await modifierMonProfilClient(donnees, userId);
   }
-  // Auto-correction : son propre compte, état VALIDE, tous rôles staff.
-  // (La gestion d'autrui reste gardée par peutModifierAdmin côté fiches.)
   if (moi.etat !== "VALIDE") {
     return { ok: false, erreur: "Modification impossible (compte non modifiable)." };
   }
@@ -299,12 +264,6 @@ export async function modifierMonProfilAction(
   return { ok: true, inchange: false };
 }
 
-/**
- * Coupe les autres sessions du compte connecté, partout sauf ici
- * (appareil perdu, doute sur qui détient l'accès). La session courante
- * survit : on reste connecté. Sans journal d'audit dans cette branche :
- * sera tracé (session.deconnecter-autres, avant/après) avec la couche S2.
- */
 export async function deconnecterAutresSessionsAction(): Promise<ResultatDeconnexionAutres> {
   const session = await auth.api.getSession({ headers: await headers() });
   const userId = session?.user?.id;
@@ -352,17 +311,6 @@ export type ResultatDesactivationSecondFacteur =
   | { ok: true }
   | { ok: false; erreur: string };
 
-/**
- * Enregistre la traçabilité du second facteur après enrôlement OTP réussi
- * côté better-auth (code SMS ou email vérifié). Auto-déclaration du titulaire
- * lui-même depuis sa page profil — tout compte `VALIDE`, staff comme client
- * (issue #3, optionnel pour tous) — tracée avec creePar = soi. Le
- * remplacement d'un facteur perdu reste réservé au principal
- * (remplacerFacteur2faAdmin). Un seul facteur actif par compte : la seconde
- * activation est refusée, jamais écrasée.
- *
- * Sans journal d'audit dans cette branche : sera tracé avec la couche S2.
- */
 export async function confirmerSecondFacteurAction(
   nomAppareil: string,
 ): Promise<ResultatConfirmationSecondFacteur> {
@@ -462,19 +410,6 @@ export async function confirmerSecondFacteurAction(
   return { ok: true };
 }
 
-/**
- * Enregistre la traçabilité de la désactivation du second facteur, après
- * désactivation effective côté better-auth (`authClient.twoFactor.disable`,
- * mot de passe vérifié par better-auth). Miroir de
- * `confirmerSecondFacteurAction` : le client désactive d'abord (le mot de
- * passe y est exigé et vérifié), puis cette action vérifie que better-auth
- * n'exige plus de second facteur avant de marquer la traçabilité
- * (`facteurs2faAdmin` / `facteurs2faClients` → `actif = false`). Aucune ligne
- * n'est supprimée : la désactivation se lit dans l'historique. Idempotente :
- * désactiver deux fois rend le même état, pas d'erreur.
- *
- * Sans journal d'audit dans cette branche : sera tracé avec la couche S2.
- */
 export async function desactiverSecondFacteurAction(): Promise<ResultatDesactivationSecondFacteur> {
   const session = await auth.api.getSession({ headers: await headers() });
   const userId = session?.user?.id;
@@ -504,10 +439,6 @@ export async function desactiverSecondFacteurAction(): Promise<ResultatDesactiva
   if (client && !compteClientPeutActiverSecondFacteur(client.etat)) {
     return { ok: false, erreur: "Second facteur réservé aux comptes validés." };
   }
-  // La désactivation better-auth doit avoir eu lieu avant : un appel direct
-  // sans passer par `twoFactor.disable` (mot de passe vérifié) est refusé,
-  // pour ne jamais afficher « À activer » pendant que la connexion exige
-  // encore un code.
   const lignesUtilisateur = await db
     .select({ twoFactorEnabled: user.twoFactorEnabled })
     .from(user)

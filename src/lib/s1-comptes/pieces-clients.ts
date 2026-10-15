@@ -14,12 +14,6 @@ import {
 import type { StatutPiece } from "./fiche-client";
 import { lignesEcrites } from "./resultat-mysql";
 
-// Dépôt de pièce d'identité client (S1-03) : le client dépose depuis
-// l'application (image compressée côté client, ou PDF). Le fichier vit
-// sous donnees/pieces-clients (jamais commité, jamais le binaire en base),
-// la ligne porte qui l'a vue et quand — posés par la validation, pas par
-// le dépôt : une pièce déposée n'est pas une pièce vue.
-
 export type ErreurPiece =
   | "NON_AUTORISE"
   | "COMPTE_NON_ELIGIBLE"
@@ -35,7 +29,6 @@ export class PieceError extends Error {
   }
 }
 
-/** Compte client du connecté, ou null (anonyme, staff, inconnu). */
 export async function compteClientConnecte(): Promise<{
   id: string;
   etat: string;
@@ -52,13 +45,6 @@ export async function compteClientConnecte(): Promise<{
   return compte ? { id: compte.id, etat: compte.etat } : null;
 }
 
-/**
- * Dépose la pièce d'un compte EN_ATTENTE_VALIDATION, REFUSE ou VALIDE. Un
- * compte VALIDE remplace sa pièce sans changer d'état : l'ancienne ligne
- * et son fichier restent au dossier, la nouvelle est à revoir. Un compte
- * REVOQUE ne dépose plus rien. Écrit le fichier puis la ligne : échec
- * d'écriture = rien en base.
- */
 export async function deposerPieceIdentiteClient(input: {
   compteClientId: string;
   typePiece: string;
@@ -109,7 +95,6 @@ export async function deposerPieceIdentiteClient(input: {
   return { id };
 }
 
-/** Pièces d'un compte, la plus récente d'abord. */
 export async function lirePiecesCompte(compteClientId: string) {
   return db
     .select({
@@ -127,16 +112,6 @@ export async function lirePiecesCompte(compteClientId: string) {
     .orderBy(desc(piecesIdentiteClients.createdAt));
 }
 
-/**
- * Retire une pièce refusée par le client qui la remplace (ticket 11).
- * Rien n'est supprimé : la ligne reste, le fichier reste sur le disque, et
- * le motif de refus reste lisible. Retirer, c'est dire « celle-là ne
- * compte plus » — pas l'effacer.
- *
- * L'écriture est gardée par le statut attendu : une pièce déjà retirée,
- * ou jamais refusée, ne peut pas l'être deux fois. Renvoie le nombre de
- * lignes écrites.
- */
 export async function retirerPiece(
   pieceId: string,
   compteId: string,
@@ -155,15 +130,6 @@ export async function retirerPiece(
   return lignesEcrites(resultat);
 }
 
-/**
- * Marque la pièce vue par l'humain qui tranche, et lui donne son verdict
- * (dans sa transaction). Valider un compte sur une pièce, c'est aussi
- * l'accepter : un seul état, jamais deux vérités.
- *
- * L'écriture est gardée par le statut attendu : deux personnes qui
- * statuent la même pièce au même instant ne peuvent pas s'écraser, la
- * seconde ne touche aucune ligne. Renvoie le nombre de lignes écrites.
- */
 export async function statuerPiece(
   pieceId: string,
   adminId: string,

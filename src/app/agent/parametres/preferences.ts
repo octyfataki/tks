@@ -1,20 +1,7 @@
-/**
- * Préférences d'appareil de l'agent de service (/agent/parametres).
- *
- * Stockage local uniquement (`localStorage`), jamais synchronisé : ce sont
- * des réglages du téléphone, pas des écritures métier. Sur un téléphone
- * partagé au comptoir (S1), ils valent pour l'appareil, pas pour le compte.
- *
- * Le thème passe par `ThemeProvider` (clé `tks-theme`) ; le reste vit sous
- * la clé unique ci-dessous. Le parse est tolérant : toute valeur illisible
- * retombe sur les défauts, jamais d'écran cassé.
- */
-
 export const CLE_PREFERENCES_AGENT = "tks-agent-preferences";
 
 export type DensiteComptoir = "confortable" | "compacte";
 
-/** Canal d'un signal sur l'appareil : combine avec les interrupteurs son / vibration. */
 export type CanalNotification = "son-vibration" | "vibration" | "silencieuse";
 
 export const CANAUX_NOTIFICATION: { valeur: CanalNotification; etiquette: string }[] = [
@@ -23,7 +10,6 @@ export const CANAUX_NOTIFICATION: { valeur: CanalNotification; etiquette: string
   { valeur: "silencieuse", etiquette: "Silencieuse" },
 ];
 
-/** Clés stables des événements configurables. */
 export type CleNotification =
   | "validations"
   | "encaissements"
@@ -33,7 +19,6 @@ export type CleNotification =
   | "taux";
 
 export type ReglageNotification = {
-  /** L'événement déclenche un signal sur l'appareil. */
   actif: boolean;
   canal: CanalNotification;
 };
@@ -100,9 +85,7 @@ export const CATALOGUE_NOTIFICATIONS: {
 ];
 
 export type PreferencesAgent = {
-  /** Densité de la file d'attente et de la caisse rapide (S5). */
   densite: DensiteComptoir;
-  /** Signaux par événement, appareil uniquement. */
   notifications: NotificationsAgent;
 };
 
@@ -159,7 +142,6 @@ function lireNotifications(valeur: unknown): NotificationsAgent {
   };
 }
 
-/** Parse tolérant : objet partiel ou illisible -> défauts complétés. */
 export function lirePreferences(valeur: unknown): PreferencesAgent {
   if (typeof valeur !== "object" || valeur === null) {
     return { ...PREFERENCES_DEFAUT };

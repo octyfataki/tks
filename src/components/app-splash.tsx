@@ -4,13 +4,6 @@ import { useEffect, useState } from "react";
 import { AppLoader } from "@/components/app-loader";
 import { cn } from "@/lib/utils";
 
-/**
- * Écran de démarrage de l'application.
- *
- * Affiché une seule fois, au chargement initial : le layout racine ne se
- * remonte pas pendant la navigation côté client, donc ce voile ne réapparaît
- * jamais ensuite. Il s'efface en fondu puis se retire du DOM.
- */
 export function AppSplash() {
   const [fondu, setFondu] = useState(false);
   const [retire, setRetire] = useState(false);

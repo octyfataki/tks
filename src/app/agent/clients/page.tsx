@@ -36,7 +36,6 @@ const ETAT_PAR_FILTRE: Record<FiltreCompte, string> = {
   revoque: "REVOQUE",
 };
 
-/** Agent connecté : son id staff, ou null. Le layout garantit AGENT VALIDE. */
 async function agentConnecte(): Promise<{ id: string } | null> {
   const session = await auth.api.getSession({ headers: await headers() });
   const userId = session?.user?.id;
@@ -49,11 +48,6 @@ async function agentConnecte(): Promise<{ id: string } | null> {
   return lignes[0] ?? null;
 }
 
-/**
- * /agent/clients — Registre des comptes clients (connexions), même registre
- * que /admin/clients : une connexion par ligne, téléphone = clé du compte,
- * aucun solde. Exige la permission `client.valider` (socle ou individuelle).
- */
 export default async function AgentComptesClientsPage({
   searchParams,
 }: {

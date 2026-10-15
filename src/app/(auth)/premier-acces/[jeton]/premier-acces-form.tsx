@@ -12,8 +12,6 @@ import {
 import { PasswordInput } from "@/components/password-input";
 import { choisirMotDePassePremierAcces } from "./actions";
 
-// Choix du mot de passe via lien de premier accès : le lien n'ouvre aucune
-// session — après ce choix, connexion normale (email + mot de passe + 2FA).
 export function PremierAccesForm({ jeton }: { jeton: string }) {
   const [erreur, setErreur] = useState<string | null>(null);
   const [chargement, setChargement] = useState(false);

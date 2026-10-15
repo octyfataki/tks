@@ -2,9 +2,6 @@ import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { EtiquettesBadge, PastilleEtiquette } from "./etiquettes-badge";
 
-// S4 issue #7 — le badge montre les libellés français, jamais un code brut.
-// Un code inconnu n'affiche rien.
-
 describe("PastilleEtiquette", () => {
   it("affiche le libellé français de l'étiquette", () => {
     render(<PastilleEtiquette code="BON_PAYEUR" />);

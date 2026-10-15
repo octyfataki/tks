@@ -20,17 +20,6 @@ import { confirmerSecondFacteurAction } from "@/app/admin/profil/actions";
 type Etape = "appareil" | "sms" | "courriel" | "codes";
 type Methode = "sms" | "email";
 
-/**
- * Active le second facteur OTP du compte connecté (tout compte VALIDE,
- * staff comme client, depuis sa page profil — issue #3) : mot de passe,
- * choix de la méthode (SMS prioritaire, email en repli), code à 6 chiffres,
- * puis confirmation. Le même code part sur les deux méthodes (voir sendOTP
- * dans src/lib/auth.ts) ; l'utilisateur saisit celui qu'il reçoit. La
- * traçabilité (méthode nommée) est enregistrée côté serveur après
- * vérification. Sans TOTP : aucune application à installer, aucun QR à
- * scanner. SMS sans numéro de contact = repli email explicite, jamais de
- * code perdu.
- */
 export function ActivationSecondFacteur({
   email,
   telephone,
@@ -77,8 +66,6 @@ export function ActivationSecondFacteur({
       setErreur("Votre mot de passe est exigé pour activer le second facteur.");
       return;
     }
-    // SMS sans numéro de contact = repli email explicite (issue #3) : le
-    // code part quand même (l'envoi couvre l'email), jamais de code perdu.
     const sansNumero = methode === "sms" && !(telephone ?? "").trim();
     setRepliEmail(sansNumero);
     setErreur(null);

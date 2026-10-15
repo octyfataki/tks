@@ -29,7 +29,6 @@ function initiales(nom: string): string {
   );
 }
 
-/** Compresse en carré 256px JPEG (cover), comme la preuve de paiement : plafonnée. */
 async function compresserPhoto(
   fichier: File,
   suivreEtape?: (etape: "lecture" | "compression") => void,
@@ -60,7 +59,6 @@ async function compresserPhoto(
   }
 }
 
-/** Avatar du bandeau : le crayon ouvre une fenêtre (dépôt + galerie). */
 export function PhotoProfilModifiable({ nom, avatarUrl }: { nom: string; avatarUrl?: string | null }) {
   const [ouvert, setOuvert] = React.useState(false);
   const [apercu, setApercu] = React.useState<string | null>(null);
@@ -92,9 +90,6 @@ export function PhotoProfilModifiable({ nom, avatarUrl }: { nom: string; avatarU
     setSurvolDepot(false);
     setEtapeCompression(null);
   }
-
-  // La fenêtre se referme dans l'action ci-dessus quand l'enregistrement
-  // réussit : pas d'effet ici (pas de setState dans un effet).
 
   async function traiterFichier(fichier: File | undefined) {
     if (!fichier) return;
@@ -140,14 +135,12 @@ export function PhotoProfilModifiable({ nom, avatarUrl }: { nom: string; avatarU
             {initiales(nom)}
           </AvatarFallback>
         </Avatar>
-        {/* Voile + icône au survol ou au focus (bureau) : repère que l'image est modifiable. */}
         <span
           aria-hidden
           className="pointer-events-none absolute inset-0 flex items-center justify-center rounded-full bg-black/45 text-white opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
         >
           <CameraIcon className="size-5" />
         </span>
-        {/* Pastille caméra permanente : tout l'ensemble est un bouton, donc cliquer l'avatar OU la pastille ouvre la modification. */}
         <span
           aria-hidden
           className="pointer-events-none absolute -right-1 -bottom-1 flex size-7 items-center justify-center rounded-full border bg-card text-muted-foreground shadow-sm"

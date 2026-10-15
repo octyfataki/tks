@@ -5,14 +5,6 @@ import { useRouter } from "next/navigation";
 import { RefreshCwIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-/**
- * L'autre sens de la communication : quand le client dépose une pièce
- * depuis /pending, la file /admin/clients/validation doit le voir sans
- * rechargement manuel. Scrutation douce (router.refresh toutes les
- * 10 s + retour d'onglet + reconnexion), jamais de boucle quand l'onglet
- * est caché. Hors-ligne : le refresh échoue en silence, la file gardée
- * reste lisible.
- */
 export function RafraichissementFile() {
   const routeur = useRouter();
   const [actualiseLe, setActualiseLe] = React.useState<Date | null>(() => new Date());
@@ -24,7 +16,6 @@ export function RafraichissementFile() {
       routeur.refresh();
       setActualiseLe(new Date());
     } finally {
-      // Le refresh serveur n'a pas de promesse : on retombe vite.
       window.setTimeout(() => setEnCours(false), 600);
     }
   }, [routeur]);

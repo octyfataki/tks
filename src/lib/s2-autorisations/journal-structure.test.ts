@@ -2,10 +2,6 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
-// S2 issue 01 — test structurel : l'immuabilité du journal est garantie
-// par la base (triggers), pas par l'application. Échoue dès que la
-// migration perd un trigger — exactement le jour où la promesse cesserait
-// d'être vraie.
 describe("S2 — journal immuable par la base", () => {
   const migration = readFileSync(
     resolve(process.cwd(), "drizzle/0006_careless_daimon_hellstrom.sql"),

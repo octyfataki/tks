@@ -26,12 +26,6 @@ function messageErreur(code: PieceError["code"], detail: string): string {
   }
 }
 
-/**
- * Dépose la pièce d'identité du client connecté (image ou PDF). Le compte
- * doit pouvoir encore déposer (en attente, refusé, ou validé qui remplace
- * sa pièce — voir `etatPieceDeposable`) : un compte révoqué ne dépose plus
- * rien. Un compte validé reste validé ; la nouvelle pièce est à revoir.
- */
 export async function deposerPieceIdentiteAction(
   _precedent: ResultatDepotPiece | null,
   donnees: FormData,
@@ -61,14 +55,8 @@ export async function deposerPieceIdentiteAction(
       octets,
     });
     revalidatePath("/pending");
-    // Le dépôt alimente la file du distributeur : sans ces deux
-    // revalidations, /admin/clients/validation garderait la ligne « sans
-    // pièce » jusqu'au rechargement manuel.
     revalidatePath("/admin/clients/validation");
     revalidatePath("/admin/clients");
-    // Le client validé remplace sa pièce depuis son profil : la carte
-    // « Pièce d'identité » doit montrer la nouvelle pièce sans rechargement
-    // manuel.
     revalidatePath("/clients/profil");
     return { ok: true, pieceId: deposee.id };
   } catch (erreur) {

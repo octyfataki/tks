@@ -37,21 +37,6 @@ export type LigneFileValidation = {
   piece: PieceFile;
 };
 
-/**
- * File de validation : même dessin que le registre des comptes — tableau
- * dense, cachets d'état, lignes dépliables, chiffres tabulaires. Ici chaque
- * ligne est un compte bloqué : la ligne dépliée est le guichet. En haut du
- * guichet, la pièce déposée par le client (image à voir, PDF à ouvrir) ; en
- * dessous, les gestes : valider sur pièce, refuser avec motif (réversible),
- * attester au comptoir, et révoquer le compte suspect (définitif — la
- * « suppression » de la file, sans effacement physique : REVOQUE, journalisé,
- * motif conservé). Sans pièce, valider est impossible et le guichet le dit —
- * le serveur l'impose aussi. Aucune colonne d'argent : ni solde, ni dette,
- * ni plafond.
- *
- * `listeComptesHref` : chemin de la liste des comptes dans l'espace courant
- * (/admin/clients ou /agent/clients).
- */
 export function FileValidation({
   lignes,
   maintenant,
@@ -59,7 +44,6 @@ export function FileValidation({
 }: {
   lignes: LigneFileValidation[];
   maintenant: number;
-  /** Lien vers la liste des comptes dans l'espace courant. */
   listeComptesHref: string;
 }) {
   const [depliees, setDepliees] = React.useState<ReadonlySet<string>>(

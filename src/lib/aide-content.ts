@@ -1,17 +1,3 @@
-/**
- * Annuaire de raccourcis de la page d'aide (/aide).
- *
- * Trois rubriques, une par niveau : Aide Client, Aide Agent, Aide Admin.
- * Quand on est perdu, on vient y chercher le raccourci vers une page ou
- * une fonctionnalité liée à son niveau.
- *
- * Règles (mêmes que la palette de recherche) :
- * - un raccourci ne porte un `href` que si l'écran existe vraiment ;
- * - sans `href`, l'entrée s'affiche « Bientôt » — jamais de lien mort ;
- * - vocabulaire GLOSSARY.md strict : « client » jamais « shop », « commande »
- *   jamais « réalisation », « preuve de paiement » jamais « facture ».
- */
-
 import type { Profil } from "@/lib/s1-comptes/role-session";
 import { DESTINATION_CONNEXION } from "@/lib/s1-comptes/role-session";
 
@@ -20,7 +6,6 @@ export type AideNiveau = "Client" | "Agent" | "Admin";
 export type AideRaccourci = {
   label: string;
   description: string;
-  /** Absent = écran pas encore construit : affiché « Bientôt », sans lien. */
   href?: string;
   motsCles?: string[];
 };
@@ -208,7 +193,6 @@ export const AIDE_SECTIONS: AideSectionNiveau[] = [
   },
 ];
 
-/** Écrans annoncés mais pas encore construits : rappel commun, sans liens. */
 export const AIDE_BIENTOT: { theme: string; entrees: string[] }[] = [
   {
     theme: "Clients et crédit",
@@ -224,11 +208,6 @@ export const AIDE_BIENTOT: { theme: string; entrees: string[] }[] = [
   },
 ];
 
-/**
- * Répartiteur d'aide (logique pure, testée) : chaque type d'utilisateur
- * connecté atterrit sur l'aide de son niveau, jamais sur celle d'un autre.
- * Anonyme, inconnu ou non validé : retour à la connexion.
- */
 export function destinationAide(profil: Profil): string {
   if (profil.type === "CLIENT") return "/clients/aide";
   if (profil.type === "STAFF" && profil.etat === "VALIDE") {

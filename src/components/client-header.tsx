@@ -51,17 +51,6 @@ function segmentsPourChemin(chemin: string): Segment[] {
   ];
 }
 
-/**
- * En-tête fixe de l'espace client. Monté une seule fois dans
- * /clients/layout : il persiste pendant la navigation client-side, seul le
- * contenu sous lui change. Le fil d'Ariane est déduit du chemin courant.
- *
- * Même coquille que les espaces administrateur et agent de service
- * (DashboardHeader) : date du jour, taux du jour en lecture seule — un
- * client n'a jamais la permission `taux.saisir` — notifications à son
- * périmètre (dossier, commandes, soldes), aide de l'espace client,
- * recherche au périmètre client.
- */
 export function ClientHeader() {
   const chemin = usePathname();
   const segments = segmentsPourChemin(chemin);
@@ -73,7 +62,6 @@ export function ClientHeader() {
         orientation="vertical"
         className="mr-1 data-vertical:h-4 data-vertical:self-auto"
       />
-      {/* Mobile : le fil d'Ariane est masqué, le logo garde le repère du site. */}
       <BrandLogo height={24} className="shrink-0 md:hidden" />
       <DashboardHeader
         className="min-w-0 flex-1"

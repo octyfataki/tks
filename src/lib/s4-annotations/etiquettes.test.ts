@@ -6,9 +6,6 @@ import {
   ETIQUETTES_FERMEES,
 } from "@/lib/s4-annotations/etiquettes";
 
-// S4 issue #7 — la liste des étiquettes est fermée et vit dans le code.
-// Aucune étiquette ne s'invente à l'exécution : l'inconnue vaut refus.
-
 describe("S4 — liste fermée des étiquettes d'annotation", () => {
   it("contient exactement les trois repères opérationnels", () => {
     expect(ETIQUETTES_FERMEES.map((e) => e.code)).toEqual([

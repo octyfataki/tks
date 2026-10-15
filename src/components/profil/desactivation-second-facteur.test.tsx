@@ -35,8 +35,6 @@ async function confirmer() {
   });
 }
 
-// Issue #5 : le second facteur est optionnel pour tous, donc désactivable
-// par le titulaire lui-même depuis sa page profil, au mot de passe.
 describe("DesactivationSecondFacteur", () => {
   afterEach(() => {
     vi.clearAllMocks();

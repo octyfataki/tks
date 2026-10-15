@@ -5,9 +5,6 @@ import {
   messageErreurSecondFacteur,
 } from "./erreurs-auth";
 
-// Garantie commune : aucun libellé anglais de Better Auth ne doit atteindre
-// l'utilisateur, quel que soit le chemin d'erreur.
-
 describe("messageErreurConnexion", () => {
   it("traduit les identifiants incorrects", () => {
     expect(

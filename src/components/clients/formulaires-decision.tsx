@@ -32,11 +32,6 @@ function MessageResultat({ resultat }: { resultat: ResultatDecision | null }) {
   );
 }
 
-/**
- * Valider porte l'identifiant de la pièce vue : aucun champ à saisir, le
- * geste confirme « j'ai vu cette pièce ». Succès = la file se recharge sans
- * la ligne (revalidation serveur).
- */
 export function FormulaireValider({
   compteId,
   pieceId,
@@ -64,10 +59,6 @@ export function FormulaireValider({
   );
 }
 
-/**
- * Refuser porte un motif obligatoire, montré au client — qui pourra être
- * validé plus tard sans ressaisie (REFUSE → VALIDE reste ouvert).
- */
 export function FormulaireRefuser({ compteId }: { compteId: string }) {
   const [resultat, action, enCours] = useActionState(
     refuserCompteClientAction,
@@ -102,11 +93,6 @@ export function FormulaireRefuser({ compteId }: { compteId: string }) {
   );
 }
 
-/**
- * Attester avoir vu la pièce physique au comptoir : le client venu avec sa
- * pièce ne repart pas bredouille faute de dépôt numérique. Le type est coché
- * en liste fermée, jamais saisi librement ; la vue est journalisée.
- */
 export function FormulaireAttesterComptoir({
   compteId,
 }: {
@@ -147,15 +133,6 @@ export function FormulaireAttesterComptoir({
   );
 }
 
-/**
- * Révoquer un compte suspect (fraude, usurpation, pièce falsifiée…). C'est
- * la « suppression » de la file : aucun effacement physique (invariant 10,
- * journal immuable) — le compte passe en REVOQUE, définitif, sort de la
- * file, reste visible dans la liste des comptes avec le filtre « Révoqués ».
- * Le motif est obligatoire et conservé. Réservé au doute grave : pour un
- * simple doute réparable (pièce illisible), préférer le refus, réversible
- * sans ressaisie.
- */
 export function FormulaireRevoquer({ compteId }: { compteId: string }) {
   const [resultat, action, enCours] = useActionState(
     revoquerCompteClientAction,
