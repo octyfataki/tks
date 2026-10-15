@@ -2,271 +2,170 @@ Status: ready-for-agent
 
 # S4 — Clients et lignes de crédit
 
+## Statut de cette révision
+
+Cette révision remplace le modèle de « dossier client » manipulé séparément du compte.
+Le client métier est **la boutique elle-même**, gérée par son propriétaire. Le compte
+est un moyen d'accès ; il ne porte pas les données financières. Le parcours normal
+ne comporte plus de rattachement manuel systématique.
+
 ## Problem Statement
 
-Dans le prototype Excel, un client est **une chaîne de caractères dans une
-colonne**. Cela produit trois défauts immédiatement visibles :
+Le prototype Excel représentait le client par un texte, ce qui fusionnait les homonymes,
+ne bornait pas le crédit et ne permettait pas de gérer l'identité et l'entrée d'un client.
 
-1. **Les homonymes sont indiscernables.** Deux entreprises qui s'appellent
-   « Alimentation Chez Marie » à Kinshasa et à Lubumbashi sont le même client
-   pour la feuille. Leurs dettes sont additionnées. Le total est faux et personne
-   ne s'en aperçoit.
-2. **Le crédit est illimité.** Rien dans le prototype ne dit combien un client
-   peut devoir simultanément. Le chef compte de mémoire, ce qui tient jusqu'au
-   premier client qui dépasse la mesure.
-3. **Rien ne distingue un bon payeur d'un mauvais.** Il n'y a pas de statut. Tout
-   le monde a les mêmes droits, donc tout le monde peut prendre du crédit.
+La première conception a répondu à ces problèmes en séparant le compte et le dossier,
+puis en exigeant leur rattachement manuel. Cette séparation impose une opération
+supplémentaire à chaque inscription sans correspondre au parcours attendu du propriétaire
+d'une petite boutique : se connecter et gérer directement les opérations de sa boutique.
 
-Et le prototype ne gère pas du tout l'entrée d'un nouveau client : il n'y a ni
-formulaire, ni identité, ni contact.
+Le nouveau modèle doit conserver une identité métier stable et un historique financier
+unique, tout en distinguant l'authentification de l'autorisation d'accéder à un profil
+client existant.
 
 ## Solution
 
-Une fiche client réelle, avec une identité unique, et une **ligne de crédit**
-explicite qui borne l'exposition du distributeur.
+Un **profil client** représente une boutique réelle et porte les données métier et
+financières. Un **compte** authentifie la personne qui gère cette boutique.
 
-- Le **dossier client porte un numéro de contact, qui n'est pas unique.** Deux
-  clients peuvent partager un téléphone — c'est courant — et un client peut en
-  changer sans que sa dette bouge. Le dossier est désigné par son **nom** dans
-  toute opération sensible.
-- Le **numéro de téléphone est l'identifiant unique du compte**, en S1, et
-  **seulement** celui-là. Il ne porte aucune donnée financière. Voir « Fiche
-  client » dans les décisions d'implémentation.
-- Chaque client porte un **statut** : `EN_EVALUATION` ou `PRIVILEGIE`. Seul un
-  client `PRIVILEGIE` peut passer des commandes crédit.
-- Chaque client porte un **plafond de crédit**, qui est le maximum qu'il peut
-  devoir **simultanément**.
-- Une **valeur par défaut** s'applique à la création ; l'administrateur
-  principal peut la modifier pour un client donné.
-- Le **plafond restant** est dérivé : `plafond − dette totale`. C'est la seule
-  quantité qui autorise une commande crédit.
-- La promotion est une **décision libre** de l'administrateur principal, sans
-  seuil automatique.
-- Une **pièce d'identité** est collectée à la création du dossier et conservée.
-  Elle sert à deux choses : la réinitialisation de mot de passe et la **validation
-  du compte** (S1). C'est la même pièce, pas deux.
+- Le profil client possède un identifiant interne stable, un nom, une adresse, des
+  coordonnées de contact, un statut de crédit et un plafond.
+- Le compte client utilise un numéro de téléphone normalisé comme identifiant de
+  connexion unique dans l'espace des comptes. Ce numéro n'est pas la clé métier du client.
+- Le profil client porte un numéro de contact indexé mais non unique : plusieurs boutiques
+  peuvent partager un numéro de contact.
+- Lorsqu'une inscription correspond clairement à une nouvelle boutique, le système crée
+  le profil client et son accès dans le même parcours contrôlé, sans étape manuelle de
+  rattachement.
+- Lorsqu'une inscription semble correspondre à une boutique déjà enregistrée, l'accès
+  au profil existant est bloqué jusqu'à confirmation par un agent autorisé. La recherche
+  par téléphone ne suffit jamais à prouver l'identité.
+- La validation de la personne et la confirmation de son droit à gérer une boutique
+  existante sont deux décisions distinctes.
+- Les commandes, créances, paiements et autres opérations sont liées au profil client
+  stable, jamais directement au numéro de téléphone.
+- Le changement de téléphone ne crée pas un nouveau profil et ne déplace aucune dette.
+- Le statut et le plafond de crédit restent des attributs du profil client.
 
-## User Stories
+## User Stories — Identité et accès
 
-### Identité du client
+1. En tant que propriétaire d'une boutique, je veux créer un compte et accéder au profil
+   de ma boutique sans devoir effectuer un rattachement manuel supplémentaire.
+2. En tant que distributeur, je veux que deux boutiques homonymes restent deux profils
+   distincts, afin que leurs opérations financières ne soient jamais fusionnées.
+3. En tant qu'agent, je veux rechercher des profils par plusieurs champs et voir des
+   résultats non ambigus, sans sélection automatique sur la base du seul téléphone.
+4. En tant qu'agent, je veux confirmer qu'un compte validé est autorisé à accéder à un
+   profil client existant avant de révéler son historique ou son solde.
+5. En tant que propriétaire, je veux que mon historique complet reste associé à ma
+   boutique lorsque mon numéro de téléphone change.
+6. En tant que distributeur, je veux connaître la date de création du profil et son
+   auteur, afin de tracer l'origine de l'enregistrement.
+7. En tant que client, je veux soumettre ma pièce d'identité une seule fois pour la
+   vérification initiale, selon le parcours S1.
+8. En tant que distributeur, je veux corriger une association d'accès erronée sans
+   modifier les commandes, créances ou paiements.
+9. En tant que propriétaire, je veux voir uniquement les données du profil client auquel
+   mon compte est autorisé à accéder.
 
-1. As the distributor, I want to create a client's file with a name, a contact number and an address, so that I can start tracking a debt.
-2. As the distributor, I want two clients with the same name to be two different clients, so that their debts are never merged.
-3. As the distributor, I want to find a client by phone number, so that serving someone at the counter takes seconds.
-4. As the distributor, I want to search by several fields at once, so that I find a client whose name I misremember.
-5. As the distributor, I want a phone number to lead me to every client who uses it, so that I do not pick the wrong one.
-6. As the distributor, I want to see when a client's file was created and who created it, so that I can trace the origin of the record.
-7. As a client, I want to upload an identity document once, so that getting my account validated and recovering my password are both easy.
-8. As a client, I want to update my address, so that my file stays current.
-9. As the distributor, I want to see a client's complete history in one place, so that I have the whole file.
+## User Stories — Statut et plafond de crédit
 
-### Statut
+Les règles de statut, plafond, suivi et devise de la version S4 précédente sont conservées :
 
-10. As a client, I want to know my status, so that I understand whether I can order on credit.
-11. As the distributor, I want a new client to start in EN_EVALUATION, so that nobody gets credit before I decide.
-12. As the distributor, I want to promote a client to PRIVILEGIE, so that I can reward a reliable payer.
-13. As the distributor, I want to demote a client to EN_EVALUATION, so that I can stop extending new credit.
-14. As the distributor, I want promotion and demotion to be immediate, so that the change takes effect at once.
-15. As the distributor, I want to see who changed a client's status and when, so that the decision is traceable.
-16. As the distributor, I want to know which clients I demoted and why, so that I can explain it to them.
-17. As a client, I want to know that I can become PRIVILEGIE, so that I know what to aim for.
-18. As the distributor, I want to list clients by status, so that I can find who to promote.
+- Nouveau profil : `EN_EVALUATION`.
+- Seul `PRIVILEGIE` peut passer des commandes crédit.
+- La promotion et la rétrogradation sont des décisions humaines de l'administrateur principal.
+- Le plafond est un montant et une devise ; sa valeur par défaut s'applique aux nouveaux
+  profils et ne modifie pas les profils existants.
+- Le disponible est calculé à partir des créances dans la même devise ; il n'est jamais
+  saisi manuellement.
+- Toute commande qui dépasse le disponible est refusée et auditée.
+- Le profil client conserve l'historique des commandes, créances et paiements.
 
-### Plafond de crédit
+## Décisions d'implémentation
 
-19. As the distributor, I want a default credit ceiling applied to new clients, so that I don't set each one by hand.
-20. As the distributor, I want to set a client's ceiling individually, so that I can adapt it to that client's situation.
-21. As the distributor, I want to change a ceiling at any time, so that I can react to a large order.
-22. As the distributor, I want the change of ceiling to leave existing debt untouched, so that I can't quietly forgive money.
-23. As a client, I want to see my remaining ceiling, so that I know how much more I can order.
-24. As a client, I want to see my remaining ceiling in francs, so that I understand the number.
-25. As a client, I want to be refused cleanly when I exceed my ceiling, so that I know the limit before trying.
-26. As the distributor, I want the remaining ceiling to be shown in the client list, so that I see at a glance who is near their limit.
-27. As the distributor, I want to see clients close to their ceiling, so that I can anticipate.
-28. As the distributor, I want the remaining ceiling to never go negative, so that a display never shows a nonsensical figure.
-29. As the distributor, I want to see the ceiling in the currency it was set in, so that I don't confuse a dollars ceiling with a francs debt.
+### Profil client
 
-### Tri et suivi
+- Le profil possède un identifiant interne stable, généré localement de façon compatible
+  avec le fonctionnement hors-ligne, et un horodatage de création.
+- Le nom est libre et non unique. Il n'est pas une clé primaire et ne suffit pas à
+  distinguer deux boutiques.
+- Le numéro de contact est normalisé, indexé et non unique.
+- Le profil ne stocke pas de copie redondante de la pièce d'identité. Il référence la
+  preuve de vérification conservée par le système de comptes, conformément à S1.
+- Le profil client est l'agrégat auquel sont rattachées les opérations métier et financières.
+  Il ne doit pas être recréé à chaque changement de compte ou de téléphone.
 
-30. As the distributor, I want clients sorted by amount owed, so that I know who to chase first.
-31. As the distributor, I want to see how long a client has been owing, so that I judge urgency.
-32. As the distributor, I want to see clients owing more than N days, so that I can act on the worst ones.
-33. As the distributor, I want to search for a client with an overdue balance, so that I prepare before they arrive.
-34. As a client, I want my file to be private, so that I don't see other clients.
+### Compte et autorisation d'accès
 
-## Implementation Decisions
+- Le téléphone est unique comme identifiant de compte, mais pas comme contact de profil.
+- Un compte client doit être `VALIDE` avant tout accès métier.
+- Pour une nouvelle boutique, le profil peut être créé dans le même parcours après les
+  contrôles nécessaires.
+- Si une correspondance plausible avec un profil existant est détectée, le système ne
+  crée pas automatiquement un second profil et ne donne pas accès au profil existant.
+  Il place le cas en attente de confirmation par un agent autorisé.
+- L'agent doit vérifier la personne et son autorité à gérer la boutique. Le nom, le
+  téléphone et le solde sont des indices de recherche, pas des preuves suffisantes.
+- Une confirmation d'accès est atomique : vérifier que le compte n'a pas déjà accès à un
+  autre profil et que le profil n'a pas déjà un compte principal actif.
+- Les permissions de confirmation et de correction sont explicites et auditées.
+- La correction d'une autorisation d'accès révoque l'accès incorrect ; elle ne supprime
+  ni ne déplace les écritures financières.
+- Un compte `EN_ATTENTE_VALIDATION`, `REFUSE` ou `REVOQUE` n'accède à aucun profil client.
+  Un compte `VALIDE` mais sans autorisation de profil ne voit ni solde, ni commandes,
+  ni créances, ni paiements.
 
-### Fiche client
+### Statut et plafond
 
-- Le dossier porte un **numéro de contact** au format international normalisé,
-  **indexé mais non unique**. Il sert à retrouver un dossier, pas à l'identifier.
-- Le dossier est désigné par son **nom** dans toute opération sensible : le
-  rattachement d'un compte, la validation d'une pièce, la sélection d'un dossier.
-  Confirmer « par son nom » est délibéré : c'est ce qui empêche un numéro mal
-  saisi de faire afficher la dette d'un client à un autre.
-- **Le numéro de téléphone est la clé du compte, jamais celle du dossier** (S1).
-  Il n'est pas l'identifiant de connexion *de la fiche* : c'est la fiche qui est
-  rattachée au compte, pas l'inverse.
-- Le nom est **libre et non unique**. C'est l'erreur du prototype qu'on corrige :
-  ce n'est pas le nom qui identifie un client de façon unique, mais il reste la
-  seule chose qu'un humain peut confirmer à voix haute.
-- La **pièce d'identité** est une image compressée et conservée, dont
-  l'**artefact appartient à S1** : le client la dépose une fois depuis
-  l'application, et c'est la validation du compte qui la référence. Le dossier la
-  **référence**, il ne la duplique pas et ne la redemande pas — un dossier peut
-  donc être rattaché à un compte déjà validé sans nouvelle pièce. Deux usages pour
-  une seule pièce : la validation du compte et la réinitialisation de mot de
-  passe.
-- La fiche porte une **clé générée par l'appareil** et un horodatage local. Une
-  fiche créée hors-ligne est valide dès la synchronisation.
+- Statut : `EN_EVALUATION` ou `PRIVILEGIE`, `EN_EVALUATION` par défaut.
+- Aucun seuil automatique de promotion.
+- La promotion ne crée aucune créance et n'annule aucune dette.
+- Le plafond porte un montant et une devise. Un plafond USD se compare aux créances USD ;
+  un plafond CDF se compare aux créances CDF, sans conversion.
+- Le plafond restant est dérivé, jamais stocké. Le disponible pour commander ne peut pas
+  être négatif ; si le plafond est abaissé sous la dette existante, la situation est
+  signalée explicitement et aucune nouvelle commande crédit n'est autorisée.
+- Changer le plafond ne modifie jamais les dettes existantes.
+- La valeur par défaut est configurable et ne s'applique qu'aux nouveaux profils.
 
-### Statut
+### Contraintes hors-ligne
 
-- Deux valeurs : `EN_EVALUATION`, `PRIVILEGIE`. `EN_EVALUATION` par défaut.
-- **Aucun seuil automatique.** Pas de « trois commandes prépayées à temps
-  suffisent ». La décision est humaine, c'est un choix explicite du client.
-- Le statut est modifiable librement et **immédiatement**. Aucune période
-  d'attente, aucune expiration automatique.
-- Le passage en `PRIVILEGIE` **ne crée pas** de créance et n'annule aucune dette.
-  Il ne change que l'éligibilité à la commande crédit.
-- Un client en `EN_EVALUATION` qui a déjà du crédit non soldé le garde. Le statut
-  ne force aucun remboursement.
+- Les profils, statuts et plafonds ont des identifiants stables et des horodatages locaux.
+- Toute création hors-ligne est marquée en attente de synchronisation.
+- Une confirmation d'accès à un profil existant exige une vérification côté serveur ou
+  une politique hors-ligne explicitement définie ; l'accès ne doit pas être accordé
+  localement sur la seule base d'une correspondance de téléphone.
+- Les conflits concurrents d'accès sont résolus explicitement et audités, jamais en
+  donnant silencieusement accès à deux comptes.
 
-### Plafond de crédit
+## Tests d'acceptation prioritaires
 
-- Le plafond porte **un montant et une devise**, comme toute écriture financière
-  (S3). Il porte **toujours la devise dans laquelle le client contracte**, ce qui
-  est la situation normale : un plafond en USD pour un client qui prend son crédit
-  en dollars.
-- **Un plafond en USD se compare au montant en USD que le client doit**, c'est-à-dire
-  la somme de ses créances en USD, **sans conversion**. Un plafond en CDF se
-  compare de même à ses créances en CDF. Comparer deux montants de même devise
-  évite de dépendre d'un taux qui bouge. Voir ADR-0001 et la note en fin de spec.
-- **Le plafond n'est donc pas une dette, et ne se comporte pas comme elle.** C'est
-  une **décision du distributeur**, pas un fait comptable. Un fait se valorise au
-  taux du jour ; une décision ne se valorise pas. Le plafond et la créance ont
-  chacun leur règle, et les confondre fait dépendre une limite commerciale d'un
-  taux que personne n'a choisi.
-- **Plafond restant = plafond − créances de la même devise**, et **seulement**
-  celles-là. Un client dont les créances sont en USD a un plafond restant calculé
-  sur ses créances en USD ; ses créances en CDF n'entrent pas dans ce calcul.
-- Le plafond restant est **dérivé, jamais stocké**.
-- **Conséquence à écrire dans les écrans** : un plafond en USD affiche son disponible
-  en USD, avec l'équivalent en francs **à titre indicatif**, et la date du taux à
-  côté. Le chiffre qui autorise la commande est le chiffre en USD.
-- **Modifier un plafond ne touche jamais à la dette existante.** Augmenter le
-  plafond n'annule rien ; le diminuer peut rendre le plafond restant négatif,
-  situation qui doit être **affichée telle quelle** et non écrêtée à zéro. On
-  distingue donc deux valeurs : *plafond restant* (qui peut être négatif) et
-  *disponible pour commander* (qui ne l'est jamais). La commande crédit est
-  refusée dans les deux cas.
-- Une valeur **par défaut** vit dans la configuration, modifiable par
-  l'administrateur principal. Elle s'applique aux clients créés après le
-  changement, et **ne modifie pas** les clients existants.
+1. Deux boutiques homonymes restent deux profils et leurs finances restent séparées.
+2. Un téléphone de contact peut apparaître sur plusieurs profils ; un identifiant de
+   compte ne peut pas être dupliqué.
+3. Une nouvelle boutique ne nécessite pas d'étape de rattachement manuel distincte.
+4. Une inscription qui correspond possiblement à un profil existant ne donne pas accès
+   automatiquement et n'expose aucune donnée financière avant confirmation de l'agent.
+5. Un compte non validé ne peut ni commander ni consulter les données financières.
+6. Un compte validé sans autorisation de profil ne voit aucun solde, aucune commande,
+   aucune créance ni aucun paiement.
+7. Une confirmation d'accès vérifie les contraintes un-à-un et est auditée.
+8. Une correction d'accès ne crée, ne supprime et ne déplace aucune écriture financière.
+9. Un changement de téléphone conserve le même identifiant de profil et tout l'historique.
+10. Le statut et le plafond suivent les règles existantes de crédit.
+11. Une commande crédit refusée n'engendre aucune écriture financière et le refus est audité.
+12. Les règles d'accès restent sûres hors-ligne et lors de la synchronisation.
 
-### Contraintes offline
+## Hors périmètre et décisions ouvertes
 
-- Fiche, statut et plafond sont **réplicables**. Identifiant généré sur
-  l'appareil, horodatage local conservé.
-- Le plafond restant est calculable **localement**, à partir des créances
-  embarquées et du taux embarqué. Un agent hors-ligne voit le même chiffre qu'en
-  ligne.
-- Une **promotion hors-ligne** prend effet localement immédiatement et se
-  propage. Deux promotions concurrentes de statuts différents sur le même client
-  produisent un **conflit** de synchronisation, traité selon ADR-0005.
-
-## Testing Decisions
-
-**La couture principale est la couche applicative, contre une vraie base de
-données.**
-
-**Les tests qui comptent :**
-
-- **Deux homonymes sont deux clients.** C'est le test central de cette spec. Deux
-  fiches de même nom, téléphones différents, dettes différentes : le total du
-  portefeuille est la somme des deux, et la recherche par nom les renvoie
-  toutes les deux. Sans ce test, on a réintroduit le bug du prototype.
-- **Le compte est unique, le dossier ne l'est pas.** Un numéro déjà pris comme
-  identifiant de compte est refusé (S1). Un numéro déjà porté par un dossier est
-  accepté : on en ajoute un second. Le test couvre les deux directions, parce que
-  la première protège et que la seconde autorise.
-- **Le dossier se désigne par son nom.** Une recherche par numéro propose plusieurs
-  dossiers, et l ninguno n'est retenu automatiquement. Le test vérifie qu'aucun
-  dossier n'est désigné sans que son nom ait été confirmé — c'est le raccourci qui
-  ferait afficher la dette d'un client à un autre.
-- **Le plafond restant se déduit, jamais saisi.** Le test est indirect : créer
-  une créance fait baisser le plafond restant sans qu'aucune écriture ne touche
-  au plafond.
-- **Diminuer un plafond ne crée pas de créance.** Baisser le plafond sous la
-  dette existante laisse la dette intacte, donne un plafond restant négatif
-  affiché, et un disponible pour commander nul.
-- **Un plafond en USD se compare en USD, jamais converti.** Un client avec un
-  plafond de 200 USD et 180 USD de créances en USD dispose de 20 USD. Un client
-  avec un plafond de 460 000 CDF et 414 000 CDF de créances dispose de 46 000 CDF.
-- **Le changement de taux ne déplace aucun des deux disponibles.** C'est le test qui
-  verrouille la règle, et il échoue si quelqu'un compare deux devises par
-  conversion. Testé **dans les deux sens** : on fait varier le taux et on vérifie
-  que les deux disponibles sont inchangés. Sans le deuxième sens, un test qui
-  compare deux devises par conversion peut passer par hasard, si le taux n'a pas
-  bougé entre les deux mesures.
-- **Le plafond ne s'écrase pas en négatif côté commande.** Une commande crédit
-  qui dépasse le disponible est refusée, et le refus est journalisé — invariant 4
-  du glossaire.
-- **La promotion est immédiate et sans effet de bord.** Passer un client en
-  `PRIVILEGIE` ne crée aucune écriture financière et ne modifie aucune dette. Le
-  test le vérifie en comparant le total du portefeuille avant et après.
-- **La valeur par défaut ne s'applique pas rétroactivement.** Changer la valeur
-  par défaut ne touche pas un client existant, et s'applique au suivant créé.
-- **Hors-ligne, le plafond restant est identique.** Le même client, le même taux
-  embarqué, le même chiffre sans réseau. C'est ce qui garantit qu'un agent
-  n'annonce pas une limite fausse à un client.
-
-## Out of Scope
-
-- **Seuils automatiques de promotion.** Décision explicite de ne pas les faire.
-  Le client n'en veut pas.
-- Expiration automatique du statut `PRIVILEGIE` après une période donnée.
-- Notation, scoring de risque, probabilité de défaut.
-- Contrats, documents signés, gestion de garanties ou de nantissements.
-- Multi-distributeur : un seul, sans cloisonnement supplémentaire.
-- Adresses structurées avec ville, province, code postal décomposé. Le champ est
-  une texte libre pour l'instant.
-- Import en lot de clients depuis un fichier : c'est S10.
-
-## Further Notes
-
-**Le montant du plafond n'est pas tranché.** L'interview a convergé vers « 200 ou
-300, à valider », avec des clients privilégiés qui iraient jusqu'à 500. La valeur
-par défaut est donc **paramétrable**, et c'est ce qui rend le point non bloquant :
-on livre avec une valeur par défaut raisonnable et on la change en configuration
-quand le client tranche. Ne pas coder en dur.
-
-**Attention à la confusion plafond / dette.** Le prototype Excel n'avait pas de
-plafond du tout, et sa « Synthèse Dettes » calculait un reste global par client.
-La tentation sera d'utiliser le reste à payer comme plafond. Ce n'est pas la même
-chose : le plafond est une **décision du distributeur**, le reste à payer est un
-**fait**. Ne pas les confondre dans le modèle.
-
-**Le plafond restant peut être négatif, et c'est voulu.** Quand le distributeur
-diminue un plafond en dessous de la dette déjà contractée, la situation réelle est
-que le client doit plus que la limite. Écrêter à zéro ferait croire que le client
-est dans les clous. Les deux chiffres sont donc affichés séparément — voir les
-décisions ci-dessus. Ce n'est pas une coquetterie d'interface, c'est la seule
-représentation honnête.
-
-**Le plafond n'est pas une dette, et c'est la distinction que le modèle doit tenir.**
-Une version précédente de cette spec disait l'inverse — que le plafond se comporte
-comme une dette et que l'espace disponible varie avec le taux. Elle se contredisait
-elle-même, et les deux affirmations ne pouvaient pas être vraies en même temps.
-
-Le raisonnement qui tranche : **une créance est un fait, un plafond est une
-décision**. Un fait se valorise au taux du jour, c'est ADR-0001. Une décision ne se
-valorise pas : le chef a choisi 200 USD le mardi, et le fait que le dollar vaut
-2 400 le mercredi ne transforme pas sa décision en 240 000. Si le disponible bouge
-avec le taux, un client peut se voir refuser une commande alors qu'on ne la lui avait
-jamais refusée auparavant, sans que personne n'ait pris aucune décision. C'est une
-mauvaise surprise, et elle n'est explicable à personne.
-
-La conséquence est un test qui doit exister : **le changement de taux ne déplace
-aucun plafond restant**. Pas « le disponible n'a pas bougé ce jour-ci », mais « aucun
-taux ne le fait bouger ». Ce test est écrit dans les deux sens, en CDF et en USD.
+- Plusieurs comptes actifs pour une même boutique (non autorisé par défaut ; à décider si
+  des employés du client doivent plus tard accéder au même profil).
+- Plusieurs boutiques gérées par une même personne (modèle de propriété à décider).
+- Procédure exacte de récupération après perte de téléphone.
+- Critères précis qui classent une inscription comme nouvelle boutique ou comme candidate
+  à un profil existant.
+- Pièces ou preuves supplémentaires exigées pour démontrer qu'une personne gère une
+  boutique existante.
+- Comportement exact des créations et confirmations d'accès hors-ligne.
+- Migration des profils historiques du modèle dossier vers le profil client.
