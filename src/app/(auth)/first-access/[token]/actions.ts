@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import type { ResultatAction } from "@/lib/resultat-action";
+import type { ResultatAction } from "@/lib/action-result";
 import {
   StaffError,
   definirMotDePassePremierAcces,

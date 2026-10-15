@@ -14,8 +14,8 @@ import { joursAttente } from "@/components/clients/affichage-client";
 import { BarreOutilsClients } from "@/components/clients/barre-outils-clients";
 import { RegistreComptesClients } from "@/components/clients/registre-comptes-clients";
 import { RafraichissementFile } from "@/components/clients/rafraichissement-file";
-import { PaginationListe } from "@/app/admin/list/pagination-liste";
-import { PermissionRefusee } from "@/components/permission-refusee";
+import { PaginationListe } from "@/app/admin/list/list-pagination";
+import { PermissionRefusee } from "@/components/permission-denied";
 
 const FILTRES_VALIDES = [
   "en-attente",

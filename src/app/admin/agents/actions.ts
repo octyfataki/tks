@@ -21,7 +21,7 @@ import {
   journaliserRefusContestation,
   ERREUR_CONTESTEE_INTROUVABLE,
 } from "@/lib/authorizations/journal";
-import type { ResultatAction as ResultatStandard } from "@/lib/resultat-action";
+import type { ResultatAction as ResultatStandard } from "@/lib/action-result";
 import {
   creerAgent,
   creerInvitationAgent,

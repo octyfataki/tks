@@ -10,7 +10,7 @@ import {
 import { cn } from "@/lib/utils";
 import { joursAttente } from "@/components/clients/affichage-client";
 import { FileValidation } from "@/components/clients/file-validation";
-import { RafraichissementFile } from "./rafraichissement-file";
+import { RafraichissementFile } from "./queue-refresh";
 
 /**
  * /admin/clients/validation — File des comptes clients à trancher (S1-03).

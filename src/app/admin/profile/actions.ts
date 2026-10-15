@@ -24,7 +24,7 @@ import {
   decoderDataUrlPhoto,
   nomFichierAvatar,
   photoProfilValide,
-} from "@/components/profil/photo-profil-validation";
+} from "@/components/profile/profile-photo-validation";
 
 export type ResultatPhotoProfil =
   | { ok: true; inchange: boolean }

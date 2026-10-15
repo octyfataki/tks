@@ -1,7 +1,7 @@
 import { Field, FieldGroup } from "@/components/ui/field";
 import { AuthShell } from "@/components/auth-shell";
 import { lirePremierAcces } from "@/lib/accounts/staff";
-import { PremierAccesForm } from "./premier-acces-form";
+import { PremierAccesForm } from "./first-access-form";
 
 /**
  * /first-access/[token] — la personne créée par lien choisit elle-même son

@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { AideContenu } from "@/components/aide/aide-contenu";
+import { AideContenu } from "@/components/help/help-content";
 
 export const metadata: Metadata = {
   title: "Aide Admin — TKS",

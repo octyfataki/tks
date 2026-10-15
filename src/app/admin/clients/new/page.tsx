@@ -1,9 +1,9 @@
-import { PermissionRefusee } from "@/components/permission-refusee";
+import { PermissionRefusee } from "@/components/permission-denied";
 import {
   acteurPeutOuvrirDossier,
   rechercherDossiers,
-} from "@/modules/clients/depot";
-import { FormulaireDossier } from "./formulaire-dossier";
+} from "@/modules/clients/deposit";
+import { FormulaireDossier } from "./client-record-form";
 
 /**
  * /admin/clients/new — Ouvrir un dossier client (fiche financière :

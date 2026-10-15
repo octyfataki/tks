@@ -86,7 +86,7 @@ export const DETTE_NUMEROTEE: { dossier: string; purge: string }[] = [];
  * numérotée : une exception sans échéance est une permission permanente.
  */
 export const EXCEPTIONS_TESTS: { chemin: string; purge: string }[] = [
-  { chemin: "modules/clients/dossier.test.ts", purge: "démarche en cours" },
+  { chemin: "modules/clients/client-record.test.ts", purge: "démarche en cours" },
   {
     chemin: "modules/clients/table-structure.test.ts",
     purge: "démarche en cours",

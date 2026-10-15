@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { profilSession } from "@/lib/accounts/session-profile";
-import { destinationAide } from "@/lib/aide-content";
+import { destinationAide } from "@/lib/help-content";
 
 /**
  * /help est un répartiteur, pas une page : chaque type d'utilisateur

@@ -14,9 +14,9 @@ import {
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import { PermissionRefusee } from "@/components/permission-refusee";
-import { FormulaireInvitationAdmin } from "../administrators/formulaire-invitation";
-import { FormulaireInvitationAgent } from "./formulaire";
+import { PermissionRefusee } from "@/components/permission-denied";
+import { FormulaireInvitationAdmin } from "../administrators/invitation-form";
+import { FormulaireInvitationAgent } from "./form";
 
 /**
  * /admin/invites — Invitations par lien (?cible=admin|agent, défaut agent).

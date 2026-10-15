@@ -1,4 +1,4 @@
-import { ProfilSquelette } from "@/components/profil";
+import { ProfilSquelette } from "@/components/profile";
 
 /**
  * /admin/profile — état de chargement : même coquille que la page

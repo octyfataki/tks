@@ -10,15 +10,15 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Cachet } from "../../invitations/cachet";
-import { dateCourte, nomAffiche } from "../../list/affichage-admin";
-import { detailAttente, joursAttente, texteAttente } from "../affichage-client";
+import { Cachet } from "../../invitations/stamp";
+import { dateCourte, nomAffiche } from "../../list/admin-display";
+import { detailAttente, joursAttente, texteAttente } from "../client-display";
 import {
   FormulaireAttesterComptoir,
   FormulaireRefuser,
   FormulaireRevoquer,
   FormulaireValider,
-} from "./formulaires-decision";
+} from "./decision-forms";
 
 export type PieceFile = {
   id: string;

@@ -1,7 +1,7 @@
 import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
-import { AideContenu } from "@/components/aide/aide-contenu";
-import { AIDE_SECTIONS } from "@/lib/aide-content";
+import { AideContenu } from "@/components/help/help-content";
+import { AIDE_SECTIONS } from "@/lib/help-content";
 
 /**
  * Routes réellement servies (vérifiées dans src/app). Un raccourci ne doit

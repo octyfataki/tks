@@ -1,7 +1,7 @@
 "use server";
 
 import { z } from "zod";
-import type { ResultatAction } from "@/lib/resultat-action";
+import type { ResultatAction } from "@/lib/action-result";
 import { ClientError, inscrireClient } from "@/lib/accounts/clients";
 
 // Validation zod de la frontière (cette action) : mêmes seuils que la

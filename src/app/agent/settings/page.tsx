@@ -13,7 +13,7 @@ import {
   WifiOffIcon,
 } from "lucide-react";
 import { auth } from "@/lib/auth";
-import { BoutonDeconnexion } from "@/components/bouton-deconnexion";
+import { BoutonDeconnexion } from "@/components/sign-out-button";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -22,11 +22,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { FormulaireMotDePasse } from "./formulaire-mot-de-passe";
-import { SynchronisationSection } from "./synchronisation-section";
-import { AppareilSection } from "./appareil-section";
+import { FormulaireMotDePasse } from "./password-form";
+import { SynchronisationSection } from "./sync-section";
+import { AppareilSection } from "./device-section";
 import { NotificationsSection } from "./notifications-section";
-import { PastilleReseau } from "./pastille-reseau";
+import { PastilleReseau } from "./network-indicator";
 import { decrireExpiration } from "./session-helpers";
 
 export const metadata: Metadata = {

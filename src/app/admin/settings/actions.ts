@@ -12,7 +12,7 @@ import {
 } from "@/lib/db/schema/accounts";
 import { definirReglage } from "@/lib/accounts/settings";
 import { StaffError } from "@/lib/accounts/staff";
-import type { ResultatAction } from "@/lib/resultat-action";
+import type { ResultatAction } from "@/lib/action-result";
 
 export type ResultatDureeInvitation = ResultatAction<{ jours: number }>;
 

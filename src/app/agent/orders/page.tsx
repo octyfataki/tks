@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { ClipboardListIcon } from "lucide-react";
-import { AgentBientot } from "@/components/agent-bientot";
+import { AgentBientot } from "@/components/agent-coming-soon";
 
 export const metadata: Metadata = {
   title: "Commandes — Agent — TKS",

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { EcranErreur } from "@/components/ecran-erreur";
+import { EcranErreur } from "@/components/error-screen";
 import { buttonVariants } from "@/components/ui/button";
 
 export const metadata: Metadata = {

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { FileCheckIcon } from "lucide-react";
-import { AgentBientot } from "@/components/agent-bientot";
+import { AgentBientot } from "@/components/agent-coming-soon";
 
 export const metadata: Metadata = {
   title: "Preuves de paiement — Agent — TKS",

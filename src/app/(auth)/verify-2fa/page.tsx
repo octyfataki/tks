@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { AuthShell } from "@/components/auth-shell";
-import { lireDefi2fa } from "@/lib/2fa-methode";
+import { lireDefi2fa } from "@/lib/2fa-method";
 import { profilSession } from "@/lib/accounts/session-profile";
 import { destinationApresConnexion } from "@/lib/accounts/session-role";
 import { Verify2faForm } from "./verify-2fa-form";

@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
 import { profilSession } from "@/lib/accounts/session-profile";
 import { destinationApresConnexion } from "@/lib/accounts/session-role";
-import PendingVue from "./pending-vue";
+import PendingVue from "./pending-view";
 
 // S1 : /pending est la fiche du compte client non validé — elle suit la
 // session, pas l'onglet. Seuls EN_ATTENTE_VALIDATION et REFUSE y restent :

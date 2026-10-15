@@ -4,8 +4,8 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
 import { comptesStaff } from "@/lib/db/schema/accounts";
 import { peutCreerAdminPrincipal } from "@/lib/db/schema/accounts";
-import { PermissionRefusee } from "@/components/permission-refusee";
-import { FormulaireAdministrateurPrincipal } from "../administrators/formulaire";
+import { PermissionRefusee } from "@/components/permission-denied";
+import { FormulaireAdministrateurPrincipal } from "../administrators/form";
 
 /**
  * /admin/create — Créer un administrateur principal (création directe).

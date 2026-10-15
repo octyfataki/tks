@@ -7,7 +7,7 @@ import {
   clePreferenceMethode2fa,
   estMethodeEnvoi2fa,
   lireDefi2fa,
-} from "@/lib/2fa-methode";
+} from "@/lib/2fa-method";
 import { db } from "@/lib/db/client";
 import { verification } from "@/lib/db/schema/auth-schema";
 

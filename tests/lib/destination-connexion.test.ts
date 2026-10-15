@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { demanderDestination } from "@/lib/destination-connexion";
+import { demanderDestination } from "@/lib/post-login-redirect";
 
 function reponse(corps: unknown, ok = true, status = 200) {
   return { ok, status, json: async () => corps } as Response;

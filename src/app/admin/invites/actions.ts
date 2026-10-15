@@ -12,7 +12,7 @@ import { db } from "@/lib/db/client";
 import { comptesStaff } from "@/lib/db/schema/accounts";
 import { creerInvitationAgent, StaffError } from "@/lib/accounts/staff";
 import type { ErreurStaff } from "@/lib/accounts/staff";
-import type { ResultatAction } from "@/lib/resultat-action";
+import type { ResultatAction } from "@/lib/action-result";
 
 export type ResultatInvitationAgent = ResultatAction<{ lien: string }>;
 

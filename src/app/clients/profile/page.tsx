@@ -13,10 +13,10 @@ import {
   RemplacerPieceIdentite,
   type PieceIdentiteProfil,
   type SessionEnCoursProfil,
-} from "@/components/profil";
+} from "@/components/profile";
 import { lirePiecesCompte } from "@/lib/accounts/client-documents";
 import { statutPieceValide } from "@/lib/accounts/client-record";
-import { FormulaireMonProfil } from "@/app/admin/profile/formulaire-mon-profil";
+import { FormulaireMonProfil } from "@/app/admin/profile/my-profile-form";
 import { and, desc, eq, gt } from "drizzle-orm";
 
 // Mon compte (espace client) : le même composant ProfilUtilisateur, nourri

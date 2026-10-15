@@ -10,8 +10,8 @@ import {
   peutInviterAdminPrincipal,
   premiersAccesAdmin,
 } from "@/lib/db/schema/accounts";
-import { PermissionRefusee } from "@/components/permission-refusee";
-import { RegistreInvitations, type LigneRegistre } from "./registre-invitations";
+import { PermissionRefusee } from "@/components/permission-denied";
+import { RegistreInvitations, type LigneRegistre } from "./invitation-table";
 import { etatLienInvitation } from "@/lib/db/schema/accounts/validation";
 
 /**

@@ -8,7 +8,7 @@ import { aPermission } from "@/lib/authorizations/permissions";
 import { chargerFicheClient } from "@/lib/accounts/client-record-base";
 import { etiquettesActivesParCompte } from "@/lib/annotations/annotations";
 import { VueFicheClient } from "@/components/clients/fiche-client";
-import { PermissionRefusee } from "@/components/permission-refusee";
+import { PermissionRefusee } from "@/components/permission-denied";
 
 /** Agent connecté : son id staff, ou null. Le layout garantit AGENT VALIDE. */
 async function agentConnecte(): Promise<{ id: string } | null> {

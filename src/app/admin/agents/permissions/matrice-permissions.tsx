@@ -41,7 +41,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { accorderSocleAction, appliquerSocleLotAction, retirerSocleAction } from "../actions";
-import { LIBELLES_PERMISSION } from "../[id]/permissions-agent";
+import { LIBELLES_PERMISSION } from "../[id]/agent-permissions";
 
 /**
  * Groupes métier des 18 permissions : le distributeur raisonne

@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useRouter } from "next/navigation";
-import PendingPage from "@/app/(auth)/pending/pending-vue";
+import PendingPage from "@/app/(auth)/pending/pending-view";
 import { signOut } from "@/lib/auth-client";
 
 vi.mock("next/image", () => ({
@@ -22,7 +22,7 @@ vi.mock("@/lib/auth-client", () => ({
 }));
 
 // La server action tire db + env (DATABASE_URL) : hors sujet ici, on la coupe.
-vi.mock("@/app/(auth)/pending/actions-depot", () => ({
+vi.mock("@/app/(auth)/pending/upload-actions", () => ({
   deposerPieceIdentiteAction: vi.fn(),
 }));
 

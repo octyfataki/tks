@@ -29,7 +29,7 @@ import {
   poserEtiquette,
   retirerEtiquette,
 } from "@/lib/annotations/annotations";
-import type { ResultatAction } from "@/lib/resultat-action";
+import type { ResultatAction } from "@/lib/action-result";
 
 export type ResultatDecision = ResultatAction<{ compteId: string }>;
 export type ResultatAnnotation = ResultatAction<{

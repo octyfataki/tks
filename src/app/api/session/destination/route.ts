@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { profilSession } from "@/lib/accounts/session-profile";
 import { destinationApresConnexion } from "@/lib/accounts/session-role";
-import type { CodeDestination } from "@/lib/destination-connexion";
+import type { CodeDestination } from "@/lib/post-login-redirect";
 
 // GET /api/session/destination — dit où atterrit l'utilisateur connecté.
 // C'est la seule source du routage post-connexion : le client n'a aucun rôle

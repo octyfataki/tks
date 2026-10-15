@@ -1,13 +1,13 @@
-import type { CompteProfil, SessionEnCoursProfil } from "@/components/profil";
-import { ProfilUtilisateur } from "@/components/profil";
+import type { CompteProfil, SessionEnCoursProfil } from "@/components/profile";
+import { ProfilUtilisateur } from "@/components/profile";
 import { profilSession } from "@/lib/accounts/session-profile";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
 import { session as tableSession, user } from "@/lib/db/schema/auth-schema";
 import { comptesStaff, facteurs2faAdmin } from "@/lib/db/schema/accounts";
 import { peutModifierAdmin } from "@/lib/db/schema/accounts";
-import { FormulaireMonProfil } from "./formulaire-mon-profil";
-import { ActivationSecondFacteur, DesactivationSecondFacteur } from "@/components/profil";
+import { FormulaireMonProfil } from "./my-profile-form";
+import { ActivationSecondFacteur, DesactivationSecondFacteur } from "@/components/profile";
 import { and, desc, eq, gt } from "drizzle-orm";
 import { headers } from "next/headers";
 

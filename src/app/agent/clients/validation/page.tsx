@@ -15,7 +15,7 @@ import { cn } from "@/lib/utils";
 import { joursAttente } from "@/components/clients/affichage-client";
 import { FileValidation } from "@/components/clients/file-validation";
 import { RafraichissementFile } from "@/components/clients/rafraichissement-file";
-import { PermissionRefusee } from "@/components/permission-refusee";
+import { PermissionRefusee } from "@/components/permission-denied";
 
 async function agentConnecte(): Promise<{ id: string } | null> {
   const session = await auth.api.getSession({ headers: await headers() });

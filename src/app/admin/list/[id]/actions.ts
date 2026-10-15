@@ -13,7 +13,7 @@ import {
 import { enregistrerEvenement } from "@/lib/authorizations/journal";
 import { modifierAdminSupport, StaffError } from "@/lib/accounts/staff";
 import type { ErreurStaff } from "@/lib/accounts/staff";
-import type { ResultatAction } from "@/lib/resultat-action";
+import type { ResultatAction } from "@/lib/action-result";
 
 export type ResultatModificationCoordonnees = ResultatAction<{
   inchange: boolean;

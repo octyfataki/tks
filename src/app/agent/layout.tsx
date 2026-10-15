@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { profilSession } from "@/lib/accounts/session-profile";
 import { redirectionAcces } from "@/lib/accounts/session-role";
-import { GardienSession } from "@/components/gardien-session";
+import { GardienSession } from "@/components/session-guard";
 import { AgentHeader } from "@/components/agent-header";
 import { AgentSidebar } from "@/components/agent-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";

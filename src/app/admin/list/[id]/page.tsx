@@ -21,11 +21,11 @@ import {
 } from "@/lib/db/schema/accounts";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
-import { FormulaireAppareil } from "./formulaire-appareil";
-import { FormulaireCoordonnees } from "./formulaire-coordonnees";
-import { SectionModifiable } from "./section-modifiable";
-import { InterrupteurEtat } from "../interrupteur-etat";
-import { BoutonRevocation } from "./bouton-revocation";
+import { FormulaireAppareil } from "./device-form";
+import { FormulaireCoordonnees } from "./contact-details-form";
+import { SectionModifiable } from "./editable-section";
+import { InterrupteurEtat } from "../status-toggle";
+import { BoutonRevocation } from "./revoke-button";
 
 const LIBELLE_ROLE: Record<string, string> = {
   ADMIN_PRINCIPAL: "Administrateur principal",

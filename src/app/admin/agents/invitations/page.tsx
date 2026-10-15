@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   RegistreInvitationsAgents,
   type LigneInvitationAgent,
-} from "./registre-invitations-agents";
+} from "./agent-invitation-table";
 
 /**
  * /admin/agents/invitations — Liens d'invitation agents (voie lien

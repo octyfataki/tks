@@ -4,7 +4,7 @@ import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { invitationsAgents } from "@/lib/db/schema/accounts";
-import type { ResultatAction } from "@/lib/resultat-action";
+import type { ResultatAction } from "@/lib/action-result";
 import {
   StaffError,
   accepterInvitationAdminPrincipal,

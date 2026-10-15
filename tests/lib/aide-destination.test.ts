@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { destinationAide } from "@/lib/aide-content";
+import { destinationAide } from "@/lib/help-content";
 import type { Profil } from "@/lib/accounts/session-role";
 
 /**

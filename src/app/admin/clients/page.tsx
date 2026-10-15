@@ -6,7 +6,7 @@ import { db } from "@/lib/db/client";
 import { user } from "@/lib/db/schema/auth-schema";
 import { comptesClients } from "@/lib/db/schema/accounts";
 import { nomAffiche } from "@/components/clients/affichage-partage";
-import { PaginationListe } from "../list/pagination-liste";
+import { PaginationListe } from "../list/list-pagination";
 import { BarreOutilsClients } from "@/components/clients/barre-outils-clients";
 import { RegistreComptesClients } from "@/components/clients/registre-comptes-clients";
 import { joursAttente } from "@/components/clients/affichage-client";

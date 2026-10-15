@@ -3,8 +3,8 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
-import { demanderDestination } from "@/lib/destination-connexion";
-import { MESSAGE_RESEAU, messageErreurConnexion } from "@/lib/erreurs-auth";
+import { demanderDestination } from "@/lib/post-login-redirect";
+import { MESSAGE_RESEAU, messageErreurConnexion } from "@/lib/auth-errors";
 import { Button } from "@/components/ui/button";
 import { Field, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";

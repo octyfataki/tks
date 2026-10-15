@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { GardienSession } from "@/components/gardien-session";
+import { GardienSession } from "@/components/session-guard";
 import { ClientHeader } from "@/components/client-header";
 import { ClientSidebar } from "@/components/client-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";

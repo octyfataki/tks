@@ -1,8 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import type { ResultatAction } from "@/lib/resultat-action";
-import { DossierError, creerDossier, type DossierResume } from "@/modules/clients/depot";
+import type { ResultatAction } from "@/lib/action-result";
+import { DossierError, creerDossier, type DossierResume } from "@/modules/clients/deposit";
 
 export type ResultatOuverture = ResultatAction<{
   dossierId: string;

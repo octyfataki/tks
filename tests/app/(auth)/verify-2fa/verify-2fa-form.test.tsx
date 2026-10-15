@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { authClient } from "@/lib/auth-client";
-import { demanderDestination } from "@/lib/destination-connexion";
+import { demanderDestination } from "@/lib/post-login-redirect";
 import { toast } from "@/components/ui/toast";
 import { Verify2faForm } from "@/app/(auth)/verify-2fa/verify-2fa-form";
 
@@ -12,7 +12,7 @@ vi.mock("@/lib/auth-client", () => ({
   authClient: { twoFactor: { verifyOtp: vi.fn() } },
 }));
 
-vi.mock("@/lib/destination-connexion", () => ({
+vi.mock("@/lib/post-login-redirect", () => ({
   demanderDestination: vi.fn(),
 }));
 

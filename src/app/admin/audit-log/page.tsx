@@ -10,9 +10,9 @@ import {
   nomEntite,
   resumerEvenement,
 } from "@/lib/authorizations/journal-summary";
-import { PermissionRefusee } from "@/components/permission-refusee";
+import { PermissionRefusee } from "@/components/permission-denied";
 import { Badge } from "@/components/ui/badge";
-import { RegistreJournal, type LigneJournal } from "./registre-journal";
+import { RegistreJournal, type LigneJournal } from "./audit-log-table";
 
 const LIGNES = 50;
 

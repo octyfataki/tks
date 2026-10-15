@@ -10,7 +10,7 @@ import { comptesStaff } from "@/lib/db/schema/accounts";
 import { modifierAgentSupport, modifierEmailAgentSupport, ouvrirLienMotDePasseAgent, revoquerPremierAccesAdmin, tuerSessionsStaff, StaffError } from "@/lib/accounts/staff";
 import type { ErreurStaff } from "@/lib/accounts/staff";
 import { enregistrerEvenement } from "@/lib/authorizations/journal";
-import type { ResultatAction } from "@/lib/resultat-action";
+import type { ResultatAction } from "@/lib/action-result";
 
 export type ResultatModificationCoordonneesAgent = ResultatAction<{
   inchange: boolean;

@@ -11,7 +11,7 @@ import {
 import {
   GROUPES_CLIENT,
   PaletteRecherche,
-} from "@/components/palette-recherche";
+} from "@/components/search-palette";
 import {
   Breadcrumb,
   BreadcrumbItem,
