@@ -19,7 +19,7 @@ import {
   normaliserTelephoneClient,
   rolePeutActiverSecondFacteur,
   telephoneStaffValide,
-} from "@/lib/db/schema/comptes";
+} from "@/lib/db/schema/accounts";
 import {
   decoderDataUrlPhoto,
   nomFichierAvatar,

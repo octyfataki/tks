@@ -8,7 +8,7 @@ import {
 import {
   pieceRetirable,
   type StatutPiece,
-} from "@/lib/comptes/fiche-client";
+} from "@/lib/accounts/client-record";
 import { BoutonRetirerPiece } from "./bouton-retirer-piece";
 
 /** Pièce d'identité du compte connecté, telle que montrée sur son profil. */

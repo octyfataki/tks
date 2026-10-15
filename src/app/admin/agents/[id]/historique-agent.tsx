@@ -2,8 +2,8 @@ import Link from "next/link";
 import { desc, eq, inArray, or } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { user } from "@/lib/db/schema/auth-schema";
-import { comptesStaff } from "@/lib/db/schema/comptes";
-import { journalAudit } from "@/lib/db/schema/autorisations";
+import { comptesStaff } from "@/lib/db/schema/accounts";
+import { journalAudit } from "@/lib/db/schema/authorizations";
 import { Badge } from "@/components/ui/badge";
 
 const EVENEMENTS_PAR_FICHE = 50;

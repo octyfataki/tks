@@ -2,8 +2,8 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { AuthShell } from "@/components/auth-shell";
 import { lireDefi2fa } from "@/lib/2fa-methode";
-import { profilSession } from "@/lib/comptes/profil-session";
-import { destinationApresConnexion } from "@/lib/comptes/role-session";
+import { profilSession } from "@/lib/accounts/session-profile";
+import { destinationApresConnexion } from "@/lib/accounts/session-role";
 import { Verify2faForm } from "./verify-2fa-form";
 
 // /verify-2fa n'a de sens qu'en plein défi 2FA : cookie de défi présent, pas

@@ -2,7 +2,7 @@ import { estStatutAnnotation } from "@/lib/db/schema/annotations";
 import {
   estEtiquetteConnue,
   etiquettesOrdonnees,
-} from "./etiquettes";
+} from "./labels";
 
 // Issue #7 — dérivation pure des étiquettes actives, sans E/S : testée
 // sans base (voir annotations.test.ts). L'événement le plus récent d'une

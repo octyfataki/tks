@@ -9,13 +9,13 @@ import { headers } from "next/headers";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
-import { comptesStaff, peutInviterAdminPrincipal } from "@/lib/db/schema/comptes";
+import { comptesStaff, peutInviterAdminPrincipal } from "@/lib/db/schema/accounts";
 import {
   ouvrirPremierAccesAdmin,
   revoquerInvitation,
   revoquerPremierAccesAdmin,
   StaffError,
-} from "@/lib/comptes/staff";
+} from "@/lib/accounts/staff";
 import type { ResultatAction } from "@/lib/resultat-action";
 
 export type ResultatRenvoiAcces = ResultatAction<{ lien: string }>;

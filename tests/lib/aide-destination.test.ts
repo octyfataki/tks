@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { destinationAide } from "@/lib/aide-content";
-import type { Profil } from "@/lib/comptes/role-session";
+import type { Profil } from "@/lib/accounts/session-role";
 
 /**
  * Le répartiteur /help envoie chaque type d'utilisateur connecté sur l'aide

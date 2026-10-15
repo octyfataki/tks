@@ -5,14 +5,14 @@ import { headers } from "next/headers";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
-import { comptesStaff } from "@/lib/db/schema/comptes";
-import { dateDuJourKinshasa } from "@/lib/db/schema/devises";
+import { comptesStaff } from "@/lib/db/schema/accounts";
+import { dateDuJourKinshasa } from "@/lib/db/schema/currencies";
 import {
   autoriserSaisieTaux,
   definirTauxDuJour,
   lireTauxDuJour,
   TauxError,
-} from "@/lib/devises/taux";
+} from "@/lib/currencies/rates";
 import type { ResultatAction } from "@/lib/resultat-action";
 
 // Server actions du taux du jour, branchées sur la pastille d'en-tête. La

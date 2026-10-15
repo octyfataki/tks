@@ -2,9 +2,9 @@ import { randomUUID } from "node:crypto";
 import { eq, inArray } from "drizzle-orm";
 import { db, type ExecuteurDb } from "@/lib/db/client";
 import { annotationsClients } from "@/lib/db/schema/annotations";
-import { comptesClients } from "@/lib/db/schema/comptes";
-import { enregistrerEvenement } from "@/lib/autorisations/journal";
-import { estEtiquetteConnue, etiquetteParCode } from "./etiquettes";
+import { comptesClients } from "@/lib/db/schema/accounts";
+import { enregistrerEvenement } from "@/lib/authorizations/journal";
+import { estEtiquetteConnue, etiquetteParCode } from "./labels";
 import { deriverEtiquettesActives } from "./derivation";
 
 // Issue #7 — lecture et écriture des annotations clients.

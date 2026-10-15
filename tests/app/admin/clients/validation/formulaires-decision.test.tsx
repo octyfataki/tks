@@ -6,7 +6,7 @@ import {
   FormulaireRevoquer,
   FormulaireValider,
 } from "@/app/admin/clients/validation/formulaires-decision";
-import { TYPES_PIECE } from "@/lib/comptes/pieces-fichiers";
+import { TYPES_PIECE } from "@/lib/accounts/document-files";
 
 // Les server actions tirent db + env (DATABASE_URL) : hors sujet ici.
 vi.mock("@/app/admin/clients/validation/actions", () => ({

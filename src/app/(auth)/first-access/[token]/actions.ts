@@ -5,7 +5,7 @@ import type { ResultatAction } from "@/lib/resultat-action";
 import {
   StaffError,
   definirMotDePassePremierAcces,
-} from "@/lib/comptes/staff";
+} from "@/lib/accounts/staff";
 
 // Validation zod de la frontière (cette page) : jeton présent, mot de passe
 // d'au moins 8 caractères. La couche staff revérifie (défense en profondeur).

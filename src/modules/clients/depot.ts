@@ -2,10 +2,10 @@ import { headers } from "next/headers";
 import { and, desc, eq, like, or } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
-import { comptesStaff } from "@/lib/db/schema/comptes";
-import { peutOuvrirDossier } from "@/lib/db/schema/autorisations/validation";
-import { aPermission } from "@/lib/autorisations/autorisations";
-import { enregistrerEvenement } from "@/lib/autorisations/journal";
+import { comptesStaff } from "@/lib/db/schema/accounts";
+import { peutOuvrirDossier } from "@/lib/db/schema/authorizations/validation";
+import { aPermission } from "@/lib/authorizations/permissions";
+import { enregistrerEvenement } from "@/lib/authorizations/journal";
 import {
   DossierError,
   echapperLike,

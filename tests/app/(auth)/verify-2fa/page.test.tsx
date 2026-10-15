@@ -1,10 +1,10 @@
 import { describe, expect, it, vi } from "vitest";
 import Verify2faPage from "@/app/(auth)/verify-2fa/page";
-import { profilSession } from "@/lib/comptes/profil-session";
+import { profilSession } from "@/lib/accounts/session-profile";
 import { cookies } from "next/headers";
-import type { Profil } from "@/lib/comptes/role-session";
+import type { Profil } from "@/lib/accounts/session-role";
 
-vi.mock("@/lib/comptes/profil-session", () => ({
+vi.mock("@/lib/accounts/session-profile", () => ({
   profilSession: vi.fn(),
 }));
 

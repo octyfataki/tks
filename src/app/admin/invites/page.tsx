@@ -2,12 +2,12 @@ import { headers } from "next/headers";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
-import { comptesStaff } from "@/lib/db/schema/comptes";
+import { comptesStaff } from "@/lib/db/schema/accounts";
 import {
   peutInviterAdminPrincipal,
   peutInviterAgent,
-} from "@/lib/db/schema/comptes";
-import { lireDureeInvitationJours } from "@/lib/comptes/reglages";
+} from "@/lib/db/schema/accounts";
+import { lireDureeInvitationJours } from "@/lib/accounts/settings";
 import {
   Tabs,
   TabsContent,

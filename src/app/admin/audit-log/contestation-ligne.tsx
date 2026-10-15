@@ -13,7 +13,7 @@ import {
 import {
   correctivesPour,
   type CorrectiveProposee,
-} from "@/lib/autorisations/contestation";
+} from "@/lib/authorizations/contestation";
 
 function decoderJson(brut: string | null): Record<string, unknown> | null {
   if (!brut) return null;

@@ -9,8 +9,8 @@ import {
   comptesClients,
   comptesStaff,
   piecesIdentiteClients,
-} from "@/lib/db/schema/comptes";
-import { aPermission } from "@/lib/autorisations/autorisations";
+} from "@/lib/db/schema/accounts";
+import { aPermission } from "@/lib/authorizations/permissions";
 
 const RACINE_PIECES = join(process.cwd(), "donnees");
 

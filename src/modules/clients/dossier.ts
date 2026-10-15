@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { normaliserTelephoneClient } from "@/lib/db/schema/comptes";
+import { normaliserTelephoneClient } from "@/lib/db/schema/accounts";
 
 // Module clients — domaine pur du dossier financier. Aucune base ici :
 // préparer, valider, chercher en mémoire. La persistance vit dans

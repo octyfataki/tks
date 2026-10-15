@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
-import { profilSession } from "@/lib/comptes/profil-session";
-import { destinationApresConnexion } from "@/lib/comptes/role-session";
+import { profilSession } from "@/lib/accounts/session-profile";
+import { destinationApresConnexion } from "@/lib/accounts/session-role";
 import type { CodeDestination } from "@/lib/destination-connexion";
 
 // GET /api/session/destination — dit où atterrit l'utilisateur connecté.

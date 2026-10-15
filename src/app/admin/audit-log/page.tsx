@@ -3,13 +3,13 @@ import { desc, eq, inArray } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
 import { user } from "@/lib/db/schema/auth-schema";
-import { comptesClients, comptesStaff } from "@/lib/db/schema/comptes";
-import { journalAudit } from "@/lib/db/schema/autorisations";
-import { peutConsulterJournal } from "@/lib/db/schema/autorisations";
+import { comptesClients, comptesStaff } from "@/lib/db/schema/accounts";
+import { journalAudit } from "@/lib/db/schema/authorizations";
+import { peutConsulterJournal } from "@/lib/db/schema/authorizations";
 import {
   nomEntite,
   resumerEvenement,
-} from "@/lib/autorisations/resume-journal";
+} from "@/lib/authorizations/journal-summary";
 import { PermissionRefusee } from "@/components/permission-refusee";
 import { Badge } from "@/components/ui/badge";
 import { RegistreJournal, type LigneJournal } from "./registre-journal";

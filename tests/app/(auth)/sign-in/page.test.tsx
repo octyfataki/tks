@@ -1,9 +1,9 @@
 import { describe, expect, it, vi } from "vitest";
 import SignInPage from "@/app/(auth)/sign-in/page";
-import { profilSession } from "@/lib/comptes/profil-session";
-import type { Profil } from "@/lib/comptes/role-session";
+import { profilSession } from "@/lib/accounts/session-profile";
+import type { Profil } from "@/lib/accounts/session-role";
 
-vi.mock("@/lib/comptes/profil-session", () => ({
+vi.mock("@/lib/accounts/session-profile", () => ({
   profilSession: vi.fn(),
 }));
 

@@ -2,9 +2,9 @@ import { headers } from "next/headers";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
-import { comptesStaff, peutInviterAgent } from "@/lib/db/schema/comptes";
+import { comptesStaff, peutInviterAgent } from "@/lib/db/schema/accounts";
 import { PermissionRefusee } from "@/components/permission-refusee";
-import { listerSocle } from "@/lib/autorisations/autorisations";
+import { listerSocle } from "@/lib/authorizations/permissions";
 import { SoclePermissions } from "./matrice-permissions";
 
 /**

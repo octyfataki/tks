@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { TYPES_PIECE, typePieceValide } from "@/lib/comptes/pieces-fichiers";
+import { TYPES_PIECE, typePieceValide } from "@/lib/accounts/document-files";
 import { cn } from "@/lib/utils";
 
 /** Pièce déjà déposée, telle qu'affichée sous le formulaire. */

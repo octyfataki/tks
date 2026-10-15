@@ -12,8 +12,8 @@
  *   jamais « réalisation », « preuve de paiement » jamais « facture ».
  */
 
-import type { Profil } from "@/lib/comptes/role-session";
-import { DESTINATION_CONNEXION } from "@/lib/comptes/role-session";
+import type { Profil } from "@/lib/accounts/session-role";
+import { DESTINATION_CONNEXION } from "@/lib/accounts/session-role";
 
 export type AideNiveau = "Client" | "Agent" | "Admin";
 

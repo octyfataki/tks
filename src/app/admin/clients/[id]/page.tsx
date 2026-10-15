@@ -3,8 +3,8 @@ import { notFound } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
-import { comptesStaff } from "@/lib/db/schema/comptes";
-import { chargerFicheClient } from "@/lib/comptes/fiche-client-base";
+import { comptesStaff } from "@/lib/db/schema/accounts";
+import { chargerFicheClient } from "@/lib/accounts/client-record-base";
 import { etiquettesActivesParCompte } from "@/lib/annotations/annotations";
 import { VueFicheClient } from "@/components/clients/fiche-client";
 

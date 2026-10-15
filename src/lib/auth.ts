@@ -10,7 +10,7 @@ import {
   type MethodeEnvoi2fa,
 } from "./2fa-methode";
 import { verification } from "./db/schema/auth-schema";
-import { comptesClients, comptesStaff } from "./db/schema/comptes";
+import { comptesClients, comptesStaff } from "./db/schema/accounts";
 
 // Socle S1 : TOUS les comptes (client comme staff) utilisent email + mot de
 // passe. Le téléphone n'est plus un identifiant de connexion : il reste une

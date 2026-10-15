@@ -4,7 +4,7 @@ import { desc, eq } from "drizzle-orm";
 import { ArrowUpRightIcon } from "lucide-react";
 import { db } from "@/lib/db/client";
 import { user } from "@/lib/db/schema/auth-schema";
-import { comptesClients } from "@/lib/db/schema/comptes";
+import { comptesClients } from "@/lib/db/schema/accounts";
 import { nomAffiche } from "@/components/clients/affichage-partage";
 import { PaginationListe } from "../list/pagination-liste";
 import { BarreOutilsClients } from "@/components/clients/barre-outils-clients";

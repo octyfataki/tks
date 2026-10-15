@@ -2,8 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AuthShell } from "@/components/auth-shell";
 import { Field, FieldGroup } from "@/components/ui/field";
-import { profilSession } from "@/lib/comptes/profil-session";
-import { destinationApresConnexion } from "@/lib/comptes/role-session";
+import { profilSession } from "@/lib/accounts/session-profile";
+import { destinationApresConnexion } from "@/lib/accounts/session-role";
 import { SignInForm } from "./sign-in-form";
 
 // Déjà connecté → son espace (le bouton retour ne doit pas rouvrir le

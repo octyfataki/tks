@@ -9,10 +9,10 @@ import {
   comptesStaff,
   facteurs2faAdmin,
   peutRenommerAppareil2fa,
-} from "@/lib/db/schema/comptes";
-import { enregistrerEvenement } from "@/lib/autorisations/journal";
-import { modifierAdminSupport, StaffError } from "@/lib/comptes/staff";
-import type { ErreurStaff } from "@/lib/comptes/staff";
+} from "@/lib/db/schema/accounts";
+import { enregistrerEvenement } from "@/lib/authorizations/journal";
+import { modifierAdminSupport, StaffError } from "@/lib/accounts/staff";
+import type { ErreurStaff } from "@/lib/accounts/staff";
 import type { ResultatAction } from "@/lib/resultat-action";
 
 export type ResultatModificationCoordonnees = ResultatAction<{

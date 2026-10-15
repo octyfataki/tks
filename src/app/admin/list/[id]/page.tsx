@@ -18,7 +18,7 @@ import {
   facteurs2faAdmin,
   peutModifierAdmin,
   premiersAccesAdmin,
-} from "@/lib/db/schema/comptes";
+} from "@/lib/db/schema/accounts";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { FormulaireAppareil } from "./formulaire-appareil";

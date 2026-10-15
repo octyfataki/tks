@@ -6,14 +6,14 @@ import { headers } from "next/headers";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
-import { comptesStaff, peutCreerAdminPrincipal, telephoneStaffValide } from "@/lib/db/schema/comptes";
+import { comptesStaff, peutCreerAdminPrincipal, telephoneStaffValide } from "@/lib/db/schema/accounts";
 import {
   creerAdminPrincipal,
   creerInvitationAdminPrincipal,
   ouvrirPremierAccesAdmin,
   StaffError,
-} from "@/lib/comptes/staff";
-import type { ErreurStaff } from "@/lib/comptes/staff";
+} from "@/lib/accounts/staff";
+import type { ErreurStaff } from "@/lib/accounts/staff";
 import type { ResultatAction } from "@/lib/resultat-action";
 
 export type ResultatCreationAdmin = ResultatAction<{

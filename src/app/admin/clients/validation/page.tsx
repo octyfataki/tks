@@ -6,7 +6,7 @@ import { user } from "@/lib/db/schema/auth-schema";
 import {
   comptesClients,
   piecesIdentiteClients,
-} from "@/lib/db/schema/comptes";
+} from "@/lib/db/schema/accounts";
 import { cn } from "@/lib/utils";
 import { joursAttente } from "@/components/clients/affichage-client";
 import { FileValidation } from "@/components/clients/file-validation";

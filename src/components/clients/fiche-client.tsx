@@ -34,7 +34,7 @@ import {
   revuePiecePossible,
   type FicheClient,
   type PieceFicheClient,
-} from "@/lib/comptes/fiche-client";
+} from "@/lib/accounts/client-record";
 
 function cachetEtat(etat: string): {
   encre: "attente" | "fait" | "expire" | "revoque";

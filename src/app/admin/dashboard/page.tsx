@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { profilSession } from "@/lib/comptes/profil-session";
-import { peutCreerAdminPrincipal } from "@/lib/db/schema/comptes";
+import { profilSession } from "@/lib/accounts/session-profile";
+import { peutCreerAdminPrincipal } from "@/lib/db/schema/accounts";
 
 export default async function Page() {
   // La garde /admin garantit une session staff VALIDE.

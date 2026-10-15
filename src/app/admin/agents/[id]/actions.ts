@@ -6,10 +6,10 @@ import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
 import { session as sessionAuth } from "@/lib/db/schema/auth-schema";
-import { comptesStaff } from "@/lib/db/schema/comptes";
-import { modifierAgentSupport, modifierEmailAgentSupport, ouvrirLienMotDePasseAgent, revoquerPremierAccesAdmin, tuerSessionsStaff, StaffError } from "@/lib/comptes/staff";
-import type { ErreurStaff } from "@/lib/comptes/staff";
-import { enregistrerEvenement } from "@/lib/autorisations/journal";
+import { comptesStaff } from "@/lib/db/schema/accounts";
+import { modifierAgentSupport, modifierEmailAgentSupport, ouvrirLienMotDePasseAgent, revoquerPremierAccesAdmin, tuerSessionsStaff, StaffError } from "@/lib/accounts/staff";
+import type { ErreurStaff } from "@/lib/accounts/staff";
+import { enregistrerEvenement } from "@/lib/authorizations/journal";
 import type { ResultatAction } from "@/lib/resultat-action";
 
 export type ResultatModificationCoordonneesAgent = ResultatAction<{

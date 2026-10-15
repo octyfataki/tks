@@ -3,13 +3,13 @@
 import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { invitationsAgents } from "@/lib/db/schema/comptes";
+import { invitationsAgents } from "@/lib/db/schema/accounts";
 import type { ResultatAction } from "@/lib/resultat-action";
 import {
   StaffError,
   accepterInvitationAdminPrincipal,
   accepterInvitationAgent,
-} from "@/lib/comptes/staff";
+} from "@/lib/accounts/staff";
 
 // Validation zod de la frontière (cette action) : mêmes seuils que la
 // couche staff (défense en profondeur) — email normalisé, mot de passe

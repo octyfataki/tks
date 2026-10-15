@@ -5,8 +5,8 @@ import {
   compteClientConnecte,
   deposerPieceIdentiteClient,
   PieceError,
-} from "@/lib/comptes/pieces-clients";
-import { typePieceValide } from "@/lib/comptes/pieces-fichiers";
+} from "@/lib/accounts/client-documents";
+import { typePieceValide } from "@/lib/accounts/document-files";
 import type { ResultatAction } from "@/lib/resultat-action";
 
 export type ResultatDepotPiece = ResultatAction<{ pieceId: string }>;

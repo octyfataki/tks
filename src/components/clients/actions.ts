@@ -10,20 +10,20 @@ import {
   comptesStaff,
   piecesIdentiteClients,
   transitionCompteClientValide,
-} from "@/lib/db/schema/comptes";
+} from "@/lib/db/schema/accounts";
 import {
   compteClientConnecte,
   retirerPiece,
   statuerPiece,
-} from "@/lib/comptes/pieces-clients";
-import { typePieceValide } from "@/lib/comptes/pieces-fichiers";
-import { statutPieceValide, pieceRetirable, type StatutPiece } from "@/lib/comptes/fiche-client";
+} from "@/lib/accounts/client-documents";
+import { typePieceValide } from "@/lib/accounts/document-files";
+import { statutPieceValide, pieceRetirable, type StatutPiece } from "@/lib/accounts/client-record";
 import {
   enregistrerEvenement,
   journaliserRefusContestation,
   ERREUR_CONTESTEE_INTROUVABLE,
-} from "@/lib/autorisations/journal";
-import { aPermission } from "@/lib/autorisations/autorisations";
+} from "@/lib/authorizations/journal";
+import { aPermission } from "@/lib/authorizations/permissions";
 import {
   AnnotationError,
   poserEtiquette,

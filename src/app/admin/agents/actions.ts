@@ -5,8 +5,8 @@ import { headers } from "next/headers";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
-import { comptesStaff, peutInviterAgent, telephoneStaffValide } from "@/lib/db/schema/comptes";
-import { peutGererPermissions } from "@/lib/db/schema/autorisations";
+import { comptesStaff, peutInviterAgent, telephoneStaffValide } from "@/lib/db/schema/accounts";
+import { peutGererPermissions } from "@/lib/db/schema/authorizations";
 import {
   accorderPermission,
   accorderSocle,
@@ -15,12 +15,12 @@ import {
   listerSocle,
   retirerPermission,
   retirerSocle,
-} from "@/lib/autorisations/autorisations";
+} from "@/lib/authorizations/permissions";
 import {
   enregistrerEvenement,
   journaliserRefusContestation,
   ERREUR_CONTESTEE_INTROUVABLE,
-} from "@/lib/autorisations/journal";
+} from "@/lib/authorizations/journal";
 import type { ResultatAction as ResultatStandard } from "@/lib/resultat-action";
 import {
   creerAgent,
@@ -28,11 +28,11 @@ import {
   revoquerInvitation,
   StaffError,
   tuerSessionsStaff,
-} from "@/lib/comptes/staff";
+} from "@/lib/accounts/staff";
 import {
   PERMISSIONS_FERMEES,
   PROFIL_AGENT_SERVICE_DEFAUT,
-} from "@/lib/db/schema/autorisations/validation";
+} from "@/lib/db/schema/authorizations/validation";
 
 export type ResultatAction = ResultatStandard<{
   lien?: string;

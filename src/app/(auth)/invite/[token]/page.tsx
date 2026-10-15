@@ -2,8 +2,8 @@ import { eq } from "drizzle-orm";
 import { AuthShell } from "@/components/auth-shell";
 import { Field, FieldGroup } from "@/components/ui/field";
 import { db } from "@/lib/db/client";
-import { invitationsAgents } from "@/lib/db/schema/comptes";
-import { etatLienInvitation } from "@/lib/db/schema/comptes/validation";
+import { invitationsAgents } from "@/lib/db/schema/accounts";
+import { etatLienInvitation } from "@/lib/db/schema/accounts/validation";
 import { InviteForm } from "./invite-form";
 
 export default async function InvitePage({

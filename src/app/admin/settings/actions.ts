@@ -5,13 +5,13 @@ import { headers } from "next/headers";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
-import { comptesStaff } from "@/lib/db/schema/comptes";
+import { comptesStaff } from "@/lib/db/schema/accounts";
 import {
   MAX_DUREE_INVITATION_JOURS,
   MIN_DUREE_INVITATION_JOURS,
-} from "@/lib/db/schema/comptes";
-import { definirReglage } from "@/lib/comptes/reglages";
-import { StaffError } from "@/lib/comptes/staff";
+} from "@/lib/db/schema/accounts";
+import { definirReglage } from "@/lib/accounts/settings";
+import { StaffError } from "@/lib/accounts/staff";
 import type { ResultatAction } from "@/lib/resultat-action";
 
 export type ResultatDureeInvitation = ResultatAction<{ jours: number }>;

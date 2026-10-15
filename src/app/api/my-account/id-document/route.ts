@@ -3,7 +3,7 @@ import { headers } from "next/headers";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
-import { comptesClients } from "@/lib/db/schema/comptes";
+import { comptesClients } from "@/lib/db/schema/accounts";
 
 /**
  * GET /api/my-account/piece — état du dépôt pour le client connecté :
@@ -30,7 +30,7 @@ export async function GET() {
     .limit(1);
   const compte = lignes[0];
   if (!compte) return NextResponse.json({ connecte: false });
-  const { lirePiecesCompte } = await import("@/lib/comptes/pieces-clients");
+  const { lirePiecesCompte } = await import("@/lib/accounts/client-documents");
   const pieces = await lirePiecesCompte(compte.id);
   return NextResponse.json({
     connecte: true,

@@ -1,6 +1,6 @@
 import { desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { etatLienInvitation, premiersAccesAdmin } from "@/lib/db/schema/comptes";
+import { etatLienInvitation, premiersAccesAdmin } from "@/lib/db/schema/accounts";
 import { BoutonRevoquerLien } from "./bouton-revoquer-lien";
 
 function dateHeure(valeur: Date): string {

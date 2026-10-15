@@ -6,8 +6,8 @@ import { GardienSession } from "@/components/gardien-session";
 import { ClientHeader } from "@/components/client-header";
 import { ClientSidebar } from "@/components/client-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { profilSession } from "@/lib/comptes/profil-session";
-import { redirectionAcces } from "@/lib/comptes/role-session";
+import { profilSession } from "@/lib/accounts/session-profile";
+import { redirectionAcces } from "@/lib/accounts/session-role";
 
 /**
  * Garde d'accès à /clients : l'espace du client, et du client seulement.

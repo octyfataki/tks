@@ -2,8 +2,8 @@ import { headers } from "next/headers";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
-import { comptesStaff } from "@/lib/db/schema/comptes";
-import { peutCreerAdminPrincipal } from "@/lib/db/schema/comptes";
+import { comptesStaff } from "@/lib/db/schema/accounts";
+import { peutCreerAdminPrincipal } from "@/lib/db/schema/accounts";
 import { PermissionRefusee } from "@/components/permission-refusee";
 import { FormulaireAdministrateurPrincipal } from "../administrators/formulaire";
 

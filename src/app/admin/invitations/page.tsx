@@ -9,10 +9,10 @@ import {
   invitationsAgents,
   peutInviterAdminPrincipal,
   premiersAccesAdmin,
-} from "@/lib/db/schema/comptes";
+} from "@/lib/db/schema/accounts";
 import { PermissionRefusee } from "@/components/permission-refusee";
 import { RegistreInvitations, type LigneRegistre } from "./registre-invitations";
-import { etatLienInvitation } from "@/lib/db/schema/comptes/validation";
+import { etatLienInvitation } from "@/lib/db/schema/accounts/validation";
 
 /**
  * /admin/invitations — Registre unique des invitations envoyées pour un

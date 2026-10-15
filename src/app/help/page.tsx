@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { profilSession } from "@/lib/comptes/profil-session";
+import { profilSession } from "@/lib/accounts/session-profile";
 import { destinationAide } from "@/lib/aide-content";
 
 /**
