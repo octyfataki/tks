@@ -50,6 +50,39 @@ n'est pas un dépôt git. Les artefacts présents sont :
 9. **Ne jamais merger sans ton « OK » explicite.** Préparer la PR et la
    revue, puis attendre ta validation écrite avant `gh pr merge`. Sans
    « OK », on s'arrête à la PR prête.
+10. **Aucun commentaire dans le code source.** Le code se lit grâce à ses noms,
+    son découpage et ses types ; un commentaire qui explique est un commentaire
+    à supprimer. Concrètement :
+    - ne pas écrire de commentaire explicatif, temporaire, de `TODO`, de
+      `FIXME` ni de débogage — ni sur une ligne, ni sur plusieurs ;
+    - la documentation d'un module, d'une fonction ou d'un type passe par la
+      documentation publique (`.md`, ADR, spec), pas par des commentaires
+      dispersés dans les `.ts` / `.tsx` ;
+    - ne rien expliquer de plus que le code lui-même : renommer vaut mieux que
+      commenter.
+11. **Ce qui doit survivre à cette règle, et pourquoi.**
+    - **Directives d'outils et de compilateurs** : `eslint-disable` /
+      `eslint-enable` (avec leur explication après `--`), `@__PURE__`,
+      `@__NO_SIDE_EFFECTS__`, `@jsx`, `@jsxImportSource`, `@vite-ignore`,
+      commentaires magiques webpack (`webpackChunkName`, `webpackMode`…),
+      directives `/// <reference>` ; les retirer casse le lint ou le build.
+    - **Licences légales** : `SPDX-License-Identifier`, `@license`, `@preserve`,
+      mentions de copyright.
+    - **`"use client"`, `"use server"`, `"use strict"`** : ce sont des
+      littéraux, pas des commentaires. Ne jamais les toucher.
+12. **Ne pas toucher aux fichiers générés ni à la documentation.** Laissés hors
+    périmètre : `next-env.d.ts` (régénéré par Next), `drizzle/*.sql` (générés
+    par Drizzle, marqueurs `--> statement-breakpoint` fonctionnels),
+    `drizzle/meta/`, `pnpm-lock.yaml`, `tsconfig.tsbuildinfo`, ainsi que les
+    `.md` (`AGENTS.md`, `GLOSSARY.md`, `docs/`, `.scratch/`), qui sont
+    précisément là où l'explication doit vivre.
+13. **Quand on retire des commentaires, le reste ne doit pas bouger.** Ne pas
+    changer la logique, les signatures, les noms, les imports ni le
+    comportement ; ne pas reformater au-delà de ce qu'exige la suppression
+    (conserver l'indentation, les lignes vides, les fins de ligne CRLF/LF,
+    l'ordre des imports). Vérifier ensuite avec `tsc`, `eslint` et la suite de
+    tests, et comparer token par token l'ancien et le nouveau fichier quand
+    le volume le justifie.
 
 ## Agent skills
 
