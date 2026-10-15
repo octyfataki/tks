@@ -6,10 +6,10 @@ import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
 import { session as sessionAuth } from "@/lib/db/schema/auth-schema";
-import { comptesStaff } from "@/lib/db/schema/s1-comptes";
-import { modifierAgentSupport, modifierEmailAgentSupport, ouvrirLienMotDePasseAgent, revoquerPremierAccesAdmin, tuerSessionsStaff, StaffError } from "@/lib/s1-comptes/staff";
-import type { ErreurStaff } from "@/lib/s1-comptes/staff";
-import { enregistrerEvenement } from "@/lib/s2-autorisations/journal";
+import { comptesStaff } from "@/lib/db/schema/comptes";
+import { modifierAgentSupport, modifierEmailAgentSupport, ouvrirLienMotDePasseAgent, revoquerPremierAccesAdmin, tuerSessionsStaff, StaffError } from "@/lib/comptes/staff";
+import type { ErreurStaff } from "@/lib/comptes/staff";
+import { enregistrerEvenement } from "@/lib/autorisations/journal";
 import type { ResultatAction } from "@/lib/resultat-action";
 
 export type ResultatModificationCoordonneesAgent = ResultatAction<{
@@ -158,7 +158,7 @@ export async function genererLienMotDePasseAgentAction(
   try {
     const acces = await ouvrirLienMotDePasseAgent(createurId, id);
     revalidatePath(`/admin/agents/${id}`);
-    return { ok: true, lien: `/premier-acces/${acces.jeton}` };
+    return { ok: true, lien: `/first-access/${acces.jeton}` };
   } catch (erreur) {
     // ouvrirLienMotDePasseAgent ne jette que NON_AUTORISE (acteur non
     // autorisé ou cible non éligible) : mappé explicitement, le reste est

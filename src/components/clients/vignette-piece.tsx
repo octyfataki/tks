@@ -18,7 +18,7 @@ export function VignettePiece({
   alt: string;
 }) {
   const [cassee, setCassee] = useState(false);
-  const url = `/api/pieces-clients/${pieceId}`;
+  const url = `/api/client-documents/${pieceId}`;
 
   if (!mime.startsWith("image/") || cassee) {
     return (

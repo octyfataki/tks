@@ -2,8 +2,8 @@ import type { ReactNode } from "react";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { profilSession } from "@/lib/s1-comptes/profil-session";
-import { redirectionAcces } from "@/lib/s1-comptes/role-session";
+import { profilSession } from "@/lib/comptes/profil-session";
+import { redirectionAcces } from "@/lib/comptes/role-session";
 import { GardienSession } from "@/components/gardien-session";
 import { AppSidebar } from "@/components/app-sidebar";
 import { AdminHeader } from "@/components/admin-header";
@@ -46,7 +46,7 @@ export default async function AdminLayout({
       <GardienSession />
       <AppSidebar
         utilisateur={{ nom, email: email || "Espace distributeur" }}
-        profilUrl="/admin/profil"
+        profilUrl="/admin/profile"
       />
       <SidebarInset>
         <AdminHeader />

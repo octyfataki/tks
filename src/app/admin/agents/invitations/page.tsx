@@ -3,8 +3,8 @@ import { desc, eq, inArray } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
 import { user } from "@/lib/db/schema/auth-schema";
-import { comptesStaff, invitationsAgents, peutInviterAgent } from "@/lib/db/schema/s1-comptes";
-import { etatLienInvitation } from "@/lib/db/schema/s1-comptes/validation";
+import { comptesStaff, invitationsAgents, peutInviterAgent } from "@/lib/db/schema/comptes";
+import { etatLienInvitation } from "@/lib/db/schema/comptes/validation";
 import { Badge } from "@/components/ui/badge";
 import {
   RegistreInvitationsAgents,

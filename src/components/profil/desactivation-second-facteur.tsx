@@ -15,7 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { desactiverSecondFacteurAction } from "@/app/admin/profil/actions";
+import { desactiverSecondFacteurAction } from "@/app/admin/profile/actions";
 
 type Etape = "confirmation" | "termine";
 

@@ -9,9 +9,9 @@ import { headers } from "next/headers";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
-import { comptesStaff } from "@/lib/db/schema/s1-comptes";
-import { creerInvitationAgent, StaffError } from "@/lib/s1-comptes/staff";
-import type { ErreurStaff } from "@/lib/s1-comptes/staff";
+import { comptesStaff } from "@/lib/db/schema/comptes";
+import { creerInvitationAgent, StaffError } from "@/lib/comptes/staff";
+import type { ErreurStaff } from "@/lib/comptes/staff";
 import type { ResultatAction } from "@/lib/resultat-action";
 
 export type ResultatInvitationAgent = ResultatAction<{ lien: string }>;

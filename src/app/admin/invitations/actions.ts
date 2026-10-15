@@ -9,13 +9,13 @@ import { headers } from "next/headers";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
-import { comptesStaff, peutInviterAdminPrincipal } from "@/lib/db/schema/s1-comptes";
+import { comptesStaff, peutInviterAdminPrincipal } from "@/lib/db/schema/comptes";
 import {
   ouvrirPremierAccesAdmin,
   revoquerInvitation,
   revoquerPremierAccesAdmin,
   StaffError,
-} from "@/lib/s1-comptes/staff";
+} from "@/lib/comptes/staff";
 import type { ResultatAction } from "@/lib/resultat-action";
 
 export type ResultatRenvoiAcces = ResultatAction<{ lien: string }>;
@@ -63,7 +63,7 @@ export async function rouvrirPremierAccesAction(
   try {
     const acces = await ouvrirPremierAccesAdmin(moi.id, cibleId);
     revalidatePath("/admin/invitations");
-    return { ok: true, lien: `/premier-acces/${acces.jeton}` };
+    return { ok: true, lien: `/first-access/${acces.jeton}` };
   } catch (erreur) {
     if (erreur instanceof StaffError) {
       return { ok: false, erreur: "Renvoi impossible pour ce compte." };

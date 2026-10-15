@@ -10,25 +10,25 @@ import {
   comptesStaff,
   piecesIdentiteClients,
   transitionCompteClientValide,
-} from "@/lib/db/schema/s1-comptes";
+} from "@/lib/db/schema/comptes";
 import {
   compteClientConnecte,
   retirerPiece,
   statuerPiece,
-} from "@/lib/s1-comptes/pieces-clients";
-import { typePieceValide } from "@/lib/s1-comptes/pieces-fichiers";
-import { statutPieceValide, pieceRetirable, type StatutPiece } from "@/lib/s1-comptes/fiche-client";
+} from "@/lib/comptes/pieces-clients";
+import { typePieceValide } from "@/lib/comptes/pieces-fichiers";
+import { statutPieceValide, pieceRetirable, type StatutPiece } from "@/lib/comptes/fiche-client";
 import {
   enregistrerEvenement,
   journaliserRefusContestation,
   ERREUR_CONTESTEE_INTROUVABLE,
-} from "@/lib/s2-autorisations/journal";
-import { aPermission } from "@/lib/s2-autorisations/autorisations";
+} from "@/lib/autorisations/journal";
+import { aPermission } from "@/lib/autorisations/autorisations";
 import {
   AnnotationError,
   poserEtiquette,
   retirerEtiquette,
-} from "@/lib/s4-annotations/annotations";
+} from "@/lib/annotations/annotations";
 import type { ResultatAction } from "@/lib/resultat-action";
 
 export type ResultatDecision = ResultatAction<{ compteId: string }>;
@@ -356,7 +356,7 @@ export async function statuerPieceIdentiteAction(
   }
   revaliderLesDeuxEspaces();
   // Le motif se lit sur le profil du client : il doit le voir sans recharger.
-  revalidatePath("/clients/profil");
+  revalidatePath("/clients/profile");
   return { ok: true, compteId };
 }
 
@@ -428,7 +428,7 @@ export async function retirerPieceIdentiteAction(
     return { ok: false, erreur: "Retrait impossible : journal indisponible." };
   }
   revaliderLesDeuxEspaces();
-  revalidatePath("/clients/profil");
+  revalidatePath("/clients/profile");
   return { ok: true, compteId: compte.id };
 }
 
@@ -664,7 +664,7 @@ function messageAnnotation(code: string): string {
  * Pose une étiquette sur un compte client (S4 issue #7). Liste fermée :
  * un code inconnu est refusé, jamais enregistré. L'écriture est
  * append-only et journalisée dans la même transaction (couche
- * `s4-annotations`) : journal indisponible = geste annulé.
+ * `annotations`) : journal indisponible = geste annulé.
  */
 export async function poserEtiquetteAction(
   _precedent: ResultatAnnotation | null,

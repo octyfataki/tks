@@ -25,7 +25,7 @@ export default function Introuvable() {
           <Link href="/" className={buttonVariants({ size: "lg" })}>
             Retour à l&apos;accueil
           </Link>
-          <Link href="/aide" className={buttonVariants({ size: "lg", variant: "outline" })}>
+          <Link href="/help" className={buttonVariants({ size: "lg", variant: "outline" })}>
             Voir l&apos;aide
           </Link>
         </>

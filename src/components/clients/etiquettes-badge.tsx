@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import {
   etiquetteParCode,
   type TeinteEtiquette,
-} from "@/lib/s4-annotations/etiquettes";
+} from "@/lib/annotations/etiquettes";
 
 /**
  * Classes Tailwind par teinte d'étiquette. Centralisées ici : la pastille

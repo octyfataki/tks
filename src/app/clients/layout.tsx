@@ -6,8 +6,8 @@ import { GardienSession } from "@/components/gardien-session";
 import { ClientHeader } from "@/components/client-header";
 import { ClientSidebar } from "@/components/client-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { profilSession } from "@/lib/s1-comptes/profil-session";
-import { redirectionAcces } from "@/lib/s1-comptes/role-session";
+import { profilSession } from "@/lib/comptes/profil-session";
+import { redirectionAcces } from "@/lib/comptes/role-session";
 
 /**
  * Garde d'accès à /clients : l'espace du client, et du client seulement.
@@ -47,7 +47,7 @@ export default async function ClientsLayout({
           email: email || "Espace client",
           avatar: session?.user?.image ?? undefined,
         }}
-        profilUrl="/clients/profil"
+        profilUrl="/clients/profile"
       />
       <SidebarInset>
         <ClientHeader />

@@ -1,6 +1,6 @@
 /**
  * Statut du compte client pour /pending (S1-03).
- * Source unique : GET /api/mon-compte/piece — état du compte, motif de
+ * Source unique : GET /api/my-account/piece — état du compte, motif de
  * refus éventuel, identité de la session et pièces déjà déposées.
  * Anonyme ou staff : non connecté.
  */
@@ -29,7 +29,7 @@ function texteOuNull(valeur: unknown): string | null {
 
 export async function lireStatutCompte(): Promise<StatutCompte> {
   try {
-    const reponse = await fetch("/api/mon-compte/piece", {
+    const reponse = await fetch("/api/my-account/piece", {
       cache: "no-store",
     });
     if (!reponse.ok) return { connecte: false };

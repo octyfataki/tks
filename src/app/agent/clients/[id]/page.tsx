@@ -3,10 +3,10 @@ import { notFound } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
-import { comptesStaff } from "@/lib/db/schema/s1-comptes";
-import { aPermission } from "@/lib/s2-autorisations/autorisations";
-import { chargerFicheClient } from "@/lib/s1-comptes/fiche-client-base";
-import { etiquettesActivesParCompte } from "@/lib/s4-annotations/annotations";
+import { comptesStaff } from "@/lib/db/schema/comptes";
+import { aPermission } from "@/lib/autorisations/autorisations";
+import { chargerFicheClient } from "@/lib/comptes/fiche-client-base";
+import { etiquettesActivesParCompte } from "@/lib/annotations/annotations";
 import { VueFicheClient } from "@/components/clients/fiche-client";
 import { PermissionRefusee } from "@/components/permission-refusee";
 

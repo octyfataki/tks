@@ -13,7 +13,7 @@ Références normatives : `GLOSSARY.md`, `docs/adr/0001` à `0005`, `.scratch/de
 4. **Pas de taux sur écriture** : `creances` et `paiements` = `montant + devise`, jamais de colonne taux. Invariant 5 + ADR-0001.
 5. **Append-only** : `journal_audit` sans UPDATE/DELETE par contrainte base. Corrections par écriture inverse, jamais de DELETE (invariant 10).
 6. **Vocabulaire** : `compte` != `dossier`, téléphone = clé du compte jamais du dossier, `commande` jamais `realisation`/`vente`, pas de `shop`, `virtuel`, `facture`.
-7. **Organisation (skill `architecture-patterns`)** : un dossier par contexte dans `src/lib/db/schema/sN-*/`, export via `index.ts`. Exemple : `s1-comptes/`, `s2-acces/`.
+7. **Organisation (skill `architecture-patterns`)** : un dossier par contexte métier dans `src/lib/db/schema/*/`, export via `index.ts`. Exemple : `comptes/`, `autorisations/` (jamais de numéro de spec).
 
 ## Conventions nommages
 

@@ -4,7 +4,7 @@ import { desc, eq } from "drizzle-orm";
 import { ArrowUpRightIcon } from "lucide-react";
 import { db } from "@/lib/db/client";
 import { user } from "@/lib/db/schema/auth-schema";
-import { comptesClients } from "@/lib/db/schema/s1-comptes";
+import { comptesClients } from "@/lib/db/schema/comptes";
 import { nomAffiche } from "@/components/clients/affichage-partage";
 import { PaginationListe } from "../list/pagination-liste";
 import { BarreOutilsClients } from "@/components/clients/barre-outils-clients";
@@ -169,6 +169,14 @@ export default async function ListeComptesClientsPage({
           Une connexion par ligne : le téléphone est la clé du compte. Le
           dossier financier vit ailleurs — ici aucun solde.
         </p>
+        <div className="mt-3">
+          <Link
+            href="/admin/clients/new"
+            className="inline-flex items-center rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+          >
+            Ouvrir un dossier
+          </Link>
+        </div>
       </div>
 
       {enAttente.length === 0 ? (

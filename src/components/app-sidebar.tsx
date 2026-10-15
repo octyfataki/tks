@@ -105,7 +105,7 @@ const groups: { label: string; items: NavItem[] }[] = [
       },
       {
         title: "Journal d'audit",
-        url: "/admin/journal",
+        url: "/admin/audit-log",
         icon: <ScrollTextIcon />,
       },
     ],
@@ -197,7 +197,7 @@ const groups: { label: string; items: NavItem[] }[] = [
     items: [
       {
         title: "Paramètres",
-        url: "/admin/parametres",
+        url: "/admin/settings",
         icon: <SettingsIcon />,
       },
     ],
@@ -211,7 +211,7 @@ export type UtilisateurSidebar = {
 
 export function AppSidebar({
   utilisateur,
-  profilUrl = "/admin/profil",
+  profilUrl = "/admin/profile",
   ...props
 }: React.ComponentProps<typeof Sidebar> & {
   utilisateur?: UtilisateurSidebar

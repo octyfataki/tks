@@ -54,7 +54,7 @@ const ETAPES_APRES = [
 export function FormulaireInvitationAgent({
   defautJours,
 }: {
-  /** Durée pré-remplie : le réglage en vigueur (/admin/parametres). */
+  /** Durée pré-remplie : le réglage en vigueur (/admin/settings). */
   defautJours: number;
 }) {
   const [resultat, action, enCours] = useActionState(

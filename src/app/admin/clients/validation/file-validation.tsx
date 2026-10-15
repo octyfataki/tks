@@ -199,7 +199,7 @@ export function FileValidation({
 
                       {ligne.piece ? (
                         <a
-                          href={`/api/pieces-clients/${ligne.piece.id}`}
+                          href={`/api/client-documents/${ligne.piece.id}`}
                           target="_blank"
                           rel="noreferrer"
                           className="mt-3 flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors hover:border-primary"
@@ -207,7 +207,7 @@ export function FileValidation({
                           {estImage ? (
                             // eslint-disable-next-line @next/next/no-img-element -- aperçu local authentifié, pas d'optimisation CDN
                             <img
-                              src={`/api/pieces-clients/${ligne.piece.id}`}
+                              src={`/api/client-documents/${ligne.piece.id}`}
                               alt={`Pièce ${ligne.piece.typePiece} de ${nom}`}
                               className="h-16 w-16 shrink-0 rounded-md border object-cover"
                             />

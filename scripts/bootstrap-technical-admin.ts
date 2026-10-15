@@ -10,7 +10,7 @@
  */
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
-import { bootstrapAdminTechnique } from "../src/lib/s1-comptes/staff";
+import { bootstrapAdminTechnique } from "../src/lib/comptes/staff";
 
 // Charge .env.local sans dépendance (tsx n'inclut pas dotenv).
 const envFile = join(process.cwd(), ".env.local");

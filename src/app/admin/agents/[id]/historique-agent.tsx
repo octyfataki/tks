@@ -2,8 +2,8 @@ import Link from "next/link";
 import { desc, eq, inArray, or } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { user } from "@/lib/db/schema/auth-schema";
-import { comptesStaff } from "@/lib/db/schema/s1-comptes";
-import { journalAudit } from "@/lib/db/schema/s2-autorisations";
+import { comptesStaff } from "@/lib/db/schema/comptes";
+import { journalAudit } from "@/lib/db/schema/autorisations";
 import { Badge } from "@/components/ui/badge";
 
 const EVENEMENTS_PAR_FICHE = 50;
@@ -21,7 +21,7 @@ function dateHeure(valeur: Date): string {
  * Historique d'un agent de service : les événements du journal d'audit
  * qui le concernent (entité) ou qu'il a lui-même provoqués (acteur :
  * inscription par lien, par exemple), plus récents d'abord. Lecture
- * seule — l'append-only reste garanti par la base, comme sur /admin/journal.
+ * seule — l'append-only reste garanti par la base, comme sur /admin/audit-log.
  */
 export async function HistoriqueAgent({ agentId }: { agentId: string }) {
   const evenements = await db
@@ -109,7 +109,7 @@ export async function HistoriqueAgent({ agentId }: { agentId: string }) {
         </table>
       </div>
       <Link
-        href={`/admin/journal?acteur=${agentId}`}
+        href={`/admin/audit-log?acteur=${agentId}`}
         className="self-end text-xs underline-offset-4 hover:underline"
       >
         Voir dans le journal complet

@@ -100,7 +100,7 @@ export default function PendingVue() {
   // Statut serveur (état + motif) : source unique partagée avec le dépôt.
   // C'est aussi le canal qui fait communiquer /pending avec
   // /admin/clients/validation : la décision de l'administrateur (valider /
-  // refuser) y arrive via GET /api/mon-compte/piece.
+  // refuser) y arrive via GET /api/my-account/piece.
   const [statut, setStatut] = useState<StatutCompte | null>(null);
   const [compteurStatut, setCompteurStatut] = useState(0);
 

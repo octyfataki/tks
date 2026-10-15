@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
-import { profilSession } from "@/lib/s1-comptes/profil-session";
-import { destinationApresConnexion } from "@/lib/s1-comptes/role-session";
+import { profilSession } from "@/lib/comptes/profil-session";
+import { destinationApresConnexion } from "@/lib/comptes/role-session";
 import PendingVue from "./pending-vue";
 
 // S1 : /pending est la fiche du compte client non validé — elle suit la

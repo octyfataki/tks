@@ -23,7 +23,7 @@ type Methode = "sms" | "email";
 // pas d'accès (étape bloquante). `trustDevice: false` — jamais mémorisé,
 // chaque session re-vérifie.
 // Second facteur = OTP à usage unique (6 chiffres, 5 minutes), envoyé sur la
-// méthode demandée via POST /api/2fa/envoyer-code : SMS (onglet par défaut)
+// méthode demandée via POST /api/2fa/send-code : SMS (onglet par défaut)
 // ou email. La méthode n'est pas décorative : l'onglet choisi décide où part
 // le code (repli email si aucun numéro de contact).
 // ÉCART ASSUMÉ à S1-spec et ADR-0006 §4, voir src/lib/auth.ts.
@@ -32,7 +32,7 @@ type Methode = "sms" | "email";
 // l'attente explicite ; la garde serveur reste l'autorité.
 const DELAI_RENVOI_SECONDES = 60;
 
-// Réponse de POST /api/2fa/envoyer-code : succès { status: true }, échec
+// Réponse de POST /api/2fa/send-code : succès { status: true }, échec
 // { code } avec les codes better-auth (traduits par
 // messageErreurSecondFacteur) — le 429 sans code est reconnu au statut.
 type ReponseEnvoi =
@@ -74,7 +74,7 @@ export function Verify2faForm() {
     setInfo(null);
     setEnvoi(true);
     try {
-      const reponse = await fetch("/api/2fa/envoyer-code", {
+      const reponse = await fetch("/api/2fa/send-code", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ methode }),

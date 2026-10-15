@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
-import { modifierPhotoProfilAction, supprimerPhotoProfilAction } from "@/app/admin/profil/actions";
+import { modifierPhotoProfilAction, supprimerPhotoProfilAction } from "@/app/admin/profile/actions";
 import { GALERIE_PHOTOS_PROFIL } from "./photo-profil-validation";
 
 function initiales(nom: string): string {

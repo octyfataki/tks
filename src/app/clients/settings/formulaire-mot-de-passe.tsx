@@ -16,7 +16,7 @@ import {
   evaluerForceMotDePasse,
   validerChangementMotDePasse,
   type NiveauForceMotDePasse,
-} from "@/app/agent/parametres/mot-de-passe-validation";
+} from "@/app/agent/settings/mot-de-passe-validation";
 
 const STYLE_FORCE: Record<NiveauForceMotDePasse, { fond: string; texte: string }> = {
   0: { fond: "bg-destructive", texte: "text-destructive" },

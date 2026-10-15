@@ -8,14 +8,14 @@ import {
   comptesStaff,
   invitationsAgents,
   peutInviterAgent,
-} from "@/lib/db/schema/s1-comptes";
-import { journalAudit } from "@/lib/db/schema/s2-autorisations";
+} from "@/lib/db/schema/comptes";
+import { journalAudit } from "@/lib/db/schema/autorisations";
 import {
   PERMISSIONS_FERMEES,
   peutConsulterJournal,
   peutGererPermissions,
-} from "@/lib/db/schema/s2-autorisations";
-import { listerPermissions, listerSocle } from "@/lib/s2-autorisations/autorisations";
+} from "@/lib/db/schema/autorisations";
+import { listerPermissions, listerSocle } from "@/lib/autorisations/autorisations";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";

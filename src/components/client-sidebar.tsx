@@ -102,7 +102,7 @@ const groups: { label: string; items: NavItem[] }[] = [
       },
       {
         title: "Aide",
-        url: "/clients/aide",
+        url: "/clients/help",
         icon: <CircleHelpIcon />,
       },
     ],
@@ -125,7 +125,7 @@ export type UtilisateurSidebarClient = {
  */
 export function ClientSidebar({
   utilisateur,
-  profilUrl = "/clients/profil",
+  profilUrl = "/clients/profile",
   ...props
 }: React.ComponentProps<typeof Sidebar> & {
   utilisateur?: UtilisateurSidebarClient

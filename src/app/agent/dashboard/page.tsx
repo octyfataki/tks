@@ -18,7 +18,7 @@ const zones = [
     titre: "Commandes",
     texte:
       "La file d'attente et la caisse rapide : servir les commandes des clients.",
-    href: "/agent/commandes",
+    href: "/agent/orders",
     lien: "Ouvrir les commandes",
   },
   {
@@ -26,7 +26,7 @@ const zones = [
     titre: "Encaissements",
     texte:
       "Encaisser au comptoir et suivre les créances restant dues.",
-    href: "/agent/encaissements",
+    href: "/agent/payments",
     lien: "Ouvrir les encaissements",
   },
   {

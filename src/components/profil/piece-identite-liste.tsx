@@ -8,7 +8,7 @@ import {
 import {
   pieceRetirable,
   type StatutPiece,
-} from "@/lib/s1-comptes/fiche-client";
+} from "@/lib/comptes/fiche-client";
 import { BoutonRetirerPiece } from "./bouton-retirer-piece";
 
 /** Pièce d'identité du compte connecté, telle que montrée sur son profil. */
@@ -58,7 +58,7 @@ export function ListePiecesIdentite({
             className="rounded-lg border bg-card transition-colors has-[a:hover]:border-primary"
           >
             <a
-              href={`/api/pieces-clients/${piece.id}`}
+              href={`/api/client-documents/${piece.id}`}
               target="_blank"
               rel="noreferrer"
               className="flex items-center gap-3 p-3"
@@ -66,7 +66,7 @@ export function ListePiecesIdentite({
               {estImage ? (
                 // eslint-disable-next-line @next/next/no-img-element -- aperçu local authentifié, pas d'optimisation CDN
                 <img
-                  src={`/api/pieces-clients/${piece.id}`}
+                  src={`/api/client-documents/${piece.id}`}
                   alt={`Votre pièce ${piece.typePiece}`}
                   className="h-16 w-16 shrink-0 rounded-md border object-cover"
                 />

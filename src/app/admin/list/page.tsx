@@ -8,7 +8,7 @@ import { user } from "@/lib/db/schema/auth-schema";
 import {
   comptesStaff,
   facteurs2faAdmin,
-} from "@/lib/db/schema/s1-comptes";
+} from "@/lib/db/schema/comptes";
 import { BarreOutilsListe } from "./barre-outils";
 import { CartesAdmins } from "./cartes-admins";
 import { PaginationListe } from "./pagination-liste";

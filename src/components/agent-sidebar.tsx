@@ -56,7 +56,7 @@ const groups: { label: string; items: NavItem[] }[] = [
     items: [
       {
         title: "Commandes",
-        url: "/agent/commandes",
+        url: "/agent/orders",
         icon: <ClipboardListIcon />,
         items: [
           { title: "File d'attente", soon: true },
@@ -65,17 +65,17 @@ const groups: { label: string; items: NavItem[] }[] = [
       },
       {
         title: "Preuves de paiement",
-        url: "/agent/preuves",
+        url: "/agent/proofs",
         icon: <FileCheckIcon />,
       },
       {
         title: "Encaissements",
-        url: "/agent/encaissements",
+        url: "/agent/payments",
         icon: <BanknoteIcon />,
       },
       {
         title: "Créances et dettes",
-        url: "/agent/creances",
+        url: "/agent/receivables",
         icon: <ScaleIcon />,
       },
     ],
@@ -85,12 +85,12 @@ const groups: { label: string; items: NavItem[] }[] = [
     items: [
       {
         title: "Paramètres",
-        url: "/agent/parametres",
+        url: "/agent/settings",
         icon: <SettingsIcon />,
       },
       {
         title: "Aide",
-        url: "/agent/aide",
+        url: "/agent/help",
         icon: <CircleHelpIcon />,
       },
     ],
@@ -113,7 +113,7 @@ export type UtilisateurSidebarAgent = {
  */
 export function AgentSidebar({
   utilisateur,
-  profilUrl = "/agent/profil",
+  profilUrl = "/agent/profile",
   ...props
 }: React.ComponentProps<typeof Sidebar> & {
   utilisateur?: UtilisateurSidebarAgent

@@ -34,7 +34,7 @@ import {
   revuePiecePossible,
   type FicheClient,
   type PieceFicheClient,
-} from "@/lib/s1-comptes/fiche-client";
+} from "@/lib/comptes/fiche-client";
 
 function cachetEtat(etat: string): {
   encre: "attente" | "fait" | "expire" | "revoque";
@@ -82,7 +82,7 @@ function Piece({
   return (
     <li className="rounded-lg border bg-muted/20">
       <a
-        href={`/api/pieces-clients/${piece.id}`}
+        href={`/api/client-documents/${piece.id}`}
         target="_blank"
         rel="noreferrer"
         className="group flex items-start gap-4 p-3"
@@ -147,6 +147,7 @@ export function VueFicheClient({
   listeHref,
   etiquettesActives,
   peutAnnoter,
+  ouvrirDossierHref = null,
 }: {
   fiche: FicheClient;
   maintenant: number;
@@ -156,6 +157,13 @@ export function VueFicheClient({
   etiquettesActives: readonly string[];
   /** Vrai si le lecteur tient la permission `client.annoter`. */
   peutAnnoter: boolean;
+  /**
+   * Lien vers l'ouverture d'un dossier pré-rempli depuis ce compte, ou
+   * `null` quand le lecteur ne peut pas ouvrir de dossier (pas de bouton
+   * sans effet). Le rattachement compte↔dossier reste différé : ouvrir
+   * pré-remplit nom et téléphone, il ne relie rien tout seul.
+   */
+  ouvrirDossierHref?: string | null;
 }) {
   const nom = nomAffiche({ nom: fiche.nom, email: fiche.email });
   const cachet = cachetEtat(fiche.etat);
@@ -409,14 +417,30 @@ export function VueFicheClient({
       <section className="rounded-xl border border-dashed bg-card p-4 sm:p-5">
         <h2 className="flex items-center gap-1.5 text-sm font-medium">
           <InfoIcon className="size-4 text-muted-foreground" />
-          Dossier financier — différé (S4)
+          Dossier financier
         </h2>
-        <p className="mt-0.5 max-w-2xl text-xs leading-relaxed text-muted-foreground">
-          Rattacher un dossier client, modifier son statut de crédit ou
-          son plafond demande des tables qui n&apos;existent pas encore
-          (S4). Ces gestes ne sont volontairement pas proposés ici : pas de
-          bouton sans effet. Ils apparaîtront sur cette fiche avec S4.
-        </p>
+        {ouvrirDossierHref ? (
+          <>
+            <p className="mt-0.5 max-w-2xl text-xs leading-relaxed text-muted-foreground">
+              Ce compte n&apos;a pas encore de dossier : ouvrez-le
+              pré-rempli de son nom et de son téléphone, sans rien retaper.
+              Vérifiez l&apos;orthographe avant d&apos;ouvrir — le dossier
+              reste désigné par son nom.
+            </p>
+            <div className="mt-3">
+              <Link href={ouvrirDossierHref} className={buttonVariants()}>
+                Ouvrir un dossier
+              </Link>
+            </div>
+          </>
+        ) : (
+          <p className="mt-0.5 max-w-2xl text-xs leading-relaxed text-muted-foreground">
+            Rattacher un dossier client, modifier son statut de crédit ou
+            son plafond demande des gestes qui n&apos;existent pas encore
+            ici. Ils apparaîtront sur cette fiche — pas de bouton sans
+            effet.
+          </p>
+        )}
         <ul className="mt-3 flex flex-wrap gap-2 text-[11px] text-muted-foreground">
           <li className="rounded-full border px-2.5 py-1">
             Rattacher un dossier

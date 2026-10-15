@@ -10,7 +10,7 @@ import {
   type MethodeEnvoi2fa,
 } from "./2fa-methode";
 import { verification } from "./db/schema/auth-schema";
-import { comptesClients, comptesStaff } from "./db/schema/s1-comptes";
+import { comptesClients, comptesStaff } from "./db/schema/comptes";
 
 // Socle S1 : TOUS les comptes (client comme staff) utilisent email + mot de
 // passe. Le téléphone n'est plus un identifiant de connexion : il reste une
@@ -23,7 +23,7 @@ import { comptesClients, comptesStaff } from "./db/schema/s1-comptes";
 // applicative (confirmerSecondFacteurAction).
 // Second facteur = code à usage unique, envoyé sur UNE méthode redondante au
 // choix de l'utilisateur : email OU SMS vers le numéro de contact du compte
-// staff (POST /api/2fa/envoyer-code, préférence `2fa-methode-<défi>` lue
+// staff (POST /api/2fa/send-code, préférence `2fa-methode-<défi>` lue
 // ci-dessous). « Méthode » et non « canal » : canal est réservé aux commandes
 // (GLOSSARY — EN_LIGNE / PRESENTIEL).
 // ÉCART ASSUMÉ à S1-spec (« pas de SMS », « pas d'OTP sous toute forme ») et à
@@ -133,7 +133,7 @@ export const auth = betterAuth({
       issuer: "TKS",
       otpOptions: {
         // Code à 6 chiffres, 5 minutes, 5 essais, chiffré au repos. Envoyé
-        // sur la méthode demandée (POST /api/2fa/envoyer-code) : email, ou
+        // sur la méthode demandée (POST /api/2fa/send-code) : email, ou
         // SMS vers le numéro de contact du compte (staff comme client) quand
         // il est renseigné. Sans préférence lisible : repli historique, les
         // deux méthodes — aucun envoi ne doit se perdre parce que le choix
@@ -165,7 +165,7 @@ export const auth = betterAuth({
                 methode = pref;
               } else if (process.env.NODE_ENV !== "production") {
                 // Ligne absente ou valeur inattendue : le suffixe permet de
-                // corréler avec la ligne écrite par POST /api/2fa/envoyer-code.
+                // corréler avec la ligne écrite par POST /api/2fa/send-code.
                 console.warn(
                   `[auth] 2FA : aucune préférence pour le défi …${defi.slice(-6)} (repli sms+email)`,
                 );

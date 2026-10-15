@@ -15,7 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { confirmerSecondFacteurAction } from "@/app/admin/profil/actions";
+import { confirmerSecondFacteurAction } from "@/app/admin/profile/actions";
 
 type Etape = "appareil" | "sms" | "courriel" | "codes";
 type Methode = "sms" | "email";

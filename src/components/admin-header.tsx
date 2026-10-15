@@ -33,11 +33,11 @@ const FIL_ARIANE_PAR_CHEMIN: Record<string, Segment[]> = {
     { etiquette: "Tableau de bord", href: "/admin/dashboard" },
     { etiquette: "Notifications" },
   ],
-  "/admin/profil": [
+  "/admin/profile": [
     { etiquette: "Tableau de bord", href: "/admin/dashboard" },
     { etiquette: "Mon compte" },
   ],
-  "/admin/aide": [
+  "/admin/help": [
     { etiquette: "Tableau de bord", href: "/admin/dashboard" },
     { etiquette: "Aide Admin" },
   ],
@@ -93,7 +93,7 @@ export function AdminHeader() {
       <BrandLogo height={24} className="shrink-0 md:hidden" />
       <DashboardHeader
         className="min-w-0 flex-1"
-        aideHref="/admin/aide"
+        aideHref="/admin/help"
         filAriane={
           <Breadcrumb aria-label="Fil d'Ariane">
             <BreadcrumbList>

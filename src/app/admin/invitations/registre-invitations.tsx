@@ -126,7 +126,7 @@ function exporterCSV(lignes: LigneRegistre[]) {
       cellule(
         ligne.voie === "lien"
           ? `/invite/${ligne.jeton}`
-          : `/premier-acces/${ligne.jeton}`,
+          : `/first-access/${ligne.jeton}`,
       ),
       cellule(dateCourte(ligne.envoyeLe)),
       cellule(dateCourte(ligne.expireLe)),
@@ -516,7 +516,7 @@ export function RegistreInvitations({ lignes }: { lignes: LigneRegistre[] }) {
                 const depliee = depliees.has(ligne.id);
                 const estFiche = ligne.voie === "fiche";
                 const chemin = estFiche
-                  ? `/premier-acces/${ligne.jeton}`
+                  ? `/first-access/${ligne.jeton}`
                   : `/invite/${ligne.jeton}`;
                 return (
                   <React.Fragment key={ligne.id}>

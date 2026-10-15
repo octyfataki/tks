@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { TYPES_PIECE, typePieceValide } from "@/lib/s1-comptes/pieces-fichiers";
+import { TYPES_PIECE, typePieceValide } from "@/lib/comptes/pieces-fichiers";
 import { cn } from "@/lib/utils";
 
 /** Pièce déjà déposée, telle qu'affichée sous le formulaire. */
@@ -69,7 +69,7 @@ function formaterTaille(octets: number): string {
 /**
  * Formulaire de dépôt d'une pièce d'identité, partagé par la page
  * d'attente (/pending, premier dépôt) et le profil client
- * (/clients/profil, remplacement). Le PDF part tel quel (5 Mo au plus),
+ * (/clients/profile, remplacement). Le PDF part tel quel (5 Mo au plus),
  * l'image est compressée avant envoi. `deposer` est l'appel serveur du
  * parent (import dynamique : ce module reste importable sans base) ;
  * après un dépôt réussi, le parent recharge (`onPieceDeposee`).
@@ -295,7 +295,7 @@ export function FormulaireDepotPiece({
               {pieces.map((piece) => (
                 <li key={piece.id} className="w-20 shrink-0">
                   <a
-                    href={`/api/pieces-clients/${piece.id}`}
+                    href={`/api/client-documents/${piece.id}`}
                     target="_blank"
                     rel="noreferrer"
                     className="block overflow-hidden rounded-lg border focus-visible:ring-2 focus-visible:ring-ring/30 focus-visible:outline-none"
@@ -304,7 +304,7 @@ export function FormulaireDepotPiece({
                     {piece.mime.startsWith("image/") ? (
                       // eslint-disable-next-line @next/next/no-img-element
                       <img
-                        src={`/api/pieces-clients/${piece.id}`}
+                        src={`/api/client-documents/${piece.id}`}
                         alt=""
                         loading="lazy"
                         className="h-20 w-20 object-cover"

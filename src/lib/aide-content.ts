@@ -1,5 +1,5 @@
 /**
- * Annuaire de raccourcis de la page d'aide (/aide).
+ * Annuaire de raccourcis de la page d'aide (/help).
  *
  * Trois rubriques, une par niveau : Aide Client, Aide Agent, Aide Admin.
  * Quand on est perdu, on vient y chercher le raccourci vers une page ou
@@ -12,8 +12,8 @@
  *   jamais « réalisation », « preuve de paiement » jamais « facture ».
  */
 
-import type { Profil } from "@/lib/s1-comptes/role-session";
-import { DESTINATION_CONNEXION } from "@/lib/s1-comptes/role-session";
+import type { Profil } from "@/lib/comptes/role-session";
+import { DESTINATION_CONNEXION } from "@/lib/comptes/role-session";
 
 export type AideNiveau = "Client" | "Agent" | "Admin";
 
@@ -53,7 +53,7 @@ export const AIDE_SECTIONS: AideSectionNiveau[] = [
       {
         label: "Mon compte",
         description: "Connexion et état de votre compte.",
-        href: "/clients/profil",
+        href: "/clients/profile",
         motsCles: ["profil", "compte", "connexion"],
       },
       {
@@ -97,7 +97,7 @@ export const AIDE_SECTIONS: AideSectionNiveau[] = [
       {
         label: "Mon compte",
         description: "Connexion et état de votre compte.",
-        href: "/agent/profil",
+        href: "/agent/profile",
         motsCles: ["profil", "compte"],
       },
       {
@@ -179,7 +179,7 @@ export const AIDE_SECTIONS: AideSectionNiveau[] = [
       {
         label: "Mon compte",
         description: "Connexion et état de votre compte.",
-        href: "/admin/profil",
+        href: "/admin/profile",
         motsCles: ["profil", "compte"],
       },
       {
@@ -230,9 +230,9 @@ export const AIDE_BIENTOT: { theme: string; entrees: string[] }[] = [
  * Anonyme, inconnu ou non validé : retour à la connexion.
  */
 export function destinationAide(profil: Profil): string {
-  if (profil.type === "CLIENT") return "/clients/aide";
+  if (profil.type === "CLIENT") return "/clients/help";
   if (profil.type === "STAFF" && profil.etat === "VALIDE") {
-    return profil.role === "AGENT" ? "/agent/aide" : "/admin/aide";
+    return profil.role === "AGENT" ? "/agent/help" : "/admin/help";
   }
   return DESTINATION_CONNEXION;
 }

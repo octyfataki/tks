@@ -2,10 +2,11 @@ import { drizzle } from "drizzle-orm/mysql2";
 import mysql from "mysql2/promise";
 import { env } from "@/lib/env";
 import * as authSchema from "./schema/auth-schema";
-import * as s1Comptes from "./schema/s1-comptes";
-import * as s2Autorisations from "./schema/s2-autorisations";
-import * as s3Devises from "./schema/s3-devises";
-import * as s4Annotations from "./schema/s4-annotations";
+import * as s1Comptes from "./schema/comptes";
+import * as s2Autorisations from "./schema/autorisations";
+import * as s3Devises from "./schema/devises";
+import * as s4Annotations from "./schema/annotations";
+import * as dossiersClients from "../../modules/clients/table";
 
 const pool = mysql.createPool({
   uri: env.DATABASE_URL,
@@ -15,7 +16,7 @@ const pool = mysql.createPool({
 });
 
 export const db = drizzle(pool, {
-  schema: { ...authSchema, ...s1Comptes, ...s2Autorisations, ...s3Devises, ...s4Annotations },
+  schema: { ...authSchema, ...s1Comptes, ...s2Autorisations, ...s3Devises, ...s4Annotations, ...dossiersClients },
   mode: "default",
 });
 

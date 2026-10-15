@@ -19,7 +19,7 @@ import {
   validerCompteClientComptoirAction,
   type ResultatDecision,
 } from "./actions";
-import { TYPES_PIECE } from "@/lib/s1-comptes/pieces-fichiers";
+import { TYPES_PIECE } from "@/lib/comptes/pieces-fichiers";
 
 const ETAT_INITIAL: ResultatDecision | null = null;
 

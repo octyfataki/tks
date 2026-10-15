@@ -3,7 +3,7 @@
 //
 // Le choix transite par une ligne `verification` d'identifiant
 // `2fa-methode-<défi>` (10 min, même durée que le défi 2FA), écrite par
-// POST /api/2fa/envoyer-code et lue par le mock d'envoi (src/lib/auth.ts).
+// POST /api/2fa/send-code et lue par le mock d'envoi (src/lib/auth.ts).
 // La clé reprend le jeton de défi BRUT (sans la signature) : c'est la
 // représentation que better-auth utilise des deux côtés (getSignedCookie
 // renvoie la valeur avant le dernier « . », qui sépare la signature de

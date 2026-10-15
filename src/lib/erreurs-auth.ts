@@ -32,7 +32,7 @@ const CONNEXION: Record<string, string> = {
 // Codes atteignables sur POST /two-factor/verify-otp, POST
 // /two-factor/send-otp (OTP SMS ou email, une seule méthode demandée) et POST
 // /two-factor/disable (mot de passe exigé pour désactiver), plus
-// POST /api/2fa/envoyer-code qui relaye ces codes et ajoute CANAL_INCONNU.
+// POST /api/2fa/send-code qui relaye ces codes et ajoute CANAL_INCONNU.
 const SECOND_FACTEUR: Record<string, string> = {
   INVALID_PASSWORD: "Mot de passe incorrect.",
   INVALID_CODE: "Code incorrect.",

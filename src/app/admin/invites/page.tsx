@@ -2,12 +2,12 @@ import { headers } from "next/headers";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
-import { comptesStaff } from "@/lib/db/schema/s1-comptes";
+import { comptesStaff } from "@/lib/db/schema/comptes";
 import {
   peutInviterAdminPrincipal,
   peutInviterAgent,
-} from "@/lib/db/schema/s1-comptes";
-import { lireDureeInvitationJours } from "@/lib/s1-comptes/reglages";
+} from "@/lib/db/schema/comptes";
+import { lireDureeInvitationJours } from "@/lib/comptes/reglages";
 import {
   Tabs,
   TabsContent,
@@ -15,7 +15,7 @@ import {
   TabsTrigger,
 } from "@/components/ui/tabs";
 import { PermissionRefusee } from "@/components/permission-refusee";
-import { FormulaireInvitationAdmin } from "../administrateurs/formulaire-invitation";
+import { FormulaireInvitationAdmin } from "../administrators/formulaire-invitation";
 import { FormulaireInvitationAgent } from "./formulaire";
 
 /**

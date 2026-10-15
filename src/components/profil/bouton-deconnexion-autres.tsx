@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { Button } from "@/components/ui/button";
-import { deconnecterAutresSessionsAction } from "@/app/admin/profil/actions";
+import { deconnecterAutresSessionsAction } from "@/app/admin/profile/actions";
 
 /**
  * Coupe les autres sessions du compte connecté, partout sauf ici.

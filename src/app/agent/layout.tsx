@@ -2,8 +2,8 @@ import type { ReactNode } from "react";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { profilSession } from "@/lib/s1-comptes/profil-session";
-import { redirectionAcces } from "@/lib/s1-comptes/role-session";
+import { profilSession } from "@/lib/comptes/profil-session";
+import { redirectionAcces } from "@/lib/comptes/role-session";
 import { GardienSession } from "@/components/gardien-session";
 import { AgentHeader } from "@/components/agent-header";
 import { AgentSidebar } from "@/components/agent-sidebar";
@@ -47,7 +47,7 @@ export default async function AgentLayout({
           email: email || "Espace agent",
           avatar: session?.user?.image ?? undefined,
         }}
-        profilUrl="/agent/profil"
+        profilUrl="/agent/profile"
       />
       <SidebarInset>
         <AgentHeader />

@@ -9,8 +9,8 @@ import {
   comptesClients,
   comptesStaff,
   piecesIdentiteClients,
-} from "@/lib/db/schema/s1-comptes";
-import { aPermission } from "@/lib/s2-autorisations/autorisations";
+} from "@/lib/db/schema/comptes";
+import { aPermission } from "@/lib/autorisations/autorisations";
 import { cn } from "@/lib/utils";
 import { joursAttente } from "@/components/clients/affichage-client";
 import { FileValidation } from "@/components/clients/file-validation";

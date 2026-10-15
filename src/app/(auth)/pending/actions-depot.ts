@@ -5,8 +5,8 @@ import {
   compteClientConnecte,
   deposerPieceIdentiteClient,
   PieceError,
-} from "@/lib/s1-comptes/pieces-clients";
-import { typePieceValide } from "@/lib/s1-comptes/pieces-fichiers";
+} from "@/lib/comptes/pieces-clients";
+import { typePieceValide } from "@/lib/comptes/pieces-fichiers";
 import type { ResultatAction } from "@/lib/resultat-action";
 
 export type ResultatDepotPiece = ResultatAction<{ pieceId: string }>;
@@ -69,7 +69,7 @@ export async function deposerPieceIdentiteAction(
     // Le client validé remplace sa pièce depuis son profil : la carte
     // « Pièce d'identité » doit montrer la nouvelle pièce sans rechargement
     // manuel.
-    revalidatePath("/clients/profil");
+    revalidatePath("/clients/profile");
     return { ok: true, pieceId: deposee.id };
   } catch (erreur) {
     if (erreur instanceof PieceError) {

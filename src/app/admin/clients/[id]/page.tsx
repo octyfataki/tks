@@ -3,9 +3,9 @@ import { notFound } from "next/navigation";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
-import { comptesStaff } from "@/lib/db/schema/s1-comptes";
-import { chargerFicheClient } from "@/lib/s1-comptes/fiche-client-base";
-import { etiquettesActivesParCompte } from "@/lib/s4-annotations/annotations";
+import { comptesStaff } from "@/lib/db/schema/comptes";
+import { chargerFicheClient } from "@/lib/comptes/fiche-client-base";
+import { etiquettesActivesParCompte } from "@/lib/annotations/annotations";
 import { VueFicheClient } from "@/components/clients/fiche-client";
 
 /**
@@ -38,6 +38,17 @@ export default async function FicheCompteClientAdminPage({
   ]);
   if (!fiche) notFound();
 
+  // Ouverture pré-remplie depuis le compte : nom et téléphone connus, pas
+  // retapés. Réservée au distributeur : le technique n'a aucun pouvoir
+  // métier, il garde la fiche sans le bouton.
+  const preRempli = new URLSearchParams();
+  if (fiche.nom?.trim()) preRempli.set("nom", fiche.nom.trim());
+  preRempli.set("contact", fiche.telephone);
+  const ouvrirDossierHref =
+    lignes[0]?.role === "ADMIN_PRINCIPAL"
+      ? `/admin/clients/new?${preRempli.toString()}`
+      : null;
+
   // eslint-disable-next-line react-hooks/purity -- lecture unique de l'horloge en composant serveur
   const maintenant = Date.now();
 
@@ -48,6 +59,7 @@ export default async function FicheCompteClientAdminPage({
       listeHref="/admin/clients"
       etiquettesActives={actives.get(id) ?? []}
       peutAnnoter={lignes[0]?.role === "ADMIN_PRINCIPAL"}
+      ouvrirDossierHref={ouvrirDossierHref}
     />
   );
 }

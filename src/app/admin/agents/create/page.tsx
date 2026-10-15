@@ -2,7 +2,7 @@ import { headers } from "next/headers";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
-import { comptesStaff, peutInviterAgent } from "@/lib/db/schema/s1-comptes";
+import { comptesStaff, peutInviterAgent } from "@/lib/db/schema/comptes";
 import { PermissionRefusee } from "@/components/permission-refusee";
 import { FormulaireAgent } from "./formulaire-agent";
 
