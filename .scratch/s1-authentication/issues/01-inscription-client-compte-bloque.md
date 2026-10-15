@@ -6,7 +6,7 @@ lui dit que son compte attend une vérification et où déposer sa pièce
 d'identité. **L'inscription ouvre la session** : le client n'a pas à se
 reconnecter, et le dépôt de la pièce est possible tout de suite. Tant que le
 compte n'est pas validé, il reste sur cet écran — il ne peut rien faire
-d'autre.
+d'autre : ni profil, ni solde, ni commande — pas même prépayée.
 
 Cette tranche pose aussi le **squelette** : application web installable, base de
 données réelle, migrations, CI, et la **couture de test** — couche applicative

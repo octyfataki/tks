@@ -32,11 +32,11 @@ par quelqu'un qui le connaît, et la reprise d'un compte après perte du mot de
 passe.
 
 Un point de vocabulaire, parce que c'est là que les erreurs se paient : un
-**compte** est une connexion, un **dossier** est une fiche financière. Ce ne sont
-pas les mêmes objets et ils ne doivent pas être confondus. Une application qui
-n'a qu'un seul « client » partout confond les deux, et c'est ainsi qu'un compte
-fourni avec le numéro de téléphone de quelqu'un d'autre finit par afficher la
-dette de ce quelqu'un d'autre.
+**compte** est une connexion, un **profil client** est la fiche de la boutique.
+Ce ne sont pas les mêmes objets et ils ne doivent pas être confondus. Une
+application qui n'a qu'un seul « client » partout confond les deux, et c'est
+ainsi qu'un compte fourni avec le numéro de téléphone de quelqu'un d'autre
+finit par afficher la dette de ce quelqu'un d'autre.
 
 ## Solution
 
@@ -48,12 +48,12 @@ qui tient debout **sans réseau**.
   d'invitation**.
 - **Un compte client n'est jamais utilisable avant d'avoir été validé par un
   humain.** L'inscription crée une connexion **en attente**, qui ne peut rien
-  faire — pas voir de dossier, pas voir de solde, pas commander. Valider exige
+  faire — pas voir de profil, pas voir de solde, pas commander. Valider exige
   qu'un administrateur ou un agent voit une pièce d'identité, et l'action est
   journalisée.
-- **Un compte n'est pas un dossier.** Le numéro de téléphone est la clé du compte,
-  **jamais** celle du dossier financier. Le lien entre les deux est établi par un
-  humain, et un dossier ne se désigne jamais par son seul numéro.
+- **Un compte n'est pas un profil client.** Le numéro de téléphone est la clé du compte,
+  **jamais** celle du profil client. Le lien entre les deux est établi par un
+  humain, et un profil ne se désigne jamais par son seul numéro.
 - L'accès des agents passe par un **lien d'invitation à durée de validité** et à
   usage unique : le distributeur n'a pas de fiche à saisir, et un lien envoyé à
   un ancien employé cesse de fonctionner de lui-même.
@@ -135,20 +135,20 @@ qui tient debout **sans réseau**.
 | Agent | lien d'invitation, puis email + mot de passe | **optionnel**, code à usage unique par SMS ou email |
 
 - Le **numéro de téléphone est l'identifiant unique du compte client**, et
-  l'identifiant du compte est unique. Il **n'est pas** la clé du dossier client :
-  un numéro de téléphone peut légitimement servir plusieurs dossiers. Voir
-  « Compte et dossier » ci-dessous, et S4 pour le dossier lui-même.
+  l'identifiant du compte est unique. Il **n'est pas** la clé du profil client :
+  un numéro de téléphone peut légitimement servir plusieurs profils. Voir
+  « Compte et profil » ci-dessous, et S4 pour le profil lui-même.
 - L'agent choisit son email au moment de s'inscrire. Le lien d'invitation fixe le
   rôle, pas l'identifiant.
 - **Aucun SMS n'est envoyé à l'inscription client.** La vérification du numéro
   passe par la **validation** humaine, pas par un code (voir « Compte,
-  validation et dossier »). Le SMS sert au second facteur optionnel
+  validation et profil client »). Le SMS sert au second facteur optionnel
   (issue #3), jamais à l'inscription.
 - **Aucune vérification de numéro par code à l'inscription client.** Elle n'est pas
   nécessaire, parce que la protection n'est pas le code : c'est la **validation**.
-  Voir « Compte, validation et dossier ».
+  Voir « Compte, validation et profil client ».
 
-### Compte, validation et dossier
+### Compte, validation et profil client
 
 Trois choses distinctes. Les confondre est exactement ce qui fait qu'un client
 peut lire la dette d'un autre.
@@ -157,7 +157,7 @@ peut lire la dette d'un autre.
   exister seul.
 - **Une validation est une décision humaine** : « cette personne est bien un
   client, je l'ai vérifiée ». Elle porte sur le compte, pas sur un montant.
-- **Un dossier est une fiche financière.** Nom, adresse, créances, plafond,
+- **Un profil client est la fiche de la boutique.** Nom, adresse, créances, plafond,
   statut. C'est le seul endroit où vit de l'argent.
 
 #### Les états du compte client
@@ -165,32 +165,35 @@ peut lire la dette d'un autre.
 | État | Signification | Ce que le client peut faire |
 | ---- | ------------- | ---------------------------- |
 | `EN_ATTENTE_VALIDATION` | inscrit, personne ne l'a encore vérifié | rien, sinon lire son état et se déconnecter |
-| `VALIDE` | un humain a vérifié une pièce d'identité | commander, voir son dossier **si** il est rattaché |
-| `REFUSE` | refusé, avec un motif | lire le motif ; le distributors peut valider plus tard |
+| `VALIDE` | un humain a vérifié une pièce d'identité | commander, voir son profil **si** un accès lui est autorisé (profil créé dans le même parcours, ou accès confirmé — voir S4 ticket 02) |
+| `REFUSE` | refusé, avec un motif | lire le motif ; le distributeur peut valider plus tard |
 | `REVOQUE` | plus jamais utilisé | rien |
 
-- **L'inscription crée un compte `EN_ATTENTE_VALIDATION`.** Aucun dossier, aucune
+- **L'inscription crée un compte `EN_ATTENTE_VALIDATION`.** Aucun profil, aucune
   créance, aucun solde, aucune commande — **pas même prépayée**. Un compte non
   validé ne fait rien du tout.
 - **Valider exige une pièce d'identité.** Il n'existe aucun chemin dans
   l'application qui crée un compte `VALIDE` sans que quelqu'un ait vu un document.
   C'est la contrainte structurante de cette partie de la spec, et elle doit être
   vérifiée par un test qui tente de s'en passer.
-- **Valider et rattacher sont deux décisions, mais un seul geste.** Quand
-  l'administrateur valide un client qui existe déjà au classeur, il choisit le
-  dossier dans la même action. Les deux décisions restent **attribuables séparément**
+- **Valider et autoriser sont deux décisions distinctes.** Quand
+  l'administrateur valide le compte d'une nouvelle boutique, le profil client est
+  créé dans le même parcours contrôlé, sans tâche manuelle distincte. Si un
+   profil existant semble correspondre, aucun accès n'est accordé : le cas est
+   placé en attente de confirmation par un agent autorisé (voir S4 ticket 02).
+   Les deux décisions restent **attribuables séparément**
   dans le journal, parce que le risque n'est pas le même : une validation fausse
-  donne un compte à un inconnu, un rattachement faux montre une dette à quelqu'un
+  donne un compte à un inconnu, une confirmation erronée montre une dette à quelqu'un
   d'autre.
-- **Un dossier n'est jamais choisi par le numéro de téléphone seul.** La recherche
-  affiche nom, adresse et solde ; confirmer demande de désigner le dossier par son
+- **Un profil n'est jamais choisi par le numéro de téléphone seul.** La recherche
+  affiche nom, adresse et solde ; confirmer demande de désigner le profil par son
   **nom**. Un agent qui se trompe de numéro ne valide donc pas le mauvais client.
-- **Un compte porte au plus un dossier, un dossier porte au plus un compte.** La
+- **Un compte accède au plus à un profil, un profil porte au plus un compte principal actif.** La
   relation est 1:1. Un client qui perd son téléphone réinscrit un compte, l'ancien
-  est révoqué, et le dossier est rattaché au nouveau.
-- **Valider et rattacher sont journalisés** : qui, quand, quel compte, quel
-  dossier, quelle pièce d'identité vue. Une validation ou un rattachement
-  frauduleux doit être détectable, et **défaisable**.
+  est révoqué, et l'accès au même profil est transféré au nouveau, avec journal.
+- **Valider et autoriser sont journalisés** : qui, quand, quel compte, quel
+  profil, quelle pièce d'identité vue. Une validation ou une confirmation
+  frauduleuse doit être détectable, et **défaisable**.
 - **Un agent peut valider**, si le distributeur lui a donné la permission. Le
   défaut reste zéro permission (S2). C'est ce qui permet de ne pas refuser un
   client de première visite au comptoir.
@@ -317,19 +320,19 @@ accordé, l'échec refusé — jamais l'état interne.
   porte dérobée.
 - **La pièce d'identité** est conservée et consultable lors d'une deuxième
   demande.
-- **Le compte non rattaché ne voit rien.** Un compte existe, la session fonctionne,
+- **Le compte sans autorisation ne voit rien.** Un compte existe, la session fonctionne,
   et le test vérifie trois refus : pas de solde, pas d'historique, pas de commande
-  crédit. C'est le test qui prouve que la séparation compte / dossier tient.
-- **Le rattachement donne accès, et il est tracé.** Un compte rattaché voit le
-  dossier, et le journal contient qui a rattaché quoi, quand et sur quelle pièce.
-  Un rattachement ne peut pas être fait deux fois sur le même compte.
-- **Le compte lié à un mauvais dossier se détecte.** Un client signale qu'il ne
-  voit pas sa dette : il faut pouvoir lister les rattachements faits récemment et
-  les défaire. Ce test garantit qu'une erreur de rattachement est réparable.
+  crédit. C'est le test qui prouve que la séparation compte / profil tient.
+- **La confirmation donne accès, et elle est tracée.** Un compte autorisé voit le
+  profil, et le journal contient qui a autorisé quoi, quand et sur quelle pièce.
+  Un accès ne peut pas être accordé deux fois sur le même compte.
+- **Le compte autorisé sur un mauvais profil se détecte.** Un client signale qu'il ne
+  voit pas sa dette : il faut pouvoir lister les autorisations accordées récemment et
+  les défaire. Ce test garantit qu'une erreur de confirmation est réparable.
 
 **Trois tests qui verrouillent la validation, et qu'il ne faut pas escamoter :**
 
-- **Un compte non validé ne fait rien.** Aucun dossier, aucun solde, aucune
+- **Un compte non validé ne fait rien.** Aucun profil, aucun solde, aucune
   commande, **ni prépayée ni crédit**. Le test parcourt chaque écran accessible et
   attend un refus partout. C'est le test qui prouve que `EN_ATTENTE_VALIDATION` est
   une vraie barrière, et pas un simple indicateur affiché.
@@ -337,9 +340,9 @@ accordé, l'échec refusé — jamais l'état interne.
   tous les chemins disponibles — écran, puis appel direct de la couche applicative
   — et attend un refus à chaque fois. Une validation sans document doit être
   **impossible à produire**, pas seulement masquée dans l'interface.
-- **Un dossier n'est jamais désigné par son seul numéro.** Un compte validé attend
-  une désignation explicite du dossier par son nom. Le test vérifie qu'aucun
-  raccourci « rattache au dossier de ce numéro » n'existe, parce que c'est
+- **Un profil n'est jamais désigné par son seul numéro.** Un compte validé attend
+  une désignation explicite du profil par son nom. Le test vérifie qu'aucun
+  raccourci « accès au profil de ce numéro » n'existe, parce que c'est
   exactement le raccourci qui montre la dette d'un client à un autre.
 
 **Deuxième couture, mince** : un parcours navigateur par profil, traversant
@@ -353,7 +356,7 @@ pas seulement en couche applicative.
 - **La question « qu'as-tu le droit de faire ? »** : rôles, permissions, héritage
   et journal d'audit sont en **S2**.
 - **La fiche financière du client** : nom, adresse, plafond, statut, pièce
-  d'identité. Ce sont le **dossier client** et le **rattachement**, en **S4**.
+  d'identité. Ce sont le **profil client** et la **confirmation d'accès**, en **S4**.
 - Authentification par SMS ou par OTP, sous toute forme.
 - OAuth avec Google, Facebook ou autre fournisseur d'identité.
 - Vérification de numéro par code à l'inscription client.
@@ -374,12 +377,12 @@ elle a un prix qu'il faut nommer.**
 Le client a demandé que les comptes de client soient vérifiés et validés par un
 administrateur au moment de la création. La spec l'applique ainsi : l'inscription
 crée un compte `EN_ATTENTE_VALIDATION`, et **ce compte ne peut rien faire** — pas
-voir de dossier, pas voir de solde, pas commander, **pas même en prépayé**. Il
+voir de profil, pas voir de solde, pas commander, **pas même en prépayé**. Il
 faut qu'un humain voie une pièce d'identité avant qu'il devienne un compte
 utilisable.
 
 C'est plus strict que ce qui était écrit quelques lignes plus haut, où un compte
-non rattaché pouvait encore commander en prépayé parce qu'il payait avant de
+non autorisé pouvait encore commander en prépayé parce qu'il payait avant de
 consommer. Cette tolérance a été retirée : elle reposait sur l'hypothèse que la
 personne qui s'inscrit est un vrai client, et c'est précisément ce qui n'est pas
 encore établi.
@@ -398,23 +401,23 @@ décision est correcte et le produit est mort.
 
 **La bascule du déploiement est le vrai coût.** Les clients existants sont déjà
 dans le classeur, sans compte. Chacun a besoin d'un compte validé avant de
-pouvoir servir son dossier. Le nombre est inconnu, et le mode de bascule — valider
+pouvoir servir son profil. Le nombre est inconnu, et le mode de bascule — valider
 en masse par le distributeur, ou à la première visite — **n'est pas décidé**. Ce
 n'est pas une question technique : c'est une question de charge de travail et de
 risque, et c'est au client d'y répondre.
 
-**La validation et le rattachement restent deux décisions.** Valider dit « cette
-personne est un client ». Rattacher dit « cette personne est *ce* client ». Le
+**La validation et la confirmation restent deux décisions.** Valider dit « cette
+personne est un client ». Confirmer dit « cette personne est *ce* client ». Le
 risque n'est pas le même : une validation fausse donne un compte à un inconnu, un
-rattachement faux montre une dette à quelqu'un d'autre. D'où la règle qu'un
-dossier ne se désigne **jamais par son numéro de téléphone seul**.
+confirmation erronée montre une dette à quelqu'un d'autre. D'où la règle qu'un
+profil ne se désigne **jamais par son numéro de téléphone seul**.
 
 **La question du SMS est close, et ce n'est plus le trou de cette spec.**
 
 Elle l'a été parce que le vrai problème n'était pas le SMS. Il était écrit dans
 cette spec sous une forme qui passait inaperçu : le numéro de téléphone était à la
-fois la clé du compte **et** la clé du dossier financier. Sans vérification de
-numéro, un compte créé avec le numéro d'un client atterrissait dans son dossier —
+fois la clé du compte **et** la clé du profil client. Sans vérification de
+numéro, un compte créé avec le numéro d'un client accédait à son profil —
 il lisait son solde, son historique, et commandait du crédit à son compte.
 
 Un code SMS par message aurait refermé la porte, mais en ajoutant une attente dans
