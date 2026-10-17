@@ -105,7 +105,7 @@ export default function SignUpPage() {
               minLength={2}
             />
             <FieldDescription>
-              C&apos;est sous ce nom que votre dossier sera désigné et confirmé
+              C&apos;est sous ce nom que votre profil sera désigné et confirmé
               à voix haute.
             </FieldDescription>
           </Field>

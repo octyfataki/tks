@@ -24,7 +24,7 @@ export default function ForgotPasswordPage() {
             <FieldLabel htmlFor="piece">Pièce d&apos;identité</FieldLabel>
             <Input id="piece" name="piece" type="file" accept="image/*" />
             <FieldDescription>
-              La pièce est conservée sur le dossier client pour une vérification
+              La pièce est conservée sur le profil client pour une vérification
               ultérieure. L&apos;accès temporaire est court et révoqué dès le
               nouveau mot de passe choisi.
             </FieldDescription>

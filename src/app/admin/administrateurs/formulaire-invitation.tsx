@@ -80,7 +80,7 @@ export function FormulaireInvitationAdmin({
             Inviter un administrateur principal
           </h1>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            Le compte du distributeur, qui gère les dossiers clients, les
+            Le compte du distributeur, qui gère les profils clients, les
             agents et les validations. Le lien ne crée qu&apos;un compte
             administrateur principal.
           </p>

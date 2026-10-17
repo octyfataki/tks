@@ -39,10 +39,10 @@ const groups: { label: string; items: NavItem[] }[] = [
     ],
   },
   {
-    label: "Mon dossier et crédit",
+    label: "Mon profil et crédit",
     items: [
       {
-        title: "Mon dossier",
+        title: "Mon profil",
         url: "#",
         icon: <FolderOpenIcon />,
         soon: true,

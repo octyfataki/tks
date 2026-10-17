@@ -46,7 +46,7 @@ import { LIBELLES_PERMISSION } from "../[id]/permissions-agent";
 const GROUPES: { titre: string; detail: string; permissions: string[] }[] = [
   {
     titre: "Clients",
-    detail: "Dossiers, rattachements, plafond et statut.",
+    detail: "Profils, accès, plafond et statut.",
     permissions: [
       "dossier.creer",
       "dossier.rattacher",

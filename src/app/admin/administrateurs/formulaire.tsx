@@ -127,7 +127,7 @@ export function FormulaireAdministrateurPrincipal() {
             Créer un administrateur principal
           </h1>
           <p className="mt-0.5 text-xs text-muted-foreground">
-            Le compte du distributeur, qui gère les dossiers clients, les
+            Le compte du distributeur, qui gère les profils clients, les
             agents et les validations.
           </p>
         </div>
@@ -153,7 +153,7 @@ export function FormulaireAdministrateurPrincipal() {
         <div role="status" className="flex flex-col gap-2 rounded-lg border border-green-600/30 bg-green-600/5 p-3">
           <p className="text-xs font-medium text-green-700">
             Compte administrateur principal créé pour {resultat.email}. Il
-            gère désormais les dossiers clients.
+            gère désormais les profils clients.
           </p>
           {resultat.lienPremierAcces ? (
             <>

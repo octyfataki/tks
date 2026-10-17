@@ -37,7 +37,7 @@ export function AideContenu({ niveau }: { niveau?: AideNiveau }) {
           <p className="text-xs leading-relaxed text-muted-foreground">
             Dire « client » et jamais « shop », « commande » et jamais
             « réalisation », « preuve de paiement » et jamais « facture » :
-            c’est ainsi qu’on ne mélange ni les dettes ni les dossiers.
+            c’est ainsi qu’on ne mélange ni les dettes ni les profils.
             « Virtuel », « e-money », « objectif airtime » : n’existent pas
             ici.
           </p>

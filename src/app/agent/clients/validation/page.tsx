@@ -115,7 +115,7 @@ export default async function AgentValidationComptesClientsPage() {
           {lignes.length === 0
             ? "File vide : aucun compte en attente."
             : `${lignes.length} compte${lignes.length > 1 ? "s" : ""} en attente, les plus anciens d'abord. `}
-          Un compte non validé ne peut rien faire : ni dossier, ni solde, ni
+          Un compte non validé ne peut rien faire : ni profil, ni solde, ni
           commande.
         </p>
       </div>

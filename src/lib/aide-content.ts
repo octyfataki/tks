@@ -27,13 +27,13 @@ export const AIDE_NIVEAUX: ("Tous" | AideNiveau)[] = [
 export const AIDE_SECTIONS: AideSectionNiveau[] = [
   {
     niveau: "Client",
-    phrase: "Votre espace : compte, dossier, commandes et soldes.",
+    phrase: "Votre espace : compte, profil, commandes et soldes.",
     raccourcis: [
       {
         label: "Votre compte",
-        description: "Dossier, commandes et soldes (lignes de crédit : S4).",
+        description: "Profil, commandes et soldes (lignes de crédit : S4).",
         href: "/clients",
-        motsCles: ["compte", "dossier", "solde", "accueil", "espace"],
+        motsCles: ["compte", "profil", "solde", "accueil", "espace"],
       },
       {
         label: "Mon compte",
@@ -67,7 +67,7 @@ export const AIDE_SECTIONS: AideSectionNiveau[] = [
       },
     ],
     astuce:
-      "Un compte non validé ne voit ni dossier ni solde : présentez une pièce d'identité au comptoir.",
+      "Un compte non validé ne voit ni profil ni solde : présentez une pièce d'identité au comptoir.",
   },
   {
     niveau: "Agent",
@@ -168,9 +168,9 @@ export const AIDE_SECTIONS: AideSectionNiveau[] = [
         motsCles: ["profil", "compte"],
       },
       {
-        label: "Tous les dossiers",
-        description: "Dossiers désignés par nom, adresse et solde.",
-        motsCles: ["dossier", "client", "fiche", "nom"],
+        label: "Tous les profils",
+        description: "Profils désignés par nom, adresse et solde.",
+        motsCles: ["profil", "client", "fiche", "nom"],
       },
       {
         label: "Taux de change",

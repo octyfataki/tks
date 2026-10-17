@@ -16,7 +16,7 @@ export default async function Page() {
               Créer un administrateur principal
             </p>
             <p className="mt-1 text-xs text-muted-foreground">
-              Le compte du distributeur, qui gère les dossiers clients, les
+              Le compte du distributeur, qui gère les profils clients, les
               agents et les validations.
             </p>
             <Link

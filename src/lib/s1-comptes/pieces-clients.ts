@@ -78,9 +78,9 @@ export async function deposerPieceIdentiteClient(input: {
 
   const id = randomUUID();
   const relatif = `pieces-clients/${compte.id}/${id}.${verdict.extension}`;
-  const dossier = join(process.cwd(), "donnees", "pieces-clients", compte.id);
+  const repertoire = join(process.cwd(), "donnees", "pieces-clients", compte.id);
   try {
-    await mkdir(dossier, { recursive: true });
+    await mkdir(repertoire, { recursive: true });
     await writeFile(join(process.cwd(), "donnees", relatif), input.octets);
   } catch {
     throw new PieceError("STOCKAGE_INDISPONIBLE", "dépôt impossible");

@@ -115,8 +115,8 @@ const GROUPES_ADMIN: GroupeSuggestions[] = [
     titre: "Clients et crédit",
     elements: [
       {
-        etiquette: "Tous les dossiers",
-        motsCles: ["dossier", "client", "fiches", "nom"],
+        etiquette: "Tous les profils",
+        motsCles: ["profil", "client", "fiches", "nom"],
         icone: FolderOpenIcon,
       },
       {
@@ -272,18 +272,18 @@ export const GROUPES_CLIENT: GroupeSuggestions[] = [
     elements: [
       {
         etiquette: "Votre compte",
-        motsCles: ["compte", "dossier", "solde", "accueil", "espace"],
+        motsCles: ["compte", "profil", "solde", "accueil", "espace"],
         icone: LayoutDashboardIcon,
         href: "/clients",
       },
     ],
   },
   {
-    titre: "Mon dossier et crédit",
+    titre: "Mon profil et crédit",
     elements: [
       {
-        etiquette: "Mon dossier",
-        motsCles: ["dossier", "client", "fiche", "nom", "adresse"],
+        etiquette: "Mon profil",
+        motsCles: ["profil", "client", "fiche", "nom", "adresse"],
         icone: FolderOpenIcon,
       },
       {
@@ -335,7 +335,7 @@ export const GROUPES_CLIENT: GroupeSuggestions[] = [
       },
       {
         etiquette: "Aide",
-        motsCles: ["aide", "raccourcis", "dossier", "commande"],
+        motsCles: ["aide", "raccourcis", "profil", "commande"],
         icone: CircleHelpIcon,
         href: "/clients/aide",
       },
@@ -406,7 +406,7 @@ export function PaletteRecherche({
           <CommandInput placeholder="Rechercher une page, une action…" />
           <CommandList>
             <CommandEmpty>
-              Aucun résultat — la recherche dans les dossiers clients (par nom,
+              Aucun résultat — la recherche dans les profils clients (par nom,
               avec adresse et solde) arrive avec la tranche S4.
             </CommandEmpty>
             {groupes.map((groupe, index) => (

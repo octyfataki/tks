@@ -44,7 +44,7 @@ export function RemplacerPieceIdentite() {
         deposer={deposer}
         onPieceDeposee={signalerDepot}
         titre="Remplacez votre pièce"
-        description="Photo lisible (CNI, passeport, permis) ou PDF, 5 Mo au plus. Votre pièce actuelle reste au dossier ; la nouvelle sera à revoir par un humain."
+        description="Photo lisible (CNI, passeport, permis) ou PDF, 5 Mo au plus. Votre pièce actuelle reste à votre profil ; la nouvelle sera à revoir par un humain."
         libelleEnvoi="Envoyer la nouvelle pièce"
         afficherDeposees={false}
         etiquetteSection="Remplacer votre pièce d'identité"

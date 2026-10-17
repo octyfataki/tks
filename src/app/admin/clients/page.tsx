@@ -158,7 +158,7 @@ export default async function ListeComptesClientsPage({
               ? `${lignesTriees.length} sur ${total} compte${total > 1 ? "s" : ""}.`
               : `${total} compte${total > 1 ? "s" : ""}.`}{" "}
           Une connexion par ligne : le téléphone est la clé du compte. Le
-          dossier financier vit ailleurs — ici aucun solde.
+          profil client vit ailleurs — ici aucun solde.
         </p>
       </div>
 

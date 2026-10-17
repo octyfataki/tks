@@ -48,7 +48,7 @@ export function BoutonRetirerPiece({ pieceId }: { pieceId: string }) {
   return (
     <div className="flex flex-col gap-1.5">
       <p className="text-[11px] leading-relaxed text-muted-foreground">
-        La pièce reste dans votre dossier, seul le document cesse d&apos;être
+        La pièce reste dans votre profil, seul le document cesse d&apos;être
         votre pièce actuelle. Vous pouvez en déposer une nouvelle.
       </p>
       {erreur ? (

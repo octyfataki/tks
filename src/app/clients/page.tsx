@@ -10,7 +10,7 @@ export default function ClientsAccueilPage() {
         Votre compte
       </h1>
       <p className="max-w-md text-sm leading-relaxed text-muted-foreground">
-        Votre dossier, vos commandes et vos soldes arrivent avec la gestion des
+        Votre profil, vos commandes et vos soldes arrivent avec la gestion des
         clients et des lignes de crédit. Cet écran existe d&apos;abord pour que
         la connexion d&apos;un client atterrisse ici, et nulle part ailleurs.
       </p>

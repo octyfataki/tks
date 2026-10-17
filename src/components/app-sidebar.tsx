@@ -114,12 +114,12 @@ const groups: { label: string; items: NavItem[] }[] = [
     label: "Clients et crédit",
     items: [
       {
-        title: "Dossiers clients",
+        title: "Profils clients",
         url: "#",
         icon: <FolderOpenIcon />,
         soon: true,
         items: [
-          { title: "Tous les dossiers", soon: true },
+          { title: "Tous les profils", soon: true },
           { title: "Suivi des retards", soon: true },
         ],
       },

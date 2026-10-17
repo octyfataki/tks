@@ -4,7 +4,7 @@ import { AideContenu } from "@/components/aide/aide-contenu";
 export const metadata: Metadata = {
   title: "Aide Client — TKS",
   description:
-    "Raccourcis du niveau client : compte, dossier, commandes et soldes. Connecté uniquement.",
+    "Raccourcis du niveau client : compte, profil, commandes et soldes. Connecté uniquement.",
 };
 
 export default function ClientsAidePage() {

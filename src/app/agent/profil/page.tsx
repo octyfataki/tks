@@ -111,7 +111,7 @@ export default async function AgentProfilPage() {
         telephone={telephone}
         avatarUrl={avatarUrl}
         compte={compte}
-        dossier={null}
+        profil={null}
         secondFacteurActif={secondFacteurActif}
         appareilSecondFacteur={appareilSecondFacteur}
         matricule={matricule}

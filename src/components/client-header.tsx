@@ -69,7 +69,7 @@ export function ClientHeader() {
         notifications={
           <PanneauNotifications
             elements={ELEMENTS_NOTIFICATIONS_CLIENT}
-            description="Dossier, commandes et soldes — votre compte client."
+            description="Profil, commandes et soldes — votre compte client."
           />
         }
         recherche={
