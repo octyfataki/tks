@@ -159,12 +159,12 @@ export const ELEMENTS_NOTIFICATIONS_AGENT: ElementNotification[] = [
   {
     etiquette: "Preuves de paiement en attente",
     icone: FileCheckIcon,
-    href: "/agent/preuves",
+    href: "/agent/proofs",
   },
   {
     etiquette: "Commandes à servir",
     icone: ClipboardListIcon,
-    href: "/agent/commandes",
+    href: "/agent/orders",
   },
 ]
 

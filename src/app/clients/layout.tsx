@@ -14,13 +14,13 @@ export default async function ClientsLayout({
 }: {
   children: ReactNode;
 }) {
-  const profil = await profilSession();
-  const redirection = redirectionAcces(profil, "CLIENTS");
-  if (redirection) redirect(redirection);
+  const profile = await profilSession();
+  const redirectTarget = redirectionAcces(profile, "CLIENTS");
+  if (redirectTarget) redirect(redirectTarget);
 
   const session = await auth.api.getSession({ headers: await headers() });
   const email = session?.user?.email ?? "";
-  const nom =
+  const name =
     session?.user?.name?.trim() ||
     (email ? email.split("@")[0] : "") ||
     "Client";
@@ -30,11 +30,11 @@ export default async function ClientsLayout({
       <GardienSession />
       <ClientSidebar
         utilisateur={{
-          nom,
+          nom: name,
           email: email || "Espace client",
           avatar: session?.user?.image ?? undefined,
         }}
-        profilUrl="/clients/profil"
+        profilUrl="/clients/profile"
       />
       <SidebarInset>
         <ClientHeader />

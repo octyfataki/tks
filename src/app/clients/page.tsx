@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export default function ClientsAccueilPage() {
+export default function ClientHomePage() {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
       <span className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-[11px] font-medium text-primary">
@@ -16,12 +16,12 @@ export default function ClientsAccueilPage() {
       </p>
       <div className="flex flex-wrap items-center justify-center gap-4">
         <Link
-          href="/clients/profil"
+          href="/clients/profile"
           className="text-sm font-medium text-primary underline-offset-4 hover:underline"
         >
           Mon compte
         </Link>
-        <Link href="/clients/aide" className="text-sm underline underline-offset-4">
+        <Link href="/clients/help" className="text-sm underline underline-offset-4">
           Aide — vos raccourcis client
         </Link>
       </div>

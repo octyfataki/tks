@@ -38,7 +38,7 @@ export const AIDE_SECTIONS: AideSectionNiveau[] = [
       {
         label: "Mon compte",
         description: "Connexion et état de votre compte.",
-        href: "/clients/profil",
+        href: "/clients/profile",
         motsCles: ["profil", "compte", "connexion"],
       },
       {
@@ -82,7 +82,7 @@ export const AIDE_SECTIONS: AideSectionNiveau[] = [
       {
         label: "Mon compte",
         description: "Connexion et état de votre compte.",
-        href: "/agent/profil",
+        href: "/agent/profile",
         motsCles: ["profil", "compte"],
       },
       {
@@ -209,9 +209,9 @@ export const AIDE_BIENTOT: { theme: string; entrees: string[] }[] = [
 ];
 
 export function destinationAide(profil: Profil): string {
-  if (profil.type === "CLIENT") return "/clients/aide";
+  if (profil.type === "CLIENT") return "/clients/help";
   if (profil.type === "STAFF" && profil.etat === "VALIDE") {
-    return profil.role === "AGENT" ? "/agent/aide" : "/admin/aide";
+    return profil.role === "AGENT" ? "/agent/help" : "/admin/aide";
   }
   return DESTINATION_CONNEXION;
 }

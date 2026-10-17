@@ -107,8 +107,8 @@ export async function modifierPhotoProfilAction(
     await supprimerFichierAvatar(ancienneImage);
   }
   revalidatePath("/admin/profil");
-  revalidatePath("/agent/profil");
-  revalidatePath("/clients/profil");
+  revalidatePath("/agent/profile");
+  revalidatePath("/clients/profile");
   return { ok: true, inchange: false };
 }
 
@@ -122,8 +122,8 @@ export async function supprimerPhotoProfilAction(): Promise<ResultatPhotoProfil>
   await db.update(user).set({ image: null }).where(eq(user.id, userId));
   await supprimerFichierAvatar(lignes[0]?.image ?? null);
   revalidatePath("/admin/profil");
-  revalidatePath("/agent/profil");
-  revalidatePath("/clients/profil");
+  revalidatePath("/agent/profile");
+  revalidatePath("/clients/profile");
   return { ok: true, inchange: false };
 }
 
@@ -190,7 +190,7 @@ async function modifierMonProfilClient(
       .set({ telephone: canonique })
       .where(eq(comptesClients.id, client.id));
   });
-  revalidatePath("/clients/profil");
+  revalidatePath("/clients/profile");
   return { ok: true, inchange: false };
 }
 
@@ -260,7 +260,7 @@ export async function modifierMonProfilAction(
       .where(eq(comptesStaff.id, moi.id));
   });
   revalidatePath("/admin/profil");
-  revalidatePath("/agent/profil");
+  revalidatePath("/agent/profile");
   return { ok: true, inchange: false };
 }
 
@@ -299,7 +299,7 @@ export async function deconnecterAutresSessionsAction(): Promise<ResultatDeconne
     return { ok: false, erreur: "Déconnexion impossible." };
   }
   revalidatePath("/admin/profil");
-  revalidatePath("/agent/profil");
+  revalidatePath("/agent/profile");
   return { ok: true, coupees: autres.length };
 }
 
@@ -382,7 +382,7 @@ export async function confirmerSecondFacteurAction(
       creePar: moi.id,
     });
     revalidatePath("/admin/profil");
-    revalidatePath("/agent/profil");
+    revalidatePath("/agent/profile");
     return { ok: true };
   }
   const compteClientId = client?.id;
@@ -406,7 +406,7 @@ export async function confirmerSecondFacteurAction(
     actif: true,
     creePar: compteClientId,
   });
-  revalidatePath("/clients/profil");
+  revalidatePath("/clients/profile");
   return { ok: true };
 }
 
@@ -463,7 +463,7 @@ export async function desactiverSecondFacteurAction(): Promise<ResultatDesactiva
         and(eq(facteurs2faAdmin.compteStaffId, moi.id), eq(facteurs2faAdmin.actif, true)),
       );
     revalidatePath("/admin/profil");
-    revalidatePath("/agent/profil");
+    revalidatePath("/agent/profile");
     return { ok: true };
   }
   const compteClientId = client?.id;
@@ -476,6 +476,6 @@ export async function desactiverSecondFacteurAction(): Promise<ResultatDesactiva
     .where(
       and(eq(facteurs2faClients.compteClientId, compteClientId), eq(facteurs2faClients.actif, true)),
     );
-  revalidatePath("/clients/profil");
+  revalidatePath("/clients/profile");
   return { ok: true };
 }

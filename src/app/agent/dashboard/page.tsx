@@ -14,28 +14,28 @@ export const metadata: Metadata = {
 
 const zones = [
   {
-    icone: <ClipboardListIcon aria-hidden className="size-5" />,
-    titre: "Commandes",
-    texte:
+    icon: <ClipboardListIcon aria-hidden className="size-5" />,
+    title: "Commandes",
+    text:
       "La file d'attente et la caisse rapide : servir les commandes des clients.",
-    href: "/agent/commandes",
-    lien: "Ouvrir les commandes",
+    href: "/agent/orders",
+    linkLabel: "Ouvrir les commandes",
   },
   {
-    icone: <BanknoteIcon aria-hidden className="size-5" />,
-    titre: "Encaissements",
-    texte:
+    icon: <BanknoteIcon aria-hidden className="size-5" />,
+    title: "Encaissements",
+    text:
       "Encaisser au comptoir et suivre les créances restant dues.",
-    href: "/agent/encaissements",
-    lien: "Ouvrir les encaissements",
+    href: "/agent/payments",
+    linkLabel: "Ouvrir les encaissements",
   },
   {
-    icone: <UserCheckIcon aria-hidden className="size-5" />,
-    titre: "Validation des comptes",
-    texte:
+    icon: <UserCheckIcon aria-hidden className="size-5" />,
+    title: "Validation des comptes",
+    text:
       "Valider les comptes des clients au comptoir, pièce d'identité vue.",
     href: "/agent/clients/validation",
-    lien: "Ouvrir la validation",
+    linkLabel: "Ouvrir la validation",
   },
 ];
 
@@ -54,24 +54,24 @@ export default function AgentDashboardPage() {
       <ul className="grid gap-4 md:grid-cols-3">
         {zones.map((zone) => (
           <li
-            key={zone.titre}
+            key={zone.title}
             className="flex flex-col gap-2 rounded-xl border bg-card p-4"
           >
             <span
               aria-hidden
               className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary"
             >
-              {zone.icone}
+              {zone.icon}
             </span>
-            <h2 className="text-sm font-medium">{zone.titre}</h2>
+            <h2 className="text-sm font-medium">{zone.title}</h2>
             <p className="text-xs leading-relaxed text-muted-foreground">
-              {zone.texte}
+              {zone.text}
             </p>
             <Link
               href={zone.href}
               className="mt-auto pt-2 text-sm font-medium text-primary underline-offset-4 hover:underline"
             >
-              {zone.lien}
+              {zone.linkLabel}
             </Link>
           </li>
         ))}
