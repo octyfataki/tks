@@ -5,7 +5,9 @@ import PendingVue from "./pending-vue";
 
 export default async function PendingPage() {
   const profil = await profilSession();
-  const destination = destinationApresConnexion(profil);
-  if (destination !== "/pending") redirect(destination);
+  if (profil.type !== "ANONYME") {
+    const destination = destinationApresConnexion(profil);
+    if (destination !== "/pending") redirect(destination);
+  }
   return <PendingVue />;
 }
