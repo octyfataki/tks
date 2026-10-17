@@ -112,7 +112,7 @@ export default async function AdminProfilPage() {
         telephone={telephone}
         avatarUrl={avatarUrl}
         compte={compte}
-        dossier={null}
+        profil={null}
         secondFacteurActif={secondFacteurActif}
         appareilSecondFacteur={appareilSecondFacteur}
         matricule={matricule}

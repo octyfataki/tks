@@ -99,7 +99,7 @@ export default async function ClientsProfilPage() {
         telephone={telephone}
         avatarUrl={avatarUrl}
         compte={{ type: "CLIENT" }}
-        dossier={null}
+        profil={null}
         secondFacteurActif={secondFacteurActif}
         appareilSecondFacteur={appareilSecondFacteur}
         piecesIdentite={piecesIdentite}

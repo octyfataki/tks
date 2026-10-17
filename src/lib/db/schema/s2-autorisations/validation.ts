@@ -6,7 +6,7 @@ export const PERMISSIONS_FERMEES = [
   "tresorerie.mouvement",
   "plafond.modifier",
   "statut.modifier",
-  "dossier.creer",
+  "client.creer",
   "client.acces_confirmer",
   "client.acces_revoquer",
   "client.acces_corriger",
@@ -29,7 +29,7 @@ export function estPermissionConnue(permission: string): permission is Permissio
 }
 
 export const PROFIL_AGENT_SERVICE_DEFAUT: readonly Permission[] = [
-  "dossier.creer",
+  "client.creer",
   "commande.creer",
   "commande.prendre",
   "commande.servir",

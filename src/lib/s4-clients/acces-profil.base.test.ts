@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { and, eq } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Db } from "@/lib/db/client";
 import { accesProfilClients, demandesAccesProfil, profilsClients } from "@/lib/db/schema/s4-clients";
@@ -14,6 +14,11 @@ import {
   revoquerAccesProfil,
   refuserDemandeAcces,
 } from "@/lib/s4-clients/acces-profil";
+
+const PERMISSIONS_SENSIBLES = [
+  "client.acces_confirmer",
+  "client.acces_revoquer",
+];
 
 describe("S4 — accès au profil existant", () => {
   const comptes = new Set<string>();
@@ -70,6 +75,12 @@ describe("S4 — accès au profil existant", () => {
   beforeAll(async () => {
     const client = await import("@/lib/db/client");
     db = client.db;
+    const { permissionsSocleAgents } = await import(
+      "@/lib/db/schema/s2-autorisations"
+    );
+    await db
+      .delete(permissionsSocleAgents)
+      .where(inArray(permissionsSocleAgents.permission, PERMISSIONS_SENSIBLES));
   });
 
   afterAll(async () => {

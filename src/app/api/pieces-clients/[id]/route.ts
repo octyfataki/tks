@@ -11,8 +11,38 @@ import {
   piecesIdentiteClients,
 } from "@/lib/db/schema/s1-comptes";
 import { aPermission } from "@/lib/s2-autorisations/autorisations";
+import {
+  autoriseLecturePiece,
+  type LecteurPiece,
+} from "@/lib/s1-comptes/acces-piece-identite";
 
 const RACINE_PIECES = join(process.cwd(), "donnees");
+
+async function lecteurPiece(
+  userId: string,
+  staff: { id: string; role: string; etat: string } | undefined,
+): Promise<LecteurPiece> {
+  if (staff) {
+    return {
+      type: "STAFF",
+      role: staff.role,
+      etat: staff.etat,
+      peutValider:
+        staff.role === "AGENT" && staff.etat === "VALIDE"
+          ? await aPermission(staff.id, "client.valider")
+          : false,
+    };
+  }
+
+  const comptes = await db
+    .select({ id: comptesClients.id })
+    .from(comptesClients)
+    .where(eq(comptesClients.betterAuthUserId, userId))
+    .limit(1);
+  return comptes[0]
+    ? { type: "CLIENT", compteClientId: comptes[0].id }
+    : { type: "ANONYME" };
+}
 
 export async function GET(
   _requete: Request,
@@ -45,28 +75,11 @@ export async function GET(
     .from(comptesStaff)
     .where(eq(comptesStaff.betterAuthUserId, userId))
     .limit(1);
-  const estAdmin =
-    staff[0] !== undefined &&
-    staff[0].etat === "VALIDE" &&
-    (staff[0].role === "ADMIN_PRINCIPAL" || staff[0].role === "ADMIN_TECHNIQUE");
+  const lecteur = await lecteurPiece(userId, staff[0]);
 
-  let estAgentAutorise = false;
-  if (!estAdmin && staff[0]?.role === "AGENT" && staff[0].etat === "VALIDE") {
-    estAgentAutorise = await aPermission(staff[0].id, "client.valider");
-  }
-
-  let estProprietaire = false;
-  if (!estAdmin && !estAgentAutorise) {
-    const comptes = await db
-      .select({ id: comptesClients.id })
-      .from(comptesClients)
-      .where(eq(comptesClients.betterAuthUserId, userId))
-      .limit(1);
-    estProprietaire =
-      comptes[0] !== undefined && comptes[0].id === piece.compteClientId;
-  }
-  if (!estAdmin && !estAgentAutorise && !estProprietaire) {
-    return NextResponse.json({ erreur: "Accès refusé." }, { status: 403 });
+  const decision = autoriseLecturePiece(lecteur, piece.compteClientId);
+  if (!decision.autorise) {
+    return NextResponse.json({ erreur: decision.erreur }, { status: decision.statut });
   }
 
   const absolu = resolve(RACINE_PIECES, piece.referenceImage);
