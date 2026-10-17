@@ -325,7 +325,7 @@ export const GROUPES_CLIENT: GroupeSuggestions[] = [
         etiquette: "Mon compte",
         motsCles: ["compte", "profil", "connexion"],
         icone: BadgeCheckIcon,
-        href: "/clients/profil",
+        href: "/clients/profile",
       },
       {
         etiquette: "Paramètres",
@@ -337,7 +337,7 @@ export const GROUPES_CLIENT: GroupeSuggestions[] = [
         etiquette: "Aide",
         motsCles: ["aide", "raccourcis", "dossier", "commande"],
         icone: CircleHelpIcon,
-        href: "/clients/aide",
+        href: "/clients/help",
       },
     ],
   },

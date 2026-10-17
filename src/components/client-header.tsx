@@ -26,7 +26,7 @@ type Segment = { etiquette: string; href?: string };
 
 const FIL_ARIANE_PAR_CHEMIN: Record<string, Segment[]> = {
   "/clients": [{ etiquette: "Votre compte" }],
-  "/clients/profil": [
+  "/clients/profile": [
     { etiquette: "Votre compte", href: "/clients" },
     { etiquette: "Mon compte" },
   ],
@@ -34,7 +34,7 @@ const FIL_ARIANE_PAR_CHEMIN: Record<string, Segment[]> = {
     { etiquette: "Votre compte", href: "/clients" },
     { etiquette: "Paramètres" },
   ],
-  "/clients/aide": [
+  "/clients/help": [
     { etiquette: "Votre compte", href: "/clients" },
     { etiquette: "Aide" },
   ],
@@ -65,7 +65,7 @@ export function ClientHeader() {
       <BrandLogo height={24} className="shrink-0 md:hidden" />
       <DashboardHeader
         className="min-w-0 flex-1"
-        aideHref="/clients/aide"
+        aideHref="/clients/help"
         notifications={
           <PanneauNotifications
             elements={ELEMENTS_NOTIFICATIONS_CLIENT}

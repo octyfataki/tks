@@ -7,7 +7,7 @@ export const metadata: Metadata = {
     "Raccourcis du niveau client : compte, dossier, commandes et soldes. Connecté uniquement.",
 };
 
-export default function ClientsAidePage() {
+export default function ClientHelpPage() {
   return (
     <div className="flex flex-1 flex-col gap-6 p-4 pt-4">
       <AideContenu niveau="Client" />

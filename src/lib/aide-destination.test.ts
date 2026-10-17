@@ -10,7 +10,7 @@ describe("destinationAide", () => {
 
   it("envoie le client sur l'aide client", () => {
     const profil: Profil = { type: "CLIENT", etat: "VALIDE" };
-    expect(destinationAide(profil)).toBe("/clients/aide");
+    expect(destinationAide(profil)).toBe("/clients/help");
   });
 
   it("envoie l'agent validé sur l'aide agent", () => {

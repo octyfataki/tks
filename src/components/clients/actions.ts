@@ -310,7 +310,7 @@ export async function statuerPieceIdentiteAction(
     return { ok: false, erreur: "Verdict impossible : journal indisponible." };
   }
   revaliderLesDeuxEspaces();
-  revalidatePath("/clients/profil");
+  revalidatePath("/clients/profile");
   return { ok: true, compteId };
 }
 
@@ -373,7 +373,7 @@ export async function retirerPieceIdentiteAction(
     return { ok: false, erreur: "Retrait impossible : journal indisponible." };
   }
   revaliderLesDeuxEspaces();
-  revalidatePath("/clients/profil");
+  revalidatePath("/clients/profile");
   return { ok: true, compteId: compte.id };
 }
 
