@@ -4,8 +4,8 @@ import { useEffect, useState } from "react";
 import { WifiIcon, WifiOffIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
-export function PastilleReseau() {
-  const [enLigne, setEnLigne] = useState<boolean>(() =>
+export function NetworkIndicator() {
+  const [isOnline, setIsOnline] = useState<boolean>(() =>
     typeof navigator === "undefined" ||
     typeof navigator.onLine !== "boolean"
       ? true
@@ -13,24 +13,24 @@ export function PastilleReseau() {
   );
 
   useEffect(() => {
-    const connecter = () => setEnLigne(true);
-    const couper = () => setEnLigne(false);
-    window.addEventListener("online", connecter);
-    window.addEventListener("offline", couper);
+    const goOnline = () => setIsOnline(true);
+    const goOffline = () => setIsOnline(false);
+    window.addEventListener("online", goOnline);
+    window.addEventListener("offline", goOffline);
     return () => {
-      window.removeEventListener("online", connecter);
-      window.removeEventListener("offline", couper);
+      window.removeEventListener("online", goOnline);
+      window.removeEventListener("offline", goOffline);
     };
   }, []);
 
   return (
     <Badge variant="outline" aria-live="polite">
-      {enLigne ? (
+      {isOnline ? (
         <WifiIcon aria-hidden />
       ) : (
         <WifiOffIcon aria-hidden />
       )}
-      {enLigne ? "En ligne" : "Hors ligne"}
+      {isOnline ? "En ligne" : "Hors ligne"}
     </Badge>
   );
 }

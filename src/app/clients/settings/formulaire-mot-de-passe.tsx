@@ -13,12 +13,12 @@ import {
 } from "@/components/ui/field";
 import { toast } from "@/components/ui/toast";
 import {
-  evaluerForceMotDePasse,
-  validerChangementMotDePasse,
-  type NiveauForceMotDePasse,
-} from "@/app/agent/parametres/mot-de-passe-validation";
+  evaluatePasswordStrength,
+  validatePasswordChange,
+  type PasswordStrengthLevel,
+} from "@/app/agent/settings/password-validation";
 
-const STYLE_FORCE: Record<NiveauForceMotDePasse, { fond: string; texte: string }> = {
+const STYLE_FORCE: Record<PasswordStrengthLevel, { fond: string; texte: string }> = {
   0: { fond: "bg-destructive", texte: "text-destructive" },
   1: { fond: "bg-orange-500", texte: "text-orange-600 dark:text-orange-400" },
   2: { fond: "bg-amber-500", texte: "text-amber-600 dark:text-amber-400" },
@@ -36,7 +36,7 @@ export function FormulaireMotDePasse() {
       ? !navigator.onLine
       : false;
 
-  const force = evaluerForceMotDePasse(nouveau);
+  const strength = evaluatePasswordStrength(nouveau);
   const correspondance =
     confirmation.length === 0
       ? null
@@ -46,13 +46,13 @@ export function FormulaireMotDePasse() {
 
   async function onSubmit(form: FormData) {
     setErreur(null);
-    const resultat = validerChangementMotDePasse({
-      actuel: String(form.get("actuel") ?? ""),
-      nouveau: String(form.get("nouveau") ?? ""),
+    const validationError = validatePasswordChange({
+      currentPassword: String(form.get("actuel") ?? ""),
+      newPassword: String(form.get("nouveau") ?? ""),
       confirmation: String(form.get("confirmation") ?? ""),
     });
-    if (resultat) {
-      setErreur(resultat);
+    if (validationError) {
+      setErreur(validationError);
       return;
     }
     setEnCours(true);
@@ -117,7 +117,7 @@ export function FormulaireMotDePasse() {
             <div className="mt-2 flex items-center gap-2.5">
               <div
                 role="img"
-                aria-label={`Force du mot de passe : ${force.etiquette}`}
+                aria-label={`Force du mot de passe : ${strength.label}`}
                 className="flex flex-1 gap-1"
               >
                 {[1, 2, 3, 4].map((segment) => (
@@ -125,17 +125,17 @@ export function FormulaireMotDePasse() {
                     key={segment}
                     aria-hidden="true"
                     className={
-                      segment <= Math.max(force.niveau, 1)
-                        ? `h-1 flex-1 rounded-full ${STYLE_FORCE[force.niveau].fond}`
+                      segment <= Math.max(strength.level, 1)
+                        ? `h-1 flex-1 rounded-full ${STYLE_FORCE[strength.level].fond}`
                         : "h-1 flex-1 rounded-full bg-muted"
                     }
                   />
                 ))}
               </div>
               <span
-                className={`shrink-0 text-xs font-semibold ${STYLE_FORCE[force.niveau].texte}`}
+                className={`shrink-0 text-xs font-semibold ${STYLE_FORCE[strength.level].texte}`}
               >
-                {force.etiquette}
+                {strength.label}
               </span>
             </div>
           ) : (

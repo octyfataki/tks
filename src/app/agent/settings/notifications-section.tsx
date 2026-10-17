@@ -16,64 +16,60 @@ import { Separator } from "@/components/ui/separator";
 import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import {
-  CANAUX_NOTIFICATION,
-  CATALOGUE_NOTIFICATIONS,
-  GROUPES_NOTIFICATION,
-  type CanalNotification,
-  type CleNotification,
+  NOTIFICATION_CHANNELS,
+  NOTIFICATION_CATALOG,
+  NOTIFICATION_GROUPS,
+  type NotificationChannel,
+  type NotificationKey,
 } from "./preferences";
-import { usePreferencesAgent } from "./use-preferences-agent";
+import { useAgentPreferences } from "./use-preferences-agent";
 
-type EtatPermission =
-  | "indisponible"
-  | "demande"
-  | "accordee"
-  | "refusee";
+type PermissionState = "unavailable" | "prompt" | "granted" | "denied";
 
-function usePermissionNotification(): {
-  etat: EtatPermission;
-  demander: () => void;
+function useNotificationPermission(): {
+  state: PermissionState;
+  request: () => void;
 } {
-  const [etat, setEtat] = useState<EtatPermission>("demande");
+  const [state, setState] = useState<PermissionState>("prompt");
 
   useEffect(() => {
     if (typeof window === "undefined" || !("Notification" in window)) {
       // eslint-disable-next-line react-hooks/set-state-in-effect -- lecture unique d'une API navigateur après montage
-      setEtat("indisponible");
+      setState("unavailable");
       return;
     }
-    if (Notification.permission === "granted") setEtat("accordee");
-    else if (Notification.permission === "denied") setEtat("refusee");
-    else setEtat("demande");
+    if (Notification.permission === "granted") setState("granted");
+    else if (Notification.permission === "denied") setState("denied");
+    else setState("prompt");
   }, []);
 
-  function demander() {
+  function request() {
     try {
-      const resultat = Notification.requestPermission();
-      if (typeof (resultat as Promise<NotificationPermission>)?.then === "function") {
-        (resultat as Promise<NotificationPermission>).then(
+      const permissionRequest = Notification.requestPermission();
+      if (typeof (permissionRequest as Promise<NotificationPermission>)?.then === "function") {
+        (permissionRequest as Promise<NotificationPermission>).then(
           (permission) =>
-            setEtat(permission === "granted" ? "accordee" : "refusee"),
+            setState(permission === "granted" ? "granted" : "denied"),
           () => {},
         );
       }
     } catch {
       try {
-        setEtat(
-          Notification.permission === "granted" ? "accordee" : "refusee",
+        setState(
+          Notification.permission === "granted" ? "granted" : "denied",
         );
       } catch {
       }
     }
   }
 
-  return { etat, demander };
+  return { state, request };
 }
 
-function DemandeActivation() {
-  const { etat, demander } = usePermissionNotification();
+function PermissionPrompt() {
+  const { state, request } = useNotificationPermission();
 
-  if (etat === "indisponible") return null;
+  if (state === "unavailable") return null;
 
   return (
     <div className="flex items-center justify-between gap-4 rounded-lg border p-4">
@@ -86,7 +82,7 @@ function DemandeActivation() {
           <p className="text-sm font-semibold">
             Notifications du navigateur
           </p>
-          {etat === "refusee" ? (
+          {state === "denied" ? (
             <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
               Refusées dans le navigateur : réactivez-les dans les réglages
               du site pour recevoir les signaux. Chaque événement reste
@@ -100,11 +96,11 @@ function DemandeActivation() {
           )}
         </div>
       </div>
-      {etat === "accordee" ? (
+      {state === "granted" ? (
         <Badge variant="secondary" className="shrink-0 rounded-full">
           Activées
         </Badge>
-      ) : etat === "refusee" ? (
+      ) : state === "denied" ? (
         <Badge variant="outline" className="shrink-0 rounded-full">
           Refusées
         </Badge>
@@ -113,7 +109,7 @@ function DemandeActivation() {
           type="button"
           size="sm"
           className="shrink-0"
-          onClick={demander}
+          onClick={request}
         >
           Activer les notifications
         </Button>
@@ -123,88 +119,88 @@ function DemandeActivation() {
 }
 
 export function NotificationsSection() {
-  const { preferences, chargees, mettreAJour } = usePreferencesAgent();
+  const { preferences, loaded, update } = useAgentPreferences();
 
-  function reglerActif(cle: CleNotification, actif: boolean) {
-    mettreAJour({
+  function setEnabled(key: NotificationKey, enabled: boolean) {
+    update({
       notifications: {
         ...preferences.notifications,
-        [cle]: { ...preferences.notifications[cle], actif },
+        [key]: { ...preferences.notifications[key], actif: enabled },
       },
     });
   }
 
-  function reglerCanal(cle: CleNotification, canal: CanalNotification) {
-    mettreAJour({
+  function setChannel(key: NotificationKey, channel: NotificationChannel) {
+    update({
       notifications: {
         ...preferences.notifications,
-        [cle]: { ...preferences.notifications[cle], canal },
+        [key]: { ...preferences.notifications[key], canal: channel },
       },
     });
   }
 
   return (
     <div className="flex flex-col gap-6">
-      <DemandeActivation />
+      <PermissionPrompt />
 
       <div className="flex flex-col">
-        {GROUPES_NOTIFICATION.map((groupe, index) => (
-          <div key={groupe.valeur}>
+        {NOTIFICATION_GROUPS.map((group, index) => (
+          <div key={group.value}>
             {index > 0 ? <Separator className="my-6" /> : null}
             <div className="grid grid-cols-1 gap-4 md:grid-cols-[minmax(0,13rem)_minmax(0,1fr)] md:gap-8">
               <div>
-                <p className="text-sm font-semibold">{groupe.titre}</p>
+                <p className="text-sm font-semibold">{group.title}</p>
                 <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                  {groupe.description}
+                  {group.description}
                 </p>
               </div>
               <ul className="flex flex-col gap-5">
-                {CATALOGUE_NOTIFICATIONS.filter(
-                  (entree) => entree.groupe === groupe.valeur,
-                ).map((entree) => {
-                  const reglage = preferences.notifications[entree.cle];
+                {NOTIFICATION_CATALOG.filter(
+                  (entry) => entry.group === group.value,
+                ).map((entry) => {
+                  const setting = preferences.notifications[entry.key];
                   return (
                     <li
-                      key={entree.cle}
+                      key={entry.key}
                       className={cn(
                         "flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between",
-                        !chargees && "opacity-60",
+                        !loaded && "opacity-60",
                       )}
                     >
                       <div className="flex min-w-0 items-start gap-3">
                         <Switch
-                          checked={reglage.actif}
-                          disabled={!chargees}
-                          onCheckedChange={(suivant: boolean) =>
-                            reglerActif(entree.cle, suivant)
+                          checked={setting.actif}
+                          disabled={!loaded}
+                          onCheckedChange={(next: boolean) =>
+                            setEnabled(entry.key, next)
                           }
-                          aria-label={entree.titre}
+                          aria-label={entry.title}
                           className="mt-0.5"
                         />
                         <div className="min-w-0">
-                          <p className="text-sm font-medium">{entree.titre}</p>
+                          <p className="text-sm font-medium">{entry.title}</p>
                           <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-                            {entree.description}
+                            {entry.description}
                           </p>
                         </div>
                       </div>
                       <Select
-                        value={reglage.canal}
-                        onValueChange={(valeur: unknown) =>
-                          reglerCanal(entree.cle, valeur as CanalNotification)
+                        value={setting.canal}
+                        onValueChange={(value: unknown) =>
+                          setChannel(entry.key, value as NotificationChannel)
                         }
-                        disabled={!chargees || !reglage.actif}
+                        disabled={!loaded || !setting.actif}
                       >
                         <SelectTrigger
-                          aria-label={`Canal pour ${entree.titre}`}
+                          aria-label={`Canal pour ${entry.title}`}
                           className="w-full shrink-0 text-xs sm:w-40"
                         >
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          {CANAUX_NOTIFICATION.map((canal) => (
-                            <SelectItem key={canal.valeur} value={canal.valeur}>
-                              {canal.etiquette}
+                          {NOTIFICATION_CHANNELS.map((channel) => (
+                            <SelectItem key={channel.value} value={channel.value}>
+                              {channel.label}
                             </SelectItem>
                           ))}
                         </SelectContent>

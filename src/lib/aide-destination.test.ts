@@ -15,7 +15,7 @@ describe("destinationAide", () => {
 
   it("envoie l'agent validé sur l'aide agent", () => {
     const profil: Profil = { type: "STAFF", role: "AGENT", etat: "VALIDE" };
-    expect(destinationAide(profil)).toBe("/agent/aide");
+    expect(destinationAide(profil)).toBe("/agent/help");
   });
 
   it("envoie chaque administrateur validé sur l'aide admin", () => {

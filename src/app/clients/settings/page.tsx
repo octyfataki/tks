@@ -22,9 +22,9 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { decrireExpiration } from "@/app/agent/parametres/session-helpers";
-import { PastilleReseau } from "@/app/agent/parametres/pastille-reseau";
-import { SynchronisationSection } from "@/app/agent/parametres/synchronisation-section";
+import { describeSessionExpiration } from "@/app/agent/settings/session-helpers";
+import { NetworkIndicator } from "@/app/agent/settings/network-indicator";
+import { SyncSection } from "@/app/agent/settings/sync-section";
 import { FormulaireMotDePasse } from "./formulaire-mot-de-passe";
 import { AppareilSection } from "./appareil-section";
 import { NotificationsSection } from "./notifications-section";
@@ -37,8 +37,10 @@ export const metadata: Metadata = {
 
 export default async function ClientsParametresPage() {
   const session = await auth.api.getSession({ headers: await headers() });
-  const expiration = decrireExpiration(session?.session?.expiresAt ?? null);
-  const sessionSensible = expiration.expiree || expiration.expireBientot;
+  const sessionExpiration = describeSessionExpiration(
+    session?.session?.expiresAt ?? null,
+  );
+  const isSessionAtRisk = sessionExpiration.isExpired || sessionExpiration.expiresSoon;
 
   return (
     <div className="flex w-full flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
@@ -47,7 +49,7 @@ export default async function ClientsParametresPage() {
           <h1 className="text-[22px] leading-tight font-semibold tracking-tight">
             Paramètres
           </h1>
-          {sessionSensible ? (
+          {isSessionAtRisk ? (
             <Badge variant="destructive">
               <TriangleAlertIcon />
               Session à renouveler
@@ -55,7 +57,7 @@ export default async function ClientsParametresPage() {
           ) : (
             <Badge variant="secondary">Compte prêt</Badge>
           )}
-          <PastilleReseau />
+          <NetworkIndicator />
         </div>
         <p className="max-w-[62ch] text-[13px] leading-relaxed text-muted-foreground">
           Votre téléphone, votre session, votre mot de passe. Vos informations restent
@@ -101,7 +103,7 @@ export default async function ClientsParametresPage() {
                 <div className="flex items-baseline justify-between gap-4">
                   <p className="text-xs text-muted-foreground">Expire le</p>
                   <p className="text-sm font-semibold text-foreground tabular-nums">
-                    {expiration.dateFormatee}
+                    {sessionExpiration.formattedDate}
                   </p>
                 </div>
                 <div
@@ -110,7 +112,7 @@ export default async function ClientsParametresPage() {
                   aria-valuemax={7}
                   aria-valuenow={Math.max(
                     0,
-                    Math.min(7, expiration.joursRestants ?? 0),
+                    Math.min(7, sessionExpiration.daysRemaining ?? 0),
                   )}
                   aria-label="Temps de session restant"
                   className="h-1.5 overflow-hidden rounded-full bg-muted"
@@ -118,10 +120,10 @@ export default async function ClientsParametresPage() {
                   <div
                     aria-hidden="true"
                     style={{
-                      width: `${Math.max(0, Math.min(100, ((expiration.joursRestants ?? 0) / 7) * 100))}%`,
+                      width: `${Math.max(0, Math.min(100, ((sessionExpiration.daysRemaining ?? 0) / 7) * 100))}%`,
                     }}
                     className={
-                      sessionSensible
+                      isSessionAtRisk
                         ? "h-full rounded-full bg-destructive"
                         : "h-full rounded-full bg-primary"
                     }
@@ -130,17 +132,17 @@ export default async function ClientsParametresPage() {
                 <div className="flex items-baseline justify-between gap-4">
                   <p className="text-xs text-muted-foreground">Temps restant</p>
                   <p className="text-sm font-semibold text-foreground tabular-nums">
-                    {expiration.joursRestants === null
+                    {sessionExpiration.daysRemaining === null
                       ? "Inconnu"
-                      : expiration.expiree
+                      : sessionExpiration.isExpired
                         ? "Expirée — reconnectez-vous"
-                        : expiration.joursRestants <= 0
+                        : sessionExpiration.daysRemaining <= 0
                           ? "Dernier jour"
-                          : `${expiration.joursRestants} jour${expiration.joursRestants > 1 ? "s" : ""}`}
+                          : `${sessionExpiration.daysRemaining} jour${sessionExpiration.daysRemaining > 1 ? "s" : ""}`}
                   </p>
                 </div>
               </div>
-              {expiration.expireBientot ? (
+              {sessionExpiration.expiresSoon ? (
                 <p
                   role="alert"
                   className="rounded-md bg-destructive/8 px-3 py-2 text-xs leading-relaxed text-destructive"
@@ -232,7 +234,7 @@ export default async function ClientsParametresPage() {
           </div>
           <Card>
             <CardContent>
-              <SynchronisationSection />
+              <SyncSection />
             </CardContent>
           </Card>
         </section>
