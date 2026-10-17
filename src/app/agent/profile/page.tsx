@@ -110,8 +110,8 @@ export default async function AgentProfilePage() {
         email={email || "Espace agent"}
         telephone={telephone}
         avatarUrl={avatarUrl}
-        compte={account}
-        dossier={null}
+compte={account}
+        profil={null}
         secondFacteurActif={secondFactorEnabled}
         appareilSecondFacteur={secondFactorDevice}
         matricule={staffNumber}

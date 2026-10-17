@@ -1,7 +1,7 @@
 export {
   ProfilUtilisateur,
   type CompteProfil,
-  type DossierRattacheProfil,
+  type ProfilClientAffiche,
   type ProfilUtilisateurProps,
   type SessionEnCoursProfil,
 } from "./profil-utilisateur";

@@ -17,30 +17,30 @@ vi.mock("next/navigation", () => ({
 }));
 
 describe("ProfilUtilisateur", () => {
-  it("affiche le compte client sans dossier avec l'état vide normatif", () => {
+  it("affiche le compte client sans profil avec l'état vide normatif", () => {
     render(
       <ProfilUtilisateur
         nom="Aline Mukendi"
         email="aline@example.com"
         compte={{ type: "CLIENT" }}
-        dossier={null}
+        profil={null}
       />,
     );
     expect(screen.getByRole("heading", { name: "Aline Mukendi" })).toBeInTheDocument();
     expect(
-      screen.getByText(/aucun dossier rattaché/i),
+      screen.getByText(/aucun profil autorisé/i),
     ).toBeInTheDocument();
-    expect(screen.queryByText("Dossier client rattaché")).not.toBeInTheDocument();
+    expect(screen.queryByText("Profil client autorisé")).not.toBeInTheDocument();
   });
 
-  it("affiche le dossier rattaché quand le client est rattaché", () => {
+  it("affiche le profil autorisé quand le client est autorisé", () => {
     render(
       <ProfilUtilisateur
         nom="Aline Mukendi"
         email="aline@example.com"
         telephone="+243 810 000 001"
         compte={{ type: "CLIENT" }}
-        dossier={{ nom: "Boutique Mukendi", statut: "PRIVILEGIE", adresse: "Kinshasa" }}
+        profil={{ nom: "Boutique Mukendi", statut: "PRIVILEGIE", adresse: "Kinshasa" }}
       />,
     );
     expect(screen.getByText("Boutique Mukendi")).toBeInTheDocument();
@@ -248,7 +248,7 @@ describe("ProfilUtilisateur", () => {
         email="aline@example.com"
         telephone="+243 815 000 000"
         compte={{ type: "CLIENT" }}
-        dossier={null}
+        profil={null}
         secondFacteurActif={false}
         formulaireSecondFacteur={<ActivationSecondFacteur />}
       />,
@@ -257,13 +257,13 @@ describe("ProfilUtilisateur", () => {
     expect(screen.getByLabelText("Confirmez votre mot de passe")).toBeInTheDocument();
   });
 
-  it("montre les pièces d'identité au client, entre coordonnées et dossier", () => {
+  it("montre les pièces d'identité au client, entre coordonnées et profil", () => {
     render(
       <ProfilUtilisateur
         nom="Aline Mukendi"
         email="aline@example.com"
         compte={{ type: "CLIENT" }}
-        dossier={null}
+        profil={null}
         piecesIdentite={[
           {
             id: "piece-1",
@@ -292,7 +292,7 @@ describe("ProfilUtilisateur", () => {
         nom="Aline Mukendi"
         email="aline@example.com"
         compte={{ type: "CLIENT" }}
-        dossier={null}
+        profil={null}
         piecesIdentite={[]}
       />,
     );

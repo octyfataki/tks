@@ -386,17 +386,17 @@ export function VueFicheClient({
       <section className="rounded-xl border border-dashed bg-card p-4 sm:p-5">
         <h2 className="flex items-center gap-1.5 text-sm font-medium">
           <InfoIcon className="size-4 text-muted-foreground" />
-          Dossier financier — différé (S4)
+          Profil client — différé (S4)
         </h2>
         <p className="mt-0.5 max-w-2xl text-xs leading-relaxed text-muted-foreground">
-          Rattacher un dossier client, modifier son statut de crédit ou
+          Confirmer l&apos;accès au profil, modifier son statut de crédit ou
           son plafond demande des tables qui n&apos;existent pas encore
           (S4). Ces gestes ne sont volontairement pas proposés ici : pas de
           bouton sans effet. Ils apparaîtront sur cette fiche avec S4.
         </p>
         <ul className="mt-3 flex flex-wrap gap-2 text-[11px] text-muted-foreground">
           <li className="rounded-full border px-2.5 py-1">
-            Rattacher un dossier
+            Confirmer l&apos;accès
           </li>
           <li className="rounded-full border px-2.5 py-1">
             Statut de crédit

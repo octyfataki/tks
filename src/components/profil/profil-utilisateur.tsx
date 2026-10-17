@@ -20,7 +20,7 @@ export type CompteProfil =
       etat: "VALIDE" | "SUSPENDU" | "REVOQUE";
     };
 
-export type DossierRattacheProfil = {
+export type ProfilClientAffiche = {
   nom: string;
   statut: "EN_EVALUATION" | "PRIVILEGIE";
   adresse?: string | null;
@@ -40,7 +40,7 @@ export type ProfilUtilisateurProps = {
   telephone?: string | null;
   avatarUrl?: string | null;
   compte: CompteProfil;
-  dossier?: DossierRattacheProfil | null;
+  profil?: ProfilClientAffiche | null;
   secondFacteurActif?: boolean | null;
   appareilSecondFacteur?: string | null;
   matricule?: string | null;
@@ -189,7 +189,7 @@ export function ProfilUtilisateur({
   telephone,
   avatarUrl,
   compte,
-  dossier,
+  profil,
   secondFacteurActif,
   appareilSecondFacteur,
   matricule,
@@ -209,7 +209,7 @@ export function ProfilUtilisateur({
   const estStaff = compte.type === "STAFF";
   const estAgent = estStaff && compte.role === "AGENT";
   const estAdmin = estStaff && compte.role !== "AGENT";
-  const dossierAffiche = compte.type === "CLIENT" ? (dossier ?? null) : null;
+  const profilAffiche = compte.type === "CLIENT" ? (profil ?? null) : null;
   const telephoneAffiche = telephone?.trim() ? telephone : null;
   const sessionsAffichees = sessions ?? null;
   const nbAutresSessions = sessionsAffichees
@@ -331,26 +331,26 @@ export function ProfilUtilisateur({
           ) : null}
 
           {compte.type === "CLIENT" ? (
-            <section aria-label="Dossier client" className="rounded-xl border bg-card p-4 sm:p-5">
-              <TitreCarte titre="Dossier client" verrou="lecture seule : le rattachement se fait par un distributeur" />
-              {dossierAffiche ? (
+            <section aria-label="Profil client" className="rounded-xl border bg-card p-4 sm:p-5">
+              <TitreCarte titre="Profil client" verrou="lecture seule : l'accès est confirmé par un distributeur" />
+              {profilAffiche ? (
                 <dl className="mt-4 grid gap-x-8 gap-y-4 sm:grid-cols-2">
-                  <Champ etiquette="Nom du dossier" valeur={dossierAffiche.nom} />
+                  <Champ etiquette="Nom du profil" valeur={profilAffiche.nom} />
                   <Champ
                     etiquette="Statut"
-                    valeur={dossierAffiche.statut === "PRIVILEGIE" ? "Privilégié" : "En évaluation"}
+                    valeur={profilAffiche.statut === "PRIVILEGIE" ? "Privilégié" : "En évaluation"}
                   />
                   <div className="sm:col-span-2">
                     <Champ
                       etiquette="Adresse"
-                      valeur={dossierAffiche.adresse?.trim() ? dossierAffiche.adresse : "Non renseignée"}
+                      valeur={profilAffiche.adresse?.trim() ? profilAffiche.adresse : "Non renseignée"}
                     />
                   </div>
                 </dl>
               ) : (
                 <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-                  Aucun dossier rattaché : aucun dossier ni solde n&apos;est visible tant que le
-                  rattachement n&apos;est pas fait.
+                  Aucun profil autorisé : aucun profil ni solde n&apos;est visible tant que
+                  l&apos;accès n&apos;est pas confirmé.
                 </p>
               )}
             </section>

@@ -215,8 +215,8 @@ export default function PendingVue() {
           statut: "areprendre",
         },
         {
-          titre: "Rattachement à votre dossier",
-          detail: "Votre compte rejoint votre dossier, désigné par son nom",
+          titre: "Accès à votre profil",
+          detail: "Votre compte rejoint votre profil, désigné par son nom",
           statut: "avenir",
         },
       ]
@@ -239,8 +239,8 @@ export default function PendingVue() {
           statut: "avenir",
         },
         {
-          titre: "Rattachement à votre dossier",
-          detail: "Votre compte rejoint votre dossier, désigné par son nom",
+          titre: "Accès à votre profil",
+          detail: "Votre compte rejoint votre profil, désigné par son nom",
           statut: "avenir",
         },
       ];
@@ -307,8 +307,8 @@ export default function PendingVue() {
           </h1>
           <p className="mt-3 max-w-prose text-sm leading-relaxed text-muted-foreground">
             {estRefuse
-              ? "Lisez le motif, puis déposez une meilleure pièce : votre compte sera revu sans réinscription. Tant qu'il n'est pas validé puis rattaché, il ne peut rien faire — ni dossier, ni solde, ni commande, pas même prépayée."
-              : "Gardez cette fiche : présentez votre pièce d'identité au comptoir, ou attendez qu'un humain du distributeur la vérifie. Tant que le compte n'est pas validé puis rattaché, il ne peut rien faire — ni dossier, ni solde, ni commande, pas même prépayée."}
+              ? "Lisez le motif, puis déposez une meilleure pièce : votre compte sera revu sans réinscription. Tant qu'il n'est pas validé puis autorisé, il ne peut rien faire — ni profil, ni solde, ni commande, pas même prépayée."
+              : "Gardez cette fiche : présentez votre pièce d'identité au comptoir, ou attendez qu'un humain du distributeur la vérifie. Tant que le compte n'est pas validé puis autorisé, il ne peut rien faire — ni profil, ni solde, ni commande, pas même prépayée."}
           </p>
         </div>
 
@@ -472,9 +472,9 @@ export default function PendingVue() {
 
       <footer className="relative z-10 border-t bg-background/80 backdrop-blur">
         <p className="mx-auto w-full max-w-2xl px-4 py-4 text-xs text-muted-foreground sm:px-6">
-          Un compte non validé ne voit aucun dossier et aucun solde. La
-          validation dit que vous êtes client ; le rattachement, fait ensuite
-          par le distributeur, dit que vous êtes ce client-là.
+          Un compte non validé ne voit aucun profil et aucun solde. La
+          validation dit que vous êtes client ; l&apos;accès à votre profil, accordé
+          ensuite, dit que vous êtes ce client-là.
         </p>
       </footer>
     </div>

@@ -49,7 +49,7 @@ const GROUPES: { titre: string; detail: string; permissions: string[] }[] = [
     titre: "Clients",
     detail: "Profils, accès, plafond et statut.",
     permissions: [
-      "dossier.creer",
+      "client.creer",
       "client.acces_confirmer",
       "client.acces_revoquer",
       "client.acces_corriger",
@@ -91,7 +91,7 @@ const GROUPES: { titre: string; detail: string; permissions: string[] }[] = [
 ];
 
 const ICONES: Record<string, LucideIcon> = {
-  "dossier.creer": FolderPlusIcon,
+  "client.creer": FolderPlusIcon,
   "client.acces_confirmer": LinkIcon,
   "client.acces_revoquer": UnlinkIcon,
   "client.acces_corriger": ShieldAlertIcon,
@@ -569,7 +569,7 @@ export function SoclePermissions({ initiales }: { initiales: string[] }) {
 export const MatricePermissions = SoclePermissions;
 export type LigneMatrice = { id: string; nom: string; email: string; permissions: string[] };
 export const PERMISSIONS_QUOTIDIEN = [
-  "dossier.creer",
+  "client.creer",
   "commande.creer",
   "commande.prendre",
   "commande.servir",

@@ -18,7 +18,7 @@ describe("S2 — liste fermée des permissions", () => {
       "tresorerie.mouvement",
       "plafond.modifier",
       "statut.modifier",
-      "dossier.creer",
+      "client.creer",
       "client.acces_confirmer",
       "client.acces_revoquer",
       "client.acces_corriger",

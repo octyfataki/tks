@@ -18,7 +18,7 @@ export const LIBELLES_PERMISSION: Record<string, { titre: string; detail: string
   "tresorerie.mouvement": { titre: "Mouvement de trésorerie", detail: "Caisse et comptes mobile money." },
   "plafond.modifier": { titre: "Modifier un plafond", detail: "Limite d'exposition d'un client." },
   "statut.modifier": { titre: "Changer un statut client", detail: "Promotion EN_EVALUATION → PRIVILEGIE, décision humaine." },
-  "dossier.creer": { titre: "Créer un profil client", detail: "Fiche de la boutique : nom, adresse, historique." },
+  "client.creer": { titre: "Créer un profil client", detail: "Fiche de la boutique : nom, adresse, historique." },
   "client.acces_confirmer": { titre: "Confirmer un accès", detail: "Autoriser un compte validé sur son profil existant." },
   "client.acces_revoquer": { titre: "Révoquer un accès", detail: "Retirer l'accès d'un compte au profil." },
   "client.acces_corriger": { titre: "Corriger un accès", detail: "Défaire un accès erroné sans toucher aux écritures." },
