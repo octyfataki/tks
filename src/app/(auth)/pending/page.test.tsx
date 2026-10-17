@@ -1,7 +1,10 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useRouter } from "next/navigation";
-import PendingPage from "./pending-vue";
+import PendingVue from "./pending-vue";
+import PendingPageServeur from "./page";
+import { profilSession } from "@/lib/s1-comptes/profil-session";
+import type { Profil } from "@/lib/s1-comptes/role-session";
 import { signOut } from "@/lib/auth-client";
 
 vi.mock("next/image", () => ({
@@ -15,6 +18,15 @@ vi.mock("next/navigation", () => ({
     refresh: vi.fn(),
     replace: vi.fn(),
   })),
+  redirect: (url: string) => {
+    const erreur = new Error("NEXT_REDIRECT");
+    (erreur as Error & { digest?: string }).digest = `${url};replace`;
+    throw erreur;
+  },
+}));
+
+vi.mock("@/lib/s1-comptes/profil-session", () => ({
+  profilSession: vi.fn(),
 }));
 
 vi.mock("@/lib/auth-client", () => ({
@@ -24,6 +36,12 @@ vi.mock("@/lib/auth-client", () => ({
 vi.mock("./actions-depot", () => ({
   deposerPieceIdentiteAction: vi.fn(),
 }));
+
+async function destinationServeur(profil: Profil): Promise<string> {
+  vi.mocked(profilSession).mockResolvedValueOnce(profil);
+  const erreur = await PendingPageServeur().catch((e: unknown) => e);
+  return (erreur as Error & { digest?: string }).digest ?? "";
+}
 
 function simulerStatut(corps: unknown, ok = true) {
   vi.stubGlobal(
@@ -54,7 +72,7 @@ describe("page /pending", () => {
       motifRefus: null,
       pieces: [],
     });
-    render(<PendingPage />);
+    render(<PendingVue />);
     expect(screen.getByText("En attente")).toBeInTheDocument();
     expect(
       screen.getByRole("heading", {
@@ -81,7 +99,7 @@ describe("page /pending", () => {
       motifRefus: "Photo floue, renvoyez une CNI lisible.",
       pieces: [],
     });
-    render(<PendingPage />);
+    render(<PendingVue />);
     await waitFor(() =>
       expect(screen.getByText("Refusé")).toBeInTheDocument(),
     );
@@ -121,7 +139,7 @@ describe("page /pending", () => {
       inscritLe: new Date("2026-10-01T10:00:00Z").toISOString(),
       pieces: [],
     });
-    render(<PendingPage />);
+    render(<PendingVue />);
     await waitFor(() =>
       expect(screen.getByText("Amina de la session")).toBeInTheDocument(),
     );
@@ -150,7 +168,7 @@ describe("page /pending", () => {
         },
       ],
     });
-    render(<PendingPage />);
+    render(<PendingVue />);
     await waitFor(() =>
       expect(screen.getByText(/pièces déjà déposées/i)).toBeInTheDocument(),
     );
@@ -161,7 +179,7 @@ describe("page /pending", () => {
 
   it("reste en attente sans formulaire quand personne n'est connecté", async () => {
     simulerStatut({ connecte: false });
-    render(<PendingPage />);
+    render(<PendingVue />);
     expect(
       screen.getByRole("heading", {
         level: 1,
@@ -191,7 +209,7 @@ describe("page /pending", () => {
       inscritLe: null,
       pieces: [],
     });
-    render(<PendingPage />);
+    render(<PendingVue />);
     await waitFor(() =>
       expect(
         screen.getAllByRole("button", { name: /se déconnecter/i }).length,
@@ -213,7 +231,7 @@ describe("page /pending", () => {
       inscritLe: null,
       pieces: [],
     });
-    render(<PendingPage />);
+    render(<PendingVue />);
     const boutons = await screen.findAllByRole("button", {
       name: /se déconnecter/i,
     });
@@ -229,7 +247,7 @@ describe("page /pending", () => {
       refresh: vi.fn(),
       replace: remplacer,
     } as unknown as ReturnType<typeof useRouter>);
-    render(<PendingPage />);
+    render(<PendingVue />);
     await waitFor(() =>
       expect(remplacer).toHaveBeenCalledWith("/sign-in"),
     );
@@ -253,14 +271,15 @@ describe("page /pending", () => {
       refresh: vi.fn(),
       replace: remplacer,
     } as unknown as ReturnType<typeof useRouter>);
-    render(<PendingPage />);
+    render(<PendingVue />);
     await waitFor(() =>
       expect(screen.getByText("Nouvel inscrit")).toBeInTheDocument(),
     );
     expect(remplacer).not.toHaveBeenCalled();
   });
 
-  it("ne renvoie pas vers la connexion sur coupure réseau", async () => {    vi.stubGlobal(
+  it("ne renvoie pas vers la connexion sur coupure réseau", async () => {
+    vi.stubGlobal(
       "fetch",
       vi.fn().mockRejectedValue(new TypeError("coupure")),
     );
@@ -270,7 +289,7 @@ describe("page /pending", () => {
       refresh: vi.fn(),
       replace: remplacer,
     } as unknown as ReturnType<typeof useRouter>);
-    render(<PendingPage />);
+    render(<PendingVue />);
     await waitFor(() =>
       expect(screen.getByText("En attente")).toBeInTheDocument(),
     );
@@ -279,10 +298,54 @@ describe("page /pending", () => {
 
   it("garde le fond pointillé du thème derrière la fiche", () => {
     simulerStatut({ connecte: false });
-    const { container } = render(<PendingPage />);
+    const { container } = render(<PendingVue />);
     const fond = container.querySelector(
       ".pointer-events-none.absolute.inset-0",
     );
     expect(fond?.getAttribute("style")).toMatch(/radial-gradient/);
+  });
+});
+
+describe("page /pending — barrière serveur", () => {
+  it("laisse un anonyme sans session voir la fiche", async () => {
+    vi.mocked(profilSession).mockResolvedValueOnce({ type: "ANONYME" });
+    await expect(PendingPageServeur()).resolves.toBeDefined();
+  });
+
+  it("laisse un client en attente rester sur sa fiche", async () => {
+    expect(
+      await destinationServeur({
+        type: "CLIENT",
+        etat: "EN_ATTENTE_VALIDATION",
+      }),
+    ).toBe("");
+  });
+
+  it("renvoie un client validé vers son espace", async () => {
+    expect(
+      await destinationServeur({ type: "CLIENT", etat: "VALIDE" }),
+    ).toContain("/clients");
+  });
+
+  it("renvoie un client révoqué vers la connexion", async () => {
+    expect(
+      await destinationServeur({ type: "CLIENT", etat: "REVOQUE" }),
+    ).toContain("/sign-in");
+  });
+
+  it("renvoie un profil INCONNU vers la connexion", async () => {
+    expect(await destinationServeur({ type: "INCONNU" })).toContain(
+      "/sign-in",
+    );
+  });
+
+  it("renvoie un agent connecté vers son espace", async () => {
+    expect(
+      await destinationServeur({
+        type: "STAFF",
+        role: "AGENT",
+        etat: "VALIDE",
+      }),
+    ).toContain("/agent");
   });
 });

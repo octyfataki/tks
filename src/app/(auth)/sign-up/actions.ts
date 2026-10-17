@@ -1,6 +1,8 @@
 "use server";
 
+import { headers } from "next/headers";
 import { z } from "zod";
+import { auth } from "@/lib/auth";
 import type { ResultatAction } from "@/lib/resultat-action";
 import { ClientError, inscrireClient } from "@/lib/s1-comptes/clients";
 
@@ -17,12 +19,14 @@ const SchemaInscription = z.object({
   telephone: z.string().trim().min(1, "numéro de téléphone exigé"),
 });
 
+export type ResultatInscription = ResultatAction<{ session: boolean }>;
+
 export async function inscrireCompteClient(input: {
   email: string;
   password: string;
   name: string;
   telephone: string;
-}): Promise<ResultatAction> {
+}): Promise<ResultatInscription> {
   const parse = SchemaInscription.safeParse(input);
   if (!parse.success) {
     return {
@@ -32,7 +36,6 @@ export async function inscrireCompteClient(input: {
   }
   try {
     await inscrireClient(parse.data);
-    return { ok: true };
   } catch (e) {
     if (e instanceof ClientError) {
       switch (e.code) {
@@ -61,5 +64,15 @@ export async function inscrireCompteClient(input: {
       }
     }
     return { ok: false, erreur: "inscription refusée" };
+  }
+
+  try {
+    await auth.api.signInEmail({
+      body: { email: parse.data.email, password: parse.data.password },
+      headers: await headers(),
+    });
+    return { ok: true, session: true };
+  } catch {
+    return { ok: true, session: false };
   }
 }
