@@ -1,0 +1,76 @@
+import { eq } from "drizzle-orm";
+import { db } from "@/lib/db/client";
+import {
+  DEFAUT_DUREE_INVITATION_JOURS,
+  estCleReglage,
+  normaliserDureeInvitationJours,
+  peutModifierReglage,
+  reglages,
+  type CleReglage,
+} from "@/lib/db/schema/accounts";
+import { enregistrerEvenement } from "@/lib/authorizations/journal";
+import { StaffError } from "./staff";
+
+const VALEURS_DEFAUT: Record<CleReglage, string> = {
+  duree_invitation_jours: String(DEFAUT_DUREE_INVITATION_JOURS),
+};
+
+export async function lireReglage(cle: CleReglage): Promise<string> {
+  const lignes = await db
+    .select({ valeur: reglages.valeur })
+    .from(reglages)
+    .where(eq(reglages.cle, cle));
+  return lignes[0]?.valeur ?? VALEURS_DEFAUT[cle];
+}
+
+export async function lireDureeInvitationJours(): Promise<number> {
+  return normaliserDureeInvitationJours(
+    await lireReglage("duree_invitation_jours"),
+  );
+}
+
+export async function definirReglage(input: {
+  cle: string;
+  valeur: string;
+  modifieParRole: string;
+  modifieParEtat: string;
+  modifieParId: string;
+}): Promise<{ cle: CleReglage; valeur: string }> {
+  if (!estCleReglage(input.cle)) {
+    throw new StaffError("NON_AUTORISE", "réglage inconnu");
+  }
+  if (
+    !peutModifierReglage(input.cle, input.modifieParRole, input.modifieParEtat)
+  ) {
+    throw new StaffError("NON_AUTORISE", "modificateur non autorisé");
+  }
+  const valeur =
+    input.cle === "duree_invitation_jours"
+      ? String(normaliserDureeInvitationJours(input.valeur))
+      : input.valeur;
+  const avant = await lireReglage(input.cle);
+  await db.transaction(async (tx) => {
+    await tx
+      .insert(reglages)
+      .values({ cle: input.cle, valeur, modifiePar: input.modifieParId })
+      .onDuplicateKeyUpdate({
+        set: { valeur, modifiePar: input.modifieParId },
+      });
+    const trace = await enregistrerEvenement(
+      {
+        acteurId: input.modifieParId,
+        roleAuMoment: input.modifieParRole,
+        typeAction: "reglage.modifier",
+        entite: "reglage",
+        entiteId: input.cle,
+        avant: { valeur: avant },
+        apres: { valeur },
+      },
+      tx,
+    );
+    if (!trace.ok) {
+      throw new StaffError("JOURNAL_INDISPONIBLE", "journal indisponible");
+    }
+  });
+  return { cle: input.cle, valeur };
+}

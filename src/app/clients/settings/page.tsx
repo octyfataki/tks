@@ -13,7 +13,7 @@ import {
   WifiOffIcon,
 } from "lucide-react";
 import { auth } from "@/lib/auth";
-import { BoutonDeconnexion } from "@/components/bouton-deconnexion";
+import { BoutonDeconnexion } from "@/components/sign-out-button";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,
@@ -22,11 +22,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { decrireExpiration } from "@/app/agent/parametres/session-helpers";
-import { PastilleReseau } from "@/app/agent/parametres/pastille-reseau";
-import { SynchronisationSection } from "@/app/agent/parametres/synchronisation-section";
-import { FormulaireMotDePasse } from "./formulaire-mot-de-passe";
-import { AppareilSection } from "./appareil-section";
+import { decrireExpiration } from "@/app/agent/settings/session-helpers";
+import { PastilleReseau } from "@/app/agent/settings/network-indicator";
+import { SynchronisationSection } from "@/app/agent/settings/sync-section";
+import { FormulaireMotDePasse } from "./password-form";
+import { AppareilSection } from "./device-section";
 import { NotificationsSection } from "./notifications-section";
 
 export const metadata: Metadata = {
@@ -61,7 +61,7 @@ export default async function ClientsParametresPage() {
           Votre téléphone, votre session, votre mot de passe. Vos informations restent
           visibles dans{" "}
           <Link
-            href="/clients/profil"
+            href="/clients/profile"
             className="font-medium text-primary underline-offset-4 hover:underline"
           >
             Mon compte
@@ -290,7 +290,7 @@ export default async function ClientsParametresPage() {
         Ni taux, ni plafond, ni promotion ici : ce sont des décisions du
         distributeur. Besoin d’aide ?{" "}
         <Link
-          href="/clients/aide"
+          href="/clients/help"
           className="font-medium text-primary underline-offset-4 hover:underline"
         >
           Ouvrir l’aide

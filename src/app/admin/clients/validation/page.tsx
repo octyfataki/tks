@@ -6,11 +6,11 @@ import { user } from "@/lib/db/schema/auth-schema";
 import {
   comptesClients,
   piecesIdentiteClients,
-} from "@/lib/db/schema/s1-comptes";
+} from "@/lib/db/schema/accounts";
 import { cn } from "@/lib/utils";
 import { joursAttente } from "@/components/clients/affichage-client";
 import { FileValidation } from "@/components/clients/file-validation";
-import { RafraichissementFile } from "./rafraichissement-file";
+import { RafraichissementFile } from "./queue-refresh";
 
 export default async function ValidationComptesClientsPage() {
   const lignesBrutes = await db

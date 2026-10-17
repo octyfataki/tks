@@ -2,12 +2,12 @@ import type { ReactNode } from "react";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { GardienSession } from "@/components/gardien-session";
+import { GardienSession } from "@/components/session-guard";
 import { ClientHeader } from "@/components/client-header";
 import { ClientSidebar } from "@/components/client-sidebar";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
-import { profilSession } from "@/lib/s1-comptes/profil-session";
-import { redirectionAcces } from "@/lib/s1-comptes/role-session";
+import { profilSession } from "@/lib/accounts/session-profile";
+import { redirectionAcces } from "@/lib/accounts/session-role";
 
 export default async function ClientsLayout({
   children,
@@ -34,7 +34,7 @@ export default async function ClientsLayout({
           email: email || "Espace client",
           avatar: session?.user?.image ?? undefined,
         }}
-        profilUrl="/clients/profil"
+        profilUrl="/clients/profile"
       />
       <SidebarInset>
         <ClientHeader />

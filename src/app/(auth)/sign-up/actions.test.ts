@@ -1,13 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { inscrireCompteClient } from "./actions";
-import { ClientError, inscrireClient } from "@/lib/s1-comptes/clients";
+import { ClientError, inscrireClient } from "@/lib/accounts/clients";
 import { auth } from "@/lib/auth";
 
 vi.mock("next/headers", () => ({
   headers: vi.fn(async () => new Headers()),
 }));
 
-vi.mock("@/lib/s1-comptes/clients", () => ({
+vi.mock("@/lib/accounts/clients", () => ({
   inscrireClient: vi.fn(async () => ({
     id: "compte-1",
     betterAuthUserId: "user-1",

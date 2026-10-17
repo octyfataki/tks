@@ -16,12 +16,12 @@ export default function ClientsAccueilPage() {
       </p>
       <div className="flex flex-wrap items-center justify-center gap-4">
         <Link
-          href="/clients/profil"
+          href="/clients/profile"
           className="text-sm font-medium text-primary underline-offset-4 hover:underline"
         >
           Mon compte
         </Link>
-        <Link href="/clients/aide" className="text-sm underline underline-offset-4">
+        <Link href="/clients/help" className="text-sm underline underline-offset-4">
           Aide — vos raccourcis client
         </Link>
       </div>

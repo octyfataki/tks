@@ -22,10 +22,10 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet"
-import { PaletteRecherche } from "@/components/palette-recherche"
+import { PaletteRecherche } from "@/components/search-palette"
 import { ModeToggle } from "@/components/mode-toggle"
-import { DateDuJour } from "@/components/taux-du-jour"
-import { TauxDuJourAuto } from "@/components/taux-du-jour-auto"
+import { DateDuJour } from "@/components/daily-rate"
+import { TauxDuJourAuto } from "@/components/auto-daily-rate"
 import {
   Tooltip,
   TooltipContent,
@@ -159,12 +159,12 @@ export const ELEMENTS_NOTIFICATIONS_AGENT: ElementNotification[] = [
   {
     etiquette: "Preuves de paiement en attente",
     icone: FileCheckIcon,
-    href: "/agent/preuves",
+    href: "/agent/proofs",
   },
   {
     etiquette: "Commandes à servir",
     icone: ClipboardListIcon,
-    href: "/agent/commandes",
+    href: "/agent/orders",
   },
 ]
 
@@ -212,7 +212,7 @@ function HeaderIconButton({
 export function DashboardHeader({
   filAriane,
   action,
-  aideHref = "/aide",
+  aideHref = "/help",
   notifications,
   recherche,
   className,

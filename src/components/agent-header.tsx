@@ -11,7 +11,7 @@ import {
 import {
   GROUPES_AGENT,
   PaletteRecherche,
-} from "@/components/palette-recherche";
+} from "@/components/search-palette";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -31,19 +31,19 @@ const FIL_ARIANE_PAR_CHEMIN: Record<string, Segment[]> = {
     { etiquette: "Comptes clients", href: "/agent/clients" },
     { etiquette: "Validation" },
   ],
-  "/agent/commandes": [{ etiquette: "Commandes" }],
-  "/agent/preuves": [{ etiquette: "Preuves de paiement" }],
-  "/agent/encaissements": [{ etiquette: "Encaissements" }],
-  "/agent/creances": [{ etiquette: "Créances et dettes" }],
-  "/agent/profil": [
+  "/agent/orders": [{ etiquette: "Commandes" }],
+  "/agent/proofs": [{ etiquette: "Preuves de paiement" }],
+  "/agent/payments": [{ etiquette: "Encaissements" }],
+  "/agent/receivables": [{ etiquette: "Créances et dettes" }],
+  "/agent/profile": [
     { etiquette: "Tableau de bord", href: "/agent/dashboard" },
     { etiquette: "Mon compte" },
   ],
-  "/agent/parametres": [
+  "/agent/settings": [
     { etiquette: "Tableau de bord", href: "/agent/dashboard" },
     { etiquette: "Paramètres" },
   ],
-  "/agent/aide": [
+  "/agent/help": [
     { etiquette: "Tableau de bord", href: "/agent/dashboard" },
     { etiquette: "Aide" },
   ],
@@ -83,7 +83,7 @@ export function AgentHeader() {
       <BrandLogo height={24} className="shrink-0 md:hidden" />
       <DashboardHeader
         className="min-w-0 flex-1"
-        aideHref="/agent/aide"
+        aideHref="/agent/help"
         notifications={
           <PanneauNotifications
             elements={ELEMENTS_NOTIFICATIONS_AGENT}

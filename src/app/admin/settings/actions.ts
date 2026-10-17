@@ -1,0 +1,80 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
+import { eq } from "drizzle-orm";
+import { auth } from "@/lib/auth";
+import { db } from "@/lib/db/client";
+import { comptesStaff } from "@/lib/db/schema/accounts";
+import {
+  MAX_DUREE_INVITATION_JOURS,
+  MIN_DUREE_INVITATION_JOURS,
+} from "@/lib/db/schema/accounts";
+import { definirReglage } from "@/lib/accounts/settings";
+import { StaffError } from "@/lib/accounts/staff";
+import type { ResultatAction } from "@/lib/action-result";
+
+export type ResultatDureeInvitation = ResultatAction<{ jours: number }>;
+
+export async function enregistrerDureeInvitationAction(
+  _precedent: ResultatDureeInvitation | null,
+  donnees: FormData,
+): Promise<ResultatDureeInvitation> {
+  const brut = String(donnees.get("dureeJours") ?? "").trim();
+  const nombre = Number(brut);
+  if (
+    !Number.isInteger(nombre) ||
+    nombre < MIN_DUREE_INVITATION_JOURS ||
+    nombre > MAX_DUREE_INVITATION_JOURS
+  ) {
+    return {
+      ok: false,
+      erreur: `Durée invalide : un entier entre ${MIN_DUREE_INVITATION_JOURS} et ${MAX_DUREE_INVITATION_JOURS} jours.`,
+    };
+  }
+
+  const session = await auth.api.getSession({ headers: await headers() });
+  const userId = session?.user?.id;
+  if (!userId) {
+    return { ok: false, erreur: "Session expirée — reconnectez-vous." };
+  }
+  const lignes = await db
+    .select({
+      id: comptesStaff.id,
+      role: comptesStaff.role,
+      etat: comptesStaff.etat,
+    })
+    .from(comptesStaff)
+    .where(eq(comptesStaff.betterAuthUserId, userId))
+    .limit(1);
+  const moi = lignes[0];
+  if (!moi) {
+    return { ok: false, erreur: "Session expirée — reconnectez-vous." };
+  }
+
+  try {
+    const reglage = await definirReglage({
+      cle: "duree_invitation_jours",
+      valeur: String(nombre),
+      modifieParRole: moi.role,
+      modifieParEtat: moi.etat,
+      modifieParId: moi.id,
+    });
+    revalidatePath("/admin/settings");
+    revalidatePath("/admin/invites");
+    revalidatePath("/admin/administrators");
+    return { ok: true, jours: Number(reglage.valeur) };
+  } catch (erreur) {
+    if (erreur instanceof StaffError) {
+      if (erreur.code === "NON_AUTORISE") {
+        return {
+          ok: false,
+          erreur:
+            "Seul un administrateur validé peut modifier ce réglage.",
+        };
+      }
+      return { ok: false, erreur: "Enregistrement impossible — réessayez." };
+    }
+    return { ok: false, erreur: "Enregistrement impossible — réessayez." };
+  }
+}

@@ -1,0 +1,18 @@
+import type { Metadata } from "next";
+import { AideContenu } from "@/components/help/help-content";
+
+export const metadata: Metadata = {
+  title: "Aide Admin — TKS",
+  description:
+    "Raccourcis du niveau administrateur : pilotage, accès, socle. Connecté uniquement.",
+};
+
+export default async function AdminAidePage() {
+  return (
+    <div className="flex flex-1 flex-col gap-2 p-4 pt-4">
+      <main className="flex flex-col gap-6 py-4">
+        <AideContenu />
+      </main>
+    </div>
+  );
+}

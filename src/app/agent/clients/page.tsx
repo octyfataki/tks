@@ -6,16 +6,16 @@ import { ArrowUpRightIcon } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
 import { user } from "@/lib/db/schema/auth-schema";
-import { comptesStaff } from "@/lib/db/schema/s1-comptes";
-import { comptesClients } from "@/lib/db/schema/s1-comptes";
-import { aPermission } from "@/lib/s2-autorisations/autorisations";
+import { comptesStaff } from "@/lib/db/schema/accounts";
+import { comptesClients } from "@/lib/db/schema/accounts";
+import { aPermission } from "@/lib/authorizations/permissions";
 import { nomAffiche } from "@/components/clients/affichage-partage";
 import { joursAttente } from "@/components/clients/affichage-client";
 import { BarreOutilsClients } from "@/components/clients/barre-outils-clients";
 import { RegistreComptesClients } from "@/components/clients/registre-comptes-clients";
 import { RafraichissementFile } from "@/components/clients/rafraichissement-file";
-import { PaginationListe } from "@/app/admin/list/pagination-liste";
-import { PermissionRefusee } from "@/components/permission-refusee";
+import { PaginationListe } from "@/app/admin/list/list-pagination";
+import { PermissionRefusee } from "@/components/permission-denied";
 
 const FILTRES_VALIDES = [
   "en-attente",

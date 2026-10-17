@@ -2,8 +2,8 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { AuthShell } from "@/components/auth-shell";
 import { Field, FieldGroup } from "@/components/ui/field";
-import { profilSession } from "@/lib/s1-comptes/profil-session";
-import { destinationApresConnexion } from "@/lib/s1-comptes/role-session";
+import { profilSession } from "@/lib/accounts/session-profile";
+import { destinationApresConnexion } from "@/lib/accounts/session-role";
 import { SignInForm } from "./sign-in-form";
 
 export default async function SignInPage() {
