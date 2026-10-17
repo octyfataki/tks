@@ -11,6 +11,18 @@ import {
 } from "@/lib/db/schema/s1-comptes";
 import type { Profil } from "./role-session";
 
+export async function staffConnecte(): Promise<{ id: string } | null> {
+  const session = await auth.api.getSession({ headers: await headers() });
+  const userId = session?.user?.id;
+  if (!userId) return null;
+  const lignes = await db
+    .select({ id: comptesStaff.id })
+    .from(comptesStaff)
+    .where(eq(comptesStaff.betterAuthUserId, userId))
+    .limit(1);
+  return lignes[0] ?? null;
+}
+
 export async function profilSession(): Promise<Profil> {
   const session = await auth.api.getSession({ headers: await headers() });
   const userId = session?.user?.id;

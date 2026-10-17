@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
-    "test:db": "node --env-file=.env.local node_modules/vitest/vitest.mjs run",
+    "test:db": "node --env-file=.env.local node_modules/vitest/vitest.mjs run --config vitest.db.config.ts",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:bootstrap-technical-admin": "tsx --env-file=.env.local scripts/bootstrap-technical-admin.ts"

@@ -21,6 +21,7 @@ import {
   ScaleIcon,
   SearchIcon,
   SettingsIcon,
+  ShieldAlertIcon,
   ShieldCheckIcon,
   UnlinkIcon,
   UserCogIcon,
@@ -46,11 +47,12 @@ import { LIBELLES_PERMISSION } from "../[id]/permissions-agent";
 const GROUPES: { titre: string; detail: string; permissions: string[] }[] = [
   {
     titre: "Clients",
-    detail: "Dossiers, rattachements, plafond et statut.",
+    detail: "Profils, accès, plafond et statut.",
     permissions: [
       "dossier.creer",
-      "dossier.rattacher",
-      "dossier.detacher",
+      "client.acces_confirmer",
+      "client.acces_revoquer",
+      "client.acces_corriger",
       "plafond.modifier",
       "statut.modifier",
     ],
@@ -90,8 +92,9 @@ const GROUPES: { titre: string; detail: string; permissions: string[] }[] = [
 
 const ICONES: Record<string, LucideIcon> = {
   "dossier.creer": FolderPlusIcon,
-  "dossier.rattacher": LinkIcon,
-  "dossier.detacher": UnlinkIcon,
+  "client.acces_confirmer": LinkIcon,
+  "client.acces_revoquer": UnlinkIcon,
+  "client.acces_corriger": ShieldAlertIcon,
   "plafond.modifier": ScaleIcon,
   "statut.modifier": UserCogIcon,
   "commande.creer": ClipboardListIcon,
@@ -139,8 +142,8 @@ const SENSIBLES = new Set([
   "creance.creer",
   "ecriture.corriger",
   "tresorerie.mouvement",
-  "dossier.rattacher",
-  "dossier.detacher",
+  "client.acces_confirmer",
+  "client.acces_revoquer",
 ]);
 
 function BasculeSocle({

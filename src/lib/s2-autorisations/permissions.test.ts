@@ -8,8 +8,8 @@ import {
 } from "../db/schema/s2-autorisations/validation";
 
 describe("S2 — liste fermée des permissions", () => {
-  it("contient les 20 identifiants métier, et eux seuls", () => {
-    expect(PERMISSIONS_FERMEES).toHaveLength(20);
+  it("contient les 21 identifiants métier, et eux seuls", () => {
+    expect(PERMISSIONS_FERMEES).toHaveLength(21);
     for (const nom of [
       "taux.saisir",
       "creance.creer",
@@ -19,8 +19,9 @@ describe("S2 — liste fermée des permissions", () => {
       "plafond.modifier",
       "statut.modifier",
       "dossier.creer",
-      "dossier.rattacher",
-      "dossier.detacher",
+      "client.acces_confirmer",
+      "client.acces_revoquer",
+      "client.acces_corriger",
       "grille.tarif",
       "preuve.valider",
       "commande.creer",
@@ -60,6 +61,9 @@ describe("S2 — liste fermée des permissions", () => {
       "grille.tarif",
       "reconciliation.trancher",
       "journal.consulter",
+      "client.acces_confirmer",
+      "client.acces_revoquer",
+      "client.acces_corriger",
     ]) {
       expect(PROFIL_AGENT_SERVICE_DEFAUT).not.toContain(sensible);
     }

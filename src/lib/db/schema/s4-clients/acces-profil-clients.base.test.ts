@@ -4,8 +4,6 @@ import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import type { Db } from "@/lib/db/client";
 import { accesProfilClients } from "@/lib/db/schema/s4-clients";
 
-const baseDisponible = Boolean(process.env.DATABASE_URL);
-
 function accesAccorde(profilClientId: string, compteClientId: string) {
   return {
     id: randomUUID(),
@@ -25,9 +23,7 @@ function accesRevoque(profilClientId: string, compteClientId: string) {
   };
 }
 
-describe.skipIf(!baseDisponible)(
-  "S4 — la base refuse deux accès actifs, sans l'aide de l'application",
-  () => {
+describe("S4 — la base refuse deux accès actifs, sans l'aide de l'application", () => {
     const comptesCrees = new Set<string>();
     let db: Db;
     let fermerPool: () => Promise<void>;
@@ -122,5 +118,4 @@ describe.skipIf(!baseDisponible)(
       const lignes = await db.select().from(accesProfilClients).limit(1);
       expect(Object.keys(lignes[0] ?? { id: "" })).not.toContain("telephone");
     });
-  },
-);
+});

@@ -1,114 +1,110 @@
-# 02 — Accès au profil client existant
+# 02 — Confirmation d'accès à un profil existant
 
 Status: ready-for-agent
 
-Blocked by: 01
+Blocked by: 07 (table `acces_profil_clients`, migration 0020)
 
-**Objectif :** supprimer le rattachement manuel comme étape systématique. Le client
-métier est la boutique ; son compte permet à son propriétaire d'accéder au profil
-correspondant. Lorsqu'une boutique semble déjà exister, un agent autorisé confirme
-l'accès avant que des données financières soient révélées.
+**Remplace** la version précédente de ce ticket. Le rattachement manuel
+n'existe plus : ce qui est livré ici est une **décision humaine** sur une
+correspondance possible, jamais une tâche à faire pour chaque client.
 
-**Remplace :** `02-rattachement-compte-dossier.md` dans sa version précédente.
+## Ce que la tranche livre
 
-**Dépendances :** S1 (inscription, pièce d'identité et validation du compte) ; S4
-(profil client, statut, plafond et historique financier).
+1. L'état de **demande de vérification** (`demandes_acces_profil`, migration
+   0021) : une correspondance possible ouvre une demande, et n'accorde rien.
+2. La décision : un agent habilité **confirme** ou **refuse**, avec motif.
+3. La **révocation** d'un accès précédemment accordé.
+4. Les **actions serveur** qui vérifient la permission à chaque appel.
+5. Le renommage des permissions `dossier.rattacher` / `dossier.detacher` en
+   `client.acces_confirmer` / `client.acces_revoquer` / `client.acces_corriger`,
+   conformément au découpage.
 
-**Statut :** proposition de refonte — décisions ouvertes listées en fin de ticket.
+Elle ne livre pas encore l'écran agent de la file de demandes : la couche
+applicative et les actions serveur sont là, l'interface vient ensuite.
 
-## Règle de parcours
+## Les règles qui tiennent
 
-- **Nouvelle boutique confirmée :** création du compte et du profil client dans le même
-  parcours contrôlé. Pas de tâche séparée de rattachement.
-- **Correspondance possible avec un profil existant :** ne pas créer de doublon, ne pas
-  révéler de solde ou d'historique et ne pas accorder l'accès automatiquement. Créer un
-  cas « confirmation d'accès » pour un agent autorisé.
-- **Compte validé :** la validation prouve que la personne a été vérifiée ; elle ne
-  prouve pas à elle seule qu'elle est autorisée à gérer un profil client préexistant.
-- **Compte non validé :** aucun accès métier, même si un profil semble correspondre.
-
-## Critères d'acceptation
-
-- [ ] Une nouvelle boutique peut être créée et rendue accessible sans étape manuelle
-      distincte de rattachement.
-- [ ] Les doublons plausibles déclenchent une confirmation par un agent autorisé.
-- [ ] Avant confirmation, le demandeur ne voit ni nom complet du profil candidat si cela
-      divulgue une donnée privée, ni adresse détaillée, solde, créances, paiements,
-      commandes ou historique. L'écran agent peut montrer les informations nécessaires
-      à la vérification selon ses permissions.
-- [ ] La recherche peut utiliser nom, téléphone de contact et adresse, mais aucun champ
-      seul, y compris le téléphone ou le nom, ne sélectionne automatiquement un profil.
-- [ ] L'agent vérifie l'identité de la personne et son autorité à gérer la boutique.
-      La pièce d'identité déjà contrôlée est réutilisée selon S1 ; elle n'est pas redemandée
-      uniquement pour cette étape.
-- [ ] La confirmation est atomique et vérifie que le compte n'a pas déjà accès à un autre
-      profil et que le profil n'a pas déjà un compte principal actif.
-- [ ] Toute confirmation, tentative refusée, révocation et correction est auditée avec
-      l'acteur, l'horodatage, le compte, le profil visé, le résultat et le motif.
-- [ ] La correction d'un accès erroné coupe l'accès au mauvais profil, mais ne supprime,
-      ne modifie et ne déplace aucune commande, créance ou paiement.
-- [ ] Le profil et l'historique financier ne changent pas quand le propriétaire change de
-      téléphone ; la récupération suit une procédure sécurisée et auditée.
-- [ ] Le client ne voit que le profil auquel son compte dispose d'une autorisation active.
-- [ ] Un conflit de synchronisation ne peut pas accorder le même profil à deux comptes
-      principaux actifs.
-- [ ] Le parcours ne crée aucune écriture financière et ne modifie aucun solde.
-
-## Cas de test
-
-1. **Nouvelle boutique :** compte validé, aucune correspondance plausible ; création du
-   profil et accès accordé conformément au parcours approuvé.
-2. **Homonyme :** deux profils de même nom ; aucun choix automatique, finances séparées.
-3. **Téléphone partagé :** plusieurs profils portent le même numéro de contact ; aucune
-   sélection automatique.
-4. **Profil existant :** le compte validé ne voit aucune donnée financière avant décision
-   de l'agent.
-5. **Confirmation positive :** accès accordé au profil exact ; historique existant inchangé.
-6. **Confirmation négative :** aucun accès accordé ; motif audité.
-7. **Compte déjà autorisé ailleurs :** deuxième autorisation refusée.
-8. **Profil déjà doté d'un compte principal actif :** deuxième accès principal refusé, sauf
-   si une future décision métier autorise explicitement plusieurs comptes.
-9. **Correction d'erreur :** accès incorrect révoqué ; aucune écriture financière modifiée.
-10. **Téléphone perdu :** nouveau moyen de connexion, même profil, aucune dette dupliquée.
-11. **Compte non validé ou révoqué :** aucun accès, même si le profil est connu.
-12. **Hors-ligne :** aucune autorisation d'accès à un profil existant n'est accordée sur
-    la seule base d'une correspondance locale non vérifiée.
+- **Avant confirmation, le demandeur ne voit rien.** Ni solde, ni créance, ni
+  commande, ni historique. Le seul chemin de lecture est
+  `profilAutorisePourCompte`, qui renvoie `null` sans accès actif. C'est cette
+  fonction que S5 et S6 devront consommer, **jamais** une lecture de profil
+  guidée par un numéro de téléphone.
+- **Un compte doit être `VALIDE`** pour détenir un accès. La validation prouve
+  qui se connecte ; elle ne remplace pas la décision d'accès au profil.
+  L'invariant 7 est appliqué dans la couche, pas seulement dans l'écran.
+- **Le téléphone et la pièce d'identité ne prouvent rien sur l'autorité.** Il
+  n'existe aucun appel qui accorde un accès depuis une correspondance de
+  numéro. L'indice qui a déclenché la détection est **conservé pour l'agent**
+  (`indice_detection`), et ne débloque rien : seul un `profil_client_id` visé
+  par un humain lisible peut être confirmé.
+- **Journal indisponible = rien n'est écrit.** Confirmation, refus et révocation
+  passent tous par une transaction unique qui contient l'écriture métier *et*
+  l'événement d'audit. Si le journal tombe, l'opération entière est annulée.
+- **Révoker ne déplace rien.** Un accès porte `statut`, pas une suppression.
+  Aucune écriture financière n'existe encore dans ce modèle (S5, S6 à venir) et
+  aucune n'est référencée par cette table : une révocation ne peut donc pas en
+  déplacer une.
+- **Motif obligatoire** (3 à 500 caractères) pour refuser comme pour révoquer.
+  Une décision sans motif lisible est unexpliquable six mois plus tard.
 
 ## Permissions
 
-Remplacer les permissions de rattachement `dossier.rattacher` et `dossier.detacher` par
-des permissions exprimant l'intention :
+| Permission | Effet |
+| --- | --- |
+| `client.acces_confirmer` | confirmer ou refuser une demande |
+| `client.acces_revoquer` | révoquer un accès accordé |
+| `client.acces_corriger` | corriger un accès erroné (conserve l'historique) |
 
-- `client.acces_confirmer`
-- `client.acces_revoquer`
-- `client.acces_corriger`
+Les trois sont **absentes du profil agent par défaut** : un test le vérifie.
+Confirmer qu'une personne gère une boutique est un pouvoir de risque, il se
+donne une par une, jamais par défaut. `dossier.creer` reste le seul pouvoir
+client du profil par défaut.
 
-La matrice exacte des rôles autorisés reste à confirmer. Les permissions ne doivent pas
-être attribuées à l'administrateur technique par défaut, car il n'a pas de pouvoir métier.
+L'administrateur technique ne les détient pas non plus : il n'a aucun pouvoir
+métier.
 
-## Journal d'audit minimal
+## Migration
 
-- type d'action ;
-- compte demandeur et profil client visé ;
-- acteur authentifié ayant pris la décision ;
-- date/heure ;
-- résultat et motif ;
-- référence de la vérification d'identité utilisée, sans dupliquer la pièce elle-même ;
-- identifiant de corrélation permettant de relier la demande, la décision et une éventuelle correction.
+`0021_round_edwin_jarvis.sql` : un `CREATE TABLE` `demandes_acces_profil`, sans
+`ALTER`, sans `UPDATE`, sans `DROP`. Rollback : `DROP TABLE demandes_acces_profil`.
+Aucune donnée financière n'est concernée — il n'en existe pas encore.
 
-## Décisions ouvertes
+## Ce que le test protège
 
-1. Une personne peut-elle gérer plusieurs boutiques, chacune avec un profil financier séparé ?
-2. Plusieurs personnes/comptes peuvent-ils accéder à la même boutique ? Si oui, avec quels rôles ?
-3. Quels critères déclenchent « correspondance possible » plutôt que « nouvelle boutique » ?
-4. Quelles preuves démontrent qu'une personne est propriétaire ou gestionnaire autorisé de la boutique ?
-5. La confirmation d'accès peut-elle être effectuée hors-ligne, ou exige-t-elle une validation en ligne ?
-6. Comment transférer l'accès quand le propriétaire change, sans transférer automatiquement des droits financiers ?
-7. Quelle est la procédure de récupération du compte si le téléphone est perdu ou réattribué ?
-8. Quelle stratégie de migration permet de transformer les dossiers existants en profils clients sans créer de doublons ni modifier les soldes ?
+Sept cas contre la vraie base, choisis parce qu'ils protègent quelque chose :
 
-## Limite de cette révision
+1. un compte non validé ne peut même pas ouvrir de demande, ni rien lire ;
+2. un agent **sans** permission ne peut pas confirmer, et le compte reste sans
+   accès ;
+3. une demande ouverte n'accorde rien — `profilAutorisePourCompte` vaut `null` ;
+4. après confirmation, l'accès existe et l'événement est journalisé ;
+5. un refus exige un motif ;
+6. une révocation coupe l'accès et laisse la demande tracée ;
+7. révoquer exige `client.acces_revoquer`, pas seulement confirmer.
 
-Le fichier S1 source n'a pas été fourni dans les documents disponibles. Ce ticket définit donc les
-contrats attendus de S1, mais ne remplace pas sa spécification complète. Les modifications
-S1 à appliquer sont récapitulées dans `S1-amendements-proposes.md`.
+## Décisions restant à trancher
+
+1. **Critères de « correspondance possible »** : quels champs, et quel seuil,
+   ouvrent une demande. Le ticket ne les invente pas — ils viennent de S10 pour
+   l'import, et du métier pour l'inscription.
+2. **Preuves d'autorité** demandées à l'agent : pièce d'identité du gérant,
+   registre de commerce, ou les deux selon la taille de la boutique.
+3. **Comportement hors-ligne** : la demande peut être écrite hors-ligne, mais
+   la confirmation exige une vérification sûre. Ce qui est écrit ici.
+4. **Plusieurs personnes sur une boutique** : verrou, la colonne `profil_actif` ne
+   l'autorise pas. Voir le ticket 07.
+5. **Changement de propriétaire** : révocation puis nouvel accord sur le même
+   profil — la mécanique existe, la procédure reste à écrire.
+6. **Matrice exacte des rôles** : l'agent de service peut-il confirmer au
+   comptoir ? Recommandé oui, avec `client.acces_confirmer`, jamais par défaut.
+
+## Écarts assumés
+
+- **Aucune clé étrangère**, comme partout ailleurs dans le projet.
+- **Aucun écran agent** dans cette tranche : la liste des demandes
+  (`listerDemandesAccesEnAttente`) est prête, l'interface vient avec le ticket
+  d'interface.
+- **`agentConnecte` existe en trois copies** dans les pages agent. Cette
+  tranche extrait `staffConnecte()` depuis `profil-session.ts` et l'utilise ;
+  remplacer les trois appelants est un nettoyage sans risque, laissé de côté
+  pour ne pas mélanger deux sujets dans la même PR.
