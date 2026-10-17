@@ -30,9 +30,9 @@ import { DeviceSection } from "./device-section";
 import { NotificationsSection } from "./notifications-section";
 
 export const metadata: Metadata = {
-  title: "ParamÃ¨tres â€” Client â€” TKS",
+  title: "Paramètres — Client — TKS",
   description:
-    "ParamÃ¨tres du client : session, mot de passe, synchronisation et rÃ©glages de l'appareil.",
+    "Paramètres du client : session, mot de passe, synchronisation et réglages de l'appareil.",
 };
 
 export default async function ClientSettingsPage() {
@@ -47,20 +47,20 @@ export default async function ClientSettingsPage() {
       <div className="flex flex-col gap-2">
         <div className="flex flex-wrap items-center gap-2">
           <h1 className="text-[22px] leading-tight font-semibold tracking-tight">
-            ParamÃ¨tres
+            Paramètres
           </h1>
           {isSessionAtRisk ? (
             <Badge variant="destructive">
               <TriangleAlertIcon />
-              Session Ã  renouveler
+              Session à renouveler
             </Badge>
           ) : (
-            <Badge variant="secondary">Compte prÃªt</Badge>
+            <Badge variant="secondary">Compte prêt</Badge>
           )}
           <NetworkIndicator />
         </div>
         <p className="max-w-[62ch] text-[13px] leading-relaxed text-muted-foreground">
-          Votre tÃ©lÃ©phone, votre session, votre mot de passe. Vos informations restent
+          Votre téléphone, votre session, votre mot de passe. Vos informations restent
           visibles dans{" "}
           <Link
             href="/clients/profile"
@@ -83,10 +83,10 @@ export default async function ClientSettingsPage() {
                 id="security-title"
                 className="text-sm font-semibold tracking-tight"
               >
-                SÃ©curitÃ© du compte
+                Sécurité du compte
               </h2>
               <p className="text-xs text-muted-foreground">
-                Qui peut ouvrir votre compte, et jusquâ€™Ã  quand.
+                Qui peut ouvrir votre compte, et jusqu’à quand.
               </p>
             </div>
           </div>
@@ -95,7 +95,7 @@ export default async function ClientSettingsPage() {
             <CardHeader>
               <CardTitle>Session en cours</CardTitle>
               <CardDescription>
-                Elle survit Ã  la coupure rÃ©seau, mais elle expire quand mÃªme.
+                Elle survit à la coupure réseau, mais elle expire quand même.
               </CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col gap-4">
@@ -135,7 +135,7 @@ export default async function ClientSettingsPage() {
                     {sessionExpiration.daysRemaining === null
                       ? "Inconnu"
                       : sessionExpiration.isExpired
-                        ? "ExpirÃ©e â€” reconnectez-vous"
+                        ? "Expirée — reconnectez-vous"
                         : sessionExpiration.daysRemaining <= 0
                           ? "Dernier jour"
                           : `${sessionExpiration.daysRemaining} jour${sessionExpiration.daysRemaining > 1 ? "s" : ""}`}
@@ -147,15 +147,15 @@ export default async function ClientSettingsPage() {
                   role="alert"
                   className="rounded-md bg-destructive/8 px-3 py-2 text-xs leading-relaxed text-destructive"
                 >
-                  Votre session expire bientÃ´t : reconnectez-vous au moment
-                  choisi, avant dâ€™Ãªtre coupÃ©.
+                  Votre session expire bientôt : reconnectez-vous au moment
+                  choisi, avant d’être coupé.
                 </p>
               ) : null}
               <div className="flex flex-col gap-2 border-t border-dashed pt-4">
                 <BoutonDeconnexion className="self-start" />
                 <p className="text-xs leading-relaxed text-muted-foreground">
-                  TÃ©lÃ©phone perdu ou volÃ© : la rÃ©vocation nâ€™agit quâ€™Ã  la
-                  synchronisation. PrÃ©venez le distributeur sans attendre.
+                  Téléphone perdu ou volé : la révocation n’agit qu’à la
+                  synchronisation. Prévenez le distributeur sans attendre.
                 </p>
               </div>
             </CardContent>
@@ -168,45 +168,45 @@ export default async function ClientSettingsPage() {
                 <CardTitle>Mot de passe</CardTitle>
               </div>
               <CardDescription>
-                Le changer ferme les autres sessions â€” utile sur tÃ©lÃ©phone
-                partagÃ©.
+                Le changer ferme les autres sessions — utile sur téléphone
+                partagé.
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,28rem)_minmax(0,1fr)]">
                 <PasswordForm />
                 <aside
-                  aria-label="Bon Ã  savoir"
+                  aria-label="Bon à savoir"
                   className="h-fit overflow-hidden rounded-xl border bg-card shadow-sm"
                 >
                   <div className="flex items-center gap-2 border-b px-5 py-3.5">
                     <ShieldCheckIcon className="size-4 text-emerald-600 dark:text-emerald-400" />
-                    <p className="text-[13px] font-semibold">Bon Ã  savoir</p>
+                    <p className="text-[13px] font-semibold">Bon à savoir</p>
                   </div>
                   <ul className="flex flex-col gap-3.5 px-5 py-4">
                     <li className="flex gap-2.5 text-xs leading-relaxed text-muted-foreground">
                       <CheckIcon className="mt-0.5 size-4 shrink-0 text-emerald-600 dark:text-emerald-400" strokeWidth={3} />
-                      Au moins 8 caractÃ¨res, diffÃ©rent de vos autres comptes.
+                      Au moins 8 caractères, différent de vos autres comptes.
                     </li>
                     <li className="flex gap-2.5 text-xs leading-relaxed text-muted-foreground">
                       <CheckIcon className="mt-0.5 size-4 shrink-0 text-emerald-600 dark:text-emerald-400" strokeWidth={3} />
-                      Le changer ferme les autres sessions : prÃ©voyez de
-                      reconnecter vos autres tÃ©lÃ©phones.
+                      Le changer ferme les autres sessions : prévoyez de
+                      reconnecter vos autres téléphones.
                     </li>
                   </ul>
                   <p className="mx-5 mb-2 flex gap-2.5 rounded-lg border border-primary/25 bg-primary/[0.07] px-3 py-2.5 text-xs leading-relaxed">
                     <UsersIcon className="mt-0.5 size-4 shrink-0 text-primary-foreground" />
                     <span>
-                      <span className="font-semibold">TÃ©lÃ©phone partagÃ© ?</span>{" "}
+                      <span className="font-semibold">Téléphone partagé ?</span>{" "}
                       <span className="text-muted-foreground">
-                        Si quelquâ€™un dâ€™autre a ouvert votre compte avec votre
-                        session, changez le mot de passe pour couper son accÃ¨s.
+                        Si quelqu’un d’autre a ouvert votre compte avec votre
+                        session, changez le mot de passe pour couper son accès.
                       </span>
                     </span>
                   </p>
                   <p className="mx-5 mb-5 flex gap-2.5 rounded-lg bg-muted/60 px-3 py-2.5 text-xs leading-relaxed text-muted-foreground">
                     <WifiOffIcon className="mt-0.5 size-4 shrink-0" />
-                    Sans rÃ©seau, le changement attend le retour du rÃ©seau
+                    Sans réseau, le changement attend le retour du réseau
                     et la file de S8.
                   </p>
                 </aside>
@@ -225,10 +225,10 @@ export default async function ClientSettingsPage() {
                 id="sync-title"
                 className="text-sm font-semibold tracking-tight"
               >
-                File et rÃ©seau
+                File et réseau
               </h2>
               <p className="text-xs text-muted-foreground">
-                OÃ¹ en sont vos donnÃ©es, sans chiffre inventÃ©.
+                Où en sont vos données, sans chiffre inventé.
               </p>
             </div>
           </div>
@@ -252,7 +252,7 @@ export default async function ClientSettingsPage() {
                 Cet appareil
               </h2>
               <p className="text-xs text-muted-foreground">
-                RÃ©glages du tÃ©lÃ©phone, jamais synchronisÃ©s.
+                Réglages du téléphone, jamais synchronisés.
               </p>
             </div>
           </div>
@@ -276,7 +276,7 @@ export default async function ClientSettingsPage() {
                 Notifications
               </h2>
               <p className="text-xs text-muted-foreground">
-                Quels Ã©vÃ©nements vous signalent, et comment.
+                Quels événements vous signalent, et comment.
               </p>
             </div>
           </div>
@@ -289,13 +289,13 @@ export default async function ClientSettingsPage() {
       </div>
 
       <p className="border-t border-dashed pt-4 text-xs leading-relaxed text-muted-foreground">
-        Ni taux, ni plafond, ni promotion ici : ce sont des dÃ©cisions du
-        distributeur. Besoin dâ€™aide ?{" "}
+        Ni taux, ni plafond, ni promotion ici : ce sont des décisions du
+        distributeur. Besoin d’aide ?{" "}
         <Link
           href="/clients/help"
           className="font-medium text-primary underline-offset-4 hover:underline"
         >
-          Ouvrir lâ€™aide
+          Ouvrir l’aide
         </Link>
         .
       </p>

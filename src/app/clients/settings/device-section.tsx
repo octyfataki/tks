@@ -140,7 +140,7 @@ export function DeviceSection() {
 
       <div>
         <p className="text-[13px] font-semibold">Densité des listes</p>
-        <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label="Densité des listes">
+        <div className="mt-2 flex flex-wrap gap-2" role="group" aria-label="Densité des listes de commandes et de paiements">
           {densities.map((option) => (
             <Button
               key={option.value}
