@@ -14,7 +14,7 @@ export const journalAudit = mysqlTable(
     roleAuMoment: varchar("role_au_moment", { length: 32 }).notNull(),
     typeAction: varchar("type_action", { length: 128 }).notNull(),
     entite: varchar("entite", { length: 128 }).notNull(),
-    entiteId: varchar("entite_id", { length: 36 }),
+    entiteId: varchar("entite_id", { length: 128 }),
     avant: json("avant").$type<unknown>(),
     apres: json("apres").$type<unknown>(),
     appareilId: varchar("appareil_id", { length: 128 }),

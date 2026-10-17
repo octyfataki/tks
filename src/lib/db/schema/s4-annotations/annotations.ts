@@ -5,6 +5,7 @@ export const annotationsClients = mysqlTable(
   {
     id: varchar("id", { length: 36 }).primaryKey(),
     compteClientId: varchar("compte_client_id", { length: 36 }).notNull(),
+    profilClientId: varchar("profil_client_id", { length: 36 }),
     etiquette: varchar("etiquette", { length: 64 }).notNull(),
     statut: varchar("statut", { length: 16 }).notNull(),
     acteurId: varchar("acteur_id", { length: 36 }).notNull(),
@@ -12,6 +13,7 @@ export const annotationsClients = mysqlTable(
     recuLe: timestamp("recu_le", { fsp: 3 }).defaultNow().notNull(),
   },
   (table) => [
+    index("annotations_clients_profil_idx").on(table.profilClientId),
     index("annotations_clients_compte_idx").on(table.compteClientId),
     index("annotations_clients_compte_etiquette_idx").on(
       table.compteClientId,
