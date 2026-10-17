@@ -46,8 +46,13 @@ son nom ici**, elle ne contourne pas la liste.
       mobile money.
       *Plafond* — `plafond.modifier` : fixer, modifier, diminuer un plafond.
       *Promotion* — `statut.modifier` : changer le statut d'un client.
-      *Dossier client* — `dossier.creer`, `dossier.rattacher`, `dossier.detacher` :
-      créer une fiche client, la rattacher à un compte, la défaire.
+      *Profil client* — `dossier.creer` : créer la fiche d'une boutique.
+      *Accès au profil* — `client.acces_confirmer` (confirmer ou refuser une
+      demande d'accès à un profil existant), `client.acces_revoquer` (retirer un
+      accès accordé), `client.acces_corriger` (défaire un accès erroné sans
+      toucher aux écritures). Les trois restent **absentes du profil agent par
+      défaut** : confirmer qu'une personne gère une boutique se donne une par
+      une. Voir S4 ticket 02.
       *Grille tarifaire* — `grille.tarif` : saisir ou modifier un prix unitaire.
       *Preuve de paiement* — `preuve.valider` : valider ou refuser une preuve.
       *Commande* — `commande.creer`, `commande.prendre` (poser un verrou),
