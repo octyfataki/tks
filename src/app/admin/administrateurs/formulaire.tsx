@@ -21,6 +21,7 @@ import {
 import { Button, buttonVariants } from "@/components/ui/button";
 import { FieldDescription } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
+import { useUrlAbsolue } from "@/lib/use-origine";
 import {
   creerAdministrateurPrincipalAction,
   type ResultatCreationAdmin,
@@ -108,6 +109,10 @@ export function FormulaireAdministrateurPrincipal() {
   const [lienDemande, setLienDemande] = React.useState(true);
   const [lienCopie, setLienCopie] = React.useState(false);
 
+  const lienComplet = useUrlAbsolue(
+    resultat && resultat.ok ? resultat.lienPremierAcces : null,
+  );
+
   const nomComplet = `${prenom} ${nom}`.trim() || "Nouveau distributeur";
   const etapesApres = lienDemande ? ETAPES_LIEN : ETAPES_CLASSIQUE;
   const initiales =
@@ -159,8 +164,11 @@ export function FormulaireAdministrateurPrincipal() {
                 Le lien n&apos;ouvre aucune session.
               </p>
               <div className="flex items-center gap-2">
-                <code className="min-w-0 flex-1 truncate rounded-md border bg-background px-2 py-1 font-mono text-[11px]">
-                  {resultat.lienPremierAcces}
+                <code
+                  title={lienComplet}
+                  className="min-w-0 flex-1 truncate rounded-md border bg-background px-2 py-1 font-mono text-[11px]"
+                >
+                  {lienComplet}
                 </code>
                 <Button
                   type="button"
@@ -168,9 +176,7 @@ export function FormulaireAdministrateurPrincipal() {
                   variant="outline"
                   onClick={async () => {
                     try {
-                      await navigator.clipboard.writeText(
-                        `${window.location.origin}${resultat.lienPremierAcces}`,
-                      );
+                      await navigator.clipboard.writeText(lienComplet);
                       setLienCopie(true);
                     } catch {
                       setLienCopie(false);

@@ -13,6 +13,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { useUrlAbsolue } from "@/lib/use-origine";
 import {
   creerLienInvitationAgentAction,
   type ResultatInvitationAgent,
@@ -57,6 +58,7 @@ export function FormulaireInvitationAgent({
     Number.isFinite(duree) && duree >= 1 ? Math.min(Math.floor(duree), 30) : 7;
   const [expirationEstimee, setExpirationEstimee] = React.useState("");
   const lienCree = resultat && resultat.ok ? resultat.lien : null;
+  const lienComplet = useUrlAbsolue(lienCree);
   React.useEffect(() => {
     // eslint-disable-next-line react-hooks/set-state-in-effect -- aperçu dérivé, pas de boucle
     setExpirationEstimee(
@@ -108,10 +110,10 @@ export function FormulaireInvitationAgent({
           </p>
           <div className="flex items-center gap-2">
             <code
-              title={resultat.lien}
+              title={lienComplet}
               className="min-w-0 flex-1 rounded-md border bg-background px-2 py-1 font-mono text-[11px] break-all select-all"
             >
-              {resultat.lien}
+              {lienComplet}
             </code>
             <Button
               type="button"
@@ -119,9 +121,7 @@ export function FormulaireInvitationAgent({
               variant="outline"
               onClick={async () => {
                 try {
-                  await navigator.clipboard.writeText(
-                    `${window.location.origin}${resultat.lien}`,
-                  );
+                  await navigator.clipboard.writeText(lienComplet);
                   setLienCopie(true);
                 } catch {
                   setLienCopie(false);
