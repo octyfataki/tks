@@ -105,13 +105,13 @@ export default function PendingVue() {
 
   useEffect(() => {
     let actif = true;
-    chargerStatut().catch(() => {});
-    const minuteur = window.setInterval(() => {
-      if (document.visibilityState === "visible") chargerStatut().catch(() => {});
-    }, 8000);
     const rafraichir = () => {
-      chargerStatut().catch(() => {});
+      void chargerStatut().catch(() => {});
     };
+    rafraichir();
+    const minuteur = window.setInterval(() => {
+      if (document.visibilityState === "visible") rafraichir();
+    }, 8000);
     const surVisibilite = () => {
       if (document.visibilityState === "visible") rafraichir();
     };
