@@ -1,11 +1,12 @@
 import { randomUUID } from "node:crypto";
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray } from "drizzle-orm";
 import { db, type ExecuteurDb } from "@/lib/db/client";
 import { annotationsClients } from "@/lib/db/schema/s4-annotations";
 import { comptesClients } from "@/lib/db/schema/s1-comptes";
+import { accesProfilClients } from "@/lib/db/schema/s4-clients";
 import { enregistrerEvenement } from "@/lib/s2-autorisations/journal";
 import { estEtiquetteConnue, etiquetteParCode } from "./etiquettes";
-import { deriverEtiquettesActives } from "./derivation";
+import { deriverEtiquettesActives, deriverEtiquettesActivesParCle } from "./derivation";
 
 export type ErreurAnnotation =
   | "COMPTE_INTROUVABLE"
@@ -35,6 +36,52 @@ export async function etiquettesActivesParCompte(
     .from(annotationsClients)
     .where(inArray(annotationsClients.compteClientId, [...compteIds]));
   return deriverEtiquettesActives(lignes);
+}
+
+/**
+ * Lecture par profil : c'est celle que doit utiliser tout écran qui montre le
+ * shop. Changer de compte de connexion ou rétablir un accès ne change rien à
+ * ce que renvoie cette fonction.
+ */
+export async function etiquettesActivesParProfil(
+  profilIds: readonly string[],
+): Promise<Map<string, string[]>> {
+  if (profilIds.length === 0) return new Map();
+  const lignes = await db
+    .select({
+      profilClientId: annotationsClients.profilClientId,
+      etiquette: annotationsClients.etiquette,
+      statut: annotationsClients.statut,
+      horodatageLocal: annotationsClients.horodatageLocal,
+      recuLe: annotationsClients.recuLe,
+    })
+    .from(annotationsClients)
+    .where(inArray(annotationsClients.profilClientId, [...profilIds]));
+  return deriverEtiquettesActivesParCle(
+    lignes,
+    (evenement) => evenement.profilClientId ?? "",
+  );
+}
+
+/**
+ * Le profil vient de l'accès actif, jamais du téléphone. Un compte sans accès
+ * ne rattache rien : l'étiquette part alors sans profil, et attendra qu'un
+ * agent confirme l'accès au shop.
+ */
+async function profilActifDuCompte(
+  compteClientId: string,
+): Promise<string | null> {
+  const lignes = await db
+    .select({ profilClientId: accesProfilClients.profilClientId })
+    .from(accesProfilClients)
+    .where(
+      and(
+        eq(accesProfilClients.compteClientId, compteClientId),
+        eq(accesProfilClients.statut, "ACCORDE"),
+      ),
+    )
+    .limit(1);
+  return lignes[0]?.profilClientId ?? null;
 }
 
 async function compteExiste(compteClientId: string): Promise<boolean> {
@@ -84,9 +131,11 @@ async function consignerAnnotation(input: {
   if (!trace.ok) {
     throw new AnnotationError("JOURNAL_INDISPONIBLE", "journal indisponible");
   }
+  const profilClientId = await profilActifDuCompte(input.compteClientId);
   await ex.insert(annotationsClients).values({
     id: randomUUID(),
     compteClientId: input.compteClientId,
+    profilClientId,
     etiquette: input.etiquette,
     statut: input.statut,
     acteurId: input.acteurId,

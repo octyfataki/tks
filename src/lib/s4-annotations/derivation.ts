@@ -5,15 +5,23 @@ import {
 } from "./etiquettes";
 
 export type EvenementAnnotation = {
-  compteClientId: string;
+  compteClientId?: string | null;
+  profilClientId?: string | null;
   etiquette: string;
   statut: string;
   horodatageLocal: Date;
   recuLe: Date;
 };
 
-export function deriverEtiquettesActives(
+/**
+ * Les étiquettes suivent le **profil**, pas le compte. La clé de regroupement
+ * est fournie par l'appelant, ce qui rend la dérivation indépendante du mode
+ * de lecture : elle fonctionne aussi bien sur des lignes lues par compte que
+ * par profil.
+ */
+export function deriverEtiquettesActivesParCle(
   evenements: readonly EvenementAnnotation[],
+  cle: (evenement: EvenementAnnotation) => string,
 ): Map<string, string[]> {
   const ordonnes = [...evenements].sort((a, b) => {
     const parLocal = a.horodatageLocal.getTime() - b.horodatageLocal.getTime();
@@ -25,22 +33,32 @@ export function deriverEtiquettesActives(
   for (const evenement of ordonnes) {
     if (!estEtiquetteConnue(evenement.etiquette)) continue;
     if (!estStatutAnnotation(evenement.statut)) continue;
-    let parCompte = etat.get(evenement.compteClientId);
-    if (!parCompte) {
-      parCompte = new Map();
-      etat.set(evenement.compteClientId, parCompte);
+    const groupe = cle(evenement);
+    let parEtiquette = etat.get(groupe);
+    if (!parEtiquette) {
+      parEtiquette = new Map();
+      etat.set(groupe, parEtiquette);
     }
-    parCompte.set(evenement.etiquette, evenement.statut);
+    parEtiquette.set(evenement.etiquette, evenement.statut);
   }
 
   const resultat = new Map<string, string[]>();
-  for (const [compteClientId, parCompte] of etat) {
-    const posees = [...parCompte.entries()]
+  for (const [groupe, parEtiquette] of etat) {
+    const posees = [...parEtiquette.entries()]
       .filter(([, statut]) => statut === "POSEE")
       .map(([etiquette]) => etiquette);
     if (posees.length > 0) {
-      resultat.set(compteClientId, etiquettesOrdonnees(posees));
+      resultat.set(groupe, etiquettesOrdonnees(posees));
     }
   }
   return resultat;
+}
+
+export function deriverEtiquettesActives(
+  evenements: readonly EvenementAnnotation[],
+): Map<string, string[]> {
+  return deriverEtiquettesActivesParCle(
+    evenements,
+    (evenement) => evenement.compteClientId ?? "",
+  );
 }

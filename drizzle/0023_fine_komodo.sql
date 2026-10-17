@@ -1,0 +1,1 @@
+ALTER TABLE `journal_audit` MODIFY COLUMN `entite_id` varchar(128);
