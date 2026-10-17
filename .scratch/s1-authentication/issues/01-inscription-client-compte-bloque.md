@@ -1,9 +1,12 @@
 # 01: Le client s'inscrit, et son compte ne peut rien faire
 
 **What to build:** Un client ouvre l'application, s'inscrit avec son numéro de
-téléphone et un mot de passe, se connecte, et tombe sur un écran qui lui dit que
-son compte attend une vérification et quelle pièce fournir. Il ne peut rien faire
-d'autre : pas de dossier, pas de solde, pas de commande — pas même prépayée.
+téléphone et un mot de passe, et tombe immédiatement sur un écran de suivi qui
+lui dit que son compte attend une vérification et où déposer sa pièce
+d'identité. **L'inscription ouvre la session** : le client n'a pas à se
+reconnecter, et le dépôt de la pièce est possible tout de suite. Tant que le
+compte n'est pas validé, il reste sur cet écran — il ne peut rien faire
+d'autre.
 
 Cette tranche pose aussi le **squelette** : application web installable, base de
 données réelle, migrations, CI, et la **couture de test** — couche applicative
@@ -18,6 +21,15 @@ et il faudra la réécrire six fois.
 - [ ] Un numéro de téléphone au format international normalisé et un mot de passe
       suffisent à créer un compte. Aucun email n'est demandé à un client.
 - [ ] Le compte créé est `EN_ATTENTE_VALIDATION`.
+- [ ] **L'inscription ouvre la session.** Le client atterrit sur `/pending`
+      connecté, sans se reconnecter. Si la session ne peut pas être ouverte, le
+      compte n'est pas perdu : la page le dit et le renvoie vers la connexion.
+- [ ] **Le dépôt de la pièce se fait depuis `/pending`, jamais à l'inscription.**
+      L'inscription ne propose aucun dépôt : un écran qui affiche « pièce
+      enregistrée » sans rien écrire est pire qu'un écran absent.
+- [ ] **Test : l'inscription ouvre une session.** Sans ce test, une régression
+      qui fait perdre la session rend le dépôt de pièce impossible, sans aucune
+      erreur visible.
 - [ ] Le numéro de téléphone est **unique comme identifiant de compte**. Une
       seconde inscription avec le même numéro est refusée avec un motif lisible.
 - [ ] Un mot de passe trop faible est refusé, et le refus dit pourquoi.

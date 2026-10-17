@@ -44,7 +44,6 @@ function memoriserInscription(patch: Record<string, string | number>) {
 
 export default function SignUpPage() {
   const router = useRouter();
-  const [etape, setEtape] = useState<"infos" | "piece">("infos");
   const [chargement, setChargement] = useState(false);
 
   const soumettreInfos = useCallback(
@@ -72,86 +71,25 @@ export default function SignUpPage() {
         return;
       }
       memoriserInscription({ name, email, telephone, at: Date.now() });
-      setEtape("piece");
-    },
-    [],
-  );
-
-  const soumettrePiece = useCallback(
-    async (e: React.FormEvent<HTMLFormElement>) => {
-      e.preventDefault();
-      const champ = e.currentTarget.elements.namedItem("piece");
-      const fichier =
-        champ instanceof HTMLInputElement ? champ.files?.[0] : undefined;
-      memoriserInscription({ piece: fichier?.name ?? "comptoir" });
-      setChargement(true);
-      await new Promise((r) => setTimeout(r, 600));
+      if (!resultat.session) {
+        toast.add({
+          type: "info",
+          title: "Compte créé",
+          description:
+            "Connectez-vous pour déposer votre pièce d'identité et suivre votre demande.",
+        });
+        router.push("/sign-in");
+        return;
+      }
       router.push("/pending");
     },
     [router],
   );
 
-  const passerAuComptoir = useCallback(() => {
-    memoriserInscription({ piece: "comptoir" });
-    router.push("/pending");
-  }, [router]);
-
-  if (etape === "piece") {
-    return (
-      <AuthShell
-        title="Pièce d'identité"
-        description="Dernière étape : déposez votre pièce d'identité, ou présentez-la au comptoir. Sans pièce vue par un humain, le compte ne sera pas validé."
-      >
-        <RedirigerConnecte />
-        <form action="#" method="post" onSubmit={soumettrePiece}>
-          <FieldGroup>
-            <Field>
-              <FieldLabel htmlFor="piece">Pièce d&apos;identité</FieldLabel>
-              <Input
-                id="piece"
-                name="piece"
-                type="file"
-                accept="image/*"
-                required
-              />
-              <FieldDescription>
-                Photo compressée, plafonnée en taille. Elle sera conservée sur
-                votre dossier et montrée à l&apos;humain qui validera le compte.
-              </FieldDescription>
-            </Field>
-            <Field>
-              <Button
-                type="submit"
-                size="lg"
-                className="w-full"
-                disabled={chargement}
-              >
-                {chargement ? "Envoi…" : "Envoyer ma pièce d'identité"}
-              </Button>
-            </Field>
-            <Field>
-              <p className="text-xs text-muted-foreground">
-                Je l&apos;ai sous la main plus tard ?{" "}
-                <button
-                  type="button"
-                  className="underline underline-offset-4"
-                  onClick={passerAuComptoir}
-                >
-                  Je la présenterai au comptoir
-                </button>
-                .
-              </p>
-            </Field>
-          </FieldGroup>
-        </form>
-      </AuthShell>
-    );
-  }
-
   return (
     <AuthShell
       title="Inscription client"
-      description="Tout se remplit ici, sur cette page. La pièce d'identité vous sera demandée juste après l'envoi du formulaire."
+      description="Tout se remplit ici, sur cette page. Votre compte est créé immédiatement ; il attend une vérification par un humain."
     >
       <RedirigerConnecte />
       <form action="#" method="post" onSubmit={soumettreInfos}>
@@ -222,7 +160,9 @@ export default function SignUpPage() {
           </Field>
           <Field>
             <p className="text-xs text-muted-foreground">
-              Après l&apos;envoi, vous déposerez votre pièce d&apos;identité.
+              Après l&apos;envoi, vous arrivez sur la page de suivi. C&apos;est
+              là que vous déposez votre pièce d&apos;identité, et que vous
+              suivez l&apos;avancement de votre demande.
             </p>
           </Field>
           <Field>
