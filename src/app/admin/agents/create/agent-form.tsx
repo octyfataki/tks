@@ -346,17 +346,23 @@ function ÉcranSuccès({
       .join("") || "AG";
   return (
     <div className="flex flex-1 flex-col items-center">
-      <section className="mt-6 w-full max-w-2xl">
+      <section className="tks-ticket-enter mt-6 w-full max-w-2xl">
         <div className="overflow-hidden rounded-xl border bg-card">
-          <div className="bg-gradient-to-r from-primary/15 via-primary/5 to-transparent p-6 pb-4">
-            <div className="flex items-center gap-4">
+          <div className="relative bg-gradient-to-r from-primary/15 via-primary/5 to-transparent p-6 pb-4">
+            <div aria-hidden className="tks-maille absolute inset-0" />
+            <div className="relative flex items-center gap-4">
               <span className="relative flex size-14 shrink-0 items-center justify-center rounded-full bg-primary text-base font-semibold text-primary-foreground">
-                {initiales}
                 <span
                   aria-hidden
-                  className="absolute -right-1.5 -bottom-1.5 flex size-6 items-center justify-center rounded-full border-2 border-card bg-green-600"
-                >
+                  className="absolute -inset-3 rounded-full border border-primary/20"
+                />
+                {initiales}
+                <span className="tks-pousse absolute -right-1.5 -bottom-1.5 flex size-6 items-center justify-center rounded-full border-2 border-card bg-green-600">
                   <CircleCheckIcon className="size-4 text-white" />
+                  <span
+                    aria-hidden
+                    className="tks-echo absolute -inset-1.5 rounded-full border border-green-600/60"
+                  />
                 </span>
               </span>
               <div className="min-w-0">
@@ -364,7 +370,7 @@ function ÉcranSuccès({
                 <p className="truncate text-xs text-muted-foreground">{agent.email}</p>
               </div>
             </div>
-            <div className="mt-4 flex flex-wrap gap-1.5">
+            <div className="relative mt-4 flex flex-wrap gap-1.5">
               <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
                 Agent de service
               </span>
