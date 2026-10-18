@@ -1,16 +1,16 @@
-export const CLE_PREFERENCES_AGENT = "tks-agent-preferences";
+export const AGENT_PREFERENCES_KEY = "tks-agent-preferences";
 
-export type DensiteComptoir = "confortable" | "compacte";
+export type CounterDensity = "confortable" | "compacte";
 
-export type CanalNotification = "son-vibration" | "vibration" | "silencieuse";
+export type NotificationChannel = "son-vibration" | "vibration" | "silencieuse";
 
-export const CANAUX_NOTIFICATION: { valeur: CanalNotification; etiquette: string }[] = [
-  { valeur: "son-vibration", etiquette: "Son + vibration" },
-  { valeur: "vibration", etiquette: "Vibration" },
-  { valeur: "silencieuse", etiquette: "Silencieuse" },
+export const NOTIFICATION_CHANNELS: { value: NotificationChannel; label: string }[] = [
+  { value: "son-vibration", label: "Son + vibration" },
+  { value: "vibration", label: "Vibration" },
+  { value: "silencieuse", label: "Silencieuse" },
 ];
 
-export type CleNotification =
+export type NotificationKey =
   | "validations"
   | "encaissements"
   | "file"
@@ -18,78 +18,78 @@ export type CleNotification =
   | "synchronisation"
   | "taux";
 
-export type ReglageNotification = {
+export type NotificationSetting = {
   actif: boolean;
-  canal: CanalNotification;
+  canal: NotificationChannel;
 };
 
-export type NotificationsAgent = Record<CleNotification, ReglageNotification>;
+export type AgentNotifications = Record<NotificationKey, NotificationSetting>;
 
-export type GroupeNotification = "comptoir" | "poste";
+export type NotificationGroup = "comptoir" | "poste";
 
-export const GROUPES_NOTIFICATION: { valeur: GroupeNotification; titre: string; description: string }[] = [
+export const NOTIFICATION_GROUPS: { value: NotificationGroup; title: string; description: string }[] = [
   {
-    valeur: "comptoir",
-    titre: "Alertes du comptoir",
+    value: "comptoir",
+    title: "Alertes du comptoir",
     description: "Signaux sur l'appareil pendant que vous servez.",
   },
   {
-    valeur: "poste",
-    titre: "Poste et compte",
+    value: "poste",
+    title: "Poste et compte",
     description: "Ce qui concerne votre session et vos données.",
   },
 ];
 
-export const CATALOGUE_NOTIFICATIONS: {
-  cle: CleNotification;
-  groupe: GroupeNotification;
-  titre: string;
+export const NOTIFICATION_CATALOG: {
+  key: NotificationKey;
+  group: NotificationGroup;
+  title: string;
   description: string;
 }[] = [
   {
-    cle: "validations",
-    groupe: "comptoir",
-    titre: "Validation des gestes",
+    key: "validations",
+    group: "comptoir",
+    title: "Validation des gestes",
     description: "Un signal à chaque geste validé au comptoir.",
   },
   {
-    cle: "encaissements",
-    groupe: "comptoir",
-    titre: "Encaissements reçus",
+    key: "encaissements",
+    group: "comptoir",
+    title: "Encaissements reçus",
     description: "Quand un paiement est confirmé.",
   },
   {
-    cle: "file",
-    groupe: "comptoir",
-    titre: "File d'attente",
+    key: "file",
+    group: "comptoir",
+    title: "File d'attente",
     description: "Quand un nouveau geste attend — consommé par S5.",
   },
   {
-    cle: "session",
-    groupe: "poste",
-    titre: "Session qui expire",
+    key: "session",
+    group: "poste",
+    title: "Session qui expire",
     description: "Un rappel avant d'être coupé au comptoir.",
   },
   {
-    cle: "synchronisation",
-    groupe: "poste",
-    titre: "Synchronisation terminée",
+    key: "synchronisation",
+    group: "poste",
+    title: "Synchronisation terminée",
     description: "Quand la file est partie — branché avec S8.",
   },
   {
-    cle: "taux",
-    groupe: "poste",
-    titre: "Taux mis à jour",
+    key: "taux",
+    group: "poste",
+    title: "Taux mis à jour",
     description: "Quand le distributeur change le taux — branché avec S3.",
   },
 ];
 
-export type PreferencesAgent = {
-  densite: DensiteComptoir;
-  notifications: NotificationsAgent;
+export type AgentPreferences = {
+  densite: CounterDensity;
+  notifications: AgentNotifications;
 };
 
-export const NOTIFICATIONS_DEFAUT: NotificationsAgent = {
+export const DEFAULT_NOTIFICATIONS: AgentNotifications = {
   validations: { actif: true, canal: "son-vibration" },
   encaissements: { actif: true, canal: "son-vibration" },
   file: { actif: true, canal: "vibration" },
@@ -98,65 +98,65 @@ export const NOTIFICATIONS_DEFAUT: NotificationsAgent = {
   taux: { actif: true, canal: "silencieuse" },
 };
 
-export const PREFERENCES_DEFAUT: PreferencesAgent = {
+export const DEFAULT_PREFERENCES: AgentPreferences = {
   densite: "confortable",
-  notifications: { ...NOTIFICATIONS_DEFAUT },
+  notifications: { ...DEFAULT_NOTIFICATIONS },
 };
 
-function estDensite(valeur: unknown): valeur is DensiteComptoir {
-  return valeur === "confortable" || valeur === "compacte";
+function isCounterDensity(value: unknown): value is CounterDensity {
+  return value === "confortable" || value === "compacte";
 }
 
-function estCanal(valeur: unknown): valeur is CanalNotification {
+function isNotificationChannel(value: unknown): value is NotificationChannel {
   return (
-    valeur === "son-vibration" ||
-    valeur === "vibration" ||
-    valeur === "silencieuse"
+    value === "son-vibration" ||
+    value === "vibration" ||
+    value === "silencieuse"
   );
 }
 
-function lireReglage(valeur: unknown, defaut: ReglageNotification): ReglageNotification {
-  if (typeof valeur !== "object" || valeur === null) return { ...defaut };
-  const objet = valeur as Record<string, unknown>;
+function readSetting(value: unknown, fallback: NotificationSetting): NotificationSetting {
+  if (typeof value !== "object" || value === null) return { ...fallback };
+  const record = value as Record<string, unknown>;
   return {
-    actif: typeof objet.actif === "boolean" ? objet.actif : defaut.actif,
-    canal: estCanal(objet.canal) ? objet.canal : defaut.canal,
+    actif: typeof record.actif === "boolean" ? record.actif : fallback.actif,
+    canal: isNotificationChannel(record.canal) ? record.canal : fallback.canal,
   };
 }
 
-function lireNotifications(valeur: unknown): NotificationsAgent {
-  const objet =
-    typeof valeur === "object" && valeur !== null
-      ? (valeur as Record<string, unknown>)
+function readNotifications(value: unknown): AgentNotifications {
+  const record =
+    typeof value === "object" && value !== null
+      ? (value as Record<string, unknown>)
       : {};
   return {
-    validations: lireReglage(objet.validations, NOTIFICATIONS_DEFAUT.validations),
-    encaissements: lireReglage(objet.encaissements, NOTIFICATIONS_DEFAUT.encaissements),
-    file: lireReglage(objet.file, NOTIFICATIONS_DEFAUT.file),
-    session: lireReglage(objet.session, NOTIFICATIONS_DEFAUT.session),
-    synchronisation: lireReglage(
-      objet.synchronisation,
-      NOTIFICATIONS_DEFAUT.synchronisation,
+    validations: readSetting(record.validations, DEFAULT_NOTIFICATIONS.validations),
+    encaissements: readSetting(record.encaissements, DEFAULT_NOTIFICATIONS.encaissements),
+    file: readSetting(record.file, DEFAULT_NOTIFICATIONS.file),
+    session: readSetting(record.session, DEFAULT_NOTIFICATIONS.session),
+    synchronisation: readSetting(
+      record.synchronisation,
+      DEFAULT_NOTIFICATIONS.synchronisation,
     ),
-    taux: lireReglage(objet.taux, NOTIFICATIONS_DEFAUT.taux),
+    taux: readSetting(record.taux, DEFAULT_NOTIFICATIONS.taux),
   };
 }
 
-export function lirePreferences(valeur: unknown): PreferencesAgent {
-  if (typeof valeur !== "object" || valeur === null) {
-    return { ...PREFERENCES_DEFAUT };
+export function readPreferences(value: unknown): AgentPreferences {
+  if (typeof value !== "object" || value === null) {
+    return { ...DEFAULT_PREFERENCES };
   }
-  const objet = valeur as Record<string, unknown>;
+  const record = value as Record<string, unknown>;
   return {
-    densite: estDensite(objet.densite)
-      ? objet.densite
-      : PREFERENCES_DEFAUT.densite,
-    notifications: lireNotifications(objet.notifications),
+    densite: isCounterDensity(record.densite)
+      ? record.densite
+      : DEFAULT_PREFERENCES.densite,
+    notifications: readNotifications(record.notifications),
   };
 }
 
-export function serialiserPreferences(
-  preferences: PreferencesAgent,
+export function serializePreferences(
+  preferences: AgentPreferences,
 ): string {
   return JSON.stringify(preferences);
 }

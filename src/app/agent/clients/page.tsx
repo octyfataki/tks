@@ -17,43 +17,43 @@ import { RafraichissementFile } from "@/components/clients/rafraichissement-file
 import { PaginationListe } from "@/app/admin/list/list-pagination";
 import { PermissionRefusee } from "@/components/permission-denied";
 
-const FILTRES_VALIDES = [
+const VALID_FILTERS = [
   "en-attente",
   "valide",
   "refuse",
   "revoque",
 ] as const;
-const TRIS_VALIDES = ["anciens", "nom-az"] as const;
+const VALID_SORTS = ["anciens", "nom-az"] as const;
 
-const LIGNES_PAR_PAGE = 10;
+const ROWS_PER_PAGE = 10;
 
-type FiltreCompte = (typeof FILTRES_VALIDES)[number];
+type AccountFilter = (typeof VALID_FILTERS)[number];
 
-const ETAT_PAR_FILTRE: Record<FiltreCompte, string> = {
+const STATUS_BY_FILTER: Record<AccountFilter, string> = {
   "en-attente": "EN_ATTENTE_VALIDATION",
   valide: "VALIDE",
   refuse: "REFUSE",
   revoque: "REVOQUE",
 };
 
-async function agentConnecte(): Promise<{ id: string } | null> {
+async function getConnectedAgent(): Promise<{ id: string } | null> {
   const session = await auth.api.getSession({ headers: await headers() });
   const userId = session?.user?.id;
   if (!userId) return null;
-  const lignes = await db
+  const rows = await db
     .select({ id: comptesStaff.id })
     .from(comptesStaff)
     .where(eq(comptesStaff.betterAuthUserId, userId))
     .limit(1);
-  return lignes[0] ?? null;
+  return rows[0] ?? null;
 }
 
-export default async function AgentComptesClientsPage({
+export default async function AgentClientAccountsPage({
   searchParams,
 }: {
   searchParams: Promise<{ q?: string; filtre?: string; tri?: string; page?: string }>;
 }) {
-  const agent = await agentConnecte();
+  const agent = await getConnectedAgent();
   if (!agent || !(await aPermission(agent.id, "client.valider"))) {
     return (
       <PermissionRefusee
@@ -64,111 +64,114 @@ export default async function AgentComptesClientsPage({
     );
   }
 
-  const filtres = await searchParams;
-  const recherche = (filtres.q ?? "").trim().toLowerCase();
-  const filtre = (FILTRES_VALIDES as readonly string[]).includes(
-    filtres.filtre ?? "",
+  const query = await searchParams;
+  const searchTerm = (query.q ?? "").trim().toLowerCase();
+  const filter = (VALID_FILTERS as readonly string[]).includes(
+    query.filtre ?? "",
   )
-    ? (filtres.filtre as FiltreCompte)
+    ? (query.filtre as AccountFilter)
     : null;
-  const tri = (TRIS_VALIDES as readonly string[]).includes(filtres.tri ?? "")
-    ? (filtres.tri as (typeof TRIS_VALIDES)[number])
+  const sort = (VALID_SORTS as readonly string[]).includes(query.tri ?? "")
+    ? (query.tri as (typeof VALID_SORTS)[number])
     : null;
-  const estFiltre = recherche !== "" || filtre !== null;
+  const isFiltered = searchTerm !== "" || filter !== null;
 
-  const lignesBrutes = await db
+  const rawRows = await db
     .select({
       id: comptesClients.id,
       email: comptesClients.email,
       telephone: comptesClients.telephone,
-      etat: comptesClients.etat,
+      status: comptesClients.etat,
       createdAt: comptesClients.createdAt,
-      valideLe: comptesClients.valideLe,
-      refuseMotif: comptesClients.refuseMotif,
-      nom: user.name,
+      validatedAt: comptesClients.valideLe,
+      rejectionReason: comptesClients.refuseMotif,
+      name: user.name,
     })
     .from(comptesClients)
     .leftJoin(user, eq(user.id, comptesClients.betterAuthUserId))
     .orderBy(desc(comptesClients.createdAt));
 
   // eslint-disable-next-line react-hooks/purity -- lecture unique de l'horloge en composant serveur
-  const maintenant = Date.now();
+  const now = Date.now();
 
-  const enAttente = lignesBrutes.filter(
-    (ligne) => ligne.etat === "EN_ATTENTE_VALIDATION",
+  const pendingRows = rawRows.filter(
+    (row) => row.status === "EN_ATTENTE_VALIDATION",
   );
-  const plusAncien = Math.max(
+  const oldestWaitDays = Math.max(
     0,
-    ...enAttente.map((ligne) => joursAttente(ligne.createdAt, maintenant)),
+    ...pendingRows.map((row) => joursAttente(row.createdAt, now)),
   );
 
-  const lignesFiltrees = lignesBrutes.filter((ligne) => {
-    if (filtre !== null && ligne.etat !== ETAT_PAR_FILTRE[filtre]) return false;
-    if (recherche) {
-      const nom = (ligne.nom?.trim() || ligne.email).toLowerCase();
+  const filteredRows = rawRows.filter((row) => {
+    if (filter !== null && row.status !== STATUS_BY_FILTER[filter]) return false;
+    if (searchTerm) {
+      const name = (row.name?.trim() || row.email).toLowerCase();
       if (
-        !nom.includes(recherche) &&
-        !ligne.email.toLowerCase().includes(recherche) &&
-        !ligne.telephone.toLowerCase().includes(recherche)
+        !name.includes(searchTerm) &&
+        !row.email.toLowerCase().includes(searchTerm) &&
+        !row.telephone.toLowerCase().includes(searchTerm)
       )
         return false;
     }
     return true;
   });
 
-  const lignesTriees = [...lignesFiltrees].sort((a, b) => {
-    if (tri === "anciens") return a.createdAt.getTime() - b.createdAt.getTime();
-    if (tri === "nom-az")
-      return nomAffiche(a).localeCompare(nomAffiche(b), "fr");
+  const sortedRows = [...filteredRows].sort((a, b) => {
+    if (sort === "anciens") return a.createdAt.getTime() - b.createdAt.getTime();
+    if (sort === "nom-az")
+      return nomAffiche({ nom: a.name, email: a.email }).localeCompare(
+        nomAffiche({ nom: b.name, email: b.email }),
+        "fr",
+      );
     return b.createdAt.getTime() - a.createdAt.getTime();
   });
 
-  const total = lignesBrutes.length;
+  const total = rawRows.length;
   const totalPages = Math.max(
     1,
-    Math.ceil(lignesTriees.length / LIGNES_PAR_PAGE),
+    Math.ceil(sortedRows.length / ROWS_PER_PAGE),
   );
-  const pageDemandee = Math.floor(Number(filtres.page));
+  const requestedPage = Math.floor(Number(query.page));
   const page =
-    Number.isFinite(pageDemandee) && pageDemandee >= 1
-      ? Math.min(pageDemandee, totalPages)
+    Number.isFinite(requestedPage) && requestedPage >= 1
+      ? Math.min(requestedPage, totalPages)
       : 1;
-  const conserves = new URLSearchParams();
-  if (recherche) conserves.set("q", filtres.q?.trim() ?? "");
-  if (filtre) conserves.set("filtre", filtre);
-  if (tri) conserves.set("tri", tri);
-  const chaineConservee = conserves.toString();
-  const hrefBase = chaineConservee
-    ? `/agent/clients?${chaineConservee}`
+  const preservedParams = new URLSearchParams();
+  if (searchTerm) preservedParams.set("q", query.q?.trim() ?? "");
+  if (filter) preservedParams.set("filtre", filter);
+  if (sort) preservedParams.set("tri", sort);
+  const preservedQuery = preservedParams.toString();
+  const baseHref = preservedQuery
+    ? `/agent/clients?${preservedQuery}`
     : "/agent/clients";
 
-  const exportLignes = lignesTriees.map((ligne) => ({
-    nom: nomAffiche(ligne),
-    email: ligne.email,
-    telephone: ligne.telephone,
-    etat: ligne.etat,
-    inscritLe: ligne.createdAt.toLocaleDateString("fr-FR"),
+  const exportRows = sortedRows.map((row) => ({
+    nom: nomAffiche({ nom: row.name, email: row.email }),
+    email: row.email,
+    telephone: row.telephone,
+    etat: row.status,
+    inscritLe: row.createdAt.toLocaleDateString("fr-FR"),
     attenteJours:
-      ligne.etat === "EN_ATTENTE_VALIDATION"
-        ? String(joursAttente(ligne.createdAt, maintenant))
+      row.status === "EN_ATTENTE_VALIDATION"
+        ? String(joursAttente(row.createdAt, now))
         : "—",
-    valideLe: ligne.valideLe
-      ? ligne.valideLe.toLocaleDateString("fr-FR")
+    valideLe: row.validatedAt
+      ? row.validatedAt.toLocaleDateString("fr-FR")
       : "—",
-    motifRefus: ligne.refuseMotif ?? "—",
+    motifRefus: row.rejectionReason ?? "—",
   }));
 
-  const lignes = lignesTriees
-    .slice((page - 1) * LIGNES_PAR_PAGE, page * LIGNES_PAR_PAGE)
-    .map((ligne) => ({
-      id: ligne.id,
-      nom: ligne.nom,
-      email: ligne.email,
-      telephone: ligne.telephone,
-      etat: ligne.etat,
-      inscritLe: ligne.createdAt,
-      valideLe: ligne.valideLe,
-      refuseMotif: ligne.refuseMotif,
+  const rows = sortedRows
+    .slice((page - 1) * ROWS_PER_PAGE, page * ROWS_PER_PAGE)
+    .map((row) => ({
+      id: row.id,
+      nom: row.name,
+      email: row.email,
+      telephone: row.telephone,
+      etat: row.status,
+      inscritLe: row.createdAt,
+      valideLe: row.validatedAt,
+      refuseMotif: row.rejectionReason,
     }));
 
   return (
@@ -183,15 +186,15 @@ export default async function AgentComptesClientsPage({
         <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
           {total === 0
             ? "Aucun compte pour le moment."
-            : estFiltre
-              ? `${lignesTriees.length} sur ${total} compte${total > 1 ? "s" : ""}.`
+            : isFiltered
+              ? `${sortedRows.length} sur ${total} compte${total > 1 ? "s" : ""}.`
               : `${total} compte${total > 1 ? "s" : ""}.`}{" "}
           Une connexion par ligne : le téléphone est la clé du compte. Le
           dossier financier vit ailleurs — ici aucun solde.
         </p>
       </div>
 
-      {enAttente.length === 0 ? (
+      {pendingRows.length === 0 ? (
         <div className="flex flex-wrap items-center gap-x-2 gap-y-1 rounded-lg border bg-card px-3 py-2 text-xs text-muted-foreground">
           <span
             aria-hidden
@@ -212,21 +215,21 @@ export default async function AgentComptesClientsPage({
             className="size-1.5 shrink-0 rounded-full bg-amber-600"
           />
           <span className="font-medium">
-            {enAttente.length} compte{enAttente.length > 1 ? "s" : ""} en
+            {pendingRows.length} compte{pendingRows.length > 1 ? "s" : ""} en
             attente
           </span>
           <span className="text-muted-foreground">
             — plus ancien{" "}
-            {plusAncien === 0
+            {oldestWaitDays === 0
               ? "arrivé aujourd'hui"
-              : plusAncien === 1
+              : oldestWaitDays === 1
                 ? "arrivé hier"
-                : `en attente depuis ${plusAncien} jours`}{" "}
+                : `en attente depuis ${oldestWaitDays} jours`}{" "}
             · pièce d&apos;identité exigée.
           </span>
           <Link
             href="/agent/clients/validation"
-            aria-label={`Ouvrir la file de validation, ${enAttente.length} compte${enAttente.length > 1 ? "s" : ""} en attente`}
+            aria-label={`Ouvrir la file de validation, ${pendingRows.length} compte${pendingRows.length > 1 ? "s" : ""} en attente`}
             className="group ml-auto inline-flex items-center overflow-hidden rounded-full border border-primary/50 bg-transparent text-primary shadow-sm transition-colors hover:bg-primary/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
           >
             <span className="py-1.5 pr-2 pl-3.5 text-xs font-medium">
@@ -237,7 +240,7 @@ export default async function AgentComptesClientsPage({
               className="h-4 w-px border-l border-dashed border-primary/40"
             />
             <span className="flex items-center gap-1 py-1.5 pr-3 pl-2 text-xs font-semibold tabular-nums">
-              {enAttente.length}
+              {pendingRows.length}
               <ArrowUpRightIcon className="size-3.5 transition-transform motion-safe:group-hover:-translate-y-px motion-safe:group-hover:translate-x-px" />
             </span>
           </Link>
@@ -251,18 +254,18 @@ export default async function AgentComptesClientsPage({
       />
 
       <Suspense>
-        <BarreOutilsClients exportLignes={exportLignes} />
+        <BarreOutilsClients exportLignes={exportRows} />
       </Suspense>
 
-      {lignes.length === 0 ? (
+      {rows.length === 0 ? (
         <div className="rounded-xl border bg-card p-6 text-center">
           <p className="text-sm font-medium">
-            {estFiltre
+            {isFiltered
               ? "Aucun compte ne correspond aux filtres"
               : "Aucun compte client pour le moment"}
           </p>
           <p className="mt-1 text-xs text-muted-foreground">
-            {estFiltre ? (
+            {isFiltered ? (
               <Link
                 href="/agent/clients"
                 className="underline-offset-4 hover:underline"
@@ -276,14 +279,14 @@ export default async function AgentComptesClientsPage({
         </div>
       ) : (
         <RegistreComptesClients
-          lignes={lignes}
-          maintenant={maintenant}
+          lignes={rows}
+          maintenant={now}
           page={page}
           totalPages={totalPages}
           ficheBaseHref="/agent/clients"
         />
       )}
-      <PaginationListe page={page} totalPages={totalPages} hrefBase={hrefBase} />
+      <PaginationListe page={page} totalPages={totalPages} hrefBase={baseHref} />
     </div>
   );
 }

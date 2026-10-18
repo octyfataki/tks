@@ -57,7 +57,7 @@ export async function deposerPieceIdentiteAction(
     revalidatePath("/pending");
     revalidatePath("/admin/clients/validation");
     revalidatePath("/admin/clients");
-    revalidatePath("/clients/profil");
+    revalidatePath("/clients/profile");
     return { ok: true, pieceId: deposee.id };
   } catch (erreur) {
     if (erreur instanceof PieceError) {

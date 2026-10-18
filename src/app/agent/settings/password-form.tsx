@@ -13,12 +13,12 @@ import {
 } from "@/components/ui/field";
 import { toast } from "@/components/ui/toast";
 import {
-  evaluerForceMotDePasse,
-  validerChangementMotDePasse,
-  type NiveauForceMotDePasse,
+  evaluatePasswordStrength,
+  validatePasswordChange,
+  type PasswordStrengthLevel,
 } from "./password-validation";
 
-const COULEURS_FORCE: Record<NiveauForceMotDePasse, string> = {
+const STRENGTH_COLORS: Record<PasswordStrengthLevel, string> = {
   0: "bg-destructive",
   1: "bg-orange-500",
   2: "bg-amber-500",
@@ -26,7 +26,7 @@ const COULEURS_FORCE: Record<NiveauForceMotDePasse, string> = {
   4: "bg-emerald-500",
 };
 
-const TEXTE_FORCE: Record<NiveauForceMotDePasse, string> = {
+const STRENGTH_TEXT_COLORS: Record<PasswordStrengthLevel, string> = {
   0: "text-destructive",
   1: "text-orange-600 dark:text-orange-400",
   2: "text-amber-600 dark:text-amber-400",
@@ -34,40 +34,40 @@ const TEXTE_FORCE: Record<NiveauForceMotDePasse, string> = {
   4: "text-emerald-600 dark:text-emerald-400",
 };
 
-export function FormulaireMotDePasse() {
-  const [enCours, setEnCours] = useState(false);
-  const [erreur, setErreur] = useState<string | null>(null);
-  const [nouveau, setNouveau] = useState("");
+export function PasswordForm() {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [newPassword, setNewPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
-  const horsLigne =
+  const isOffline =
     typeof navigator !== "undefined" && typeof navigator.onLine === "boolean"
       ? !navigator.onLine
       : false;
 
-  const force = evaluerForceMotDePasse(nouveau);
-  const correspondance =
+  const strength = evaluatePasswordStrength(newPassword);
+  const matchStatus =
     confirmation.length === 0
       ? null
-      : nouveau === confirmation
+      : newPassword === confirmation
         ? "ok"
         : "ko";
 
-  async function onSubmit(form: FormData) {
-    setErreur(null);
-    const resultat = validerChangementMotDePasse({
-      actuel: String(form.get("actuel") ?? ""),
-      nouveau: String(form.get("nouveau") ?? ""),
+  async function handleSubmit(form: FormData) {
+    setError(null);
+    const validationError = validatePasswordChange({
+      currentPassword: String(form.get("currentPassword") ?? ""),
+      newPassword: String(form.get("newPassword") ?? ""),
       confirmation: String(form.get("confirmation") ?? ""),
     });
-    if (resultat) {
-      setErreur(resultat);
+    if (validationError) {
+      setError(validationError);
       return;
     }
-    setEnCours(true);
+    setIsSubmitting(true);
     try {
       const { error } = await authClient.changePassword({
-        currentPassword: String(form.get("actuel") ?? ""),
-        newPassword: String(form.get("nouveau") ?? ""),
+        currentPassword: String(form.get("currentPassword") ?? ""),
+        newPassword: String(form.get("newPassword") ?? ""),
         revokeOtherSessions: true,
       });
       if (error) throw new Error(error.message ?? "changement refusé");
@@ -76,56 +76,56 @@ export function FormulaireMotDePasse() {
         title: "Mot de passe changé",
         description: "Les autres sessions ont été fermées.",
       });
-      setNouveau("");
+      setNewPassword("");
       setConfirmation("");
-      const formulaire = document.getElementById(
-        "agent-mot-de-passe",
+      const formElement = document.getElementById(
+        "agent-password-form",
       ) as HTMLFormElement | null;
-      formulaire?.reset();
+      formElement?.reset();
     } catch (e) {
       const message =
         e instanceof Error ? e.message : "changement refusé, réessayez";
-      setErreur(message);
+      setError(message);
       toast.add({
         type: "error",
         title: "Échec du changement",
         description: message,
       });
     } finally {
-      setEnCours(false);
+      setIsSubmitting(false);
     }
   }
 
   return (
-    <form id="agent-mot-de-passe" action={onSubmit}>
+    <form id="agent-password-form" action={handleSubmit}>
       <FieldGroup>
         <Field>
-          <FieldLabel htmlFor="agent-mdp-actuel">Mot de passe actuel</FieldLabel>
+          <FieldLabel htmlFor="agent-password-current">Mot de passe actuel</FieldLabel>
           <PasswordInput
-            id="agent-mdp-actuel"
-            name="actuel"
+            id="agent-password-current"
+            name="currentPassword"
             autoComplete="current-password"
             required
           />
         </Field>
         <Field>
-          <FieldLabel htmlFor="agent-mdp-nouveau">
+          <FieldLabel htmlFor="agent-password-new">
             Nouveau mot de passe
           </FieldLabel>
           <PasswordInput
-            id="agent-mdp-nouveau"
-            name="nouveau"
+            id="agent-password-new"
+            name="newPassword"
             autoComplete="new-password"
             minLength={8}
             required
-            value={nouveau}
-            onChange={setNouveau}
+            value={newPassword}
+            onChange={setNewPassword}
           />
-          {nouveau.length > 0 ? (
+          {newPassword.length > 0 ? (
             <div className="mt-2 flex items-center gap-2.5">
               <div
                 role="img"
-                aria-label={`Force du mot de passe : ${force.etiquette}`}
+                aria-label={`Force du mot de passe : ${strength.label}`}
                 className="flex flex-1 gap-1"
               >
                 {[1, 2, 3, 4].map((segment) => (
@@ -133,17 +133,17 @@ export function FormulaireMotDePasse() {
                     key={segment}
                     aria-hidden="true"
                     className={
-                      segment <= Math.max(force.niveau, 1)
-                        ? `h-1 flex-1 rounded-full ${COULEURS_FORCE[force.niveau]}`
+                      segment <= Math.max(strength.level, 1)
+                        ? `h-1 flex-1 rounded-full ${STRENGTH_COLORS[strength.level]}`
                         : "h-1 flex-1 rounded-full bg-muted"
                     }
                   />
                 ))}
               </div>
               <span
-                className={`shrink-0 text-xs font-semibold ${TEXTE_FORCE[force.niveau]}`}
+                className={`shrink-0 text-xs font-semibold ${STRENGTH_TEXT_COLORS[strength.level]}`}
               >
-                {force.etiquette}
+                {strength.label}
               </span>
             </div>
           ) : (
@@ -153,11 +153,11 @@ export function FormulaireMotDePasse() {
           )}
         </Field>
         <Field>
-          <FieldLabel htmlFor="agent-mdp-confirmation">
+          <FieldLabel htmlFor="agent-password-confirmation">
             Confirmer le nouveau mot de passe
           </FieldLabel>
           <PasswordInput
-            id="agent-mdp-confirmation"
+            id="agent-password-confirmation"
             name="confirmation"
             autoComplete="new-password"
             minLength={8}
@@ -165,40 +165,40 @@ export function FormulaireMotDePasse() {
             value={confirmation}
             onChange={setConfirmation}
           />
-          {correspondance === "ok" ? (
+          {matchStatus === "ok" ? (
             <p className="mt-1.5 flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
               <CheckIcon className="size-3.5" strokeWidth={3} />
               Les mots de passe correspondent.
             </p>
-          ) : correspondance === "ko" ? (
+          ) : matchStatus === "ko" ? (
             <p className="mt-1.5 flex items-center gap-1.5 text-xs font-medium text-destructive">
               <XIcon className="size-3.5" strokeWidth={3} />
               La confirmation ne correspond pas encore.
             </p>
           ) : null}
         </Field>
-        {horsLigne ? (
+        {isOffline ? (
           <p role="alert" className="text-xs text-destructive">
             Sans réseau : le changement de mot de passe attendra le retour du
             réseau et la file durable de S8.
           </p>
         ) : null}
-        {erreur ? (
+        {error ? (
           <p
             role="alert"
             className="rounded-md bg-destructive/8 px-3 py-2 text-xs leading-relaxed text-destructive"
           >
-            {erreur}
+            {error}
           </p>
         ) : null}
         <Field>
           <Button
             type="submit"
             className="w-full sm:w-auto"
-            disabled={enCours || horsLigne}
+            disabled={isSubmitting || isOffline}
           >
             <KeyRoundIcon />
-            {enCours ? "Changement…" : "Changer mon mot de passe"}
+            {isSubmitting ? "Changement…" : "Changer mon mot de passe"}
           </Button>
         </Field>
       </FieldGroup>

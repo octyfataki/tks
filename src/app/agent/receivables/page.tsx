@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { ScaleIcon } from "lucide-react";
-import { AgentBientot } from "@/components/agent-coming-soon";
+import { AgentComingSoon } from "@/components/agent-coming-soon";
 
 export const metadata: Metadata = {
   title: "Créances et dettes — Agent — TKS",
@@ -8,14 +8,14 @@ export const metadata: Metadata = {
     "Créances des clients et reste à payer dérivé au taux en vigueur.",
 };
 
-export default function AgentCreancesPage() {
+export default function AgentReceivablesPage() {
   return (
     <div className="flex flex-1 flex-col">
-      <AgentBientot
-        icone={<ScaleIcon aria-hidden className="size-6" />}
-        titre="Créances et dettes"
-        texte="Ce que chaque client doit : créances suivies séparément, reste à payer dérivé."
-        suite="Le suivi des dettes arrive avec S6 — paiements fractionnés, ancienneté, avance visible."
+      <AgentComingSoon
+        icon={<ScaleIcon aria-hidden className="size-6" />}
+        title="Créances et dettes"
+        text="Ce que chaque client doit : créances suivies séparément, reste à payer dérivé."
+        upcoming="Le suivi des dettes arrive avec S6 — paiements fractionnés, ancienneté, avance visible."
       />
     </div>
   );

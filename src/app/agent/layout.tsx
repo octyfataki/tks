@@ -14,13 +14,13 @@ export default async function AgentLayout({
 }: {
   children: ReactNode;
 }) {
-  const profil = await profilSession();
-  const redirection = redirectionAcces(profil, "AGENT");
-  if (redirection) redirect(redirection);
+  const profile = await profilSession();
+  const redirectTarget = redirectionAcces(profile, "AGENT");
+  if (redirectTarget) redirect(redirectTarget);
 
   const session = await auth.api.getSession({ headers: await headers() });
   const email = session?.user?.email ?? "";
-  const nom =
+  const name =
     session?.user?.name?.trim() ||
     (email ? email.split("@")[0] : "") ||
     "Agent de service";
@@ -30,7 +30,7 @@ export default async function AgentLayout({
       <GardienSession />
       <AgentSidebar
         utilisateur={{
-          nom,
+          nom: name,
           email: email || "Espace agent",
           avatar: session?.user?.image ?? undefined,
         }}

@@ -1,6 +1,6 @@
 import Link from "next/link";
 
-export default function ClientsAccueilPage() {
+export default function ClientHomePage() {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center">
       <span className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-[11px] font-medium text-primary">

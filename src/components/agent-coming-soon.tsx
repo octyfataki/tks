@@ -1,15 +1,15 @@
 import type { ReactNode } from "react";
 
-export function AgentBientot({
-  icone,
-  titre,
-  texte,
-  suite,
+export function AgentComingSoon({
+  icon,
+  title,
+  text,
+  upcoming,
 }: {
-  icone: ReactNode;
-  titre: string;
-  texte: string;
-  suite: string;
+  icon: ReactNode;
+  title: string;
+  text: string;
+  upcoming: string;
 }) {
   return (
     <div className="flex flex-1 items-center justify-center p-4 sm:p-6">
@@ -18,14 +18,14 @@ export function AgentBientot({
           aria-hidden
           className="mx-auto flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary"
         >
-          {icone}
+          {icon}
         </span>
-        <h1 className="mt-4 text-base font-semibold tracking-tight">{titre}</h1>
+        <h1 className="mt-4 text-base font-semibold tracking-tight">{title}</h1>
         <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-          {texte}
+          {text}
         </p>
         <p className="mt-4 rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground">
-          {suite}
+          {upcoming}
         </p>
       </div>
     </div>

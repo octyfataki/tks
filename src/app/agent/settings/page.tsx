@@ -22,12 +22,12 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { FormulaireMotDePasse } from "./password-form";
-import { SynchronisationSection } from "./sync-section";
-import { AppareilSection } from "./device-section";
+import { PasswordForm } from "./password-form";
+import { SyncSection } from "./sync-section";
+import { DeviceSection } from "./device-section";
 import { NotificationsSection } from "./notifications-section";
-import { PastilleReseau } from "./network-indicator";
-import { decrireExpiration } from "./session-helpers";
+import { NetworkIndicator } from "./network-indicator";
+import { describeSessionExpiration } from "./session-helpers";
 
 export const metadata: Metadata = {
   title: "Paramètres — Agent — TKS",
@@ -35,10 +35,12 @@ export const metadata: Metadata = {
     "Paramètres de l'agent de service : session, mot de passe, synchronisation et réglages de l'appareil.",
 };
 
-export default async function AgentParametresPage() {
+export default async function AgentSettingsPage() {
   const session = await auth.api.getSession({ headers: await headers() });
-  const expiration = decrireExpiration(session?.session?.expiresAt ?? null);
-  const sessionSensible = expiration.expiree || expiration.expireBientot;
+  const sessionExpiration = describeSessionExpiration(
+    session?.session?.expiresAt ?? null,
+  );
+  const isSessionAtRisk = sessionExpiration.isExpired || sessionExpiration.expiresSoon;
 
   return (
     <div className="flex w-full flex-1 flex-col gap-6 px-4 py-6 sm:px-6 sm:py-8">
@@ -47,7 +49,7 @@ export default async function AgentParametresPage() {
           <h1 className="text-[22px] leading-tight font-semibold tracking-tight">
             Paramètres
           </h1>
-          {sessionSensible ? (
+          {isSessionAtRisk ? (
             <Badge variant="destructive">
               <TriangleAlertIcon />
               Session à renouveler
@@ -55,7 +57,7 @@ export default async function AgentParametresPage() {
           ) : (
             <Badge variant="secondary">Poste prêt</Badge>
           )}
-          <PastilleReseau />
+          <NetworkIndicator />
         </div>
         <p className="max-w-[62ch] text-[13px] leading-relaxed text-muted-foreground">
           Ce téléphone, votre session, votre mot de passe. Votre fiche reste
@@ -71,14 +73,14 @@ export default async function AgentParametresPage() {
       </div>
 
       <div className="flex flex-col gap-4">
-        <section aria-labelledby="titre-securite" className="flex flex-col gap-3">
+        <section aria-labelledby="security-title" className="flex flex-col gap-3">
           <div className="flex items-center gap-2.5">
             <span className="flex size-8 items-center justify-center rounded-lg bg-primary/15 text-primary-foreground [&_svg]:size-4">
               <ShieldCheckIcon />
             </span>
             <div>
               <h2
-                id="titre-securite"
+                id="security-title"
                 className="text-sm font-semibold tracking-tight"
               >
                 Sécurité du poste
@@ -101,7 +103,7 @@ export default async function AgentParametresPage() {
                 <div className="flex items-baseline justify-between gap-4">
                   <p className="text-xs text-muted-foreground">Expire le</p>
                   <p className="text-sm font-semibold text-foreground tabular-nums">
-                    {expiration.dateFormatee}
+                    {sessionExpiration.formattedDate}
                   </p>
                 </div>
                 <div
@@ -110,7 +112,7 @@ export default async function AgentParametresPage() {
                   aria-valuemax={7}
                   aria-valuenow={Math.max(
                     0,
-                    Math.min(7, expiration.joursRestants ?? 0),
+                    Math.min(7, sessionExpiration.daysRemaining ?? 0),
                   )}
                   aria-label="Temps de session restant"
                   className="h-1.5 overflow-hidden rounded-full bg-muted"
@@ -118,10 +120,10 @@ export default async function AgentParametresPage() {
                   <div
                     aria-hidden="true"
                     style={{
-                      width: `${Math.max(0, Math.min(100, ((expiration.joursRestants ?? 0) / 7) * 100))}%`,
+                      width: `${Math.max(0, Math.min(100, ((sessionExpiration.daysRemaining ?? 0) / 7) * 100))}%`,
                     }}
                     className={
-                      sessionSensible
+                      isSessionAtRisk
                         ? "h-full rounded-full bg-destructive"
                         : "h-full rounded-full bg-primary"
                     }
@@ -130,17 +132,17 @@ export default async function AgentParametresPage() {
                 <div className="flex items-baseline justify-between gap-4">
                   <p className="text-xs text-muted-foreground">Temps restant</p>
                   <p className="text-sm font-semibold text-foreground tabular-nums">
-                    {expiration.joursRestants === null
+                    {sessionExpiration.daysRemaining === null
                       ? "Inconnu"
-                      : expiration.expiree
+                      : sessionExpiration.isExpired
                         ? "Expirée — reconnectez-vous"
-                        : expiration.joursRestants <= 0
+                        : sessionExpiration.daysRemaining <= 0
                           ? "Dernier jour"
-                          : `${expiration.joursRestants} jour${expiration.joursRestants > 1 ? "s" : ""}`}
+                          : `${sessionExpiration.daysRemaining} jour${sessionExpiration.daysRemaining > 1 ? "s" : ""}`}
                   </p>
                 </div>
               </div>
-              {expiration.expireBientot ? (
+              {sessionExpiration.expiresSoon ? (
                 <p
                   role="alert"
                   className="rounded-md bg-destructive/8 px-3 py-2 text-xs leading-relaxed text-destructive"
@@ -172,7 +174,7 @@ export default async function AgentParametresPage() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,28rem)_minmax(0,1fr)]">
-                <FormulaireMotDePasse />
+                <PasswordForm />
                 <aside
                   aria-label="Bon à savoir"
                   className="h-fit overflow-hidden rounded-xl border bg-card shadow-sm"
@@ -214,14 +216,14 @@ export default async function AgentParametresPage() {
           </Card>
         </section>
 
-        <section aria-labelledby="titre-synchro" className="flex flex-col gap-3">
+        <section aria-labelledby="sync-title" className="flex flex-col gap-3">
           <div className="flex items-center gap-2.5">
             <span className="flex size-8 items-center justify-center rounded-lg bg-muted text-muted-foreground [&_svg]:size-4">
               <RefreshCwIcon />
             </span>
             <div>
               <h2
-                id="titre-synchro"
+                id="sync-title"
                 className="text-sm font-semibold tracking-tight"
               >
                 File et réseau
@@ -233,19 +235,19 @@ export default async function AgentParametresPage() {
           </div>
           <Card>
             <CardContent>
-              <SynchronisationSection />
+              <SyncSection />
             </CardContent>
           </Card>
         </section>
 
-        <section aria-labelledby="titre-appareil" className="flex flex-col gap-3">
+        <section aria-labelledby="device-title" className="flex flex-col gap-3">
           <div className="flex items-center gap-2.5">
             <span className="flex size-8 items-center justify-center rounded-lg bg-muted text-muted-foreground [&_svg]:size-4">
               <SmartphoneIcon />
             </span>
             <div>
               <h2
-                id="titre-appareil"
+                id="device-title"
                 className="text-sm font-semibold tracking-tight"
               >
                 Cet appareil
@@ -257,19 +259,19 @@ export default async function AgentParametresPage() {
           </div>
           <Card>
             <CardContent>
-              <AppareilSection />
+              <DeviceSection />
             </CardContent>
           </Card>
         </section>
 
-        <section aria-labelledby="titre-notifications" className="flex flex-col gap-3">
+        <section aria-labelledby="notifications-title" className="flex flex-col gap-3">
           <div className="flex items-center gap-2.5">
             <span className="flex size-8 items-center justify-center rounded-lg bg-muted text-muted-foreground [&_svg]:size-4">
               <BellIcon />
             </span>
             <div>
               <h2
-                id="titre-notifications"
+                id="notifications-title"
                 className="text-sm font-semibold tracking-tight"
               >
                 Notifications

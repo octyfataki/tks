@@ -1,92 +1,92 @@
-export const CLE_PREFERENCES_CLIENT = "tks-client-preferences";
+export const CLIENT_PREFERENCES_KEY = "tks-client-preferences";
 
-export type DensiteListes = "confortable" | "compacte";
+export type ListDensity = "confortable" | "compacte";
 
-export type CanalNotification = "son-vibration" | "vibration" | "silencieuse";
+export type NotificationChannel = "son-vibration" | "vibration" | "silencieuse";
 
-export const CANAUX_NOTIFICATION: { valeur: CanalNotification; etiquette: string }[] = [
-  { valeur: "son-vibration", etiquette: "Son + vibration" },
-  { valeur: "vibration", etiquette: "Vibration" },
-  { valeur: "silencieuse", etiquette: "Silencieuse" },
+export const NOTIFICATION_CHANNELS: { value: NotificationChannel; label: string }[] = [
+  { value: "son-vibration", label: "Son + vibration" },
+  { value: "vibration", label: "Vibration" },
+  { value: "silencieuse", label: "Silencieuse" },
 ];
 
-export type CleNotificationClient =
+export type ClientNotificationKey =
   | "commandes"
   | "paiements"
   | "taux"
   | "session"
   | "synchronisation";
 
-export type ReglageNotification = {
+export type NotificationSetting = {
   actif: boolean;
-  canal: CanalNotification;
+  canal: NotificationChannel;
 };
 
-export type NotificationsClient = Record<CleNotificationClient, ReglageNotification>;
+export type ClientNotifications = Record<ClientNotificationKey, NotificationSetting>;
 
-export type GroupeNotificationClient = "suivi" | "appareil";
+export type ClientNotificationGroup = "suivi" | "appareil";
 
-export const GROUPES_NOTIFICATION: {
-  valeur: GroupeNotificationClient;
-  titre: string;
+export const NOTIFICATION_GROUPS: {
+  value: ClientNotificationGroup;
+  title: string;
   description: string;
 }[] = [
   {
-    valeur: "suivi",
-    titre: "Commandes et paiements",
+    value: "suivi",
+    title: "Commandes et paiements",
     description: "Ce qui bouge sur votre compte : commandes, paiements, taux.",
   },
   {
-    valeur: "appareil",
-    titre: "Appareil et session",
+    value: "appareil",
+    title: "Appareil et session",
     description: "Ce qui concerne votre téléphone et votre connexion.",
   },
 ];
 
-export const CATALOGUE_NOTIFICATIONS: {
-  cle: CleNotificationClient;
-  groupe: GroupeNotificationClient;
-  titre: string;
+export const NOTIFICATION_CATALOG: {
+  key: ClientNotificationKey;
+  group: ClientNotificationGroup;
+  title: string;
   description: string;
 }[] = [
   {
-    cle: "commandes",
-    groupe: "suivi",
-    titre: "Suivi des commandes",
+    key: "commandes",
+    group: "suivi",
+    title: "Suivi des commandes",
     description: "Quand une commande change d'état — servi avec S5.",
   },
   {
-    cle: "paiements",
-    groupe: "suivi",
-    titre: "Paiements et reste à payer",
+    key: "paiements",
+    group: "suivi",
+    title: "Paiements et reste à payer",
     description: "Quand un paiement est enregistré — servi avec S6.",
   },
   {
-    cle: "taux",
-    groupe: "suivi",
-    titre: "Taux mis à jour",
+    key: "taux",
+    group: "suivi",
+    title: "Taux mis à jour",
     description: "Quand le distributeur change le taux — branché avec S3.",
   },
   {
-    cle: "session",
-    groupe: "appareil",
-    titre: "Session qui expire",
+    key: "session",
+    group: "appareil",
+    title: "Session qui expire",
     description: "Un rappel avant d'être déconnecté.",
   },
   {
-    cle: "synchronisation",
-    groupe: "appareil",
-    titre: "Synchronisation terminée",
+    key: "synchronisation",
+    group: "appareil",
+    title: "Synchronisation terminée",
     description: "Quand la file est partie — branché avec S8.",
   },
 ];
 
-export type PreferencesClient = {
-  densite: DensiteListes;
-  notifications: NotificationsClient;
+export type ClientPreferences = {
+  densite: ListDensity;
+  notifications: ClientNotifications;
 };
 
-export const NOTIFICATIONS_DEFAUT: NotificationsClient = {
+export const DEFAULT_NOTIFICATIONS: ClientNotifications = {
   commandes: { actif: true, canal: "son-vibration" },
   paiements: { actif: true, canal: "son-vibration" },
   taux: { actif: true, canal: "silencieuse" },
@@ -94,64 +94,64 @@ export const NOTIFICATIONS_DEFAUT: NotificationsClient = {
   synchronisation: { actif: true, canal: "silencieuse" },
 };
 
-export const PREFERENCES_DEFAUT: PreferencesClient = {
+export const DEFAULT_PREFERENCES: ClientPreferences = {
   densite: "confortable",
-  notifications: { ...NOTIFICATIONS_DEFAUT },
+  notifications: { ...DEFAULT_NOTIFICATIONS },
 };
 
-function estDensite(valeur: unknown): valeur is DensiteListes {
-  return valeur === "confortable" || valeur === "compacte";
+function isListDensity(value: unknown): value is ListDensity {
+  return value === "confortable" || value === "compacte";
 }
 
-function estCanal(valeur: unknown): valeur is CanalNotification {
+function isNotificationChannel(value: unknown): value is NotificationChannel {
   return (
-    valeur === "son-vibration" ||
-    valeur === "vibration" ||
-    valeur === "silencieuse"
+    value === "son-vibration" ||
+    value === "vibration" ||
+    value === "silencieuse"
   );
 }
 
-function lireReglage(valeur: unknown, defaut: ReglageNotification): ReglageNotification {
-  if (typeof valeur !== "object" || valeur === null) return { ...defaut };
-  const objet = valeur as Record<string, unknown>;
+function readSetting(value: unknown, fallback: NotificationSetting): NotificationSetting {
+  if (typeof value !== "object" || value === null) return { ...fallback };
+  const record = value as Record<string, unknown>;
   return {
-    actif: typeof objet.actif === "boolean" ? objet.actif : defaut.actif,
-    canal: estCanal(objet.canal) ? objet.canal : defaut.canal,
+    actif: typeof record.actif === "boolean" ? record.actif : fallback.actif,
+    canal: isNotificationChannel(record.canal) ? record.canal : fallback.canal,
   };
 }
 
-function lireNotifications(valeur: unknown): NotificationsClient {
-  const objet =
-    typeof valeur === "object" && valeur !== null
-      ? (valeur as Record<string, unknown>)
+function readNotifications(value: unknown): ClientNotifications {
+  const record =
+    typeof value === "object" && value !== null
+      ? (value as Record<string, unknown>)
       : {};
   return {
-    commandes: lireReglage(objet.commandes, NOTIFICATIONS_DEFAUT.commandes),
-    paiements: lireReglage(objet.paiements, NOTIFICATIONS_DEFAUT.paiements),
-    taux: lireReglage(objet.taux, NOTIFICATIONS_DEFAUT.taux),
-    session: lireReglage(objet.session, NOTIFICATIONS_DEFAUT.session),
-    synchronisation: lireReglage(
-      objet.synchronisation,
-      NOTIFICATIONS_DEFAUT.synchronisation,
+    commandes: readSetting(record.commandes, DEFAULT_NOTIFICATIONS.commandes),
+    paiements: readSetting(record.paiements, DEFAULT_NOTIFICATIONS.paiements),
+    taux: readSetting(record.taux, DEFAULT_NOTIFICATIONS.taux),
+    session: readSetting(record.session, DEFAULT_NOTIFICATIONS.session),
+    synchronisation: readSetting(
+      record.synchronisation,
+      DEFAULT_NOTIFICATIONS.synchronisation,
     ),
   };
 }
 
-export function lirePreferences(valeur: unknown): PreferencesClient {
-  if (typeof valeur !== "object" || valeur === null) {
-    return { ...PREFERENCES_DEFAUT };
+export function readPreferences(value: unknown): ClientPreferences {
+  if (typeof value !== "object" || value === null) {
+    return { ...DEFAULT_PREFERENCES };
   }
-  const objet = valeur as Record<string, unknown>;
+  const record = value as Record<string, unknown>;
   return {
-    densite: estDensite(objet.densite)
-      ? objet.densite
-      : PREFERENCES_DEFAUT.densite,
-    notifications: lireNotifications(objet.notifications),
+    densite: isListDensity(record.densite)
+      ? record.densite
+      : DEFAULT_PREFERENCES.densite,
+    notifications: readNotifications(record.notifications),
   };
 }
 
-export function serialiserPreferences(
-  preferences: PreferencesClient,
+export function serializePreferences(
+  preferences: ClientPreferences,
 ): string {
   return JSON.stringify(preferences);
 }

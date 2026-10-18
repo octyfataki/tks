@@ -3,76 +3,76 @@
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 
-function useEtatReseau(): boolean {
-  const [enLigne, setEnLigne] = useState<boolean>(() =>
+function useOnlineStatus(): boolean {
+  const [isOnline, setIsOnline] = useState<boolean>(() =>
     typeof navigator === "undefined" ||
     typeof navigator.onLine !== "boolean"
       ? true
       : navigator.onLine,
   );
   useEffect(() => {
-    const connecter = () => setEnLigne(true);
-    const couper = () => setEnLigne(false);
-    window.addEventListener("online", connecter);
-    window.addEventListener("offline", couper);
+    const goOnline = () => setIsOnline(true);
+    const goOffline = () => setIsOnline(false);
+    window.addEventListener("online", goOnline);
+    window.addEventListener("offline", goOffline);
     return () => {
-      window.removeEventListener("online", connecter);
-      window.removeEventListener("offline", couper);
+      window.removeEventListener("online", goOnline);
+      window.removeEventListener("offline", goOffline);
     };
   }, []);
-  return enLigne;
+  return isOnline;
 }
 
-function LigneStatut({
-  etiquette,
-  valeur,
-  ton = "neutre",
+function StatusRow({
+  label,
+  value,
+  tone = "neutral",
 }: {
-  etiquette: string;
-  valeur: string;
-  ton?: "ok" | "alerte" | "neutre";
+  label: string;
+  value: string;
+  tone?: "ok" | "warning" | "neutral";
 }) {
-  const pastille =
-    ton === "ok"
+  const dotColor =
+    tone === "ok"
       ? "bg-emerald-500"
-      : ton === "alerte"
+      : tone === "warning"
         ? "bg-destructive"
         : "bg-muted-foreground/40";
   return (
     <li className="flex items-center justify-between gap-4 py-2.5 first:pt-0 last:pb-0">
       <span className="flex min-w-0 items-center gap-2.5">
-        <span aria-hidden="true" className={`size-2 shrink-0 rounded-full ${pastille}`} />
-        <span className="truncate text-[13px] text-muted-foreground">{etiquette}</span>
+        <span aria-hidden="true" className={`size-2 shrink-0 rounded-full ${dotColor}`} />
+        <span className="truncate text-[13px] text-muted-foreground">{label}</span>
       </span>
       <span className="shrink-0 text-right text-[13px] font-semibold text-foreground tabular-nums">
-        {valeur}
+        {value}
       </span>
     </li>
   );
 }
 
-export function SynchronisationSection() {
-  const enLigne = useEtatReseau();
+export function SyncSection() {
+  const isOnline = useOnlineStatus();
 
   return (
     <div className="flex flex-col gap-4">
       <ul className="divide-y divide-dashed">
-        <LigneStatut
-          etiquette="État du réseau"
-          valeur={enLigne ? "En ligne" : "Hors ligne — on continue"}
-          ton={enLigne ? "ok" : "alerte"}
+        <StatusRow
+          label="État du réseau"
+          value={isOnline ? "En ligne" : "Hors ligne — on continue"}
+          tone={isOnline ? "ok" : "warning"}
         />
-        <LigneStatut
-          etiquette="Écritures en attente"
-          valeur="Comptage S8"
+        <StatusRow
+          label="Écritures en attente"
+          value="Comptage S8"
         />
-        <LigneStatut
-          etiquette="Dernière synchro"
-          valeur="Pas encore suivie"
+        <StatusRow
+          label="Dernière synchro"
+          value="Pas encore suivie"
         />
-        <LigneStatut
-          etiquette="Taux embarqué"
-          valeur="Avec S3, daté"
+        <StatusRow
+          label="Taux embarqué"
+          value="Avec S3, daté"
         />
       </ul>
       <p className="rounded-md bg-muted/60 px-3 py-2 text-xs leading-relaxed text-muted-foreground">

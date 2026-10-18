@@ -13,53 +13,53 @@ import {
 } from "@/components/ui/field";
 import { toast } from "@/components/ui/toast";
 import {
-  evaluerForceMotDePasse,
-  validerChangementMotDePasse,
-  type NiveauForceMotDePasse,
+  evaluatePasswordStrength,
+  validatePasswordChange,
+  type PasswordStrengthLevel,
 } from "@/app/agent/settings/password-validation";
 
-const STYLE_FORCE: Record<NiveauForceMotDePasse, { fond: string; texte: string }> = {
-  0: { fond: "bg-destructive", texte: "text-destructive" },
-  1: { fond: "bg-orange-500", texte: "text-orange-600 dark:text-orange-400" },
-  2: { fond: "bg-amber-500", texte: "text-amber-600 dark:text-amber-400" },
-  3: { fond: "bg-lime-500", texte: "text-lime-600 dark:text-lime-400" },
-  4: { fond: "bg-emerald-500", texte: "text-emerald-600 dark:text-emerald-400" },
+const STRENGTH_STYLE: Record<PasswordStrengthLevel, { background: string; text: string }> = {
+  0: { background: "bg-destructive", text: "text-destructive" },
+  1: { background: "bg-orange-500", text: "text-orange-600 dark:text-orange-400" },
+  2: { background: "bg-amber-500", text: "text-amber-600 dark:text-amber-400" },
+  3: { background: "bg-lime-500", text: "text-lime-600 dark:text-lime-400" },
+  4: { background: "bg-emerald-500", text: "text-emerald-600 dark:text-emerald-400" },
 };
 
-export function FormulaireMotDePasse() {
-  const [enCours, setEnCours] = useState(false);
-  const [erreur, setErreur] = useState<string | null>(null);
-  const [nouveau, setNouveau] = useState("");
+export function PasswordForm() {
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [newPassword, setNewPassword] = useState("");
   const [confirmation, setConfirmation] = useState("");
-  const horsLigne =
+  const isOffline =
     typeof navigator !== "undefined" && typeof navigator.onLine === "boolean"
       ? !navigator.onLine
       : false;
 
-  const force = evaluerForceMotDePasse(nouveau);
-  const correspondance =
+  const strength = evaluatePasswordStrength(newPassword);
+  const matchStatus =
     confirmation.length === 0
       ? null
-      : nouveau === confirmation
+      : newPassword === confirmation
         ? "ok"
         : "ko";
 
-  async function onSubmit(form: FormData) {
-    setErreur(null);
-    const resultat = validerChangementMotDePasse({
-      actuel: String(form.get("actuel") ?? ""),
-      nouveau: String(form.get("nouveau") ?? ""),
+  async function handleSubmit(form: FormData) {
+    setError(null);
+    const validationError = validatePasswordChange({
+      currentPassword: String(form.get("currentPassword") ?? ""),
+      newPassword: String(form.get("newPassword") ?? ""),
       confirmation: String(form.get("confirmation") ?? ""),
     });
-    if (resultat) {
-      setErreur(resultat);
+    if (validationError) {
+      setError(validationError);
       return;
     }
-    setEnCours(true);
+    setIsSubmitting(true);
     try {
       const { error } = await authClient.changePassword({
-        currentPassword: String(form.get("actuel") ?? ""),
-        newPassword: String(form.get("nouveau") ?? ""),
+        currentPassword: String(form.get("currentPassword") ?? ""),
+        newPassword: String(form.get("newPassword") ?? ""),
         revokeOtherSessions: true,
       });
       if (error) throw new Error(error.message ?? "changement refusé");
@@ -68,56 +68,56 @@ export function FormulaireMotDePasse() {
         title: "Mot de passe changé",
         description: "Les autres sessions ont été fermées.",
       });
-      setNouveau("");
+      setNewPassword("");
       setConfirmation("");
-      const formulaire = document.getElementById(
-        "client-mot-de-passe",
+      const formElement = document.getElementById(
+        "client-password-form",
       ) as HTMLFormElement | null;
-      formulaire?.reset();
+      formElement?.reset();
     } catch (e) {
       const message =
         e instanceof Error ? e.message : "changement refusé, réessayez";
-      setErreur(message);
+      setError(message);
       toast.add({
         type: "error",
         title: "Échec du changement",
         description: message,
       });
     } finally {
-      setEnCours(false);
+      setIsSubmitting(false);
     }
   }
 
   return (
-    <form id="client-mot-de-passe" action={onSubmit}>
+    <form id="client-password-form" action={handleSubmit}>
       <FieldGroup>
         <Field>
-          <FieldLabel htmlFor="client-mdp-actuel">Mot de passe actuel</FieldLabel>
+          <FieldLabel htmlFor="client-password-current">Mot de passe actuel</FieldLabel>
           <PasswordInput
-            id="client-mdp-actuel"
-            name="actuel"
+            id="client-password-current"
+            name="currentPassword"
             autoComplete="current-password"
             required
           />
         </Field>
         <Field>
-          <FieldLabel htmlFor="client-mdp-nouveau">
+          <FieldLabel htmlFor="client-password-new">
             Nouveau mot de passe
           </FieldLabel>
           <PasswordInput
-            id="client-mdp-nouveau"
-            name="nouveau"
+            id="client-password-new"
+            name="newPassword"
             autoComplete="new-password"
             minLength={8}
             required
-            value={nouveau}
-            onChange={setNouveau}
+            value={newPassword}
+            onChange={setNewPassword}
           />
-          {nouveau.length > 0 ? (
+          {newPassword.length > 0 ? (
             <div className="mt-2 flex items-center gap-2.5">
               <div
                 role="img"
-                aria-label={`Force du mot de passe : ${force.etiquette}`}
+                aria-label={`Force du mot de passe : ${strength.label}`}
                 className="flex flex-1 gap-1"
               >
                 {[1, 2, 3, 4].map((segment) => (
@@ -125,17 +125,17 @@ export function FormulaireMotDePasse() {
                     key={segment}
                     aria-hidden="true"
                     className={
-                      segment <= Math.max(force.niveau, 1)
-                        ? `h-1 flex-1 rounded-full ${STYLE_FORCE[force.niveau].fond}`
+                      segment <= Math.max(strength.level, 1)
+                        ? `h-1 flex-1 rounded-full ${STRENGTH_STYLE[strength.level].background}`
                         : "h-1 flex-1 rounded-full bg-muted"
                     }
                   />
                 ))}
               </div>
               <span
-                className={`shrink-0 text-xs font-semibold ${STYLE_FORCE[force.niveau].texte}`}
+                className={`shrink-0 text-xs font-semibold ${STRENGTH_STYLE[strength.level].text}`}
               >
-                {force.etiquette}
+                {strength.label}
               </span>
             </div>
           ) : (
@@ -145,11 +145,11 @@ export function FormulaireMotDePasse() {
           )}
         </Field>
         <Field>
-          <FieldLabel htmlFor="client-mdp-confirmation">
+          <FieldLabel htmlFor="client-password-confirmation">
             Confirmer le nouveau mot de passe
           </FieldLabel>
           <PasswordInput
-            id="client-mdp-confirmation"
+            id="client-password-confirmation"
             name="confirmation"
             autoComplete="new-password"
             minLength={8}
@@ -157,40 +157,40 @@ export function FormulaireMotDePasse() {
             value={confirmation}
             onChange={setConfirmation}
           />
-          {correspondance === "ok" ? (
+          {matchStatus === "ok" ? (
             <p className="mt-1.5 flex items-center gap-1.5 text-xs font-medium text-emerald-600 dark:text-emerald-400">
               <CheckIcon className="size-3.5" strokeWidth={3} />
               Les mots de passe correspondent.
             </p>
-          ) : correspondance === "ko" ? (
+          ) : matchStatus === "ko" ? (
             <p className="mt-1.5 flex items-center gap-1.5 text-xs font-medium text-destructive">
               <XIcon className="size-3.5" strokeWidth={3} />
               La confirmation ne correspond pas encore.
             </p>
           ) : null}
         </Field>
-        {horsLigne ? (
+        {isOffline ? (
           <p role="alert" className="text-xs text-destructive">
             Sans réseau : le changement de mot de passe attendra le retour du
             réseau et la file durable de S8.
           </p>
         ) : null}
-        {erreur ? (
+        {error ? (
           <p
             role="alert"
             className="rounded-md bg-destructive/8 px-3 py-2 text-xs leading-relaxed text-destructive"
           >
-            {erreur}
+            {error}
           </p>
         ) : null}
         <Field>
           <Button
             type="submit"
             className="w-full sm:w-auto"
-            disabled={enCours || horsLigne}
+            disabled={isSubmitting || isOffline}
           >
             <KeyRoundIcon />
-            {enCours ? "Changement…" : "Changer mon mot de passe"}
+            {isSubmitting ? "Changement…" : "Changer mon mot de passe"}
           </Button>
         </Field>
       </FieldGroup>

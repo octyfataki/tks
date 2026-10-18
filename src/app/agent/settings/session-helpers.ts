@@ -1,45 +1,45 @@
-export type DescriptionExpiration = {
-  dateFormatee: string;
-  joursRestants: number | null;
-  expiree: boolean;
-  expireBientot: boolean;
+export type SessionExpiration = {
+  formattedDate: string;
+  daysRemaining: number | null;
+  isExpired: boolean;
+  expiresSoon: boolean;
 };
 
-export const SEUIL_AVERTISSEMENT_JOURS = 2;
+export const EXPIRY_WARNING_THRESHOLD_DAYS = 2;
 
-export function decrireExpiration(
+export function describeSessionExpiration(
   expiration: Date | string | null | undefined,
-  maintenant: Date = new Date(),
-): DescriptionExpiration {
+  now: Date = new Date(),
+): SessionExpiration {
   if (!expiration) {
     return {
-      dateFormatee: "Inconnue",
-      joursRestants: null,
-      expiree: false,
-      expireBientot: false,
+      formattedDate: "Inconnue",
+      daysRemaining: null,
+      isExpired: false,
+      expiresSoon: false,
     };
   }
   const date = expiration instanceof Date ? expiration : new Date(expiration);
   if (Number.isNaN(date.getTime())) {
     return {
-      dateFormatee: "Inconnue",
-      joursRestants: null,
-      expiree: false,
-      expireBientot: false,
+      formattedDate: "Inconnue",
+      daysRemaining: null,
+      isExpired: false,
+      expiresSoon: false,
     };
   }
-  const joursRestants = Math.floor(
-    (date.getTime() - maintenant.getTime()) / (1000 * 60 * 60 * 24),
+  const daysRemaining = Math.floor(
+    (date.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
   );
-  const expiree = date.getTime() <= maintenant.getTime();
+  const isExpired = date.getTime() <= now.getTime();
   return {
-    dateFormatee: new Intl.DateTimeFormat("fr-FR", {
+    formattedDate: new Intl.DateTimeFormat("fr-FR", {
       dateStyle: "medium",
       timeStyle: "short",
     }).format(date),
-    joursRestants: expiree ? 0 : joursRestants,
-    expiree,
-    expireBientot:
-      !expiree && joursRestants <= SEUIL_AVERTISSEMENT_JOURS,
+    daysRemaining: isExpired ? 0 : daysRemaining,
+    isExpired,
+    expiresSoon:
+      !isExpired && daysRemaining <= EXPIRY_WARNING_THRESHOLD_DAYS,
   };
 }

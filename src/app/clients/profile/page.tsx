@@ -19,64 +19,64 @@ import { statutPieceValide } from "@/lib/accounts/client-record";
 import { FormulaireMonProfil } from "@/app/admin/profile/my-profile-form";
 import { and, desc, eq, gt } from "drizzle-orm";
 
-export default async function ClientsProfilPage() {
-  const entetes = await headers();
-  const session = await auth.api.getSession({ headers: entetes });
+export default async function ClientProfilePage() {
+  const requestHeaders = await headers();
+  const session = await auth.api.getSession({ headers: requestHeaders });
   const email = session?.user?.email ?? "";
   const userId = session?.user?.id;
-  const sessionActuelleId =
+  const currentSessionId =
     (session as unknown as { session?: { id?: string } } | null)?.session?.id ?? null;
-  const nom =
+  const name =
     session?.user?.name?.trim() ||
     (email ? email.split("@")[0] : "") ||
     "Client";
   const avatarUrl = session?.user?.image ?? null;
 
   let telephone: string | null = null;
-  let compteValide = false;
-  let secondFacteurActif: boolean | null = null;
-  let appareilSecondFacteur: string | null = null;
-  let piecesIdentite: PieceIdentiteProfil[] | undefined;
+  let isAccountValidated = false;
+  let secondFactorEnabled: boolean | null = null;
+  let secondFactorDevice: string | null = null;
+  let identityDocuments: PieceIdentiteProfil[] | undefined;
 
   if (userId) {
-    const lignes = await db
-      .select({ id: comptesClients.id, telephone: comptesClients.telephone, etat: comptesClients.etat })
+    const rows = await db
+      .select({ id: comptesClients.id, telephone: comptesClients.telephone, status: comptesClients.etat })
       .from(comptesClients)
       .where(eq(comptesClients.betterAuthUserId, userId))
       .limit(1);
-    const ligne = lignes[0];
-    if (ligne) {
-      telephone = ligne.telephone ?? null;
-      compteValide = ligne.etat === "VALIDE";
-      const facteurs = await db
-        .select({ nomAppareil: facteurs2faClients.nomAppareil, actif: facteurs2faClients.actif })
+    const row = rows[0];
+    if (row) {
+      telephone = row.telephone ?? null;
+      isAccountValidated = row.status === "VALIDE";
+      const factors = await db
+        .select({ deviceName: facteurs2faClients.nomAppareil, actif: facteurs2faClients.actif })
         .from(facteurs2faClients)
-        .where(eq(facteurs2faClients.compteClientId, ligne.id))
+        .where(eq(facteurs2faClients.compteClientId, row.id))
         .limit(1);
-      const facteur = facteurs[0];
-      if (facteur) {
-        secondFacteurActif = facteur.actif;
-        appareilSecondFacteur = facteur.nomAppareil;
+      const factor = factors[0];
+      if (factor) {
+        secondFactorEnabled = factor.actif;
+        secondFactorDevice = factor.deviceName;
       } else {
-        secondFacteurActif = null;
+        secondFactorEnabled = null;
       }
-      const deposees = await lirePiecesCompte(ligne.id);
-      piecesIdentite = deposees.map((p) => ({
-        id: p.id,
-        typePiece: p.typePiece,
-        mime: p.mime,
-        statutPiece: statutPieceValide(p.statutPiece)
-          ? p.statutPiece
+      const uploadedDocuments = await lirePiecesCompte(row.id);
+      identityDocuments = uploadedDocuments.map((document) => ({
+        id: document.id,
+        typePiece: document.typePiece,
+        mime: document.mime,
+        statutPiece: statutPieceValide(document.statutPiece)
+          ? document.statutPiece
           : "EN_ATTENTE",
-        refusMotif: p.refusMotif,
-        deposeLe: p.deposeLe,
+        refusMotif: document.refusMotif,
+        deposeLe: document.deposeLe,
       }));
     }
   }
 
   let sessions: SessionEnCoursProfil[] = [];
   if (userId) {
-    const lignesSessions = await db
+    const sessionRows = await db
       .select({
         id: tableSession.id,
         appareil: tableSession.userAgent,
@@ -88,33 +88,33 @@ export default async function ClientsProfilPage() {
       .where(and(eq(tableSession.userId, userId), gt(tableSession.expiresAt, new Date())))
       .orderBy(desc(tableSession.createdAt))
       .limit(20);
-    sessions = lignesSessions;
+    sessions = sessionRows;
   }
 
   return (
     <div className="flex flex-1 flex-col gap-4 bg-background p-4 sm:p-6">
       <ProfilUtilisateur
-        nom={nom}
+        nom={name}
         email={email || "Espace client"}
         telephone={telephone}
         avatarUrl={avatarUrl}
         compte={{ type: "CLIENT" }}
         dossier={null}
-        secondFacteurActif={secondFacteurActif}
-        appareilSecondFacteur={appareilSecondFacteur}
-        piecesIdentite={piecesIdentite}
+        secondFacteurActif={secondFactorEnabled}
+        appareilSecondFacteur={secondFactorDevice}
+        piecesIdentite={identityDocuments}
         formulairePieceIdentite={<RemplacerPieceIdentite />}
         sessions={sessions}
-        sessionActuelleId={sessionActuelleId}
-        peutModifierCoordonnees={compteValide}
+        sessionActuelleId={currentSessionId}
+        peutModifierCoordonnees={isAccountValidated}
         motifCoordonneesVerrouillees="Lecture seule : votre compte ne permet pas la correction."
-        cleCoordonnees={`${nom}-${telephone ?? ""}`}
+        cleCoordonnees={`${name}-${telephone ?? ""}`}
         formulaireCoordonnees={
-          <FormulaireMonProfil nomInitial={nom} telephoneInitial={telephone ?? ""} />
+          <FormulaireMonProfil nomInitial={name} telephoneInitial={telephone ?? ""} />
         }
         formulaireSecondFacteur={
-          compteValide ? (
-            secondFacteurActif === true ? (
+          isAccountValidated ? (
+            secondFactorEnabled === true ? (
               <DesactivationSecondFacteur />
             ) : (
               <ActivationSecondFacteur email={email} telephone={telephone} />

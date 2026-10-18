@@ -1,31 +1,31 @@
 import { describe, expect, it } from "vitest";
 import {
-  evaluerForceMotDePasse,
-  validerChangementMotDePasse,
+  evaluatePasswordStrength,
+  validatePasswordChange,
 } from "@/app/agent/settings/password-validation";
 
-describe("validerChangementMotDePasse", () => {
-  const valide = {
-    actuel: "ancien-mot-de-passe",
-    nouveau: "nouveau-mot-de-passe",
+describe("validatePasswordChange", () => {
+  const valid = {
+    currentPassword: "ancien-mot-de-passe",
+    newPassword: "nouveau-mot-de-passe",
     confirmation: "nouveau-mot-de-passe",
   };
 
   it("accepte un changement bien formé", () => {
-    expect(validerChangementMotDePasse(valide)).toBeNull();
+    expect(validatePasswordChange(valid)).toBeNull();
   });
 
   it("exige le mot de passe actuel", () => {
     expect(
-      validerChangementMotDePasse({ ...valide, actuel: "" }),
+      validatePasswordChange({ ...valid, currentPassword: "" }),
     ).toContain("actuel");
   });
 
   it("refuse un nouveau mot de passe trop court", () => {
     expect(
-      validerChangementMotDePasse({
-        ...valide,
-        nouveau: "court",
+      validatePasswordChange({
+        ...valid,
+        newPassword: "court",
         confirmation: "court",
       }),
     ).toContain("8 caractères");
@@ -33,33 +33,33 @@ describe("validerChangementMotDePasse", () => {
 
   it("refuse une confirmation différente", () => {
     expect(
-      validerChangementMotDePasse({ ...valide, confirmation: "autre-mot-de-passe" }),
+      validatePasswordChange({ ...valid, confirmation: "autre-mot-de-passe" }),
     ).toContain("confirmation");
   });
 
   it("refuse un nouveau mot de passe identique à l'actuel", () => {
     expect(
-      validerChangementMotDePasse({
-        actuel: "meme-mot-de-passe",
-        nouveau: "meme-mot-de-passe",
+      validatePasswordChange({
+        currentPassword: "meme-mot-de-passe",
+        newPassword: "meme-mot-de-passe",
         confirmation: "meme-mot-de-passe",
       }),
     ).toContain("différent");
   });
 });
 
-describe("evaluerForceMotDePasse", () => {
+describe("evaluatePasswordStrength", () => {
   it("juge trop court sous 8 caractères", () => {
-    expect(evaluerForceMotDePasse("abc")).toEqual({
-      niveau: 0,
-      etiquette: "Trop court",
+    expect(evaluatePasswordStrength("abc")).toEqual({
+      level: 0,
+      label: "Trop court",
     });
-    expect(evaluerForceMotDePasse("1234567").niveau).toBe(0);
+    expect(evaluatePasswordStrength("1234567").level).toBe(0);
   });
 
   it("monte avec la longueur et la variété", () => {
-    expect(evaluerForceMotDePasse("huitcara").niveau).toBe(1);
-    expect(evaluerForceMotDePasse("huitcaractere12").niveau).toBeGreaterThan(1);
-    expect(evaluerForceMotDePasse("Comptoir-Kinshasa-2026!").niveau).toBe(4);
+    expect(evaluatePasswordStrength("huitcara").level).toBe(1);
+    expect(evaluatePasswordStrength("huitcaractere12").level).toBeGreaterThan(1);
+    expect(evaluatePasswordStrength("Comptoir-Kinshasa-2026!").level).toBe(4);
   });
 });

@@ -10,24 +10,24 @@ import { etiquettesActivesParCompte } from "@/lib/annotations/annotations";
 import { VueFicheClient } from "@/components/clients/fiche-client";
 import { PermissionRefusee } from "@/components/permission-denied";
 
-async function agentConnecte(): Promise<{ id: string } | null> {
+async function getConnectedAgent(): Promise<{ id: string } | null> {
   const session = await auth.api.getSession({ headers: await headers() });
   const userId = session?.user?.id;
   if (!userId) return null;
-  const lignes = await db
+  const rows = await db
     .select({ id: comptesStaff.id })
     .from(comptesStaff)
     .where(eq(comptesStaff.betterAuthUserId, userId))
     .limit(1);
-  return lignes[0] ?? null;
+  return rows[0] ?? null;
 }
 
-export default async function FicheCompteClientAgentPage({
+export default async function AgentClientRecordPage({
   params,
 }: {
   params: Promise<{ id: string }>;
 }) {
-  const agent = await agentConnecte();
+  const agent = await getConnectedAgent();
   if (!agent || !(await aPermission(agent.id, "client.valider"))) {
     return (
       <PermissionRefusee
@@ -39,23 +39,23 @@ export default async function FicheCompteClientAgentPage({
   }
 
   const { id } = await params;
-  const fiche = await chargerFicheClient(id);
-  if (!fiche) notFound();
-  const [actives, peutAnnoter] = await Promise.all([
+  const record = await chargerFicheClient(id);
+  if (!record) notFound();
+  const [activeLabels, canAnnotate] = await Promise.all([
     etiquettesActivesParCompte([id]),
     aPermission(agent.id, "client.annoter"),
   ]);
 
   // eslint-disable-next-line react-hooks/purity -- lecture unique de l'horloge en composant serveur
-  const maintenant = Date.now();
+  const now = Date.now();
 
   return (
     <VueFicheClient
-      fiche={fiche}
-      maintenant={maintenant}
+      fiche={record}
+      maintenant={now}
       listeHref="/agent/clients"
-      etiquettesActives={actives.get(id) ?? []}
-      peutAnnoter={peutAnnoter}
+      etiquettesActives={activeLabels.get(id) ?? []}
+      peutAnnoter={canAnnotate}
     />
   );
 }

@@ -10,82 +10,82 @@ import { ActivationSecondFacteur, DesactivationSecondFacteur } from "@/component
 import { and, desc, eq, gt } from "drizzle-orm";
 import { headers } from "next/headers";
 
-export default async function AgentProfilPage() {
-  const entetes = await headers();
-  const session = await auth.api.getSession({ headers: entetes });
+export default async function AgentProfilePage() {
+  const requestHeaders = await headers();
+  const session = await auth.api.getSession({ headers: requestHeaders });
   const email = session?.user?.email ?? "";
   const userId = session?.user?.id;
-  const sessionActuelleId =
+  const currentSessionId =
     (session as unknown as { session?: { id?: string } } | null)?.session?.id ?? null;
-  const nom =
+  const name =
     session?.user?.name?.trim() ||
     (email ? email.split("@")[0] : "") ||
     "Agent de service";
   const avatarUrl = session?.user?.image ?? null;
 
-  const profil = await profilSession();
-  const compte: CompteProfil =
-    profil.type === "STAFF"
-      ? { type: "STAFF", role: profil.role, etat: profil.etat }
+  const profile = await profilSession();
+  const account: CompteProfil =
+    profile.type === "STAFF"
+      ? { type: "STAFF", role: profile.role, etat: profile.etat }
       : { type: "CLIENT" };
 
   let telephone: string | null = null;
-  let matricule: string | null = null;
-  let creeLe: Date | null = null;
-  let creePar: string | null = null;
-  let secondFacteurActif: boolean | null = null;
-  let appareilSecondFacteur: string | null = null;
+  let staffNumber: string | null = null;
+  let createdAt: Date | null = null;
+  let createdBy: string | null = null;
+  let secondFactorEnabled: boolean | null = null;
+  let secondFactorDevice: string | null = null;
 
-  if (userId && profil.type === "STAFF") {
-    const lignes = await db
+  if (userId && profile.type === "STAFF") {
+    const rows = await db
       .select({
         id: comptesStaff.id,
         telephone: comptesStaff.telephone,
         createdAt: comptesStaff.createdAt,
-        creePar: comptesStaff.creePar,
-        nom: user.name,
+        createdBy: comptesStaff.creePar,
+        name: user.name,
       })
       .from(comptesStaff)
       .leftJoin(user, eq(user.id, comptesStaff.betterAuthUserId))
       .where(eq(comptesStaff.betterAuthUserId, userId))
       .limit(1);
-    const ligne = lignes[0];
-    if (ligne) {
-      telephone = ligne.telephone ?? null;
-      matricule = ligne.id.slice(0, 8).toUpperCase();
-      creeLe = ligne.createdAt;
-      if (ligne.creePar) {
-        const createurs = await db
-          .select({ email: comptesStaff.email, nom: user.name })
+    const row = rows[0];
+    if (row) {
+      telephone = row.telephone ?? null;
+      staffNumber = row.id.slice(0, 8).toUpperCase();
+      createdAt = row.createdAt;
+      if (row.createdBy) {
+        const creators = await db
+          .select({ email: comptesStaff.email, name: user.name })
           .from(comptesStaff)
           .leftJoin(user, eq(user.id, comptesStaff.betterAuthUserId))
-          .where(eq(comptesStaff.id, ligne.creePar))
+          .where(eq(comptesStaff.id, row.createdBy))
           .limit(1);
-        const createur = createurs[0];
-        creePar = createur
-          ? createur.nom?.trim() || createur.email || "Compte supprimé"
+        const creator = creators[0];
+        createdBy = creator
+          ? creator.name?.trim() || creator.email || "Compte supprimé"
           : "Compte supprimé";
       } else {
-        creePar = "Système (bootstrap)";
+        createdBy = "Système (bootstrap)";
       }
-      const facteurs = await db
-        .select({ nomAppareil: facteurs2faAdmin.nomAppareil, actif: facteurs2faAdmin.actif })
+      const factors = await db
+        .select({ deviceName: facteurs2faAdmin.nomAppareil, actif: facteurs2faAdmin.actif })
         .from(facteurs2faAdmin)
-        .where(eq(facteurs2faAdmin.compteStaffId, ligne.id))
+        .where(eq(facteurs2faAdmin.compteStaffId, row.id))
         .limit(1);
-      const facteur = facteurs[0];
-      if (facteur) {
-        secondFacteurActif = facteur.actif;
-        appareilSecondFacteur = facteur.nomAppareil;
+      const factor = factors[0];
+      if (factor) {
+        secondFactorEnabled = factor.actif;
+        secondFactorDevice = factor.deviceName;
       } else {
-        secondFacteurActif = null;
+        secondFactorEnabled = null;
       }
     }
   }
 
   let sessions: SessionEnCoursProfil[] = [];
   if (userId) {
-    const lignesSessions = await db
+    const sessionRows = await db
       .select({
         id: tableSession.id,
         appareil: tableSession.userAgent,
@@ -97,37 +97,37 @@ export default async function AgentProfilPage() {
       .where(and(eq(tableSession.userId, userId), gt(tableSession.expiresAt, new Date())))
       .orderBy(desc(tableSession.createdAt))
       .limit(20);
-    sessions = lignesSessions;
+    sessions = sessionRows;
   }
 
-  const peutModifierCoordonnees =
-    profil.type === "STAFF" && profil.etat === "VALIDE";
+  const canEditContactDetails =
+    profile.type === "STAFF" && profile.etat === "VALIDE";
 
   return (
     <div className="flex flex-1 flex-col gap-4 bg-background p-4 sm:p-6">
       <ProfilUtilisateur
-        nom={nom}
+        nom={name}
         email={email || "Espace agent"}
         telephone={telephone}
         avatarUrl={avatarUrl}
-        compte={compte}
+        compte={account}
         dossier={null}
-        secondFacteurActif={secondFacteurActif}
-        appareilSecondFacteur={appareilSecondFacteur}
-        matricule={matricule}
-        creeLe={creeLe}
-        creePar={creePar}
+        secondFacteurActif={secondFactorEnabled}
+        appareilSecondFacteur={secondFactorDevice}
+        matricule={staffNumber}
+        creeLe={createdAt}
+        creePar={createdBy}
         sessions={sessions}
-        peutModifierCoordonnees={peutModifierCoordonnees}
+        peutModifierCoordonnees={canEditContactDetails}
         motifCoordonneesVerrouillees="Lecture seule : votre compte ne permet pas la correction."
-        cleCoordonnees={`${nom}-${telephone ?? ""}`}
+        cleCoordonnees={`${name}-${telephone ?? ""}`}
         formulaireCoordonnees={
-          <FormulaireMonProfil nomInitial={nom} telephoneInitial={telephone ?? ""} />
+          <FormulaireMonProfil nomInitial={name} telephoneInitial={telephone ?? ""} />
         }
-        sessionActuelleId={sessionActuelleId}
+        sessionActuelleId={currentSessionId}
         formulaireSecondFacteur={
-          profil.type === "STAFF" && profil.etat === "VALIDE" ? (
-            secondFacteurActif === true ? (
+          profile.type === "STAFF" && profile.etat === "VALIDE" ? (
+            secondFactorEnabled === true ? (
               <DesactivationSecondFacteur />
             ) : (
               <ActivationSecondFacteur email={email} telephone={telephone} />

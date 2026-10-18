@@ -1,54 +1,54 @@
 import { describe, expect, it } from "vitest";
 import {
-  SEUIL_AVERTISSEMENT_JOURS,
-  decrireExpiration,
+  EXPIRY_WARNING_THRESHOLD_DAYS,
+  describeSessionExpiration,
 } from "@/app/agent/settings/session-helpers";
 
-describe("decrireExpiration", () => {
-  const maintenant = new Date("2026-10-01T08:00:00Z");
+describe("describeSessionExpiration", () => {
+  const now = new Date("2026-10-01T08:00:00Z");
 
   it("annonce une expiration lointaine sans avertissement", () => {
-    const description = decrireExpiration(
+    const description = describeSessionExpiration(
       new Date("2026-10-06T08:00:00Z"),
-      maintenant,
+      now,
     );
-    expect(description.joursRestants).toBe(5);
-    expect(description.expiree).toBe(false);
-    expect(description.expireBientot).toBe(false);
-    expect(description.dateFormatee).not.toBe("Inconnue");
+    expect(description.daysRemaining).toBe(5);
+    expect(description.isExpired).toBe(false);
+    expect(description.expiresSoon).toBe(false);
+    expect(description.formattedDate).not.toBe("Inconnue");
   });
 
   it("avertit quand il reste 2 jours ou moins", () => {
     expect(
-      decrireExpiration(new Date("2026-10-03T08:00:00Z"), maintenant)
-        .expireBientot,
+      describeSessionExpiration(new Date("2026-10-03T08:00:00Z"), now)
+        .expiresSoon,
     ).toBe(true);
     expect(
-      decrireExpiration(new Date("2026-10-02T08:00:00Z"), maintenant)
-        .expireBientot,
+      describeSessionExpiration(new Date("2026-10-02T08:00:00Z"), now)
+        .expiresSoon,
     ).toBe(true);
-    expect(SEUIL_AVERTISSEMENT_JOURS).toBe(2);
+    expect(EXPIRY_WARNING_THRESHOLD_DAYS).toBe(2);
   });
 
   it("signale une session expirée", () => {
-    const description = decrireExpiration(
+    const description = describeSessionExpiration(
       new Date("2026-09-30T08:00:00Z"),
-      maintenant,
+      now,
     );
-    expect(description.expiree).toBe(true);
-    expect(description.joursRestants).toBe(0);
-    expect(description.expireBientot).toBe(false);
+    expect(description.isExpired).toBe(true);
+    expect(description.daysRemaining).toBe(0);
+    expect(description.expiresSoon).toBe(false);
   });
 
   it("replie sur « Inconnue » quand l'expiration est illisible", () => {
-    for (const valeur of [null, undefined, "pas-une-date"]) {
-      const description = decrireExpiration(
-        valeur as unknown as string,
-        maintenant,
+    for (const value of [null, undefined, "pas-une-date"]) {
+      const description = describeSessionExpiration(
+        value as unknown as string,
+        now,
       );
-      expect(description.dateFormatee).toBe("Inconnue");
-      expect(description.joursRestants).toBeNull();
-      expect(description.expiree).toBe(false);
+      expect(description.formattedDate).toBe("Inconnue");
+      expect(description.daysRemaining).toBeNull();
+      expect(description.isExpired).toBe(false);
     }
   });
 });

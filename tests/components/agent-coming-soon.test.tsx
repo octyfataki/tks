@@ -1,16 +1,16 @@
 import { describe, expect, it } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { BanknoteIcon } from "lucide-react";
-import { AgentBientot } from "@/components/agent-coming-soon";
+import { AgentComingSoon } from "@/components/agent-coming-soon";
 
-describe("AgentBientot", () => {
+describe("AgentComingSoon", () => {
   it("annonce l'écran et la suite sans proposer d'action métier", () => {
     render(
-      <AgentBientot
-        icone={<BanknoteIcon />}
-        titre="Encaissements"
-        texte="Encaisser au comptoir, en espèces ou en mobile money."
-        suite="L'encaissement arrive avec S6."
+      <AgentComingSoon
+        icon={<BanknoteIcon />}
+        title="Encaissements"
+        text="Encaisser au comptoir, en espèces ou en mobile money."
+        upcoming="L'encaissement arrive avec S6."
       />,
     );
     expect(
