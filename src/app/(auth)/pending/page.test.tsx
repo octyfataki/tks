@@ -108,7 +108,7 @@ describe("page /pending", () => {
       expect(screen.getByText("En cours")).toBeInTheDocument(),
     );
     expect(
-      screen.getByText(/un profil semble déjà connu du distributeur/i),
+      screen.getByText(/profil semble déjà connu/i),
     ).toBeInTheDocument();
     expect(
       screen.queryByText(/votre compte rejoint votre profil/i),

@@ -6,8 +6,32 @@ import {
 } from "../db/schema/s1-comptes/validation";
 
 describe("autorisation des réglages par nature", () => {
-  it("la seule clé existante est technique", () => {
-    expect(NATURE_REGLAGE).toEqual({ duree_invitation_jours: "TECHNIQUE" });
+  it("décrit chaque clé, et le plafond par défaut est un réglage métier", () => {
+    expect(NATURE_REGLAGE).toEqual({
+      duree_invitation_jours: "TECHNIQUE",
+      plafond_client_defaut_montant: "METIER",
+      plafond_client_defaut_devise: "METIER",
+    });
+  });
+
+  it("le plafond par défaut échappe à l'administrateur technique", () => {
+    expect(
+      peutModifierReglage(
+        "plafond_client_defaut_montant",
+        "ADMIN_PRINCIPAL",
+        "VALIDE",
+      ),
+    ).toBe(true);
+    expect(
+      peutModifierReglage(
+        "plafond_client_defaut_montant",
+        "ADMIN_TECHNIQUE",
+        "VALIDE",
+      ),
+    ).toBe(false);
+    expect(
+      peutModifierReglage("plafond_client_defaut_devise", "AGENT", "VALIDE"),
+    ).toBe(false);
   });
 
   it("réglage technique : les deux administrateurs VALIDE modifient", () => {

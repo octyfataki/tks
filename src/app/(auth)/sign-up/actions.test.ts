@@ -34,6 +34,10 @@ vi.mock("@/lib/db/schema/s1-comptes", () => ({
   normaliserTelephoneClient: vi.fn((valeur: string) => valeur.trim()),
 }));
 
+vi.mock("@/lib/s1-comptes/reglages", () => ({
+  lirePlafondClientDefaut: vi.fn(async () => ({ montant: 200, devise: "USD" })),
+}));
+
 vi.mock("@/lib/s4-clients/inscription", () => ({
   detecterProfilsCorrespondants: vi.fn(async () => []),
   creerProfilNouvelleBoutique: vi.fn(async () => "profil-1"),
