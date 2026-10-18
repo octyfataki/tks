@@ -16,10 +16,12 @@ export const comptesClients = mysqlTable(
     createdAt: timestamp("created_at", { fsp: 3 }).defaultNow().notNull(),
     valideLe: timestamp("valide_le", { fsp: 3 }),
     refuseMotif: varchar("refuse_motif", { length: 500 }),
+    profilCandidatId: varchar("profil_candidat_id", { length: 36 }),
   },
   (table) => [
     index("comptes_clients_etat_idx").on(table.etat),
     index("comptes_clients_cree_par_idx").on(table.creePar),
+    index("comptes_clients_profil_candidat_idx").on(table.profilCandidatId),
   ],
 );
 

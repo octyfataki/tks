@@ -169,6 +169,20 @@
       "when": 1792268103374,
       "tag": "0023_fine_komodo",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "5",
+      "when": 1792270004086,
+      "tag": "0024_legal_sauron",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "5",
+      "when": 1792270382830,
+      "tag": "0025_cold_vapor",
+      "breakpoints": true
     }
   ]
 }

@@ -1,13 +1,29 @@
 import { eq, isNull } from "drizzle-orm";
 import { db, fermerPool } from "../src/lib/db/client";
 import { annotationsClients } from "../src/lib/db/schema/s4-annotations";
-import { accesProfilClients } from "../src/lib/db/schema/s4-clients";
+import { accesProfilClients, profilsClients } from "../src/lib/db/schema/s4-clients";
+import { normaliserNomBoutique } from "../src/lib/s4-clients/inscription";
+
+async function remplirNomsNormalises() {
+  const tous = await db.select({ id: profilsClients.id, nom: profilsClients.nom }).from(profilsClients);
+  let remplis = 0;
+  for (const profil of tous) {
+    const attendu = normaliserNomBoutique(profil.nom);
+    await db
+      .update(profilsClients)
+      .set({ nomNormalise: attendu })
+      .where(eq(profilsClients.id, profil.id));
+    remplis += 1;
+  }
+  console.log(`noms normalisés       : ${remplis}`);
+}
 
 /**
  * Recompose les étiquettes sur le profil du shop plutôt que sur le compte de
  * connexion. Idempotent : il ne traite que les lignes encore sans profil.
  */
 async function main() {
+  await remplirNomsNormalises();
   const avant = await db
     .select({ id: annotationsClients.id })
     .from(annotationsClients);

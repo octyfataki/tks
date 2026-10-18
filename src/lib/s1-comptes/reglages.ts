@@ -2,18 +2,40 @@ import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import {
   DEFAUT_DUREE_INVITATION_JOURS,
+  DEFAUT_PLAFOND_CLIENT_MONTANT,
   estCleReglage,
   normaliserDureeInvitationJours,
+  normaliserPlafondClientDevise,
+  normaliserPlafondClientMontant,
   peutModifierReglage,
   reglages,
   type CleReglage,
+  type DevisePlafondClient,
 } from "@/lib/db/schema/s1-comptes";
 import { enregistrerEvenement } from "@/lib/s2-autorisations/journal";
 import { StaffError } from "./staff";
 
 const VALEURS_DEFAUT: Record<CleReglage, string> = {
   duree_invitation_jours: String(DEFAUT_DUREE_INVITATION_JOURS),
+  plafond_client_defaut_montant: String(DEFAUT_PLAFOND_CLIENT_MONTANT),
+  plafond_client_defaut_devise: "USD",
 };
+
+export type PlafondClientDefaut = {
+  montant: number;
+  devise: DevisePlafondClient;
+};
+
+export async function lirePlafondClientDefaut(): Promise<PlafondClientDefaut> {
+  const [montant, devise] = await Promise.all([
+    lireReglage("plafond_client_defaut_montant"),
+    lireReglage("plafond_client_defaut_devise"),
+  ]);
+  return {
+    montant: normaliserPlafondClientMontant(montant),
+    devise: normaliserPlafondClientDevise(devise),
+  };
+}
 
 export async function lireReglage(cle: CleReglage): Promise<string> {
   const lignes = await db
@@ -47,7 +69,11 @@ export async function definirReglage(input: {
   const valeur =
     input.cle === "duree_invitation_jours"
       ? String(normaliserDureeInvitationJours(input.valeur))
-      : input.valeur;
+      : input.cle === "plafond_client_defaut_montant"
+        ? String(normaliserPlafondClientMontant(input.valeur))
+        : input.cle === "plafond_client_defaut_devise"
+          ? normaliserPlafondClientDevise(input.valeur)
+          : input.valeur;
   const avant = await lireReglage(input.cle);
   await db.transaction(async (tx) => {
     await tx

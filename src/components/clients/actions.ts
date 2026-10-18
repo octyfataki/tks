@@ -5,6 +5,7 @@ import { headers } from "next/headers";
 import { and, eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
+import { appliquerIssueApresValidation } from "@/lib/s4-clients/apres-validation";
 import {
   comptesClients,
   comptesStaff,
@@ -159,6 +160,12 @@ export async function validerCompteClientAction(
   } catch {
     return { ok: false, erreur: "Validation impossible : journal indisponible." };
   }
+  await appliquerIssueApresValidation({
+    compteClientId: compteId,
+    acteurId: trancheur.id,
+    roleAuMoment: trancheur.role,
+    horodatageLocal: maintenant,
+  });
   revaliderLesDeuxEspaces();
   return { ok: true, compteId };
 }

@@ -24,14 +24,25 @@ cette série est **additive** : `CREATE TABLE`, `ADD COLUMN`, ou un unique
 | 0021 | `CREATE TABLE demandes_acces_profil` | `DROP TABLE` |
 | 0022 | `ADD annotations_clients.profil_client_id` | `DROP COLUMN` |
 | 0023 | `MODIFY journal_audit.entite_id` → `varchar(128)` | sans risque |
+| 0024 | `ADD profils_clients.origine`, `ADD comptes_clients.profil_candidat_id` | `DROP COLUMN` |
+| 0025 | `ADD profils_clients.nom_normalise` + index | `DROP COLUMN` |
 
 0023 est le seul `MODIFY` du projet. Il **élargit** une colonne : aucune donnée
 existante n'est tronquée, et aucune donnée n'est perdue.
 
+0024 et 0025 sont additives, mais **elles ont besoin du backfill qui suit** :
+sans lui, `nom_normalise` reste vide et la détection de doublon par nom ne
+trouve rien. L'ordre migrate-puis-backfill n'est donc pas négociable.
+
 ### 2. `pnpm db:backfill-annotations-profil`
 
-Recompose les étiquettes existantes sur le profil du shop.
+Recompose les étiquettes existantes sur le profil du shop, et normalise les
+noms de boutique.
 
+- **Étape 1 — normaliser les noms.** Remplit `profils_clients.nom_normalise`.
+  Sans cette étape, une boutique déjà enregistrée n'est pas retrouvée à
+  l'inscription.
+- **Étape 2 — rattacher les étiquettes.**
 - **Idempotent** : ne traite que les lignes dont `profil_client_id` est `NULL`.
 - **Vérifie sa propre sûreté** : si le nombre d'étiquettes a changé, il échoue
   au lieu de terminer.
@@ -65,6 +76,9 @@ L'ordre inverse, migration par migration :
 ```sql
 DROP TABLE `demandes_acces_profil`;
 DROP TABLE `acces_profil_clients`;
+ALTER TABLE `profils_clients` DROP COLUMN `nom_normalise`;
+ALTER TABLE `comptes_clients` DROP COLUMN `profil_candidat_id`;
+ALTER TABLE `profils_clients` DROP COLUMN `origine`;
 ALTER TABLE `annotations_clients` DROP COLUMN `profil_client_id`;
 ```
 

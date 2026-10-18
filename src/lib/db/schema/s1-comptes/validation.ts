@@ -160,7 +160,11 @@ export function verdictRevocationLien(
   return "A_REVOQUER";
 }
 
-export const CLES_REGLAGES = ["duree_invitation_jours"] as const;
+export const CLES_REGLAGES = [
+  "duree_invitation_jours",
+  "plafond_client_defaut_montant",
+  "plafond_client_defaut_devise",
+] as const;
 export type CleReglage = (typeof CLES_REGLAGES)[number];
 
 export function estCleReglage(cle: string): cle is CleReglage {
@@ -184,7 +188,33 @@ export type NatureReglage = "TECHNIQUE" | "METIER";
 
 export const NATURE_REGLAGE: Record<CleReglage, NatureReglage> = {
   duree_invitation_jours: "TECHNIQUE",
+  plafond_client_defaut_montant: "METIER",
+  plafond_client_defaut_devise: "METIER",
 };
+
+export const DEFAUT_PLAFOND_CLIENT_MONTANT = 200;
+export const MIN_PLAFOND_CLIENT_MONTANT = 1;
+export const MAX_PLAFOND_CLIENT_MONTANT = 100_000_000;
+export const DEVISES_PLAFOND_CLIENT = ["USD", "CDF"] as const;
+export type DevisePlafondClient = (typeof DEVISES_PLAFOND_CLIENT)[number];
+
+export function normaliserPlafondClientMontant(valeur: unknown): number {
+  const nombre = Number(valeur);
+  if (!Number.isFinite(nombre)) return DEFAUT_PLAFOND_CLIENT_MONTANT;
+  const entier = Math.floor(nombre);
+  if (entier < MIN_PLAFOND_CLIENT_MONTANT) return MIN_PLAFOND_CLIENT_MONTANT;
+  if (entier > MAX_PLAFOND_CLIENT_MONTANT) return MAX_PLAFOND_CLIENT_MONTANT;
+  return entier;
+}
+
+export function normaliserPlafondClientDevise(
+  valeur: unknown,
+): DevisePlafondClient {
+  const texte = typeof valeur === "string" ? valeur.trim().toUpperCase() : "";
+  return (DEVISES_PLAFOND_CLIENT as readonly string[]).includes(texte)
+    ? (texte as DevisePlafondClient)
+    : "USD";
+}
 
 export function peutModifierReglageNature(
   nature: NatureReglage,
