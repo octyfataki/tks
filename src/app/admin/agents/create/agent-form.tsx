@@ -50,39 +50,47 @@ export function FormulaireAgent() {
   const [telephone, setTelephone] = React.useState("");
   const [motDePasse, setMotDePasse] = React.useState("");
   const [motDePasseVisible, setMotDePasseVisible] = React.useState(false);
-  const dernierResultat = React.useRef<ResultatAction | null>(null);
+  const [agentCréé, setAgentCréé] = React.useState<{
+    id: string;
+    email: string;
+    nom: string;
+  } | null>(null);
 
   React.useEffect(() => {
-    if (!resultat || dernierResultat.current === resultat) return;
-    dernierResultat.current = resultat;
+    if (!resultat) return;
     if (resultat.ok) {
-      toast.add({
-        type: "success",
-        title: "Agent créé",
-        description: `Compte actif pour ${resultat.email ?? "l'agent"}. Accordez-lui ses permissions depuis sa fiche.`,
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- affiche l'écran de succès après création, une fois par résultat
+      setAgentCréé({
+        id: resultat.id ?? "",
+        email: resultat.email ?? "",
+        nom: `${prenom} ${nom}`.trim(),
       });
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- réinitialise le formulaire après succès, une fois par résultat
       setPrenom("");
       setNom("");
       setEmail("");
       setTelephone("");
       setMotDePasse("");
     } else {
+      setAgentCréé(null);
       toast.add({
         type: "error",
         title: "Création impossible",
         description: resultat.erreur,
       });
     }
-  }, [resultat]);
+  }, [resultat, prenom, nom]);
 
   const nomComplet = `${prenom} ${nom}`.trim() || "Nouvel agent";
   const initiales =
     `${prenom.trim().charAt(0)}${nom.trim().charAt(0)}`.toUpperCase() || "AG";
 
   return (
-    <form action={action} className="flex flex-1 flex-col gap-4 p-4 pt-4">
-      <div className="flex flex-wrap items-start justify-between gap-2">
+    <div className="flex flex-1 flex-col gap-4 p-4 pt-4">
+      {agentCréé ? (
+        <ÉcranSuccès agent={agentCréé} onNouvelAgent={() => setAgentCréé(null)} />
+      ) : (
+        <form action={action} className="flex flex-1 flex-col gap-4 p-4 pt-4">
+          <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <h1 className="text-lg font-semibold tracking-tight">Créer un agent de service</h1>
           <p className="mt-0.5 text-xs text-muted-foreground">
@@ -283,6 +291,47 @@ export function FormulaireAgent() {
           </section>
         </div>
       </div>
-    </form>
+        </form>
+      )}
+    </div>
+  );
+}
+
+function ÉcranSuccès({ agent, onNouvelAgent }: {
+  agent: { id: string; email: string; nom: string };
+  onNouvelAgent: () => void;
+}) {
+  const nomComplet = agent.nom || "Nouvel agent";
+  return (
+    <section className="rounded-xl border bg-card p-4 sm:p-5 flex flex-1 flex-col items-center justify-center text-center">
+      <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-green-600 text-white mb-4">
+        <CircleCheckIcon className="size-5" />
+      </div>
+      <h2 className="text-lg font-semibold tracking-tight">Agent créé</h2>
+      <p className="mt-1 text-sm text-muted-foreground">
+        Compte actif pour <span className="font-medium">{agent.email}</span>.
+      </p>
+      <dl className="mt-4 grid grid-cols-2 gap-2 text-left w-full max-w-xs">
+        <dt className="text-[11px] text-muted-foreground">Nom</dt>
+        <dd className="text-sm font-medium">{nomComplet}</dd>
+        <dt className="text-[11px] text-muted-foreground">Email</dt>
+        <dd className="text-sm truncate">{agent.email}</dd>
+      </dl>
+      <div className="mt-6 flex flex-col sm:flex-row gap-3 w-full max-w-xs">
+        {agent.id ? (
+          <Link href={"/admin/agents/" + agent.id} className={buttonVariants()}>
+            Voir la fiche de l&apos;agent
+          </Link>
+        ) : null}
+        <div className="flex flex-col sm:flex-row gap-3 w-full flex-1">
+          <Link href="/admin/agents" className={buttonVariants({ variant: "outline" })}>
+            Retour à la liste
+          </Link>
+          <button type="button" onClick={onNouvelAgent} className={buttonVariants({ variant: "outline" })}>
+            Créer un autre agent
+          </button>
+        </div>
+      </div>
+    </section>
   );
 }

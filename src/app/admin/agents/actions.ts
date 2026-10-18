@@ -37,6 +37,7 @@ import {
 export type ResultatAction = ResultatStandard<{
   lien?: string;
   email?: string;
+  id?: string;
 }>;
 
 async function staffConnecte() {
@@ -73,14 +74,14 @@ export async function creerAgentAction(
     return { ok: false, erreur: "Seul un administrateur principal validé peut créer un agent." };
   }
   try {
-    await creerAgent(moi.id, {
+    const resultat = await creerAgent(moi.id, {
       email,
       password: motDePasse,
       name: `${prenom} ${nom}`.trim(),
       telephone,
     });
     revalidatePath("/admin/agents");
-    return { ok: true, email };
+    return { ok: true, email, id: resultat.id };
   } catch (erreur) {
     if (erreur instanceof StaffError && erreur.code === "TELEPHONE_INVALIDE") {
       return { ok: false, erreur: "Numéro de téléphone invalide (format international : + optionnel, chiffres, espaces, tirets, points, parenthèses)." };
