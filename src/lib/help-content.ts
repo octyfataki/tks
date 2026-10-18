@@ -164,7 +164,7 @@ export const AIDE_SECTIONS: AideSectionNiveau[] = [
       {
         label: "Mon compte",
         description: "Connexion et état de votre compte.",
-        href: "/admin/profil",
+        href: "/admin/profile",
         motsCles: ["profil", "compte"],
       },
       {

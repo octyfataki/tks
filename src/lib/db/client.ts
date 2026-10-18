@@ -5,7 +5,7 @@ import * as authSchema from "./schema/auth-schema";
 import * as s1Comptes from "./schema/accounts";
 import * as s2Autorisations from "./schema/authorizations";
 import * as s3Devises from "./schema/currencies";
-import * as s4Clients from "./schema/s4-clients";
+import * as s4Clients from "./schema/clients";
 import * as s4Annotations from "./schema/annotations";
 
 const pool = mysql.createPool({

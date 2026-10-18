@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { inscrireCompteClient } from "./actions";
+import { inscrireCompteClient } from "@/app/(auth)/sign-up/actions";
 import { ClientError, inscrireClient } from "@/lib/accounts/clients";
 import { auth } from "@/lib/auth";
 
