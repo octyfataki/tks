@@ -1,0 +1,37 @@
+import { describe, expect, it, vi } from "vitest";
+import SignInPage from "@/app/(auth)/sign-in/page";
+import { profilSession } from "@/lib/accounts/session-profile";
+import type { Profil } from "@/lib/accounts/session-role";
+
+vi.mock("@/lib/accounts/session-profile", () => ({
+  profilSession: vi.fn(),
+}));
+
+async function destinationDe(profil: Profil): Promise<string> {
+  vi.mocked(profilSession).mockResolvedValueOnce(profil);
+  const erreur = await SignInPage().catch((e: unknown) => e);
+  expect(erreur).toBeInstanceOf(Error);
+  return (erreur as Error & { digest?: string }).digest ?? "";
+}
+
+describe("page sign-in", () => {
+  it("renvoie un administrateur connecté vers son espace", async () => {
+    expect(
+      await destinationDe({
+        type: "STAFF",
+        role: "ADMIN_PRINCIPAL",
+        etat: "VALIDE",
+      }),
+    ).toContain("/admin");
+  });
+
+  it("laisse passer un anonyme", async () => {
+    vi.mocked(profilSession).mockResolvedValueOnce({ type: "ANONYME" });
+    await expect(SignInPage()).resolves.toBeDefined();
+  });
+
+  it("ne boucle pas sur un profil INCONNU", async () => {
+    vi.mocked(profilSession).mockResolvedValueOnce({ type: "INCONNU" });
+    await expect(SignInPage()).resolves.toBeDefined();
+  });
+});

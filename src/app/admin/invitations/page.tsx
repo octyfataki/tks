@@ -9,10 +9,10 @@ import {
   invitationsAgents,
   peutInviterAdminPrincipal,
   premiersAccesAdmin,
-} from "@/lib/db/schema/s1-comptes";
-import { PermissionRefusee } from "@/components/permission-refusee";
-import { RegistreInvitations, type LigneRegistre } from "./registre-invitations";
-import { etatLienInvitation } from "@/lib/db/schema/s1-comptes/validation";
+} from "@/lib/db/schema/accounts";
+import { PermissionRefusee } from "@/components/permission-denied";
+import { RegistreInvitations, type LigneRegistre } from "./invitation-table";
+import { etatLienInvitation } from "@/lib/db/schema/accounts/validation";
 
 export default async function InvitationsEnvoyeesPage() {
   const session = await auth.api.getSession({ headers: await headers() });

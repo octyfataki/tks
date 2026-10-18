@@ -10,10 +10,10 @@ import {
   peutLeverSuspension,
   peutRevoquerAdmin,
   peutSuspendreAdmin,
-} from "@/lib/db/schema/s1-comptes";
-import { enregistrerEvenement } from "@/lib/s2-autorisations/journal";
-import { tuerSessionsStaff } from "@/lib/s1-comptes/staff";
-import type { ResultatAction } from "@/lib/resultat-action";
+} from "@/lib/db/schema/accounts";
+import { enregistrerEvenement } from "@/lib/authorizations/journal";
+import { tuerSessionsStaff } from "@/lib/accounts/staff";
+import type { ResultatAction } from "@/lib/action-result";
 
 export type ResultatRevocation = ResultatAction;
 

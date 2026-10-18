@@ -6,11 +6,11 @@ import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
 import { session as sessionAuth } from "@/lib/db/schema/auth-schema";
-import { comptesStaff } from "@/lib/db/schema/s1-comptes";
-import { modifierAgentSupport, modifierEmailAgentSupport, ouvrirLienMotDePasseAgent, revoquerPremierAccesAdmin, tuerSessionsStaff, StaffError } from "@/lib/s1-comptes/staff";
-import type { ErreurStaff } from "@/lib/s1-comptes/staff";
-import { enregistrerEvenement } from "@/lib/s2-autorisations/journal";
-import type { ResultatAction } from "@/lib/resultat-action";
+import { comptesStaff } from "@/lib/db/schema/accounts";
+import { modifierAgentSupport, modifierEmailAgentSupport, ouvrirLienMotDePasseAgent, revoquerPremierAccesAdmin, tuerSessionsStaff, StaffError } from "@/lib/accounts/staff";
+import type { ErreurStaff } from "@/lib/accounts/staff";
+import { enregistrerEvenement } from "@/lib/authorizations/journal";
+import type { ResultatAction } from "@/lib/action-result";
 
 export type ResultatModificationCoordonneesAgent = ResultatAction<{
   inchange: boolean;
@@ -138,7 +138,7 @@ export async function genererLienMotDePasseAgentAction(
   try {
     const acces = await ouvrirLienMotDePasseAgent(createurId, id);
     revalidatePath(`/admin/agents/${id}`);
-    return { ok: true, lien: `/premier-acces/${acces.jeton}` };
+    return { ok: true, lien: `/first-access/${acces.jeton}` };
   } catch (erreur) {
     if (erreur instanceof StaffError && erreur.code === "NON_AUTORISE") {
       return { ok: false, erreur: "Lien impossible : compte non éligible (agent validé exigé)." };

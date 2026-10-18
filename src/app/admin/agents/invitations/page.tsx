@@ -3,13 +3,13 @@ import { desc, eq, inArray } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
 import { user } from "@/lib/db/schema/auth-schema";
-import { comptesStaff, invitationsAgents, peutInviterAgent } from "@/lib/db/schema/s1-comptes";
-import { etatLienInvitation } from "@/lib/db/schema/s1-comptes/validation";
+import { comptesStaff, invitationsAgents, peutInviterAgent } from "@/lib/db/schema/accounts";
+import { etatLienInvitation } from "@/lib/db/schema/accounts/validation";
 import { Badge } from "@/components/ui/badge";
 import {
   RegistreInvitationsAgents,
   type LigneInvitationAgent,
-} from "./registre-invitations-agents";
+} from "./agent-invitation-table";
 
 export default async function InvitationsAgentsPage() {
   const session = await auth.api.getSession({ headers: await headers() });

@@ -11,7 +11,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { TYPES_PIECE, typePieceValide } from "@/lib/s1-comptes/pieces-fichiers";
+import { TYPES_PIECE, typePieceValide } from "@/lib/accounts/document-files";
 import { cn } from "@/lib/utils";
 
 export type PieceDeposeeApercu = {

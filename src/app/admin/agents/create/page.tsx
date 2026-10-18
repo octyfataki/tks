@@ -2,9 +2,9 @@ import { headers } from "next/headers";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
-import { comptesStaff, peutInviterAgent } from "@/lib/db/schema/s1-comptes";
-import { PermissionRefusee } from "@/components/permission-refusee";
-import { FormulaireAgent } from "./formulaire-agent";
+import { comptesStaff, peutInviterAgent } from "@/lib/db/schema/accounts";
+import { PermissionRefusee } from "@/components/permission-denied";
+import { FormulaireAgent } from "./agent-form";
 
 export default async function CreerAgentPage() {
   const session = await auth.api.getSession({ headers: await headers() });

@@ -3,13 +3,13 @@
 import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { db } from "@/lib/db/client";
-import { invitationsAgents } from "@/lib/db/schema/s1-comptes";
-import type { ResultatAction } from "@/lib/resultat-action";
+import { invitationsAgents } from "@/lib/db/schema/accounts";
+import type { ResultatAction } from "@/lib/action-result";
 import {
   StaffError,
   accepterInvitationAdminPrincipal,
   accepterInvitationAgent,
-} from "@/lib/s1-comptes/staff";
+} from "@/lib/accounts/staff";
 
 const SchemaAcceptation = z.object({
   jeton: z.string().min(1, "lien inconnu"),

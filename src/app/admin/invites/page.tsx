@@ -2,21 +2,21 @@ import { headers } from "next/headers";
 import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
-import { comptesStaff } from "@/lib/db/schema/s1-comptes";
+import { comptesStaff } from "@/lib/db/schema/accounts";
 import {
   peutInviterAdminPrincipal,
   peutInviterAgent,
-} from "@/lib/db/schema/s1-comptes";
-import { lireDureeInvitationJours } from "@/lib/s1-comptes/reglages";
+} from "@/lib/db/schema/accounts";
+import { lireDureeInvitationJours } from "@/lib/accounts/settings";
 import {
   Tabs,
   TabsContent,
   TabsList,
   TabsTrigger,
 } from "@/components/ui/tabs";
-import { PermissionRefusee } from "@/components/permission-refusee";
-import { FormulaireInvitationAdmin } from "../administrateurs/formulaire-invitation";
-import { FormulaireInvitationAgent } from "./formulaire";
+import { PermissionRefusee } from "@/components/permission-denied";
+import { FormulaireInvitationAdmin } from "../administrators/invitation-form";
+import { FormulaireInvitationAgent } from "./form";
 
 export default async function InviterPage({
   searchParams,

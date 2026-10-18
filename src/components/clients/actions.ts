@@ -10,26 +10,26 @@ import {
   comptesStaff,
   piecesIdentiteClients,
   transitionCompteClientValide,
-} from "@/lib/db/schema/s1-comptes";
+} from "@/lib/db/schema/accounts";
 import {
   compteClientConnecte,
   retirerPiece,
   statuerPiece,
-} from "@/lib/s1-comptes/pieces-clients";
-import { typePieceValide } from "@/lib/s1-comptes/pieces-fichiers";
-import { statutPieceValide, pieceRetirable, type StatutPiece } from "@/lib/s1-comptes/fiche-client";
+} from "@/lib/accounts/client-documents";
+import { typePieceValide } from "@/lib/accounts/document-files";
+import { statutPieceValide, pieceRetirable, type StatutPiece } from "@/lib/accounts/client-record";
 import {
   enregistrerEvenement,
   journaliserRefusContestation,
   ERREUR_CONTESTEE_INTROUVABLE,
-} from "@/lib/s2-autorisations/journal";
-import { aPermission } from "@/lib/s2-autorisations/autorisations";
+} from "@/lib/authorizations/journal";
+import { aPermission } from "@/lib/authorizations/permissions";
 import {
   AnnotationError,
   poserEtiquette,
   retirerEtiquette,
-} from "@/lib/s4-annotations/annotations";
-import type { ResultatAction } from "@/lib/resultat-action";
+} from "@/lib/annotations/annotations";
+import type { ResultatAction } from "@/lib/action-result";
 
 export type ResultatDecision = ResultatAction<{ compteId: string }>;
 export type ResultatAnnotation = ResultatAction<{

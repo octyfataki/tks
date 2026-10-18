@@ -1,6 +1,6 @@
 import Link from "next/link";
-import { profilSession } from "@/lib/s1-comptes/profil-session";
-import { peutCreerAdminPrincipal } from "@/lib/db/schema/s1-comptes";
+import { profilSession } from "@/lib/accounts/session-profile";
+import { peutCreerAdminPrincipal } from "@/lib/db/schema/accounts";
 
 export default async function Page() {
   const profil = await profilSession();

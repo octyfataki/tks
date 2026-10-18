@@ -8,9 +8,9 @@ import {
   clePreferenceMethode2fa,
   estMethodeEnvoi2fa,
   type MethodeEnvoi2fa,
-} from "./2fa-methode";
+} from "./2fa-method";
 import { verification } from "./db/schema/auth-schema";
-import { comptesClients, comptesStaff } from "./db/schema/s1-comptes";
+import { comptesClients, comptesStaff } from "./db/schema/accounts";
 
 export const auth = betterAuth({
   appName: "TKS",

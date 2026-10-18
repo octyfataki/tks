@@ -2,9 +2,9 @@ import type { ReactNode } from "react";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
-import { profilSession } from "@/lib/s1-comptes/profil-session";
-import { redirectionAcces } from "@/lib/s1-comptes/role-session";
-import { GardienSession } from "@/components/gardien-session";
+import { profilSession } from "@/lib/accounts/session-profile";
+import { redirectionAcces } from "@/lib/accounts/session-role";
+import { GardienSession } from "@/components/session-guard";
 import { AppSidebar } from "@/components/app-sidebar";
 import { AdminHeader } from "@/components/admin-header";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
@@ -30,7 +30,7 @@ export default async function AdminLayout({
       <GardienSession />
       <AppSidebar
         utilisateur={{ nom, email: email || "Espace distributeur" }}
-        profilUrl="/admin/profil"
+        profilUrl="/admin/profile"
       />
       <SidebarInset>
         <AdminHeader />

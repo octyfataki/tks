@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
-import { demanderDestination } from "@/lib/destination-connexion";
-import { MESSAGE_RESEAU, messageErreurSecondFacteur } from "@/lib/erreurs-auth";
+import { demanderDestination } from "@/lib/post-login-redirect";
+import { MESSAGE_RESEAU, messageErreurSecondFacteur } from "@/lib/auth-errors";
 import { toast } from "@/components/ui/toast";
 import { Button } from "@/components/ui/button";
 import {

@@ -10,15 +10,15 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { Cachet } from "../../invitations/cachet";
-import { dateCourte, nomAffiche } from "../../list/affichage-admin";
-import { detailAttente, joursAttente, texteAttente } from "../affichage-client";
+import { Cachet } from "../../invitations/stamp";
+import { dateCourte, nomAffiche } from "../../list/admin-display";
+import { detailAttente, joursAttente, texteAttente } from "../client-display";
 import {
   FormulaireAttesterComptoir,
   FormulaireRefuser,
   FormulaireRevoquer,
   FormulaireValider,
-} from "./formulaires-decision";
+} from "./decision-forms";
 
 export type PieceFile = {
   id: string;
@@ -187,7 +187,7 @@ export function FileValidation({
 
                       {ligne.piece ? (
                         <a
-                          href={`/api/pieces-clients/${ligne.piece.id}`}
+                          href={`/api/client-documents/${ligne.piece.id}`}
                           target="_blank"
                           rel="noreferrer"
                           className="mt-3 flex items-center gap-3 rounded-lg border bg-card p-3 transition-colors hover:border-primary"
@@ -195,7 +195,7 @@ export function FileValidation({
                           {estImage ? (
                             // eslint-disable-next-line @next/next/no-img-element -- aperçu local authentifié, pas d'optimisation CDN
                             <img
-                              src={`/api/pieces-clients/${ligne.piece.id}`}
+                              src={`/api/client-documents/${ligne.piece.id}`}
                               alt={`Pièce ${ligne.piece.typePiece} de ${nom}`}
                               className="h-16 w-16 shrink-0 rounded-md border object-cover"
                             />

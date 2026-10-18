@@ -8,12 +8,12 @@ import { user } from "@/lib/db/schema/auth-schema";
 import {
   comptesStaff,
   facteurs2faAdmin,
-} from "@/lib/db/schema/s1-comptes";
-import { BarreOutilsListe } from "./barre-outils";
-import { CartesAdmins } from "./cartes-admins";
-import { PaginationListe } from "./pagination-liste";
-import { libelleRole, nomAffiche } from "./affichage-admin";
-import { filtrerLignes, trierLignes } from "./filtrage";
+} from "@/lib/db/schema/accounts";
+import { BarreOutilsListe } from "./toolbar";
+import { CartesAdmins } from "./admin-cards";
+import { PaginationListe } from "./list-pagination";
+import { libelleRole, nomAffiche } from "./admin-display";
+import { filtrerLignes, trierLignes } from "./filtering";
 
 const FILTRES_VALIDES = [
   "principal",

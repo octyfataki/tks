@@ -5,12 +5,12 @@ import { desc, eq, inArray } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
 import { user } from "@/lib/db/schema/auth-schema";
-import { comptesStaff } from "@/lib/db/schema/s1-comptes";
-import { permissionsAgents } from "@/lib/db/schema/s2-autorisations";
-import { BarreOutilsAgents } from "./barre-outils";
-import { CartesAgents } from "./cartes-agents";
-import { PaginationListe } from "../list/pagination-liste";
-import { nomAffiche } from "../list/affichage-admin";
+import { comptesStaff } from "@/lib/db/schema/accounts";
+import { permissionsAgents } from "@/lib/db/schema/authorizations";
+import { BarreOutilsAgents } from "./toolbar";
+import { CartesAgents } from "./agent-cards";
+import { PaginationListe } from "../list/list-pagination";
+import { nomAffiche } from "../list/admin-display";
 
 const FILTRES_VALIDES = ["valide", "suspendu", "revoque", "sans-permission"] as const;
 const TRIS_VALIDES = ["anciens", "nom-az", "nom-za"] as const;

@@ -27,7 +27,7 @@ Une pièce porte son propre verdict, distinct de « un humain l'a ouverte » :
 
 * `statut_piece VARCHAR(32) NOT NULL DEFAULT 'EN_ATTENTE'` — `EN_ATTENTE` /
   `ACCEPTEE` / `REFUSEE` / `RETIREE`. La liste fermée est vérifiée par
-  l'application (`STATUTS_PIECE` dans `s1-comptes/fiche-client.ts`) : une
+  l'application (`STATUTS_PIECE` dans `comptes/fiche-client.ts`) : une
   valeur hors liste est ramenée à `EN_ATTENTE` à la lecture, jamais rendue
   telle quelle.
 * `refus_motif TEXT NULL` — ce que le client doit corriger, quand

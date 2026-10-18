@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { EcranErreur } from "@/components/ecran-erreur";
+import { EcranErreur } from "@/components/error-screen";
 import { buttonVariants } from "@/components/ui/button";
 
 export const metadata: Metadata = {
@@ -20,7 +20,7 @@ export default function Introuvable() {
           <Link href="/" className={buttonVariants({ size: "lg" })}>
             Retour à l&apos;accueil
           </Link>
-          <Link href="/aide" className={buttonVariants({ size: "lg", variant: "outline" })}>
+          <Link href="/help" className={buttonVariants({ size: "lg", variant: "outline" })}>
             Voir l&apos;aide
           </Link>
         </>

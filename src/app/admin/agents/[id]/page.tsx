@@ -8,28 +8,28 @@ import {
   comptesStaff,
   invitationsAgents,
   peutInviterAgent,
-} from "@/lib/db/schema/s1-comptes";
-import { journalAudit } from "@/lib/db/schema/s2-autorisations";
+} from "@/lib/db/schema/accounts";
+import { journalAudit } from "@/lib/db/schema/authorizations";
 import {
   PERMISSIONS_FERMEES,
   peutConsulterJournal,
   peutGererPermissions,
-} from "@/lib/db/schema/s2-autorisations";
-import { listerPermissions, listerSocle } from "@/lib/s2-autorisations/autorisations";
+} from "@/lib/db/schema/authorizations";
+import { listerPermissions, listerSocle } from "@/lib/authorizations/permissions";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { nomAffiche, initiales, dateCourte } from "../../list/affichage-admin";
-import { InterrupteurPermission, ProfilEmbauche } from "./permissions-agent";
-import { InterrupteurAgent } from "../interrupteur-agent";
-import { HistoriqueAgent } from "./historique-agent";
-import { BoutonRevocationAgent } from "./bouton-revocation";
-import { FormulaireCoordonneesAgent } from "./formulaire-coordonnees";
-import { FormulaireEmailAgent } from "./formulaire-email";
-import { FormulaireLienMotDePasse } from "./formulaire-lien-mdp";
-import { LienMotDePasseEnAttente } from "./lien-mdp-en-attente";
-import { SessionsAgent } from "./sessions-agent";
-import { SectionModifiable } from "../../list/[id]/section-modifiable";
+import { nomAffiche, initiales, dateCourte } from "../../list/admin-display";
+import { InterrupteurPermission, ProfilEmbauche } from "./agent-permissions";
+import { InterrupteurAgent } from "../agent-toggle";
+import { HistoriqueAgent } from "./agent-history";
+import { BoutonRevocationAgent } from "./revoke-button";
+import { FormulaireCoordonneesAgent } from "./contact-details-form";
+import { FormulaireEmailAgent } from "./email-form";
+import { FormulaireLienMotDePasse } from "./password-link-form";
+import { LienMotDePasseEnAttente } from "./pending-password-link";
+import { SessionsAgent } from "./agent-sessions";
+import { SectionModifiable } from "../../list/[id]/editable-section";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 

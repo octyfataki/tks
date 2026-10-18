@@ -3,8 +3,8 @@
 import { headers } from "next/headers";
 import { z } from "zod";
 import { auth } from "@/lib/auth";
-import type { ResultatAction } from "@/lib/resultat-action";
-import { ClientError, inscrireClient } from "@/lib/s1-comptes/clients";
+import type { ResultatAction } from "@/lib/action-result";
+import { ClientError, inscrireClient } from "@/lib/accounts/clients";
 
 const SchemaInscription = z.object({
   email: z

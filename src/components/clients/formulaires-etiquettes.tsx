@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import {
   ETIQUETTES_FERMEES,
   type Etiquette,
-} from "@/lib/s4-annotations/etiquettes";
+} from "@/lib/annotations/labels";
 import { CLASSES_TEINTE } from "./etiquettes-badge";
 import {
   poserEtiquetteAction,

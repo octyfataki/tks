@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
-import { EcranErreur } from "@/components/ecran-erreur";
+import { EcranErreur } from "@/components/error-screen";
 import { Button, buttonVariants } from "@/components/ui/button";
 
 type ErreurGlobaleProps = {

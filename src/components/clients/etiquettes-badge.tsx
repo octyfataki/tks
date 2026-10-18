@@ -2,7 +2,7 @@ import { cn } from "@/lib/utils";
 import {
   etiquetteParCode,
   type TeinteEtiquette,
-} from "@/lib/s4-annotations/etiquettes";
+} from "@/lib/annotations/labels";
 
 export const CLASSES_TEINTE: Record<TeinteEtiquette, string> = {
   rouge: "border-destructive/40 bg-destructive/10 text-destructive",

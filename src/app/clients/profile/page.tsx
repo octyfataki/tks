@@ -5,7 +5,7 @@ import { session as tableSession } from "@/lib/db/schema/auth-schema";
 import {
   comptesClients,
   facteurs2faClients,
-} from "@/lib/db/schema/s1-comptes";
+} from "@/lib/db/schema/accounts";
 import {
   ActivationSecondFacteur,
   DesactivationSecondFacteur,
@@ -13,10 +13,10 @@ import {
   RemplacerPieceIdentite,
   type PieceIdentiteProfil,
   type SessionEnCoursProfil,
-} from "@/components/profil";
-import { lirePiecesCompte } from "@/lib/s1-comptes/pieces-clients";
-import { statutPieceValide } from "@/lib/s1-comptes/fiche-client";
-import { FormulaireMonProfil } from "@/app/admin/profil/formulaire-mon-profil";
+} from "@/components/profile";
+import { lirePiecesCompte } from "@/lib/accounts/client-documents";
+import { statutPieceValide } from "@/lib/accounts/client-record";
+import { FormulaireMonProfil } from "@/app/admin/profile/my-profile-form";
 import { and, desc, eq, gt } from "drizzle-orm";
 
 export default async function ClientProfilePage() {

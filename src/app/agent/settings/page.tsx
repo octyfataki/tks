@@ -13,7 +13,7 @@ import {
   WifiOffIcon,
 } from "lucide-react";
 import { auth } from "@/lib/auth";
-import { BoutonDeconnexion } from "@/components/bouton-deconnexion";
+import { BoutonDeconnexion } from "@/components/sign-out-button";
 import { Badge } from "@/components/ui/badge";
 import {
   Card,

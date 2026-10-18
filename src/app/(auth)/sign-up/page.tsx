@@ -12,7 +12,7 @@ import {
   FieldLabel,
 } from "@/components/ui/field";
 import { PasswordInput } from "@/components/password-input";
-import { RedirigerConnecte } from "@/components/rediriger-connecte";
+import { RedirigerConnecte } from "@/components/redirect-authenticated";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/toast";
 import { inscrireCompteClient } from "./actions";

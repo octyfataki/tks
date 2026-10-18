@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation";
-import { profilSession } from "@/lib/s1-comptes/profil-session";
-import { destinationApresConnexion } from "@/lib/s1-comptes/role-session";
-import PendingVue from "./pending-vue";
+import { profilSession } from "@/lib/accounts/session-profile";
+import { destinationApresConnexion } from "@/lib/accounts/session-role";
+import PendingVue from "./pending-view";
 
 export default async function PendingPage() {
   const profil = await profilSession();
