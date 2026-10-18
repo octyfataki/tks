@@ -7,7 +7,7 @@ import { comptesClients } from "@/lib/db/schema/s1-comptes";
 import { estStatutProfil, profilsClients } from "@/lib/db/schema/s4-clients";
 import { profilAutorisePourCompte } from "@/lib/s4-clients/acces-profil";
 
-export default async function ClientsAccueilPage() {
+export default async function ClientHomePage() {
   const session = await auth.api.getSession({ headers: await headers() });
   const userId = session?.user?.id;
 
@@ -48,7 +48,6 @@ export default async function ClientsAccueilPage() {
     }
   }
 
-export default async function ClientHomePage() {
   return (
     <div className="flex flex-1 flex-col items-center justify-center gap-4 p-6 text-center">
       <span className="inline-flex items-center rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-[11px] font-medium text-primary">
