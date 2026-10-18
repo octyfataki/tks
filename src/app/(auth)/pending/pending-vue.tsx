@@ -195,6 +195,13 @@ export default function PendingVue() {
         ? formaterDate(recap.at)
         : null;
 
+  const verificationProfilEnAttente =
+    session?.verificationProfilEnAttente === true;
+
+  const detailAccesProfil = verificationProfilEnAttente
+    ? "UnProfil semble déjà connu du distributeur : un agent vérifie que c'est bien le vôtre"
+    : "Votre compte rejoint votre profil, désigné par son nom";
+
   const etapes: Etape[] = estRefuse
     ? [
         {
@@ -216,7 +223,7 @@ export default function PendingVue() {
         },
         {
           titre: "Accès à votre profil",
-          detail: "Votre compte rejoint votre profil, désigné par son nom",
+          detail: detailAccesProfil,
           statut: "avenir",
         },
       ]
@@ -240,7 +247,7 @@ export default function PendingVue() {
         },
         {
           titre: "Accès à votre profil",
-          detail: "Votre compte rejoint votre profil, désigné par son nom",
+          detail: detailAccesProfil,
           statut: "avenir",
         },
       ];

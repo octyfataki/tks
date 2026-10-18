@@ -25,6 +25,20 @@ vi.mock("@/lib/auth", () => ({
   auth: { api: { signInEmail: vi.fn(async () => ({ token: "cookie" })) } },
 }));
 
+vi.mock("@/lib/db/client", () => ({
+  db: { update: vi.fn(() => ({ where: vi.fn(async () => undefined) })) },
+}));
+
+vi.mock("@/lib/db/schema/s1-comptes", () => ({
+  comptesClients: { id: "id" },
+  normaliserTelephoneClient: vi.fn((valeur: string) => valeur.trim()),
+}));
+
+vi.mock("@/lib/s4-clients/inscription", () => ({
+  detecterProfilsCorrespondants: vi.fn(async () => []),
+  creerProfilNouvelleBoutique: vi.fn(async () => "profil-1"),
+}));
+
 const VALIDE = {
   email: "Client@Example.cd",
   password: "motdepasse123",

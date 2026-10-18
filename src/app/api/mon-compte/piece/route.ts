@@ -17,6 +17,7 @@ export async function GET() {
       email: comptesClients.email,
       telephone: comptesClients.telephone,
       inscritLe: comptesClients.createdAt,
+      profilCandidatId: comptesClients.profilCandidatId,
     })
     .from(comptesClients)
     .where(eq(comptesClients.betterAuthUserId, userId))
@@ -36,6 +37,7 @@ export async function GET() {
     email: compte.email,
     telephone: compte.telephone,
     inscritLe: compte.inscritLe.toISOString(),
+    verificationProfilEnAttente: compte.profilCandidatId !== null,
     pieces: pieces.map((p) => ({
       id: p.id,
       typePiece: p.typePiece,

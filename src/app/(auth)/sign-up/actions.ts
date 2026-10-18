@@ -2,9 +2,17 @@
 
 import { headers } from "next/headers";
 import { z } from "zod";
+import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
+import { db } from "@/lib/db/client";
+import { comptesClients, normaliserTelephoneClient } from "@/lib/db/schema/s1-comptes";
+import { lirePlafondClientDefaut } from "@/lib/s1-comptes/reglages";
 import type { ResultatAction } from "@/lib/resultat-action";
 import { ClientError, inscrireClient } from "@/lib/s1-comptes/clients";
+import {
+  creerProfilNouvelleBoutique,
+  detecterProfilsCorrespondants,
+} from "@/lib/s4-clients/inscription";
 
 const SchemaInscription = z.object({
   email: z
@@ -21,6 +29,42 @@ const SchemaInscription = z.object({
 
 export type ResultatInscription = ResultatAction<{ session: boolean }>;
 
+/**
+ * Le profil du shop est créé dans le parcours normal, sans tâche de
+ * rattachement séparée. Si une correspondance plausible existe déjà, on ne
+ * crée **pas** un second profil : on note le profil à faire confirmer, et la
+ * décision appartient à un agent.
+ */
+async function creerBoutiqueSiNouvelle(input: {
+  compteClientId: string;
+  name: string;
+  telephone: string;
+}): Promise<void> {
+  const contactTelephone = normaliserTelephoneClient(input.telephone) ?? "";
+  const candidats = await detecterProfilsCorrespondants({
+    nom: input.name,
+    contactTelephone,
+  });
+
+  if (candidats.length > 0) {
+    await db
+      .update(comptesClients)
+      .set({ profilCandidatId: candidats[0] })
+      .where(eq(comptesClients.id, input.compteClientId));
+    return;
+  }
+
+  const plafond = await lirePlafondClientDefaut();
+  await creerProfilNouvelleBoutique({
+    compteClientId: input.compteClientId,
+    nom: input.name,
+    contactTelephone,
+    plafondMontant: plafond.montant,
+    plafondDevise: plafond.devise,
+    horodatageLocal: new Date(),
+  });
+}
+
 export async function inscrireCompteClient(input: {
   email: string;
   password: string;
@@ -35,7 +79,8 @@ export async function inscrireCompteClient(input: {
     };
   }
   try {
-    await inscrireClient(parse.data);
+    const compte = await inscrireClient(parse.data);
+    await creerBoutiqueSiNouvelle({ compteClientId: compte.id, ...parse.data });
   } catch (e) {
     if (e instanceof ClientError) {
       switch (e.code) {

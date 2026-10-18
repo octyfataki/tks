@@ -8,6 +8,7 @@ export type StatutCompte =
       email: string | null;
       telephone: string | null;
       inscritLe: string | null;
+      verificationProfilEnAttente: boolean;
       pieces: {
         id: string;
         typePiece: string;
@@ -39,6 +40,7 @@ export async function lireStatutCompte(): Promise<StatutCompte> {
       email: texteOuNull(donnees.email),
       telephone: texteOuNull(donnees.telephone),
       inscritLe: texteOuNull(donnees.inscritLe),
+      verificationProfilEnAttente: donnees.verificationProfilEnAttente === true,
       pieces: Array.isArray(donnees.pieces) ? donnees.pieces : [],
     };
   } catch {

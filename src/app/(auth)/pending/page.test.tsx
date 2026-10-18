@@ -90,6 +90,29 @@ describe("page /pending", () => {
     expect(
       screen.getByRole("button", { name: /envoyer la pièce/i }),
     ).toBeDisabled();
+    expect(
+      screen.getByText(/votre compte rejoint votre profil/i),
+    ).toBeInTheDocument();
+  });
+
+  it("annonce la vérification supplémentaire quand un profil semble déjà connu", async () => {
+    simulerStatut({
+      connecte: true,
+      etat: "EN_ATTENTE_VALIDATION",
+      motifRefus: null,
+      pieces: [],
+      verificationProfilEnAttente: true,
+    });
+    render(<PendingVue />);
+    await waitFor(() =>
+      expect(screen.getByText("En cours")).toBeInTheDocument(),
+    );
+    expect(
+      screen.getByText(/un profil semble déjà connu du distributeur/i),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/votre compte rejoint votre profil/i),
+    ).not.toBeInTheDocument();
   });
 
   it("montre le motif du distributeur et la reprise quand le compte est refusé", async () => {
