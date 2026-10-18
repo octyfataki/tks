@@ -2,7 +2,7 @@ import type { InferInsertModel, SQL } from "drizzle-orm";
 import type { MySqlTable } from "drizzle-orm/mysql-core";
 import type { ExecuteurDb } from "@/lib/db/client";
 
-export type RowFilter = SQL | undefined;
+type RowFilter = SQL | undefined;
 
 type RawExecutor = {
   insert: (table: MySqlTable) => {
@@ -32,7 +32,7 @@ export async function updateRow<T extends MySqlTable>(
   ex: ExecuteurDb,
   table: T,
   values: Partial<InferInsertModel<T>>,
-  filter: RowFilter,
+  filter: SQL,
 ): Promise<void> {
   await raw(ex).update(table).set(values).where(filter);
 }
@@ -40,7 +40,7 @@ export async function updateRow<T extends MySqlTable>(
 export async function deleteRow<T extends MySqlTable>(
   ex: ExecuteurDb,
   table: T,
-  filter: RowFilter,
+  filter: SQL,
 ): Promise<void> {
   await raw(ex).delete(table).where(filter);
 }

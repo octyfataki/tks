@@ -181,6 +181,13 @@ dès maintenant, et `order.network` entre dans la table de correspondance du glo
    C'est la décision de périmètre (« pas d'écran agent ») qui produit cet écart, pas la
    porte : le jour où l'écran agent existe, il n'aura qu'à appeler le module. La même
    limite existe déjà pour `dossier.creer` et `client.annoter`.
+7. **Deux durcissements issus de la revue de sécurité.** La porte `platform/writes` exige
+   désormais un **filtre obligatoire** (`SQL`) sur `updateRow` et `deleteRow` : `undefined`
+   y valait « aucune clause WHERE », donc une écriture de table entière, et le type invitait
+   à le passer par une variable optionnelle. `readHistory` reste une **API d'administration**
+   (elle expose le nom de l'auteur du prix) : un écran agent ou client devra passer par
+   `readPriceAt`, jamais par l'historique. Par ailleurs l'`appareilId` de l'audit reste
+   `null` : aucun helper d'appareil n'existe dans le dépôt (même état que `saisirTaux`).
 
 **Ce qui reste ouvert.** Une seule case n'est pas cochée : le **test navigateur** « la saisie
 d'un prix est refusée à l'écran pour un agent sans permission ». Le dépôt n'a aucune

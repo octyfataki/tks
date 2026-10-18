@@ -60,4 +60,10 @@ describe("S5-01 — la grille tarifaire est append-only", () => {
     const porte = lire(PORTE);
     expect(porte).not.toMatch(/from\s+"@\/(lib\/db\/schema|modules\/)/);
   });
+
+  it("n'admet aucun update ni delete sans filtre : le SQL est obligatoire", () => {
+    const porte = lire(PORTE);
+    expect(porte.match(/filter: SQL,/g)).toHaveLength(2);
+    expect(porte).not.toContain("export type RowFilter");
+  });
 });
