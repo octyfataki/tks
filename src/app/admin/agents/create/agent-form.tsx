@@ -291,21 +291,40 @@ export function FormulaireAgent() {
 function LigneÉtape({
   etape,
   estDernière,
+  grand = false,
 }: {
   etape: { icone: React.ComponentType<{ className?: string }>; titre: string; texte: string };
   estDernière: boolean;
+  grand?: boolean;
 }) {
   return (
     <li className="relative flex gap-3 pb-4 last:pb-0">
       {estDernière ? null : (
-        <span aria-hidden className="absolute top-8 bottom-0 left-4 w-px bg-border" />
+        <span
+          aria-hidden
+          className={grand ? "absolute top-11 bottom-0 left-5 w-px bg-border" : "absolute top-8 bottom-0 left-4 w-px bg-border"}
+        />
       )}
-      <span className="flex size-8 shrink-0 items-center justify-center rounded-full border bg-muted/50">
-        <etape.icone className="size-3.5 text-primary" />
+      <span
+        className={
+          grand
+            ? "flex size-10 shrink-0 items-center justify-center rounded-full border bg-muted/50"
+            : "flex size-8 shrink-0 items-center justify-center rounded-full border bg-muted/50"
+        }
+      >
+        <etape.icone className={grand ? "size-4 text-primary" : "size-3.5 text-primary"} />
       </span>
       <div>
-        <p className="text-xs font-medium">{etape.titre}</p>
-        <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">{etape.texte}</p>
+        <p className={grand ? "text-sm font-medium" : "text-xs font-medium"}>{etape.titre}</p>
+        <p
+          className={
+            grand
+              ? "mt-1 text-xs leading-relaxed text-muted-foreground"
+              : "mt-0.5 text-[11px] leading-relaxed text-muted-foreground"
+          }
+        >
+          {etape.texte}
+        </p>
       </div>
     </li>
   );
@@ -327,60 +346,63 @@ function ÉcranSuccès({
       .join("") || "AG";
   return (
     <div className="flex flex-1 flex-col items-center">
-      <section className="mt-6 w-full max-w-xl">
+      <section className="mt-6 w-full max-w-2xl">
         <div className="overflow-hidden rounded-xl border bg-card">
-          <div className="bg-gradient-to-r from-primary/15 via-primary/5 to-transparent p-4 pb-3">
-            <div className="flex items-center gap-3">
-              <span className="relative flex size-12 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
+          <div className="bg-gradient-to-r from-primary/15 via-primary/5 to-transparent p-6 pb-4">
+            <div className="flex items-center gap-4">
+              <span className="relative flex size-14 shrink-0 items-center justify-center rounded-full bg-primary text-base font-semibold text-primary-foreground">
                 {initiales}
                 <span
                   aria-hidden
-                  className="absolute -right-1 -bottom-1 flex size-5 items-center justify-center rounded-full border-2 border-card bg-green-600"
+                  className="absolute -right-1.5 -bottom-1.5 flex size-6 items-center justify-center rounded-full border-2 border-card bg-green-600"
                 >
-                  <CircleCheckIcon className="size-3.5 text-white" />
+                  <CircleCheckIcon className="size-4 text-white" />
                 </span>
               </span>
               <div className="min-w-0">
-                <p className="truncate text-sm font-medium">{agent.nom || "Nouvel agent"}</p>
-                <p className="truncate text-[11px] text-muted-foreground">{agent.email}</p>
+                <p className="text-base font-medium">{agent.nom || "Nouvel agent"}</p>
+                <p className="truncate text-xs text-muted-foreground">{agent.email}</p>
               </div>
             </div>
-            <div className="mt-3 flex flex-wrap gap-1.5">
-              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+            <div className="mt-4 flex flex-wrap gap-1.5">
+              <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
                 Agent de service
               </span>
-              <span className="rounded-full bg-green-600/10 px-2 py-0.5 text-[11px] font-medium text-green-700">
+              <span className="rounded-full bg-green-600/10 px-2.5 py-1 text-xs font-medium text-green-700">
                 Actif dès maintenant
               </span>
-              <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+              <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
                 0 permission
               </span>
             </div>
           </div>
-          <div className="p-4">
-            <h1 className="text-lg font-semibold tracking-tight">Agent créé</h1>
-            <p className="mt-0.5 text-xs text-muted-foreground">
+          <div className="p-6">
+            <h1 className="text-xl font-semibold tracking-tight">Agent créé</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
               Le compte est actif aussitôt. Il reste deux décisions, et elles sont à vous.
             </p>
-            <ol className="mt-3 flex flex-col">
+            <ol className="mt-5 flex flex-col">
               {ETAPES_APRES.slice(0, 2).map((etape, index) => (
-                <LigneÉtape key={etape.titre} etape={etape} estDernière={index === 1} />
+                <LigneÉtape key={etape.titre} etape={etape} estDernière={index === 1} grand />
               ))}
             </ol>
-            <div className="mt-4 flex flex-wrap gap-2">
+            <div className="mt-6 flex flex-col gap-2 sm:flex-row">
               {agent.id ? (
-                <Link href={"/admin/agents/" + agent.id} className={buttonVariants()}>
+                <Link href={"/admin/agents/" + agent.id} className={buttonVariants() + " sm:flex-1"}>
                   Voir la fiche de l&apos;agent
                 </Link>
               ) : null}
-              <Link href="/admin/agents" className={buttonVariants({ variant: "outline" })}>
+              <Link
+                href="/admin/agents"
+                className={buttonVariants({ variant: "outline" }) + " sm:flex-1"}
+              >
                 Retour à la liste
               </Link>
             </div>
             <button
               type="button"
               onClick={onNouvelAgent}
-              className="mt-3 text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+              className="mt-4 text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
             >
               Créer un autre agent
             </button>
