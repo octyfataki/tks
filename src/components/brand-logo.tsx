@@ -17,7 +17,7 @@ export function BrandLogo({ className, height = 32 }: BrandLogoProps) {
         height={height}
         priority
         className="h-auto w-auto"
-        style={{ height }}
+        style={{ width: "auto", height }}
       />
     </span>
   );
