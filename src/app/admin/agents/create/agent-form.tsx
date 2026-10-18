@@ -50,39 +50,47 @@ export function FormulaireAgent() {
   const [telephone, setTelephone] = React.useState("");
   const [motDePasse, setMotDePasse] = React.useState("");
   const [motDePasseVisible, setMotDePasseVisible] = React.useState(false);
-  const dernierResultat = React.useRef<ResultatAction | null>(null);
+  const [agentCréé, setAgentCréé] = React.useState<{
+    id: string;
+    email: string;
+    nom: string;
+  } | null>(null);
 
   React.useEffect(() => {
-    if (!resultat || dernierResultat.current === resultat) return;
-    dernierResultat.current = resultat;
+    if (!resultat) return;
     if (resultat.ok) {
-      toast.add({
-        type: "success",
-        title: "Agent créé",
-        description: `Compte actif pour ${resultat.email ?? "l'agent"}. Accordez-lui ses permissions depuis sa fiche.`,
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- affiche l'écran de succès après création, une fois par résultat
+      setAgentCréé({
+        id: resultat.id ?? "",
+        email: resultat.email ?? "",
+        nom: `${prenom} ${nom}`.trim(),
       });
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- réinitialise le formulaire après succès, une fois par résultat
       setPrenom("");
       setNom("");
       setEmail("");
       setTelephone("");
       setMotDePasse("");
     } else {
+      setAgentCréé(null);
       toast.add({
         type: "error",
         title: "Création impossible",
         description: resultat.erreur,
       });
     }
-  }, [resultat]);
+  }, [resultat, prenom, nom]);
 
   const nomComplet = `${prenom} ${nom}`.trim() || "Nouvel agent";
   const initiales =
     `${prenom.trim().charAt(0)}${nom.trim().charAt(0)}`.toUpperCase() || "AG";
 
   return (
-    <form action={action} className="flex flex-1 flex-col gap-4 p-4 pt-4">
-      <div className="flex flex-wrap items-start justify-between gap-2">
+    <div className="flex flex-1 flex-col gap-4 p-4 pt-4">
+      {agentCréé ? (
+        <ÉcranSuccès agent={agentCréé} onNouvelAgent={() => setAgentCréé(null)} />
+      ) : (
+        <form action={action} className="flex flex-1 flex-col gap-4 p-4 pt-4">
+          <div className="flex flex-wrap items-start justify-between gap-2">
         <div>
           <h1 className="text-lg font-semibold tracking-tight">Créer un agent de service</h1>
           <p className="mt-0.5 text-xs text-muted-foreground">
@@ -264,25 +272,149 @@ export function FormulaireAgent() {
             <h2 className="text-sm font-medium">Après la création</h2>
             <ol className="mt-3 flex flex-col">
               {ETAPES_APRES.map((etape, index) => (
-                <li key={etape.titre} className="relative flex gap-3 pb-4 last:pb-0">
-                  {index < ETAPES_APRES.length - 1 ? (
-                    <span aria-hidden className="absolute top-8 bottom-0 left-4 w-px bg-border" />
-                  ) : null}
-                  <span className="flex size-8 shrink-0 items-center justify-center rounded-full border bg-muted/50">
-                    <etape.icone className="size-3.5 text-primary" />
-                  </span>
-                  <div>
-                    <p className="text-xs font-medium">{etape.titre}</p>
-                    <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
-                      {etape.texte}
-                    </p>
-                  </div>
-                </li>
+                <LigneÉtape
+                  key={etape.titre}
+                  etape={etape}
+                  estDernière={index === ETAPES_APRES.length - 1}
+                />
               ))}
             </ol>
           </section>
         </div>
       </div>
-    </form>
+        </form>
+      )}
+    </div>
+  );
+}
+
+function LigneÉtape({
+  etape,
+  estDernière,
+  grand = false,
+}: {
+  etape: { icone: React.ComponentType<{ className?: string }>; titre: string; texte: string };
+  estDernière: boolean;
+  grand?: boolean;
+}) {
+  return (
+    <li className="relative flex gap-3 pb-4 last:pb-0">
+      {estDernière ? null : (
+        <span
+          aria-hidden
+          className={grand ? "absolute top-11 bottom-0 left-5 w-px bg-border" : "absolute top-8 bottom-0 left-4 w-px bg-border"}
+        />
+      )}
+      <span
+        className={
+          grand
+            ? "flex size-10 shrink-0 items-center justify-center rounded-full border bg-muted/50"
+            : "flex size-8 shrink-0 items-center justify-center rounded-full border bg-muted/50"
+        }
+      >
+        <etape.icone className={grand ? "size-4 text-primary" : "size-3.5 text-primary"} />
+      </span>
+      <div>
+        <p className={grand ? "text-sm font-medium" : "text-xs font-medium"}>{etape.titre}</p>
+        <p
+          className={
+            grand
+              ? "mt-1 text-xs leading-relaxed text-muted-foreground"
+              : "mt-0.5 text-[11px] leading-relaxed text-muted-foreground"
+          }
+        >
+          {etape.texte}
+        </p>
+      </div>
+    </li>
+  );
+}
+
+function ÉcranSuccès({
+  agent,
+  onNouvelAgent,
+}: {
+  agent: { id: string; email: string; nom: string };
+  onNouvelAgent: () => void;
+}) {
+  const initiales =
+    agent.nom
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((partie) => partie.charAt(0).toUpperCase())
+      .join("") || "AG";
+  return (
+    <div className="flex flex-1 flex-col items-center">
+      <section className="tks-ticket-enter mt-6 w-full max-w-2xl">
+        <div className="overflow-hidden rounded-xl border bg-card">
+          <div className="relative bg-gradient-to-r from-primary/15 via-primary/5 to-transparent p-6 pb-4">
+            <div aria-hidden className="tks-maille absolute inset-0" />
+            <div className="relative flex items-center gap-4">
+              <span className="relative flex size-14 shrink-0 items-center justify-center rounded-full bg-primary text-base font-semibold text-primary-foreground">
+                <span
+                  aria-hidden
+                  className="absolute -inset-3 rounded-full border border-primary/20"
+                />
+                {initiales}
+                <span className="tks-pousse absolute -right-1.5 -bottom-1.5 flex size-6 items-center justify-center rounded-full border-2 border-card bg-green-600">
+                  <CircleCheckIcon className="size-4 text-white" />
+                  <span
+                    aria-hidden
+                    className="tks-echo absolute -inset-1.5 rounded-full border border-green-600/60"
+                  />
+                </span>
+              </span>
+              <div className="min-w-0">
+                <p className="text-base font-medium">{agent.nom || "Nouvel agent"}</p>
+                <p className="truncate text-xs text-muted-foreground">{agent.email}</p>
+              </div>
+            </div>
+            <div className="relative mt-4 flex flex-wrap gap-1.5">
+              <span className="rounded-full bg-primary/10 px-2.5 py-1 text-xs font-medium text-primary">
+                Agent de service
+              </span>
+              <span className="rounded-full bg-green-600/10 px-2.5 py-1 text-xs font-medium text-green-700">
+                Actif dès maintenant
+              </span>
+              <span className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-muted-foreground">
+                0 permission
+              </span>
+            </div>
+          </div>
+          <div className="p-6">
+            <h1 className="text-xl font-semibold tracking-tight">Agent créé</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Le compte est actif aussitôt. Il reste deux décisions, et elles sont à vous.
+            </p>
+            <ol className="mt-5 flex flex-col">
+              {ETAPES_APRES.slice(0, 2).map((etape, index) => (
+                <LigneÉtape key={etape.titre} etape={etape} estDernière={index === 1} grand />
+              ))}
+            </ol>
+            <div className="mt-6 flex flex-col gap-2 sm:flex-row">
+              {agent.id ? (
+                <Link href={"/admin/agents/" + agent.id} className={buttonVariants() + " sm:flex-1"}>
+                  Voir la fiche de l&apos;agent
+                </Link>
+              ) : null}
+              <Link
+                href="/admin/agents"
+                className={buttonVariants({ variant: "outline" }) + " sm:flex-1"}
+              >
+                Retour à la liste
+              </Link>
+            </div>
+            <button
+              type="button"
+              onClick={onNouvelAgent}
+              className="mt-4 text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+            >
+              Créer un autre agent
+            </button>
+          </div>
+        </div>
+      </section>
+    </div>
   );
 }
