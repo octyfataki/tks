@@ -8,6 +8,118 @@ Contexte : **single-context**. Il n'y a pas de `GLOSSARY-MAP.md`.
 
 ---
 
+## Les deux écritures d'un terme
+
+Un terme de ce fichier qui est **stocké** a exactement deux écritures : la
+phrase française qu'on dit, et l'identifiant anglais qu'on stocke. Le français
+est la langue du métier, des décisions et de l'écran ; l'anglais est la langue
+du code et de la base.
+
+- **La base ne stocke que l'identifiant.** Une valeur française en base est un
+  défaut à corriger, pas un choix.
+- **Les libellés affichés restent français.** Ce fichier ne renomme aucune
+  phrase lue par un client ou par un agent.
+- La correspondance vit **ici, et nulle part ailleurs** : deux tables
+  divergentes seraient pires que pas de table. Un test vérifie que toute valeur
+  métier présente en code figure dans la table, et qu'aucune ne s'y ajoute en
+  douce.
+- Un terme **purement technique** (catégorie de fichier, méthode d'envoi 2FA,
+  clé de réglage) n'entre pas dans la table : personne ne le lit comme un mot du
+  métier.
+- Le vocabulaire du **journal d'audit** est encore ouvert en code ; il rejoindra
+  la table le jour où il sera une liste fermée.
+- Un identifiant peut se répéter d'une portée à l'autre — `VALID` vaut pour un
+  compte client comme pour un compte staff — mais jamais à l'intérieur d'une
+  même portée.
+- Un terme **de conversation** n'a pas besoin d'identifiant : c'est l'usage
+  qu'on nomme, pas le mot.
+
+### Table de correspondance
+
+| Portée | Terme français | Identifiant en code |
+| --- | --- | --- |
+| `client_account.state` | `EN_ATTENTE_VALIDATION` | `PENDING_VALIDATION` |
+| `client_account.state` | `VALIDE` | `VALID` |
+| `client_account.state` | `REFUSE` | `REJECTED` |
+| `client_account.state` | `REVOQUE` | `REVOKED` |
+| `staff_account.state` | `VALIDE` | `VALID` |
+| `staff_account.state` | `SUSPENDU` | `SUSPENDED` |
+| `staff_account.state` | `REVOQUE` | `REVOKED` |
+| `staff_account.role` | `ADMIN_PRINCIPAL` | `PRINCIPAL_ADMIN` |
+| `staff_account.role` | `ADMIN_TECHNIQUE` | `TECHNICAL_ADMIN` |
+| `staff_account.role` | `AGENT` | `SERVICE_AGENT` |
+| `client_profile.credit_status` | `EN_EVALUATION` | `UNDER_REVIEW` |
+| `client_profile.credit_status` | `PRIVILEGIE` | `PRIVILEGED` |
+| `annotation.label` | `A_SURVEILLER` | `UNDER_WATCH` |
+| `annotation.label` | `BON_PAYEUR` | `GOOD_PAYER` |
+| `annotation.label` | `CLIENT_CONFIANCE` | `TRUSTED_CLIENT` |
+| `annotation.state` | `POSEE` | `PLACED` |
+| `annotation.state` | `RETIREE` | `REMOVED` |
+| `staff.permission` | `taux.saisir` | `rate.enter` |
+| `staff.permission` | `creance.creer` | `receivable.create` |
+| `staff.permission` | `paiement.creer` | `payment.create` |
+| `staff.permission` | `ecriture.corriger` | `entry.correct` |
+| `staff.permission` | `tresorerie.mouvement` | `cash.movement` |
+| `staff.permission` | `plafond.modifier` | `credit_limit.change` |
+| `staff.permission` | `statut.modifier` | `credit_status.change` |
+| `staff.permission` | `dossier.creer` | `client_record.create` |
+| `staff.permission` | `dossier.rattacher` | `client_record.link` |
+| `staff.permission` | `dossier.detacher` | `client_record.unlink` |
+| `staff.permission` | `grille.tarif` | `price_grid.manage` |
+| `staff.permission` | `preuve.valider` | `payment_proof.validate` |
+| `staff.permission` | `commande.creer` | `order.create` |
+| `staff.permission` | `commande.prendre` | `order.claim` |
+| `staff.permission` | `commande.servir` | `order.serve` |
+| `staff.permission` | `commande.annuler` | `order.cancel` |
+| `staff.permission` | `reconciliation.trancher` | `reconciliation.resolve` |
+| `staff.permission` | `journal.consulter` | `audit_log.read` |
+| `staff.permission` | `client.valider` | `client.validate` |
+| `staff.permission` | `client.annoter` | `client.annotate` |
+| `currency` | `USD` | `USD` |
+| `currency` | `CDF` | `CDF` |
+| `order.channel` | `EN_LIGNE` | `ONLINE` |
+| `order.channel` | `PRESENTIEL` | `COUNTER` |
+| `order.payment_mode` | `ESPECES` | `CASH` |
+| `order.payment_mode` | `MOBILE_MONEY` | `MOBILE_MONEY` |
+| `order.type` | `PREPAYE` | `PREPAID` |
+| `order.type` | `CREDIT` | `CREDIT` |
+| `order.state` | `EN_ATTENTE_PREUVE` | `AWAITING_PROOF` |
+| `order.state` | `EN_FILE` | `QUEUED` |
+| `order.state` | `VERROU` | `LOCKED` |
+| `order.state` | `SERVIE` | `SERVED` |
+| `order.state` | `ANNULEE` | `CANCELLED` |
+| `order.network` | `ORANGE` | `ORANGE` |
+| `order.network` | `AIRTEL` | `AIRTEL` |
+| `order.network` | `AFRICELL` | `AFRICELL` |
+| `order.network` | `VODACOM` | `VODACOM` |
+| `order.network` | `AUTRE` | `OTHER` |
+| `cash_movement.category` | `VENTE` | `SALE` |
+| `cash_movement.category` | `RETRAIT_BANQUE` | `BANK_WITHDRAWAL` |
+| `cash_movement.category` | `RECHARGE_OPERATEUR` | `OPERATOR_TOPUP` |
+| `cash_movement.category` | `REMBOURSEMENT` | `REPAYMENT` |
+| `cash_movement.category` | `TRANSFERT` | `TRANSFER` |
+| `cash_movement.category` | `RETRAIT_PROPRIETAIRE` | `OWNER_WITHDRAWAL` |
+| `identity_document.verdict` | `EN_ATTENTE` | `PENDING` |
+| `identity_document.verdict` | `ACCEPTEE` | `ACCEPTED` |
+| `identity_document.verdict` | `REFUSEE` | `REJECTED` |
+| `identity_document.verdict` | `RETIREE` | `REMOVED` |
+| `identity_document.kind` | `CNI` | `ID_CARD` |
+| `identity_document.kind` | `PASSEPORT` | `PASSPORT` |
+| `identity_document.kind` | `PERMIS` | `DRIVING_LICENCE` |
+| `identity_document.kind` | `AUTRE` | `OTHER` |
+| `invitation_link.state` | `en-attente` | `pending` |
+| `invitation_link.state` | `termine` | `completed` |
+| `invitation_link.state` | `expire` | `expired` |
+| `invitation_link.state` | `revoque` | `revoked` |
+
+La portée dit **où la valeur vit**, pas où la table s'appelle aujourd'hui : les
+renommages de tables viendront après, et la table ci-dessus ne bougera pas. Les
+lignes où le terme et l'identifiant sont identiques (`USD`, `CDF`, `CREDIT`,
+`MOBILE_MONEY`) sont écrites **exprès** : la table est la liste complète de ce
+qui est stocké, pas la liste de ce qui reste à renommer.
+
+---
+
 ## Les quatre acteurs
 
 ### Distributeur
@@ -176,17 +288,33 @@ payer en USD.
 ## Crédit
 
 ### Statut du client
-`EN_EVALUATION` ou `PRIVILEGIE`. Un client `PRIVILEGIE` peut passer des commandes
-crédit. Un client `EN_EVALUATION` doit prépayer. La promotion est une décision libre
-de l'administrateur principal, sans seuil automatique.
+`EN_EVALUATION` ou `PRIVILEGIE`. Le statut est une **information de pilotage** :
+il ne ferme ni n'ouvre le crédit. Ce qui borne le crédit est la **ligne
+accordée** (voir « Plafond de crédit »). La promotion est une décision libre de
+l'administrateur principal, sans seuil automatique.
 
 ### Plafond de crédit
-Montant maximum que le client peut devoir simultanément. Une valeur par défaut
-s'applique à la création du profil client ; l'administrateur principal peut la modifier.
+Montant maximum que le client peut devoir simultanément, **dans une devise
+donnée**. Un profil porte **deux plafonds, un par devise**. La valeur par défaut
+est **zéro** : le crédit s'accorde, il ne se présume pas. L'administrateur
+principal l'accorde et le modifie.
+
+Un plafond sans créance de sa devise ne borne rien : c'est voulu. Le plafond USD
+borne le crédit des commandes, libellées en USD ; le plafond CDF borne les
+créances saisies en francs.
+
+### Engagé
+Somme des **commandes crédit en attente non annulées**, dans une devise. Ce n'est
+pas une créance : c'est une part du plafond **réservée** par une commande qui
+n'est pas encore servie.
 
 ### Plafond restant
-`Plafond de crédit − créances dans la même devise`. Il est dérivé, jamais stocké.
-Une commande qui dépasserait le disponible est refusée.
+`Plafond de crédit − créances de la devise − engagé de la devise`. Il est dérivé,
+jamais stocké, et jamais négatif. Une commande qui dépasserait le disponible est
+refusée.
+
+Sans l'engagé, trois commandes de 100 USD sur une ligne de 100 USD passent
+toutes, et les trois sont servies : le plafond ne bornerait rien.
 
 ---
 
@@ -210,7 +338,8 @@ est la trace d'une commande servie.
 ### Type de commande
 `PREPAYE` ou `CREDIT`.
 - `PREPAYE` : paiement avant traitement ; preuve validée avant l'entrée en file si requise.
-- `CREDIT` : crée une créance à la livraison ; réservé aux clients `PRIVILEGIE`.
+- `CREDIT` : crée une créance à la livraison ; borné par le plafond de la devise,
+  jamais par le statut du client.
 
 ### Grille tarifaire
 Prix d'une unité d'airtime par réseau, historisé. Une commande conserve le prix

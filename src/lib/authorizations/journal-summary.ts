@@ -47,6 +47,8 @@ export function nomEntite(entite: string): string {
       return "Permission du socle";
     case "taux_change":
       return "Taux";
+    case "price_grid":
+      return "Grille tarifaire";
     case "invitation_agent":
       return "Invitation agent";
     case "premier_acces_admin":
@@ -192,6 +194,15 @@ export function resumerEvenement(
       return cles.length > 0
         ? `Réglage modifié (${cles.join(", ")})`
         : "Réglage modifié";
+    }
+    case "price_grid.manage": {
+      const network = texte(apresO?.["network"]);
+      const amount = nombre(apresO?.["amount"]);
+      const currency = texte(apresO?.["currency"]);
+      if (network && amount !== null && currency) {
+        return `Prix ${network} : ${formaterMontant(amount)} ${currency} les 100 unités`;
+      }
+      return "Prix de la grille modifié";
     }
     default:
       return null;

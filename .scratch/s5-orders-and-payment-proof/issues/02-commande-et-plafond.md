@@ -25,8 +25,13 @@ un client et teste son plafond)
       créée.
 - [ ] **Commande en unités et commande en montant sont équivalentes** au même prix :
       les deux produisent le **même montant** et le **même nombre d'unités**. Test
-      central de ce ticket : `10 unités × 3 500` et `35 000 CDF` sont la même
-      commande.
+      central de ce ticket : au prix de `2 350 CDF les 100 unités`, `1 000 unités` et
+      `23 500 CDF` sont la même commande. La conversion vient du ticket 01, qui porte
+      seul la convention : `100 unités = 1 USD` de valeur faciale, et le prix d'une
+      unité vaut le prix affiché divisé par 100.
+- [ ] **L'arrondi de la conversion est tranché dans ce ticket**, et c'est un point
+      ouvert : le prix d'une unité n'est pas toujours un entier de francs (2 350 ÷ 100 =
+      23,5). Dire quel montant est réclamé, et lequel est seulement affiché.
 - [ ] **Le prix est figé au moment de la création**, dans les deux sens. Commande en
       unités : le prix unitaire est retenu. Commande en montant : le prix unitaire
       est **aussi** retenu, pour pouvoir afficher les unités équivalentes. Test :
@@ -68,3 +73,29 @@ un client et teste son plafond)
       **`commande.annuler`**. Un client ne crée **que** les siennes.
 - [ ] Test navigateur mince : le formulaire de création tient sans navigation, et
       le refus de plafond s'affiche à l'écran.
+
+## Comments
+
+### 2026-10-18 — exemple de conversion corrigé
+
+L'exemple central de ce ticket était faux. Il donnait `10 unités × 3 500` pour
+`35 000 CDF`, ce qui suppose un prix de 3 500 CDF **par unité** et contredit la
+convention fixée dans le ticket 01 : `100 unités = 1 USD`, le prix de la grille
+étant celui de 100 unités. Sous cette convention, `10 unités` valent `235 CDF` au
+prix Orange de `2 350 CDF les 100 unités`, pas `35 000 CDF`.
+
+L'exemple est remplacé par `1 000 unités` = `23 500 CDF` au même prix, et le ticket
+porte désormais la convention d'unité en clair plutôt que de la supposer.
+
+**Ce qui n'a pas bougé** : tout le reste du ticket. Le prix est toujours figé sur la
+commande, les deux modes de saisie restent équivalents, et le plafond bloque
+toujours une commande `CREDIT` qui dépasse.
+
+**Point ouvert ajouté, pas tranché** : l'arrondi, parce que le prix d'une unité
+n'est pas toujours un entier de francs.
+
+**Ce que cette intervention n'a pas touché.** `.scratch/s5-orders-and-payment-proof/amendements.md`
+porte trois amendements à ce même fichier — points 6 (permission du client), 7
+(« ne peut être créée que hors-ligne ») et 9 (refus par le statut) — et ils restent
+**non appliqués**. Ils appartiennent à un autre chantier, qui les appliquera avec le
+ticket 07. Seule la correction de l'exemple de conversion est faite ici.

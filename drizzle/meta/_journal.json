@@ -141,6 +141,13 @@
       "when": 1792032606603,
       "tag": "0019_misty_drax",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "5",
+      "when": 1792365143371,
+      "tag": "0020_price-grid",
+      "breakpoints": true
     }
   ]
 }

@@ -69,6 +69,12 @@ export function correctivesPour(input: {
         explication:
           "Un taux saisi n'est jamais écrasé : la correction passe par un taux d'ajustement daté et tracé.",
       };
+    case "price_grid.manage":
+      return {
+        contestable: false,
+        explication:
+          "Un prix de la grille n'est jamais écrasé : la correction passe par un prix daté et tracé.",
+      };
     case "annotation.poser":
     case "annotation.retirer":
       return {
