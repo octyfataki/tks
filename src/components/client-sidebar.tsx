@@ -19,8 +19,6 @@ import {
   CircleHelpIcon,
   ClipboardListIcon,
   FileCheckIcon,
-  FolderOpenIcon,
-  GaugeIcon,
   LayoutDashboardIcon,
   ScaleIcon,
   SettingsIcon,
@@ -35,23 +33,6 @@ const groups: { label: string; items: NavItem[] }[] = [
         url: "/clients",
         icon: <LayoutDashboardIcon />,
         isActive: true,
-      },
-    ],
-  },
-  {
-    label: "Mon dossier et crédit",
-    items: [
-      {
-        title: "Mon dossier",
-        url: "#",
-        icon: <FolderOpenIcon />,
-        soon: true,
-      },
-      {
-        title: "Statut et plafond",
-        url: "#",
-        icon: <GaugeIcon />,
-        soon: true,
       },
     ],
   },
