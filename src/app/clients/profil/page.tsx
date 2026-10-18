@@ -12,8 +12,11 @@ import {
   ProfilUtilisateur,
   RemplacerPieceIdentite,
   type PieceIdentiteProfil,
+  type ProfilClientAffiche,
   type SessionEnCoursProfil,
 } from "@/components/profil";
+import { estStatutProfil, profilsClients } from "@/lib/db/schema/s4-clients";
+import { profilAutorisePourCompte } from "@/lib/s4-clients/acces-profil";
 import { lirePiecesCompte } from "@/lib/s1-comptes/pieces-clients";
 import { statutPieceValide } from "@/lib/s1-comptes/fiche-client";
 import { FormulaireMonProfil } from "@/app/admin/profil/formulaire-mon-profil";
@@ -37,6 +40,7 @@ export default async function ClientsProfilPage() {
   let secondFacteurActif: boolean | null = null;
   let appareilSecondFacteur: string | null = null;
   let piecesIdentite: PieceIdentiteProfil[] | undefined;
+  let profil: ProfilClientAffiche | null = null;
 
   if (userId) {
     const lignes = await db
@@ -48,6 +52,28 @@ export default async function ClientsProfilPage() {
     if (ligne) {
       telephone = ligne.telephone ?? null;
       compteValide = ligne.etat === "VALIDE";
+      if (compteValide) {
+        const autorise = await profilAutorisePourCompte(ligne.id);
+        if (autorise) {
+          const profilLignes = await db
+            .select({
+              nom: profilsClients.nom,
+              adresse: profilsClients.adresse,
+              statut: profilsClients.statut,
+            })
+            .from(profilsClients)
+            .where(eq(profilsClients.id, autorise.profilClientId))
+            .limit(1);
+          const boutique = profilLignes[0];
+          if (boutique && estStatutProfil(boutique.statut)) {
+            profil = {
+              nom: boutique.nom,
+              statut: boutique.statut,
+              adresse: boutique.adresse,
+            };
+          }
+        }
+      }
       const facteurs = await db
         .select({ nomAppareil: facteurs2faClients.nomAppareil, actif: facteurs2faClients.actif })
         .from(facteurs2faClients)
@@ -99,7 +125,7 @@ export default async function ClientsProfilPage() {
         telephone={telephone}
         avatarUrl={avatarUrl}
         compte={{ type: "CLIENT" }}
-        profil={null}
+        profil={profil}
         secondFacteurActif={secondFacteurActif}
         appareilSecondFacteur={appareilSecondFacteur}
         piecesIdentite={piecesIdentite}
