@@ -12,8 +12,11 @@ import {
   ProfilUtilisateur,
   RemplacerPieceIdentite,
   type PieceIdentiteProfil,
+  type ProfilClientAffiche,
   type SessionEnCoursProfil,
 } from "@/components/profil";
+import { estStatutProfil, profilsClients } from "@/lib/db/schema/s4-clients";
+import { profilAutorisePourCompte } from "@/lib/s4-clients/acces-profil";
 import { lirePiecesCompte } from "@/lib/s1-comptes/pieces-clients";
 import { statutPieceValide } from "@/lib/s1-comptes/fiche-client";
 import { FormulaireMonProfil } from "@/app/admin/profil/formulaire-mon-profil";
@@ -33,10 +36,11 @@ export default async function ClientProfilePage() {
   const avatarUrl = session?.user?.image ?? null;
 
   let telephone: string | null = null;
-  let isAccountValidated = false;
+let isAccountValidated = false;
   let secondFactorEnabled: boolean | null = null;
   let secondFactorDevice: string | null = null;
   let identityDocuments: PieceIdentiteProfil[] | undefined;
+  let profil: ProfilClientAffiche | null = null;
 
   if (userId) {
     const rows = await db
@@ -48,6 +52,28 @@ export default async function ClientProfilePage() {
     if (row) {
       telephone = row.telephone ?? null;
       isAccountValidated = row.status === "VALIDE";
+      if (isAccountValidated) {
+        const autorise = await profilAutorisePourCompte(row.id);
+        if (autorise) {
+          const profilLignes = await db
+            .select({
+              nom: profilsClients.nom,
+              adresse: profilsClients.adresse,
+              statut: profilsClients.statut,
+            })
+            .from(profilsClients)
+            .where(eq(profilsClients.id, autorise.profilClientId))
+            .limit(1);
+          const boutique = profilLignes[0];
+          if (boutique && estStatutProfil(boutique.statut)) {
+            profil = {
+              nom: boutique.nom,
+              statut: boutique.statut,
+              adresse: boutique.adresse,
+            };
+          }
+        }
+      }
       const factors = await db
         .select({ deviceName: facteurs2faClients.nomAppareil, actif: facteurs2faClients.actif })
         .from(facteurs2faClients)
@@ -99,7 +125,7 @@ export default async function ClientProfilePage() {
         telephone={telephone}
         avatarUrl={avatarUrl}
         compte={{ type: "CLIENT" }}
-profil={null}
+profil={profil}
         secondFacteurActif={secondFactorEnabled}
         appareilSecondFacteur={secondFactorDevice}
         piecesIdentite={identityDocuments}
