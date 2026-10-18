@@ -272,20 +272,11 @@ export function FormulaireAgent() {
             <h2 className="text-sm font-medium">Après la création</h2>
             <ol className="mt-3 flex flex-col">
               {ETAPES_APRES.map((etape, index) => (
-                <li key={etape.titre} className="relative flex gap-3 pb-4 last:pb-0">
-                  {index < ETAPES_APRES.length - 1 ? (
-                    <span aria-hidden className="absolute top-8 bottom-0 left-4 w-px bg-border" />
-                  ) : null}
-                  <span className="flex size-8 shrink-0 items-center justify-center rounded-full border bg-muted/50">
-                    <etape.icone className="size-3.5 text-primary" />
-                  </span>
-                  <div>
-                    <p className="text-xs font-medium">{etape.titre}</p>
-                    <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
-                      {etape.texte}
-                    </p>
-                  </div>
-                </li>
+                <LigneÉtape
+                  key={etape.titre}
+                  etape={etape}
+                  estDernière={index === ETAPES_APRES.length - 1}
+                />
               ))}
             </ol>
           </section>
@@ -297,41 +288,105 @@ export function FormulaireAgent() {
   );
 }
 
-function ÉcranSuccès({ agent, onNouvelAgent }: {
+function LigneÉtape({
+  etape,
+  estDernière,
+}: {
+  etape: { icone: React.ComponentType<{ className?: string }>; titre: string; texte: string };
+  estDernière: boolean;
+}) {
+  return (
+    <li className="relative flex gap-3 pb-4 last:pb-0">
+      {estDernière ? null : (
+        <span aria-hidden className="absolute top-8 bottom-0 left-4 w-px bg-border" />
+      )}
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-full border bg-muted/50">
+        <etape.icone className="size-3.5 text-primary" />
+      </span>
+      <div>
+        <p className="text-xs font-medium">{etape.titre}</p>
+        <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">{etape.texte}</p>
+      </div>
+    </li>
+  );
+}
+
+function ÉcranSuccès({
+  agent,
+  onNouvelAgent,
+}: {
   agent: { id: string; email: string; nom: string };
   onNouvelAgent: () => void;
 }) {
-  const nomComplet = agent.nom || "Nouvel agent";
+  const initiales =
+    agent.nom
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((partie) => partie.charAt(0).toUpperCase())
+      .join("") || "AG";
   return (
-    <section className="rounded-xl border bg-card p-4 sm:p-5 flex flex-1 flex-col items-center justify-center text-center">
-      <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-green-600 text-white mb-4">
-        <CircleCheckIcon className="size-5" />
-      </div>
-      <h2 className="text-lg font-semibold tracking-tight">Agent créé</h2>
-      <p className="mt-1 text-sm text-muted-foreground">
-        Compte actif pour <span className="font-medium">{agent.email}</span>.
-      </p>
-      <dl className="mt-4 grid grid-cols-2 gap-2 text-left w-full max-w-xs">
-        <dt className="text-[11px] text-muted-foreground">Nom</dt>
-        <dd className="text-sm font-medium">{nomComplet}</dd>
-        <dt className="text-[11px] text-muted-foreground">Email</dt>
-        <dd className="text-sm truncate">{agent.email}</dd>
-      </dl>
-      <div className="mt-6 flex flex-col sm:flex-row gap-3 w-full max-w-xs">
-        {agent.id ? (
-          <Link href={"/admin/agents/" + agent.id} className={buttonVariants()}>
-            Voir la fiche de l&apos;agent
-          </Link>
-        ) : null}
-        <div className="flex flex-col sm:flex-row gap-3 w-full flex-1">
-          <Link href="/admin/agents" className={buttonVariants({ variant: "outline" })}>
-            Retour à la liste
-          </Link>
-          <button type="button" onClick={onNouvelAgent} className={buttonVariants({ variant: "outline" })}>
-            Créer un autre agent
-          </button>
+    <div className="flex flex-1 flex-col items-center">
+      <section className="mt-6 w-full max-w-xl">
+        <div className="overflow-hidden rounded-xl border bg-card">
+          <div className="bg-gradient-to-r from-primary/15 via-primary/5 to-transparent p-4 pb-3">
+            <div className="flex items-center gap-3">
+              <span className="relative flex size-12 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-semibold text-primary-foreground">
+                {initiales}
+                <span
+                  aria-hidden
+                  className="absolute -right-1 -bottom-1 flex size-5 items-center justify-center rounded-full border-2 border-card bg-green-600"
+                >
+                  <CircleCheckIcon className="size-3.5 text-white" />
+                </span>
+              </span>
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium">{agent.nom || "Nouvel agent"}</p>
+                <p className="truncate text-[11px] text-muted-foreground">{agent.email}</p>
+              </div>
+            </div>
+            <div className="mt-3 flex flex-wrap gap-1.5">
+              <span className="rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-medium text-primary">
+                Agent de service
+              </span>
+              <span className="rounded-full bg-green-600/10 px-2 py-0.5 text-[11px] font-medium text-green-700">
+                Actif dès maintenant
+              </span>
+              <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+                0 permission
+              </span>
+            </div>
+          </div>
+          <div className="p-4">
+            <h1 className="text-lg font-semibold tracking-tight">Agent créé</h1>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Le compte est actif aussitôt. Il reste deux décisions, et elles sont à vous.
+            </p>
+            <ol className="mt-3 flex flex-col">
+              {ETAPES_APRES.slice(0, 2).map((etape, index) => (
+                <LigneÉtape key={etape.titre} etape={etape} estDernière={index === 1} />
+              ))}
+            </ol>
+            <div className="mt-4 flex flex-wrap gap-2">
+              {agent.id ? (
+                <Link href={"/admin/agents/" + agent.id} className={buttonVariants()}>
+                  Voir la fiche de l&apos;agent
+                </Link>
+              ) : null}
+              <Link href="/admin/agents" className={buttonVariants({ variant: "outline" })}>
+                Retour à la liste
+              </Link>
+            </div>
+            <button
+              type="button"
+              onClick={onNouvelAgent}
+              className="mt-3 text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+            >
+              Créer un autre agent
+            </button>
+          </div>
         </div>
-      </div>
-    </section>
+      </section>
+    </div>
   );
 }
