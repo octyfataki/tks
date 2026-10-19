@@ -10,6 +10,7 @@
     "test": "vitest run",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
+    "db:triggers": "tsx scripts/install-append-only-triggers.ts",
     "db:bootstrap-technical-admin": "tsx --env-file=.env.local scripts/bootstrap-technical-admin.ts"
   },
   "dependencies": {
