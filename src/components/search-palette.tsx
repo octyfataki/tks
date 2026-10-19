@@ -173,6 +173,7 @@ const GROUPES_ADMIN: GroupeSuggestions[] = [
         etiquette: "Grille tarifaire",
         motsCles: ["tarif", "prix", "unité", "réseau"],
         icone: TagsIcon,
+        href: "/admin/pricing",
       },
       {
         etiquette: "Caisse et mobile money",

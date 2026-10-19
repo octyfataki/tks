@@ -186,9 +186,8 @@ const groups: { label: string; items: NavItem[] }[] = [
       },
       {
         title: "Grille tarifaire",
-        url: "#",
+        url: "/admin/pricing",
         icon: <TagsIcon />,
-        soon: true,
       },
     ],
   },

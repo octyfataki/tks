@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { networkFromSlug, networkLabel } from "@/modules/pricing/price-record";
 
 type Segment = { etiquette: string; href?: string };
 
@@ -29,6 +30,7 @@ const FIL_ARIANE_PAR_CHEMIN: Record<string, Segment[]> = {
     { etiquette: "Comptes clients", href: "/admin/clients" },
     { etiquette: "Validation" },
   ],
+  "/admin/pricing": [{ etiquette: "Grille tarifaire" }],
   "/admin/notifications": [
     { etiquette: "Tableau de bord", href: "/admin/dashboard" },
     { etiquette: "Notifications" },
@@ -57,6 +59,14 @@ function segmentsPourChemin(chemin: string): Segment[] {
     return [
       { etiquette: "Comptes clients", href: "/admin/clients" },
       { etiquette: "Compte" },
+    ];
+  }
+  if (chemin.startsWith("/admin/pricing/")) {
+    const slug = chemin.split("/").filter(Boolean).pop() ?? "";
+    const reseau = networkFromSlug(slug);
+    return [
+      { etiquette: "Grille tarifaire", href: "/admin/pricing" },
+      { etiquette: reseau ? networkLabel(reseau) : "Réseau" },
     ];
   }
   const exacts = FIL_ARIANE_PAR_CHEMIN[chemin];

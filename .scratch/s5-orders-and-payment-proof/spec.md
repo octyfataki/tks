@@ -167,7 +167,7 @@ personne n'a vu l'argent.
 - Le **prix est figé sur la commande** au moment de sa création, dans les deux
   sens : commande en unités (le prix unitaire est retenu) et commande en montant
   (le prix unitaire est retenu, pour pouvoir afficher les unités équivalentes).
-- Les **réseaux** sont une liste fermée : Orange, Airtel, Africell, Vodacom, Autre.
+- Les **réseaux** sont une liste fermée : Orange, Airtel, Africell, Vodacom.
 - **Aucun stock n'est suivi.** Le distributeur a un accès direct aux opérateurs ;
   l'exécution de la commande se fait hors application, au téléphone de l'agent.
 

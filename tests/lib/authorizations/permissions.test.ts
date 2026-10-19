@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  canManagePriceGrid,
   estPermissionConnue,
   peutConsulterJournal,
   peutGererPermissions,
@@ -63,6 +64,14 @@ describe("S2 — liste fermée des permissions", () => {
     ]) {
       expect(PROFIL_AGENT_SERVICE_DEFAUT).not.toContain(sensible);
     }
+  });
+
+  it("la grille tarifaire suit le patron du taux : principal d'office, technique jamais", () => {
+    expect(canManagePriceGrid("ADMIN_PRINCIPAL", "VALIDE")).toBe(true);
+    expect(canManagePriceGrid("ADMIN_TECHNIQUE", "VALIDE")).toBe(false);
+    expect(canManagePriceGrid("AGENT", "VALIDE")).toBeNull();
+    expect(canManagePriceGrid("ADMIN_PRINCIPAL", "REVOQUE")).toBe(false);
+    expect(canManagePriceGrid("AGENT", "SUSPENDU")).toBe(false);
   });
 
   it("journal lisible par les deux rôles admin valides, jamais par un révoqué", () => {

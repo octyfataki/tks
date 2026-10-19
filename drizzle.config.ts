@@ -3,11 +3,12 @@ import { defineConfig } from "drizzle-kit";
 export default defineConfig({
   schema: [
     "./src/lib/db/schema/auth-schema.ts",
-    "./src/lib/db/schema/s1-comptes/index.ts",
-    "./src/lib/db/schema/s2-autorisations/index.ts",
-    "./src/lib/db/schema/s3-devises/index.ts",
-    "./src/lib/db/schema/s4-clients/index.ts",
-    "./src/lib/db/schema/s4-annotations/index.ts",
+    "./src/lib/db/schema/accounts/index.ts",
+    "./src/lib/db/schema/authorizations/index.ts",
+    "./src/lib/db/schema/currencies/index.ts",
+    "./src/lib/db/schema/clients/index.ts",
+    "./src/lib/db/schema/annotations/index.ts",
+    "./src/modules/pricing/table.ts",
   ],
   out: "./drizzle",
   dialect: "mysql",

@@ -95,3 +95,13 @@ export function peutConsulterJournal(
     roleDemandeur === "ADMIN_TECHNIQUE"
   );
 }
+
+export function canManagePriceGrid(
+  roleRequester: string,
+  stateRequester: string,
+): boolean | null {
+  if (stateRequester !== "VALIDE") return false;
+  if (roleRequester === "ADMIN_PRINCIPAL") return true;
+  if (roleRequester === "ADMIN_TECHNIQUE") return false;
+  return null;
+}
