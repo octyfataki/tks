@@ -99,7 +99,7 @@ export default async function NetworkPricePage({
             alt={`Logo ${label}`}
             width={96}
             height={96}
-            className="size-16 shrink-0 rounded-lg bg-white object-contain p-2 ring-1 ring-foreground/10"
+            className="size-16 shrink-0 overflow-hidden rounded-lg object-cover ring-1 ring-foreground/10"
           />
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2">

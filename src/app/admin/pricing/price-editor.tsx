@@ -135,14 +135,14 @@ export function PriceEditor({
           <div className="flex-1 overflow-y-auto p-4">
             <div className="flex flex-col gap-4">
               <section className="flex items-start gap-3 rounded-xl border bg-card p-3">
-                <div className="size-16 shrink-0 overflow-hidden rounded-lg bg-white p-1 ring-1 ring-foreground/10">
+                <div className="size-16 shrink-0 overflow-hidden rounded-lg ring-1 ring-foreground/10">
                   <Image
                     src={NETWORK_LOGOS[network]}
                     alt=""
                     width={128}
                     height={128}
                     unoptimized
-                    className="h-full w-full object-contain"
+                    className="h-full w-full object-cover"
                   />
                 </div>
                 <div className="min-w-0 flex-1">
