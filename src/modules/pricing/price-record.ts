@@ -6,7 +6,6 @@ export const CLOSED_NETWORKS = [
   "AIRTEL",
   "AFRICELL",
   "VODACOM",
-  "OTHER",
 ] as const;
 
 export type Network = (typeof CLOSED_NETWORKS)[number];
@@ -16,7 +15,6 @@ export const NETWORK_LABELS: Record<Network, string> = {
   AIRTEL: "Airtel",
   AFRICELL: "Africell",
   VODACOM: "Vodacom",
-  OTHER: "Autre",
 };
 
 export const CURRENCIES = ["USD", "CDF"] as const;
@@ -83,6 +81,23 @@ export function isValidAmount(value: unknown): value is number {
 
 export function networkLabel(network: string): string {
   return isNetwork(network) ? NETWORK_LABELS[network] : network;
+}
+
+export const NETWORK_SLUGS: Record<Network, string> = {
+  ORANGE: "orange",
+  AIRTEL: "airtel",
+  AFRICELL: "africell",
+  VODACOM: "vodacom",
+};
+
+export function networkSlug(network: Network): string {
+  return NETWORK_SLUGS[network];
+}
+
+export function networkFromSlug(slug: string): Network | null {
+  return (
+    CLOSED_NETWORKS.find((network) => NETWORK_SLUGS[network] === slug) ?? null
+  );
 }
 
 export function readAmount(value: unknown): number {

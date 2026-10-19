@@ -92,7 +92,6 @@ du code et de la base.
 | `order.network` | `AIRTEL` | `AIRTEL` |
 | `order.network` | `AFRICELL` | `AFRICELL` |
 | `order.network` | `VODACOM` | `VODACOM` |
-| `order.network` | `AUTRE` | `OTHER` |
 | `cash_movement.category` | `VENTE` | `SALE` |
 | `cash_movement.category` | `RETRAIT_BANQUE` | `BANK_WITHDRAWAL` |
 | `cash_movement.category` | `RECHARGE_OPERATEUR` | `OPERATOR_TOPUP` |

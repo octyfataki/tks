@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest";
 import {
   CLOSED_NETWORKS,
+  NETWORK_SLUGS,
   PriceGridError,
   UNITS_PER_DOLLAR,
   amountForUnits,
   isBelowOfficialRate,
   isValidAmount,
+  networkFromSlug,
+  networkSlug,
   preparePrice,
   priceApplicable,
   unitsForAmount,
@@ -41,13 +44,26 @@ describe("S5-01 — la grille tarifaire, côté domaine", () => {
       "AIRTEL",
       "AFRICELL",
       "VODACOM",
-      "OTHER",
     ]);
     expect(
       code(() =>
         preparePrice({ network: "MTN", amount: 2350, currency: "CDF" }),
       ),
     ).toBe("NETWORK_UNKNOWN");
+  });
+
+  it("nomme chaque réseau et lui donne un chemin stable", () => {
+    expect(NETWORK_SLUGS).toEqual({
+      ORANGE: "orange",
+      AIRTEL: "airtel",
+      AFRICELL: "africell",
+      VODACOM: "vodacom",
+    });
+    for (const network of CLOSED_NETWORKS) {
+      expect(networkFromSlug(networkSlug(network))).toBe(network);
+    }
+    expect(networkFromSlug("other")).toBeNull();
+    expect(networkFromSlug("ORANGE")).toBeNull();
   });
 
   it("tient le prix d'un dollar d'airtime, en cent unités", () => {

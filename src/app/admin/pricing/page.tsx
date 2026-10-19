@@ -1,77 +1,19 @@
-import { PermissionRefusee } from "@/components/permission-denied";
+import { Badge } from "@/components/ui/badge";
 import { lireTauxDuJour } from "@/lib/currencies/rates";
-import {
-  CLOSED_NETWORKS,
-  CURRENCIES,
-  UNITS_PER_DOLLAR,
-  amountForUnits,
-  networkLabel,
-} from "@/modules/pricing/price-record";
+import { UNITS_PER_DOLLAR, networkSlug } from "@/modules/pricing/price-record";
 import {
   actorCanManagePriceGrid,
   readGridAt,
-  readHistory,
-  type PriceLineNamed,
 } from "@/modules/pricing/publish";
-import { PriceGridBoard, type BoardEntry, type BoardRow } from "./price-grid";
-
-const SAMPLE_UNITS = 1_000;
-
-const NOMBRE = new Intl.NumberFormat("fr-FR", { maximumFractionDigits: 2 });
-const STAMP = new Intl.DateTimeFormat("fr-FR", {
-  timeZone: "Africa/Kinshasa",
-  day: "2-digit",
-  month: "short",
-  year: "numeric",
-  hour: "2-digit",
-  minute: "2-digit",
-});
-const DAY = new Intl.DateTimeFormat("fr-FR", {
-  timeZone: "Africa/Kinshasa",
-  day: "2-digit",
-  month: "long",
-  year: "numeric",
-});
-
-function amountLabel(amount: number, currency: string): string {
-  return `${NOMBRE.format(amount)} ${currency}`;
-}
-
-function equivalentLabel(
-  amount: number,
-  currency: string,
-  rateCdf: number | null,
-): string | null {
-  if (rateCdf === null || rateCdf <= 0) return null;
-  const converted = currency === "CDF" ? amount / rateCdf : amount * rateCdf;
-  const target = currency === "CDF" ? "USD" : "CDF";
-  return `≈ ${NOMBRE.format(converted)} ${target}`;
-}
-
-function toEntry(price: PriceLineNamed, rateCdf: number | null): BoardEntry {
-  return {
-    amount: price.amount,
-    currency: price.currency,
-    amountLabel: amountLabel(price.amount, price.currency),
-    equivalentLabel: equivalentLabel(price.amount, price.currency, rateCdf),
-    sampleLabel: `${NOMBRE.format(
-      amountForUnits(price.amount, SAMPLE_UNITS),
-    )} ${price.currency}`,
-    effectiveAtLabel: STAMP.format(price.effectiveAt),
-    authorLabel: price.enteredByName ?? "compte inconnu",
-  };
-}
+import { PricingDenied } from "./denied";
+import { NetworkCard } from "./network-card";
+import { officialRateOf, toEntry } from "./pricing-display";
+import { RateNote } from "./rate-note";
 
 export default async function PriceGridPage() {
   const acteur = await actorCanManagePriceGrid();
   if (!acteur) {
-    return (
-      <PermissionRefusee
-        titre="Grille tarifaire"
-        detail="Fixer le prix de l'airtime est réservé à l'administrateur principal, ou à un agent qui en a reçu la permission. L'administrateur technique n'y touche jamais."
-        action="Demandez la permission « grille.tarif » à l'administrateur principal."
-      />
-    );
+    return <PricingDenied />;
   }
 
   const instant = new Date();
@@ -79,38 +21,47 @@ export default async function PriceGridPage() {
     readGridAt(instant),
     lireTauxDuJour(),
   ]);
-  const historiques = new Map(
-    await Promise.all(
-      CLOSED_NETWORKS.map(
-        async (network) => [network, await readHistory(network)] as const,
-      ),
-    ),
-  );
 
   const rateCdf = taux?.valeur ?? null;
-  const rows: BoardRow[] = entrees.map((entree) => ({
-    network: entree.network,
-    label: networkLabel(entree.network),
-    current: entree.price ? toEntry(entree.price, rateCdf) : null,
-    history: (historiques.get(entree.network) ?? []).map((ligne) =>
-      toEntry(ligne, rateCdf),
-    ),
-  }));
+  const officialRate = officialRateOf(taux);
+  const sansPrix = entrees.filter((entree) => entree.price === null).length;
 
   return (
-    <PriceGridBoard
-      rows={rows}
-      currencies={CURRENCIES}
-      unitsPerDollar={UNITS_PER_DOLLAR}
-      sampleUnits={SAMPLE_UNITS}
-      officialRate={
-        taux === null
-          ? null
-          : {
-              value: taux.valeur,
-              label: DAY.format(new Date(`${taux.jour}T12:00:00.000Z`)),
-            }
-      }
-    />
+    <div className="flex flex-1 flex-col gap-4 p-4 pt-4">
+      <header>
+        <Badge variant="outline">Tarifs</Badge>
+        <h1 className="mt-2 text-2xl font-semibold tracking-tight">
+          Grille tarifaire
+        </h1>
+        <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+          Un dollar d&apos;airtime vaut {UNITS_PER_DOLLAR} unités ; le prix se
+          fixe réseau par réseau. Depuis chaque carte, la saisie prend effet
+          immédiatement et s&apos;ajoute à l&apos;historique : les commandes
+          déjà passées conservent le leur.
+        </p>
+      </header>
+
+      {sansPrix > 0 ? (
+        <p className="rounded-lg border border-amber-600/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-400">
+          {sansPrix === 1
+            ? "Un réseau n'a aucun prix : aucune commande ne peut le citer."
+            : `${sansPrix} réseaux n'ont aucun prix : aucune commande ne peut les citer.`}
+        </p>
+      ) : null}
+
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {entrees.map((entree) => (
+          <NetworkCard
+            key={entree.network}
+            network={entree.network}
+            slug={networkSlug(entree.network)}
+            price={entree.price ? toEntry(entree.price, rateCdf) : null}
+            officialRate={officialRate}
+          />
+        ))}
+      </div>
+
+      <RateNote rate={officialRate} />
+    </div>
   );
 }

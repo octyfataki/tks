@@ -25,7 +25,7 @@ export async function publierPrixAction(
       amount: lireChamp(donnees, "amount"),
       currency: lireChamp(donnees, "currency"),
     });
-    revalidatePath("/admin/pricing");
+    revalidatePath("/admin/pricing", "layout");
     return {
       ok: true,
       network: ligne.network,

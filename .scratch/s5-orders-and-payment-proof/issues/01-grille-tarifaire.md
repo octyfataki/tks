@@ -1,7 +1,7 @@
 # 01: La grille tarifaire — un prix par réseau et par unité, et l'historique
 
 **What to build:** Le distributeur saisit le prix de **100 unités d'airtime** — soit un
-dollar de valeur faciale — réseau par réseau : Orange, Airtel, Africell, Vodacom, Autre.
+dollar de valeur faciale — réseau par réseau : Orange, Airtel, Africell, Vodacom.
 Il change un prix quand le marché bouge, et **les prix passés restent consultables** :
 une commande d'il y a trois semaines doit encore être compréhensible. L'agent et le client
 voient le prix avant de confirmer, en francs et en dollars.
@@ -28,10 +28,10 @@ n'y a pas de conversion stockée)
       converti**, avec la **date du taux** à côté de la conversion. Le chiffre qui engage
       est celui de la devise du prix.
 - [x] Les **réseaux sont une liste fermée dans le code** : `CLOSED_NETWORKS = ["ORANGE",
-      "AIRTEL", "AFRICELL", "VODACOM", "OTHER"]`, typée, validée par test, **sans écran
-      d'ajout**. « Autre » absorbe un opérateur nouveau ; ajouter un nom distinct est un
-      cycle de développement. Aucun réseau libre, sinon deux saisies divergentes pour une
-      même société.
+      "AIRTEL", "AFRICELL", "VODACOM"]`, typée, validée par test, **sans écran d'ajout**.
+      Un opérateur nouveau est un cycle de développement, pas une saisie libre : sinon deux
+      saisies divergent pour une même société. Le porteur a retiré « Autre » du domaine
+      (2026-10-19) : quatre réseaux, pas cinq.
 - [x] Un prix est **historisé par horodatage** : chaque saisie est une **nouvelle ligne
       datée**. Test : changer un prix laisse intactes toutes les lignes précédentes.
 - [x] **Effet immédiat seulement** : ni antidatage, ni post-datage d'un prix futur.
@@ -84,7 +84,7 @@ Les critères ci-dessus les portent ; ce qui suit en garde la trace et les raiso
 | Unité | `100 unités = 1 USD` de valeur faciale. |
 | Sens du prix | Prix de vente au client ; le prix d'achat opérateur n'est pas suivi. |
 | Devise | Colonne libre, `CDF` ou `USD`. |
-| Réseaux | Liste fermée en code, « Autre » comme catch-all. |
+| Réseaux | Liste fermée en code : Orange, Airtel, Africell, Vodacom. |
 | Historique | Versionné à l'horodatage, effet immédiat seulement, jamais d'`update` ni de `delete`. |
 | Lecture | `priceApplicable(lines, network, instant)`, `null` si aucun prix, plus la grille entière à un instant (`readGridAt`), plus la conversion unités ↔ montant (`amountForUnits`, `unitsForAmount`). |
 | Permissions | Patron S3 : principal d'office, technique jamais, agent sur `grille.tarif`. |

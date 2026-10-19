@@ -104,7 +104,7 @@ vue de l'agent. Côté client, cinq manques restent ouverts.
 - Le prix unitaire est **figé sur la commande**, dans les deux sens de saisie.
   Changer la grille ne réécrit aucune commande passée.
 - Unité = quantité opérateur. Réseaux : liste fermée (Orange, Airtel, Africell,
-  Vodacom, Autre).
+  Vodacom).
 
 ### Écran 1 — Commander
 
