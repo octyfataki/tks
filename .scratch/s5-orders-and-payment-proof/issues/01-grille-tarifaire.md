@@ -195,13 +195,14 @@ dès maintenant, et `order.network` entre dans la table de correspondance du glo
    `journal_audit_bloque_update` ni `journal_audit_bloque_delete`. Le registre a été aligné
    sur `0019`, puis `0020` appliquée (table et trois index) et enregistrée : `pnpm db:migrate`
    répond maintenant « migrations applied successfully » sans rien rejouer.
-   **Les déclencheurs, eux, restent absents de cette base** : le compte applicatif n'a pas le
-   privilège (`ER_BINLOG_CREATE_ROUTINE_NEED_SUPER`, binlog actif sans
-   `log_bin_trust_function_creators`). `pnpm db:triggers` les installe tous les quatre de
-   façon idempotente (les deux du journal, les deux de la grille) dès qu'il tourne avec un
-   compte autorisé, ou après `SET GLOBAL log_bin_trust_function_creators = 1`. Tant que ce
-   n'est pas fait, l'append-only tient par le code (aucun `UPDATE` ni `DELETE` sur ces
-   tables) et par les tests, pas par la base.
+   **Les déclencheurs manquaient** : le compte applicatif n'a pas le privilège de les créer
+   (`ER_BINLOG_CREATE_ROUTINE_NEED_SUPER`, binlog actif sans `log_bin_trust_function_creators`).
+   Après `SET GLOBAL log_bin_trust_function_creators = 1` (compte root du conteneur),
+   `pnpm db:triggers` a installé les quatre — les deux du journal, les deux de la grille — sur
+   la base de développement. Ils ont été **éprouvés pour de vrai**, dans une transaction
+   annulée : `UPDATE` et `DELETE` sur `price_grid` comme sur `journal_audit` échouent en
+   `ER_SIGNAL_EXCEPTION` / SQLSTATE `45000`, et aucune ligne de test ne subsiste. Le réglage
+   serveur ne sert qu'à la création : les déclencheurs, eux, persistent.
 
 **Ce qui reste ouvert.** Une seule case n'est pas cochée : le **test navigateur** « la saisie
 d'un prix est refusée à l'écran pour un agent sans permission ». Le dépôt n'a aucune
