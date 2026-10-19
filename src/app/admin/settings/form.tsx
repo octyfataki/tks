@@ -79,8 +79,8 @@ export function FormulaireParametres({
             aria-hidden
             className="mt-1 flex justify-between text-[11px] text-muted-foreground"
           >
-            <span>1 jour</span>
-            <span>30 jours</span>
+            <span>{minJours} jour</span>
+            <span>{maxJours} jours</span>
           </div>
         </div>
 

@@ -13,11 +13,9 @@ import { db } from "@/lib/db/client";
 import {
   comptesStaff,
   DEFAUT_DUREE_INVITATION_JOURS,
-  peutModifierReglage,
-} from "@/lib/db/schema/accounts";
-import {
   MAX_DUREE_INVITATION_JOURS,
   MIN_DUREE_INVITATION_JOURS,
+  peutModifierReglage,
 } from "@/lib/db/schema/accounts";
 import { lireDureeInvitationJours } from "@/lib/accounts/settings";
 import { PermissionRefusee } from "@/components/permission-denied";
@@ -149,8 +147,8 @@ export default async function ParametresPage() {
             </p>
             <p className="mx-5 mb-5 flex gap-2.5 rounded-lg bg-muted/60 px-3 py-2.5 text-xs leading-relaxed text-muted-foreground">
               <WifiOffIcon className="mt-0.5 size-4 shrink-0" />
-              Sans réseau, l&apos;enregistrement attend le retour du réseau —
-              le lien garde sa valeur courante d&apos;ici là.
+              Écran consultable hors réseau ; enregistre ton changement à la
+              reconnexion, la valeur courante tient d&apos;ici là.
             </p>
           </aside>
         </div>
