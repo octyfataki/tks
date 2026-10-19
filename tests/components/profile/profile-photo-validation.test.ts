@@ -24,7 +24,9 @@ describe("photoProfilValide", () => {
   it("découpe un dataURL et fabrique un nom de fichier sûr", () => {
     expect(decoderDataUrlPhoto("data:image/png;base64," + "a".repeat(64))?.mime).toBe("png");
     expect(decoderDataUrlPhoto("not-a-data-url")).toBeNull();
-    expect(nomFichierAvatar("abc-123_XY", "jpg")).toBe("abc-123_XY.jpg");
-    expect(nomFichierAvatar("../../etc/passwd", "jpg")).toBe("______etc_passwd.jpg");
+    expect(nomFichierAvatar("abc-123_XY", "jpg", "sp9832ad")).toBe("abc-123_XY-sp9832ad.jpg");
+    expect(nomFichierAvatar("../../etc/passwd", "jpg", "../../x")).toBe(
+      "______etc_passwd-______x.jpg",
+    );
   });
 });

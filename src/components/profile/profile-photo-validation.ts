@@ -35,9 +35,10 @@ export function decoderDataUrlPhoto(valeur: string): DonneesDataUrl | null {
   return null;
 }
 
-export function nomFichierAvatar(userId: string, extension: "jpg" | "svg"): string {
+export function nomFichierAvatar(userId: string, extension: "jpg" | "svg", marqueur: string): string {
   const sur = userId.replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 64) || "compte";
-  return `${sur}.${extension}`;
+  const unique = marqueur.replace(/[^a-zA-Z0-9_-]/g, "_").slice(0, 64) || "x";
+  return `${sur}-${unique}.${extension}`;
 }
 
 function illustration(first: string, second: string, third: string): string {

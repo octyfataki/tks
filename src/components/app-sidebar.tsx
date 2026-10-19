@@ -207,6 +207,7 @@ const groups: { label: string; items: NavItem[] }[] = [
 export type UtilisateurSidebar = {
   nom: string
   email: string
+  avatar?: string
 }
 
 export function AppSidebar({
@@ -251,6 +252,7 @@ export function AppSidebar({
           user={{
             name: utilisateur?.nom ?? "Administrateur",
             email: utilisateur?.email ?? "Espace distributeur",
+            avatar: utilisateur?.avatar,
           }}
           profilUrl={profilUrl}
         />

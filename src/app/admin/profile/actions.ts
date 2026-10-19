@@ -40,6 +40,10 @@ export type ResultatDeconnexionAutres =
 
 const DOSSIER_AVATARS = path.join(process.cwd(), "public", "avatars");
 
+function marqueurAvatarUnique(): string {
+  return randomUUID().replaceAll("-", "").slice(0, 12);
+}
+
 async function supprimerFichierAvatar(ancienneImage: string | null): Promise<void> {
   if (!ancienneImage?.startsWith("/avatars/")) return;
   const nom = path.basename(ancienneImage);
@@ -83,7 +87,7 @@ export async function modifierPhotoProfilAction(
   try {
     await mkdir(DOSSIER_AVATARS, { recursive: true });
     if (decodees.mime === "svg") {
-      const nom = nomFichierAvatar(userId, "svg");
+      const nom = nomFichierAvatar(userId, "svg", marqueurAvatarUnique());
       await writeFile(path.join(DOSSIER_AVATARS, nom), Buffer.from(decodees.base64, "base64"));
       imageFinale = `/avatars/${nom}`;
     } else {
@@ -91,7 +95,7 @@ export async function modifierPhotoProfilAction(
         .resize(256, 256, { fit: "cover" })
         .jpeg({ quality: 80 })
         .toBuffer();
-      const nom = nomFichierAvatar(userId, "jpg");
+      const nom = nomFichierAvatar(userId, "jpg", marqueurAvatarUnique());
       await writeFile(path.join(DOSSIER_AVATARS, nom), tampon);
       imageFinale = `/avatars/${nom}`;
     }
@@ -106,9 +110,9 @@ export async function modifierPhotoProfilAction(
   if (ancienneImage && ancienneImage !== imageFinale) {
     await supprimerFichierAvatar(ancienneImage);
   }
-  revalidatePath("/admin/profile");
-  revalidatePath("/agent/profile");
-  revalidatePath("/clients/profile");
+  revalidatePath("/admin", "layout");
+  revalidatePath("/agent", "layout");
+  revalidatePath("/clients", "layout");
   return { ok: true, inchange: false };
 }
 
@@ -121,9 +125,9 @@ export async function supprimerPhotoProfilAction(): Promise<ResultatPhotoProfil>
   const lignes = await db.select({ image: user.image }).from(user).where(eq(user.id, userId)).limit(1);
   await db.update(user).set({ image: null }).where(eq(user.id, userId));
   await supprimerFichierAvatar(lignes[0]?.image ?? null);
-  revalidatePath("/admin/profile");
-  revalidatePath("/agent/profile");
-  revalidatePath("/clients/profile");
+  revalidatePath("/admin", "layout");
+  revalidatePath("/agent", "layout");
+  revalidatePath("/clients", "layout");
   return { ok: true, inchange: false };
 }
 
@@ -190,7 +194,7 @@ async function modifierMonProfilClient(
       .set({ telephone: canonique })
       .where(eq(comptesClients.id, client.id));
   });
-  revalidatePath("/clients/profile");
+  revalidatePath("/clients", "layout");
   return { ok: true, inchange: false };
 }
 
@@ -259,8 +263,9 @@ export async function modifierMonProfilAction(
       .set({ telephone: telephoneValeur })
       .where(eq(comptesStaff.id, moi.id));
   });
-  revalidatePath("/admin/profile");
-  revalidatePath("/agent/profile");
+  revalidatePath("/admin", "layout");
+  revalidatePath("/agent", "layout");
+  revalidatePath("/clients", "layout");
   return { ok: true, inchange: false };
 }
 
