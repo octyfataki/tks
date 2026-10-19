@@ -61,6 +61,17 @@ export function equivalentLabel(
   return `≈ ${NOMBRE.format(converted)} ${target}`;
 }
 
+const JOUR_ISO = new Intl.DateTimeFormat("en-CA", {
+  timeZone: "Africa/Kinshasa",
+  year: "numeric",
+  month: "2-digit",
+  day: "2-digit",
+});
+
+export function jourIso(instant: Date): string {
+  return JOUR_ISO.format(instant);
+}
+
 export function toEntry(price: PriceShown, rateCdf: number | null): PriceEntry {
   return {
     amount: price.amount,

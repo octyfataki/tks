@@ -143,6 +143,45 @@ export async function readHistory(
   return lignes.map(toLine);
 }
 
+export type RecentChange = {
+  line: PriceLineNamed;
+  previous: PriceLineNamed | null;
+};
+
+export const RECENT_CHANGES_WINDOW = 200;
+
+export async function readRecentChanges(
+  limit: number = RECENT_CHANGES_WINDOW,
+): Promise<RecentChange[]> {
+  const dernieres = await readHistory(undefined, limit);
+  const parReseau = new Map<string, PriceLineNamed[]>();
+  for (const ligne of dernieres) {
+    parReseau.set(ligne.network, [
+      ...(parReseau.get(ligne.network) ?? []),
+      ligne,
+    ]);
+  }
+  const precedentes = new Map<string, PriceLineNamed>();
+  await Promise.all(
+    Array.from(parReseau.entries()).map(async ([network, lignes]) => {
+      const voisines = await lecteur(db)
+        .where(eq(priceGrid.network, network))
+        .orderBy(desc(priceGrid.effectiveAt), desc(priceGrid.receivedAt))
+        .limit(lignes.length + 1);
+      const lues = voisines.map(toLine);
+      for (const ligne of lignes) {
+        const index = lues.findIndex((lue) => lue.id === ligne.id);
+        const avant = index >= 0 ? lues[index + 1] : undefined;
+        if (avant) precedentes.set(ligne.id, avant);
+      }
+    }),
+  );
+  return dernieres.map((line) => ({
+    line,
+    previous: precedentes.get(line.id) ?? null,
+  }));
+}
+
 export async function publishPrice(draft: PriceDraft): Promise<PriceLine> {
   const prepared = preparePrice(draft);
   const acteur = await acteurCourant();
