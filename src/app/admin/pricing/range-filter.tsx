@@ -29,6 +29,9 @@ function libellePlage(du: string, au: string): string {
   if (!du && au) return `Jusqu'au ${format(parseISO(au), "d MMM yyyy", { locale: fr })}`;
   const debut = parseISO(du);
   const fin = parseISO(au);
+  if (debut.getTime() === fin.getTime()) {
+    return format(debut, "d MMM yyyy", { locale: fr });
+  }
   if (debut.getFullYear() === fin.getFullYear()) {
     return `${format(debut, "d MMM", { locale: fr })} – ${format(fin, "d MMM yyyy", { locale: fr })}`;
   }
