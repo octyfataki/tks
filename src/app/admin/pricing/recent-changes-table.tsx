@@ -118,14 +118,14 @@ export function RecentChangesTable({
                       href={`/admin/pricing/${ligne.slug}`}
                       className="flex items-center gap-2 underline-offset-4 hover:underline"
                     >
-                      <span className="size-6 shrink-0 overflow-hidden rounded bg-white p-0.5 ring-1 ring-foreground/10">
+                      <span className="size-6 shrink-0 overflow-hidden rounded-sm ring-1 ring-foreground/10">
                         <Image
                           src={ligne.logo}
                           alt=""
                           width={48}
                           height={48}
                           unoptimized
-                          className="h-full w-full object-contain"
+                          className="h-full w-full object-cover"
                         />
                       </span>
                       <span className="font-medium">{ligne.reseau}</span>

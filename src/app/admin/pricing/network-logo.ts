@@ -10,6 +10,6 @@ export const NETWORK_BANNERS: Record<Network, string> = {
 export const NETWORK_LOGOS: Record<Network, string> = {
   ORANGE: "/networks/orange.webp",
   AIRTEL: "/networks/airtel.jpg",
-  AFRICELL: "/networks/africell.png",
+  AFRICELL: "/networks/africell-square.jpg",
   VODACOM: "/networks/vodacom.jpg",
 };
