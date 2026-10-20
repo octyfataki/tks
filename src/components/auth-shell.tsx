@@ -13,7 +13,7 @@ type AuthShellProps = {
 };
 
 const DEFAUT_POINTS = [
-  "Commandes servies et créances suivies en CDF au taux du jour",
+  "Commandes servies et créances suivies en CDF au taux en vigueur",
   "Encaissé du jour par caisse et par réseau, sans rien coller à la main",
   "Au comptoir comme sur le terrain, même sans réseau",
 ];
@@ -142,7 +142,7 @@ export function AuthShell({
                 <div className="h-full w-[72%] rounded-full bg-primary" />
               </div>
               <p className="mt-2 text-[11px] text-muted-foreground">
-                Taux du jour : 1 USD = 2 300 CDF
+                Taux en vigueur : 1 USD = 2 300 CDF
               </p>
             </div>
             <p className="mt-3 text-xs leading-relaxed text-muted-foreground">

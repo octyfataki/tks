@@ -13,4 +13,4 @@ Source normative : `GLOSSARY.md` à la racine. Ce tableau n'est qu'un aide-mémo
 | Créance | Montant dû par un client, une devise (`USD`/`CDF`). |
 | Paiement | Montant versé par un client, une devise. Multi-devises par nature. |
 | Dette / Reste à payer | Dérivés en CDF au taux en vigueur, jamais saisis. |
-| Taux applicable | `1 USD = X CDF`, saisi 1x/jour, ne mord que sur l'USD. Devise pivot : CDF. |
+| Taux applicable | `1 USD = X CDF` : le dernier taux saisi fait foi, survit aux jours (ADR-0003), ne mord que sur l'USD. Devise pivot : CDF. |

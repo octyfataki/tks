@@ -245,7 +245,9 @@ créer un nouveau profil client pour contourner cette procédure.
 
 ### Taux de change
 Le taux `1 USD = X CDF`, saisi manuellement par l'administrateur principal et
-historisé. Il n'est jamais récupéré automatiquement d'une banque centrale.
+historisé. Il n'est jamais récupéré automatiquement d'une banque centrale. Chaque
+saisie est un engagement daté et tracé ; le taux en vigueur est la dernière saisie
+(ADR-0003).
 
 ### Devise pivot
 CDF. Toute somme affichée à l'utilisateur l'est en CDF, avec la devise native et
@@ -264,18 +266,21 @@ Un montant que le client verse au distributeur, avec sa devise et sa date. Un cl
 peut payer en CDF une dette libellée en USD, et réciproquement.
 
 ### Dette
-Dérivée : somme des créances d'un client, exprimée en CDF au taux du jour.
+Dérivée : somme des créances d'un client, exprimée en CDF au taux en vigueur.
 
 ### Reste à payer
-Dérivé : dette moins paiements, chaque montant converti en CDF au taux du jour.
+Dérivé : dette moins paiements, chaque montant converti en CDF au taux en vigueur.
+Un rapport portant sur une date passée se lit au taux en vigueur fin de ce jour.
 
 > Dette de 100 USD, taux 1 USD = 2 300 CDF, soit 230 000 CDF.
 > Paiement 1 : 50 000 CDF. Paiement 2 : 50 USD, soit 115 000 CDF.
 > **Reste à payer : 65 000 CDF.**
 
 ### Taux applicable
-Le taux `1 USD = X CDF` en vigueur, saisi par un administrateur principal, une fois
-par jour. Il ne sert qu'à convertir un montant libellé en USD.
+Le taux `1 USD = X CDF` en vigueur : le dernier taux saisi, en service jusqu'à ce
+qu'une nouvelle saisie le remplace. Il survit aux jours — un jour sans saisie n'est
+pas un jour sans taux — et ressaisir la valeur déjà en vigueur n'écrit rien. Il ne
+sert qu'à convertir un montant libellé en USD (ADR-0003).
 
 ### Dette en dollars, solde en francs
 Une dette libellée en USD ne peut pas être durablement soldée en francs : le reste
@@ -389,7 +394,7 @@ Entrée ou sortie sur un compte de trésorerie, avec une catégorie : `VENTE`,
 2. Une créance et un paiement portent exactement une devise.
 3. Une commande crédit servie crée exactement une créance, et inversement.
 4. Une commande crédit refusée ne crée aucune écriture financière ; le refus est audité.
-5. Aucun taux n'est stocké sur une écriture ; le taux ne modifie que la conversion des montants USD.
+5. Aucun taux n'est stocké sur une écriture ; le taux ne modifie que la conversion des montants USD. Le taux en vigueur est le dernier taux saisi ; une nouvelle saisie prend le relais, elle n'écrase rien (ADR-0003).
 6. Une commande crédit qui dépasse le disponible est rejetée.
 7. Un compte `EN_ATTENTE_VALIDATION` n'accède à aucune fonctionnalité métier. Un compte `VALIDE` n'accède aux données financières qu'après autorisation d'accès au bon profil client. Un numéro de téléphone seul ne suffit jamais à autoriser cet accès.
 8. Toute action métier et toute modification d'accès sont attribuées à un acteur authentifié et horodatées. Le journal d'audit est append-only.

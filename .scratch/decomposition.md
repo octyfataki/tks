@@ -102,6 +102,14 @@ Effets sur les artefacts déjà écrits :
 | `S6` | le paiement ne porte pas de taux ; l'écran d'encaissement annonce le montant en USD qui solde pour de bon |
 | `S10` | une créance importée ne porte aucun taux ; c'est la **date d'origine** qui est déclarée au rapport |
 
+**Suivi 2026-10-20 — ADR-0003.** Le « un jour civil porte au plus un taux » qui
+découlait de l'implémentation est abandonné : le taux est une **séquence de
+saisies**, le dernier saisi fait foi et survis aux jours ; une valeur identique
+ressaisie n'écrit rien ; un changement d'écart de plus de 5 % exige une
+confirmation ; un rapport passé se lit au taux en vigueur fin de jour. Voir
+`docs/adr/0003-taux-en-vigueur-est-le-dernier-saisi.md`. La spec S3, les tickets
+01 et 04, et `GLOSSARY.md` sont réalignés.
+
 **Ce qui n'a pas bougé** : l'exemple de référence — dette 100 USD à 2 300, paiements
 de 50 000 CDF puis 50 USD, reste 65 000 CDF — reste exact, parce que tout s'y
 évalue au même taux. Les deux tests de S3 sur le taux en vigueur le disent

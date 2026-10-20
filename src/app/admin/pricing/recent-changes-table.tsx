@@ -76,7 +76,7 @@ export function RecentChangesTable({
               scope="col"
               className="hidden px-3 py-2.5 font-medium lg:table-cell"
             >
-              Au taux du jour
+              Au taux en vigueur
             </th>
             <th scope="col" className="px-3 py-2.5 font-medium">
               Publié le
@@ -182,7 +182,7 @@ export function RecentChangesTable({
                         </div>
                         <div>
                           <dt className="text-[11px] text-muted-foreground">
-                            Au taux du jour
+                            Au taux en vigueur
                           </dt>
                           <dd className="mt-0.5 tabular-nums">
                             {ligne.equivalent ?? "—"}

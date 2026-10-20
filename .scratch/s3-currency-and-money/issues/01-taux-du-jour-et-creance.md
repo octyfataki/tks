@@ -15,10 +15,11 @@ au contrôle de permission)
 
 **Status:** ready-for-agent
 
-- [ ] Le taux est une entité à part : **une date, une valeur, et qui l'a saisi**. Il
-      est journalisé comme toute autre écriture.
-- [ ] **Un jour porte au plus un taux.** Une tentative de réécrire un taux existant
-      est refusée. Le taux est saisi manuellement — aucune récupération automatique
+- [ ] Le taux est une entité à part : **une valeur, la date de sa saisie, et qui
+      l'a saisi**. Il est journalisé comme toute autre écriture.
+- [ ] **Le taux est une séquence : le dernier saisi fait foi et survit aux
+      jours.** Une valeur identique à celle en vigueur est refusée sans rien
+      écrire. Le taux est saisi manuellement — aucune récupération automatique
       depuis une banque centrale, parce que le taux est un taux négocié.
 - [ ] Le taux en vigueur est un **paramètre de lecture**, pas une donnée d'écriture.
       Il est résolu au moment du calcul, jamais capturé sur l'écriture.
