@@ -30,7 +30,7 @@ flowchart LR
 | Dossier / fichier | Rôle |
 |---|---|
 | `src/app/` | Routes App Router (public, auth, admin, agent, clients, api) |
-| `src/components/` | UI shadcn + headers/sidebars par rôle + taux du jour |
+| `src/components/` | UI shadcn + headers/sidebars par rôle + taux en vigueur |
 | `src/lib/` | Logique métier (`comptes`, `autorisations`, `devises`, `annotations` — anc. `s1-comptes`, `s2-autorisations`, `s3-devises`, `s4-annotations`) + `auth.ts`, `db/` |
 | `src/platform/architecture/` | Garde-fous : `inventory.ts` (lit `src/`), `constraints.ts` (interdits) |
 | `src/hooks/use-mobile.ts` | Détection mobile |
@@ -147,7 +147,7 @@ flowchart TB
     JAUDIT["journal-audit<br/>(append-only)"]
   end
   subgraph S3T["S3 — monnaie"]
-    TX["taux-change<br/>1 jour = 1 taux, historisé<br/>jamais stocké sur écriture"]
+    TX["taux-change<br/>séquence de saisies, le dernier fait foi<br/>survit aux jours, jamais stocké sur écriture"]
   end
   subgraph S4T["S4 — dossier"]
     ANNO["annotations"]
@@ -190,6 +190,7 @@ Détail par spec : `.scratch/sN-*/spec.md` + tickets `issues/`. Implémenté à 
 | ADR | Titre | Effet |
 |---|---|---|
 | 0001 | Taux applicable = taux en vigueur | Pas de taux stocké ; USD seul concerné ; dette USD close en USD |
+| 0003 | Le taux en vigueur = dernier sauvegardé | Séquence de saisies ; survit aux jours ; identique non réécrit ; confirmation > 5 % |
 | 0002 | CDF pivot, USD devise de saisie | Affichage CDF ; une écriture = une devise |
 | 0003 | Offline-first, conflits à la synchro | File durable, réémission idempotente |
 | 0004 | Le verrou ne peut pas être décision serveur | Verrou local (file commande, S5) |

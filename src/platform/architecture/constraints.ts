@@ -43,13 +43,13 @@ export const DETTE: Record<string, EntreeDette> = {
   },
   fuitesInterface: {
     mesure: "fichiers de app/ ou components/ qui importent la base",
-    valeur: 40,
-    purge: "P1",
+    valeur: 41,
+    purge: "P1 — 41 relevé au 2026-10-20 ; +1 admin/settings/page.tsx (PR #46)",
   },
   rolesEnDur: {
     mesure: "fichiers comparant un rôle à une chaîne",
-    valeur: 22,
-    purge: "P2",
+    valeur: 23,
+    purge: "P2 — 23 relevé au 2026-10-20 ; +1 admin/settings/page.tsx (PR #46)",
   },
   cheminsNumerotes: {
     mesure: "chemins portant un numéro de spec",

@@ -4,7 +4,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeftIcon, CircleAlertIcon, PencilIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
-import { lireTauxDuJour } from "@/lib/currencies/rates";
+import { lireTauxEnVigueur } from "@/lib/currencies/rates";
 import {
   UNITS_PER_DOLLAR,
   isBelowOfficialRate,
@@ -45,7 +45,7 @@ export default async function NetworkPricePage({
   const [prix, historique, taux] = await Promise.all([
     readPriceAt(network, instant),
     readHistory(network),
-    lireTauxDuJour(),
+    lireTauxEnVigueur(),
   ]);
   const rateCdf = taux?.valeur ?? null;
   const officialRate = officialRateOf(taux);
@@ -75,7 +75,7 @@ export default async function NetworkPricePage({
       ? `${NOMBRE.format(SAMPLE_UNITS)} unités sous le taux d'un dollar`
       : `${NOMBRE.format(SAMPLE_UNITS)} unités au niveau ou au-dessus du taux`;
   } else if (courant) {
-    faceAuTauxNote = "taux du jour indisponible";
+    faceAuTauxNote = "taux en vigueur indisponible";
   }
 
   return (
@@ -162,7 +162,7 @@ export default async function NetworkPricePage({
               </p>
               {courant.equivalentLabel ? (
                 <p className="mt-2 text-sm text-muted-foreground tabular-nums">
-                  {courant.equivalentLabel} au taux du jour
+                  {courant.equivalentLabel} au taux en vigueur
                 </p>
               ) : (
                 <p className="mt-2 text-sm text-muted-foreground">
@@ -232,7 +232,7 @@ export default async function NetworkPricePage({
           </p>
         </div>
         <div className="p-4">
-          <p className="text-xs text-muted-foreground">Taux du jour</p>
+          <p className="text-xs text-muted-foreground">Taux en vigueur</p>
           <p className="mt-1 text-base font-semibold tracking-tight tabular-nums">
             {officialRate
               ? `${NOMBRE.format(officialRate.value)} CDF`

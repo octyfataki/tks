@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { eq } from "drizzle-orm";
+import { desc, eq, lte } from "drizzle-orm";
 import { db } from "@/lib/db/client";
 import { user } from "@/lib/db/schema/auth-schema";
 import { comptesStaff } from "@/lib/db/schema/accounts";
@@ -17,7 +17,7 @@ export type ErreurTaux =
   | "NON_AUTORISE"
   | "VALEUR_INVALIDE"
   | "JOUR_INVALIDE"
-  | "DEJA_DEFINI"
+  | "INCHANGE"
   | "JOURNAL_INDISPONIBLE";
 
 export class TauxError extends Error {
@@ -28,12 +28,28 @@ export class TauxError extends Error {
   }
 }
 
-export type TauxDuJourLu = {
+export type TauxEnVigueurLu = {
+  numero: number;
   jour: string;
   valeur: number;
   saisiParId: string | null;
   saisiParNom: string | null;
 };
+
+const CHAMPS_LUS = {
+  numero: tauxChange.numero,
+  jour: tauxChange.jour,
+  valeur: tauxChange.valeur,
+  saisiParId: tauxChange.saisiPar,
+  saisiParNom: user.name,
+};
+
+const JOINTURES = () =>
+  db
+    .select(CHAMPS_LUS)
+    .from(tauxChange)
+    .leftJoin(comptesStaff, eq(comptesStaff.id, tauxChange.saisiPar))
+    .leftJoin(user, eq(user.id, comptesStaff.betterAuthUserId));
 
 type CompteStaffMinimal = { id: string; role: string; etat: string };
 
@@ -58,64 +74,43 @@ async function staffParId(id: string): Promise<CompteStaffMinimal | null> {
   return lignes[0] ?? null;
 }
 
-function estDoublon(erreur: unknown): boolean {
-  const textes: string[] = [];
-  let courante: unknown = erreur;
-  for (let profondeur = 0; profondeur < 4; profondeur++) {
-    if (!courante || typeof courante !== "object") break;
-    const e = courante as {
-      message?: unknown;
-      sqlMessage?: unknown;
-      code?: unknown;
-      cause?: unknown;
-    };
-    if (typeof e.message === "string") textes.push(e.message);
-    if (typeof e.sqlMessage === "string") textes.push(e.sqlMessage);
-    if (typeof e.code === "string") textes.push(e.code);
-    courante = e.cause;
-  }
-  return textes.some(
-    (texte) =>
-      texte.includes("ER_DUP_ENTRY") || texte.includes("Duplicate entry"),
-  );
+export async function lireTauxEnVigueur(): Promise<TauxEnVigueurLu | null> {
+  const lignes = await JOINTURES().orderBy(desc(tauxChange.numero)).limit(1);
+  return lignes[0] ?? null;
 }
 
-export async function lireTauxDuJour(
-  jour: string = dateDuJourKinshasa(),
-): Promise<TauxDuJourLu | null> {
-  const lignes = await db
-    .select({
-      jour: tauxChange.jour,
-      valeur: tauxChange.valeur,
-      saisiParId: tauxChange.saisiPar,
-      saisiParNom: user.name,
-    })
-    .from(tauxChange)
-    .leftJoin(comptesStaff, eq(comptesStaff.id, tauxChange.saisiPar))
-    .leftJoin(user, eq(user.id, comptesStaff.betterAuthUserId))
-    .where(eq(tauxChange.jour, jour))
+export async function lireTauxEnVigueurAu(
+  jour: string,
+): Promise<TauxEnVigueurLu | null> {
+  if (!jourValide(jour)) {
+    throw new TauxError("JOUR_INVALIDE", "jour invalide");
+  }
+  const lignes = await JOINTURES()
+    .where(lte(tauxChange.jour, jour))
+    .orderBy(desc(tauxChange.numero))
     .limit(1);
-  const ligne = lignes[0];
-  if (!ligne) return null;
-  return {
-    jour: ligne.jour,
-    valeur: ligne.valeur,
-    saisiParId: ligne.saisiParId,
-    saisiParNom: ligne.saisiParNom ?? null,
-  };
+  return lignes[0] ?? null;
 }
 
-export async function definirTauxDuJour(input: {
-  saisiParId: string;
-  valeur: number;
-  jour?: string;
-  horodatageLocal?: Date;
-  appareilId?: string | null;
-}): Promise<{ jour: string; valeur: number }> {
-  const compte = await staffParId(input.saisiParId);
-  if (!compte) {
-    throw new TauxError("NON_AUTORISE", "compte de saisie inconnu");
-  }
+export async function lireHistoriqueTaux(
+  plafond: number = 10,
+): Promise<TauxEnVigueurLu[]> {
+  return JOINTURES()
+    .orderBy(desc(tauxChange.numero))
+    .limit(Math.min(Math.max(plafond, 1), 100));
+}
+
+type SaisieValidee = { jour: string; horodatageLocal: Date };
+
+async function validerSaisie(
+  input: {
+    saisiParId: string;
+    valeur: number;
+    jour?: string;
+    horodatageLocal?: Date;
+  },
+  compte: CompteStaffMinimal,
+): Promise<SaisieValidee> {
   if (!(await autoriserSaisieTaux(compte))) {
     throw new TauxError("NON_AUTORISE", "saisie du taux non autorisée");
   }
@@ -126,48 +121,61 @@ export async function definirTauxDuJour(input: {
   if (!jourValide(jour)) {
     throw new TauxError("JOUR_INVALIDE", "jour invalide");
   }
-  const horodatageLocal = input.horodatageLocal ?? new Date();
+  return { jour, horodatageLocal: input.horodatageLocal ?? new Date() };
+}
 
-  const existant = await lireTauxDuJour(jour);
-  if (existant) {
-    if (existant.valeur === input.valeur) {
-      return { jour, valeur: existant.valeur };
-    }
-    throw new TauxError("DEJA_DEFINI", "un taux existe déjà pour ce jour");
+export async function enregistrerTaux(input: {
+  saisiParId: string;
+  valeur: number;
+  jour?: string;
+  horodatageLocal?: Date;
+  appareilId?: string | null;
+}): Promise<{ jour: string; valeur: number }> {
+  const compte = await staffParId(input.saisiParId);
+  if (!compte) {
+    throw new TauxError("NON_AUTORISE", "compte de saisie inconnu");
+  }
+  const { jour, horodatageLocal } = await validerSaisie(input, compte);
+
+  const enVigueur = await lireTauxEnVigueur();
+  if (enVigueur && enVigueur.valeur === input.valeur) {
+    throw new TauxError("INCHANGE", "ce taux est déjà en vigueur");
   }
 
-  try {
-    await db.transaction(async (tx) => {
-      await tx.insert(tauxChange).values({
-        id: randomUUID(),
-        jour,
-        valeur: input.valeur,
-        saisiPar: input.saisiParId,
-        horodatageLocal,
-      });
-      const trace = await enregistrerEvenement(
-        {
-          acteurId: input.saisiParId,
-          roleAuMoment: compte.role,
-          typeAction: "taux.saisir",
-          entite: "taux_change",
-          entiteId: jour,
-          apres: { jour, valeur: input.valeur },
-          horodatageLocal,
-          appareilId: input.appareilId ?? null,
-        },
-        tx,
-      );
-      if (!trace.ok) {
-        throw new TauxError("JOURNAL_INDISPONIBLE", "journal indisponible");
-      }
+  return db.transaction(async (tx) => {
+    const dernier = await tx
+      .select({ numero: tauxChange.numero })
+      .from(tauxChange)
+      .orderBy(desc(tauxChange.numero))
+      .limit(1)
+      .for("update");
+    const numero = (dernier[0]?.numero ?? 0) + 1;
+
+    const id = randomUUID();
+    await tx.insert(tauxChange).values({
+      id,
+      numero,
+      jour,
+      valeur: input.valeur,
+      saisiPar: input.saisiParId,
+      horodatageLocal,
     });
-  } catch (erreur) {
-    if (erreur instanceof TauxError) throw erreur;
-    if (estDoublon(erreur)) {
-      throw new TauxError("DEJA_DEFINI", "un taux existe déjà pour ce jour");
+    const trace = await enregistrerEvenement(
+      {
+        acteurId: input.saisiParId,
+        roleAuMoment: compte.role,
+        typeAction: "taux.saisir",
+        entite: "taux_change",
+        entiteId: id,
+        apres: { jour, valeur: input.valeur },
+        horodatageLocal,
+        appareilId: input.appareilId ?? null,
+      },
+      tx,
+    );
+    if (!trace.ok) {
+      throw new TauxError("JOURNAL_INDISPONIBLE", "journal indisponible");
     }
-    throw erreur;
-  }
-  return { jour, valeur: input.valeur };
+    return { jour, valeur: input.valeur };
+  });
 }

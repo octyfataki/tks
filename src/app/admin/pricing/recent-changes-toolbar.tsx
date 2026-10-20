@@ -46,7 +46,7 @@ function cellule(valeur: string): string {
 }
 
 function exporterCSV(lignes: LigneChangement[]) {
-  const entete = "Réseau;Avant;Après;Au taux du jour;1 000 unités;Publié le;Par";
+  const entete = "Réseau;Avant;Après;Au taux en vigueur;1 000 unités;Publié le;Par";
   const corps = lignes.map((ligne) =>
     [
       cellule(ligne.reseau),

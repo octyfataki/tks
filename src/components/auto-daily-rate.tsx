@@ -5,14 +5,16 @@ import {
   TauxDuJour,
   type ResultatSaisieTaux,
   type TauxEnVigueur,
+  type TauxHistorique,
 } from "@/components/daily-rate";
 import {
-  chargerTauxDuJourAction,
-  enregistrerTauxDuJourAction,
+  chargerTauxEnVigueurAction,
+  enregistrerTauxAction,
 } from "@/components/rate-actions";
 
 type EtatTaux = {
   taux: TauxEnVigueur | null;
+  historique: TauxHistorique[];
   peutSaisir: boolean;
 };
 
@@ -21,17 +23,21 @@ export function TauxDuJourAuto({ className }: { className?: string }) {
 
   React.useEffect(() => {
     let actif = true;
-    chargerTauxDuJourAction()
+    chargerTauxEnVigueurAction()
       .then((resultat) => {
         if (!actif) return;
         if (resultat.ok) {
-          setEtat({ taux: resultat.taux, peutSaisir: resultat.peutSaisir });
+          setEtat({
+            taux: resultat.taux,
+            historique: resultat.historique,
+            peutSaisir: resultat.peutSaisir,
+          });
         } else {
-          setEtat({ taux: null, peutSaisir: false });
+          setEtat({ taux: null, historique: [], peutSaisir: false });
         }
       })
       .catch(() => {
-        if (actif) setEtat({ taux: null, peutSaisir: false });
+        if (actif) setEtat({ taux: null, historique: [], peutSaisir: false });
       });
     return () => {
       actif = false;
@@ -40,9 +46,20 @@ export function TauxDuJourAuto({ className }: { className?: string }) {
 
   const enregistrer = React.useCallback(
     async (valeur: number): Promise<ResultatSaisieTaux> => {
-      const resultat = await enregistrerTauxDuJourAction(valeur);
+      const resultat = await enregistrerTauxAction(valeur);
       if (resultat.ok) {
-        setEtat({ taux: resultat.taux, peutSaisir: true });
+        setEtat((precedent) => ({
+          taux: resultat.taux,
+          historique: [
+            {
+              valeur: resultat.taux.valeur,
+              jour: resultat.taux.depuisLe,
+              saisiPar: resultat.taux.saisiPar,
+            },
+            ...(precedent?.historique ?? []).slice(0, 9),
+          ],
+          peutSaisir: true,
+        }));
         return { ok: true };
       }
       return { ok: false, erreur: resultat.erreur };
@@ -53,6 +70,7 @@ export function TauxDuJourAuto({ className }: { className?: string }) {
   return (
     <TauxDuJour
       taux={etat?.taux ?? null}
+      historique={etat?.historique ?? []}
       peutSaisir={etat?.peutSaisir ?? false}
       onEnregistrer={enregistrer}
       className={className}

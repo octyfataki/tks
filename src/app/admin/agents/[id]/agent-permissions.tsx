@@ -11,7 +11,7 @@ import {
 } from "../actions";
 
 export const LIBELLES_PERMISSION: Record<string, { titre: string; detail: string }> = {
-  "taux.saisir": { titre: "Saisir le taux", detail: "Taux du jour 1 USD = X CDF." },
+  "taux.saisir": { titre: "Saisir le taux", detail: "1 USD = X CDF ; le dernier taux saisi fait foi." },
   "creance.creer": { titre: "Créer une créance", detail: "Dette née d'une commande crédit servie." },
   "paiement.creer": { titre: "Encaisser un paiement", detail: "Enregistrer un versement client, toute devise." },
   "ecriture.corriger": { titre: "Corriger par écriture inverse", detail: "Jamais de suppression : on annule par l'inverse tracé." },
