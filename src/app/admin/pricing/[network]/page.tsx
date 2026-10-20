@@ -17,7 +17,7 @@ import {
   readPriceAt,
 } from "@/modules/pricing/publish";
 import { PricingDenied } from "../denied";
-import { NETWORK_LOGOS } from "../network-logo";
+import { NETWORK_LOGOS } from "@/components/network-assets";
 import {
   NOMBRE,
   SAMPLE_UNITS,

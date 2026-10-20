@@ -130,11 +130,9 @@ export function preparePrice(draft: PriceDraft): PreparedPrice {
   };
 }
 
-export function priceApplicable<T extends PriceLine>(
-  lines: readonly T[],
-  network: string,
-  instant: Date,
-): T | null {
+export function priceApplicable<
+  T extends { network: string; effectiveAt: Date },
+>(lines: readonly T[], network: string, instant: Date): T | null {
   let retained: T | null = null;
   const bound = instant.getTime();
   for (const line of lines) {

@@ -16,7 +16,7 @@ import {
 import { PaginationListe } from "../list/list-pagination";
 import { PricingDenied } from "./denied";
 import { NetworkCard } from "./network-card";
-import { NETWORK_LOGOS } from "./network-logo";
+import { NETWORK_LOGOS } from "@/components/network-assets";
 import { jourIso, officialRateOf, toEntry } from "./pricing-display";
 import { RateNote } from "./rate-note";
 import { RecentChangesTable, type LigneChangement } from "./recent-changes-table";
