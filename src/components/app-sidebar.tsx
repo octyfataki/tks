@@ -18,7 +18,6 @@ import {
   AlertTriangleIcon,
   BanknoteIcon,
   ClipboardListIcon,
-  FileCheckIcon,
   FolderOpenIcon,
   GaugeIcon,
   LayoutDashboardIcon,
@@ -136,19 +135,12 @@ const groups: { label: string; items: NavItem[] }[] = [
     items: [
       {
         title: "Commandes",
-        url: "#",
+        url: "/admin/orders",
         icon: <ClipboardListIcon />,
-        soon: true,
         items: [
-          { title: "File d'attente", soon: true },
-          { title: "Caisse rapide", soon: true },
+          { title: "Toutes les commandes", url: "/admin/orders" },
+          { title: "Preuves de paiement", url: "/admin/proofs" },
         ],
-      },
-      {
-        title: "Preuves de paiement",
-        url: "#",
-        icon: <FileCheckIcon />,
-        soon: true,
       },
       {
         title: "Encaissements",

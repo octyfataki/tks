@@ -59,8 +59,8 @@ const groups: { label: string; items: NavItem[] }[] = [
         url: "/agent/orders",
         icon: <ClipboardListIcon />,
         items: [
-          { title: "File d'attente", soon: true },
-          { title: "Caisse rapide", soon: true },
+          { title: "File d'attente", url: "/agent/orders" },
+          { title: "Caisse rapide", url: "/agent/orders/new" },
         ],
       },
       {

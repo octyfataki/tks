@@ -8,6 +8,7 @@ import { db } from "@/lib/db/client";
 import {
   comptesClients,
   comptesStaff,
+  estRoleAdmin,
   piecesIdentiteClients,
 } from "@/lib/db/schema/accounts";
 import { aPermission } from "@/lib/authorizations/permissions";
@@ -48,7 +49,7 @@ export async function GET(
   const estAdmin =
     staff[0] !== undefined &&
     staff[0].etat === "VALIDE" &&
-    (staff[0].role === "ADMIN_PRINCIPAL" || staff[0].role === "ADMIN_TECHNIQUE");
+    estRoleAdmin(staff[0].role);
 
   let estAgentAutorise = false;
   if (!estAdmin && staff[0]?.role === "AGENT" && staff[0].etat === "VALIDE") {

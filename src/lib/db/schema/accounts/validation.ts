@@ -12,6 +12,10 @@ export function estRoleStaff(role: string): role is RoleStaff {
   return (ROLES_STAFF as readonly string[]).includes(role);
 }
 
+export function estRoleAdmin(role: string): boolean {
+  return role === "ADMIN_PRINCIPAL" || role === "ADMIN_TECHNIQUE";
+}
+
 export function estEtatStaff(etat: string): etat is EtatStaff {
   return (ETATS_STAFF as readonly string[]).includes(etat);
 }
