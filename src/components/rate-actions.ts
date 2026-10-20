@@ -6,24 +6,31 @@ import { eq } from "drizzle-orm";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
 import { comptesStaff } from "@/lib/db/schema/accounts";
-import { dateDuJourKinshasa } from "@/lib/db/schema/currencies";
 import {
   autoriserSaisieTaux,
-  definirTauxDuJour,
-  lireTauxDuJour,
+  enregistrerTaux,
+  lireHistoriqueTaux,
+  lireTauxEnVigueur,
   TauxError,
 } from "@/lib/currencies/rates";
 import type { ResultatAction } from "@/lib/action-result";
 
 export type TauxAffiche = {
   valeur: number;
-  dateSaisie: string;
+  depuisLe: string;
+  saisiPar?: string;
+};
+
+export type TauxHistoriqueAffiche = {
+  valeur: number;
+  jour: string;
   saisiPar?: string;
 };
 
 export type ResultatChargementTaux = ResultatAction<{
   taux: TauxAffiche | null;
   peutSaisir: boolean;
+  historique: TauxHistoriqueAffiche[];
 }>;
 
 export type ResultatEnregistrementTaux = ResultatAction<{ taux: TauxAffiche }>;
@@ -53,45 +60,57 @@ async function compteCourant(): Promise<CompteCourant | null> {
   return { ...compte, nom: session?.user?.name ?? "" };
 }
 
-export async function chargerTauxDuJourAction(): Promise<ResultatChargementTaux> {
+function versAffiche(taux: {
+  valeur: number;
+  jour: string;
+  saisiParNom?: string | null;
+}): TauxAffiche {
+  return {
+    valeur: taux.valeur,
+    depuisLe: taux.jour,
+    saisiPar: taux.saisiParNom ?? undefined,
+  };
+}
+
+export async function chargerTauxEnVigueurAction(): Promise<ResultatChargementTaux> {
   try {
-    const [taux, compte] = await Promise.all([
-      lireTauxDuJour(dateDuJourKinshasa()),
+    const [taux, historique, compte] = await Promise.all([
+      lireTauxEnVigueur(),
+      lireHistoriqueTaux(10),
       compteCourant(),
     ]);
     const peutSaisir = compte ? await autoriserSaisieTaux(compte) : false;
     return {
       ok: true,
-      taux: taux
-        ? {
-            valeur: taux.valeur,
-            dateSaisie: taux.jour,
-            saisiPar: taux.saisiParNom ?? undefined,
-          }
-        : null,
+      taux: taux ? versAffiche(taux) : null,
       peutSaisir,
+      historique: historique.map((ligne) => ({
+        valeur: ligne.valeur,
+        jour: ligne.jour,
+        saisiPar: ligne.saisiParNom ?? undefined,
+      })),
     };
   } catch {
-    return { ok: false, erreur: "Taux du jour indisponible." };
+    return { ok: false, erreur: "Taux en vigueur indisponible." };
   }
 }
 
 function messageTaux(erreur: TauxError): string {
   switch (erreur.code) {
     case "NON_AUTORISE":
-      return "Seul un compte autorisé peut saisir le taux du jour.";
+      return "Seul un compte autorisé peut saisir le taux.";
     case "VALEUR_INVALIDE":
       return "Saisir un nombre entier de francs, strictement positif, pour 1 USD.";
     case "JOUR_INVALIDE":
       return "Date invalide.";
-    case "DEJA_DEFINI":
-      return "Un taux existe déjà pour ce jour : une seconde saisie ne remplace jamais la première.";
+    case "INCHANGE":
+      return "Ce taux est déjà en vigueur : rien à changer.";
     case "JOURNAL_INDISPONIBLE":
       return "Enregistrement impossible : journal indisponible.";
   }
 }
 
-export async function enregistrerTauxDuJourAction(
+export async function enregistrerTauxAction(
   valeur: number,
 ): Promise<ResultatEnregistrementTaux> {
   const compte = await compteCourant();
@@ -99,7 +118,7 @@ export async function enregistrerTauxDuJourAction(
     return { ok: false, erreur: "Connexion requise pour saisir le taux." };
   }
   try {
-    const resultat = await definirTauxDuJour({
+    const resultat = await enregistrerTaux({
       saisiParId: compte.id,
       valeur,
     });
@@ -110,7 +129,7 @@ export async function enregistrerTauxDuJourAction(
       ok: true,
       taux: {
         valeur: resultat.valeur,
-        dateSaisie: resultat.jour,
+        depuisLe: resultat.jour,
         saisiPar: compte.nom,
       },
     };

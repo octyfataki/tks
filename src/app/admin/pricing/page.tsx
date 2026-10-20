@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge";
-import { lireTauxDuJour } from "@/lib/currencies/rates";
+import { lireTauxEnVigueur } from "@/lib/currencies/rates";
 import {
   UNITS_PER_DOLLAR,
   isBelowOfficialRate,
@@ -79,7 +79,7 @@ export default async function PriceGridPage({
   const instant = new Date();
   const [entrees, taux, changements] = await Promise.all([
     readGridAt(instant),
-    lireTauxDuJour(),
+    lireTauxEnVigueur(),
     readRecentChanges(),
   ]);
 

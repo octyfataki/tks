@@ -148,6 +148,13 @@
       "when": 1792365143371,
       "tag": "0020_price-grid",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "5",
+      "when": 1792498044166,
+      "tag": "0021_taux-en-vigueur",
+      "breakpoints": true
     }
   ]
 }

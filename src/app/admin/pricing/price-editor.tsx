@@ -175,7 +175,7 @@ export function PriceEditor({
                     </p>
                   ) : (
                     <p className="mt-0.5 text-[11px] text-muted-foreground">
-                      Aucun taux du jour : les équivalents sont masqués.
+                      Aucun taux en vigueur : les équivalents sont masqués.
                     </p>
                   )}
                 </div>
@@ -311,7 +311,7 @@ export function PriceEditor({
                 <p className="flex gap-2 rounded-lg border border-amber-600/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-400">
                   <CircleAlertIcon className="mt-0.5 size-3.5 shrink-0" />
                   <span>
-                    Ce prix passe sous le taux du jour ({officialRate.label} :{" "}
+                    Ce prix passe sous le taux en vigueur ({officialRate.label} :{" "}
                     {NOMBRE.format(officialRate.value)} CDF pour 1 USD). Le
                     dollar d&apos;airtime se vendrait à perte. La publication
                     reste possible.

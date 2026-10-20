@@ -185,7 +185,7 @@ export function EcranErreur({
             </ul>
 
             <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
-              Soldes recalculés au taux du jour à la reconnexion.
+              Soldes recalculés au taux en vigueur à la reconnexion.
             </p>
           </section>
         </div>

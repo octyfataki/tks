@@ -30,8 +30,9 @@ historisé.
   `CDF`). Les colonnes en double disparaissent.
 - **Un client peut payer en CDF une créance en USD**, et payer une partie en
   chaque devise sur la même période.
-- **Le taux est saisi par l'administrateur principal, une fois par jour**, et
-  chaque saisie est conservée.
+- **Le taux est saisi par l'administrateur principal, autant de fois que le
+  marché le demande**, et chaque saisie est conservée. Le dernier taux saisi fait
+  foi et survit aux jours (ADR-0003).
 - **Le taux applicable est le taux en vigueur au moment de la consultation, et il
   ne mord que sur les montants en USD.** Une écriture ne porte pas de taux. Un
   montant en CDF ne bouge jamais. Voir ADR-0001.
@@ -41,13 +42,13 @@ historisé.
 
 ### Taux de change
 
-1. As the distributor, I want to record today's exchange rate once, so that every conversion uses the same reference.
+1. As the distributor, I want to record the exchange rate I negotiate — once or several times a day as the market moves, so that conversions follow the real rate.
 2. As the distributor, I want previous rates kept, so that I can reconstruct what a client owed last month.
-3. As the distributor, I want to change tomorrow's rate without altering today's entries, so that history stays intact.
-4. As the distributor, I want to see who recorded a given rate, so that I trust the figure.
-5. As the distributor, I want to see the rate history, so that I can spot an unusual day.
-6. As the distributor, I want a day's rate to be recorded once and reused, so that two payments at the same hour give the same result.
-7. As the distributor, I want to be warned if I try to record a second, different rate for a day already recorded, so that I don't create an inconsistency.
+3. As the distributor, I want to record a new rate without altering previous entries, so that history stays intact.
+4. As the distributor, I want to see who recorded a given rate and when, so that I trust the figure.
+5. As the distributor, I want to see the rate history, so that I can spot an unusual entry.
+6. As the distributor, I want the last recorded rate to stay in effect day after day, so that a day without a new entry is not a day without a rate.
+7. As the distributor, I want to be warned before recording a rate far from the one in effect, so that a typo cannot silently revalue every USD debt.
 
 ### Écritures financières
 
@@ -86,18 +87,21 @@ historisé.
 
 ### Taux de change
 
-- Le taux est une entité à part : une date, une valeur, et l'utilisateur qui l'a
-  saisi. Il est **journalisé** comme toute autre écriture.
-- Un jour porte **au plus un taux**. Une tentative de réécrire un taux existant
-  est refusée ; corriger un taux erroné passe par un taux d'ajustement daté et
-  tracé, jamais par une modification.
+- Le taux est une entité à part : une valeur, la date de sa saisie, et
+  l'utilisateur qui l'a saisi. Il est **journalisé** comme toute autre écriture.
+- **Le taux est une séquence de saisies, pas un paramètre daté.** Chaque saisie
+  est append-only, numérotée dans la base ; l'ordre fait foi. La saisie la plus
+  récente est le taux en vigueur, jusqu'à la suivante. Une tentative de ressaisir
+  la valeur déjà en vigueur est refusée sans rien écrire. Voir ADR-0003.
 - Le taux est saisi manuellement. **Aucune récupération automatique** depuis une
   banque centrale : le taux est un taux négocié, donc maîtrisé.
-- Le taux du jour est un **paramètre de lecture**, pas une donnée d'écriture. Il
-  est résolu au moment du calcul, jamais capturé. Voir ADR-0001.
-- Le taux en vigueur est celui de **la date de la consultation**. Il n'est pas
-  nécessairement celui du jour : un rapport portant sur un mois passé se lit au
-  taux de ce mois-là, sinon il est faux.
+- Le taux en vigueur est un **paramètre de lecture**, pas une donnée d'écriture.
+  Il est résolu au moment du calcul, jamais capturé. Voir ADR-0001.
+- **Un rapport portant sur une date passée se lit au taux en vigueur fin de ce
+  jour** : la saisie la plus récente antérieure à la fin de journée J. Sinon il
+  est faux.
+- Un changement d'écart marquant (au-delà de 5 %) exige une confirmation
+  explicite à l'écran : il reconvertit immédiatement toutes les dettes en USD.
 
 ### Devises
 
@@ -153,10 +157,10 @@ Cet exemple est normatif et doit être couvert par un test :
 - Le taux en vigueur est embarqué dans le paquet local. Un agent hors-ligne
   calcule des soldes avec le taux qu'il a reçu, et l'interface indique
   explicitement **de quelle date est ce taux**.
-- Un taux embarqué est **toujours périmé dès le lendemain**. Ce n'est pas une
-  anomalie, c'est le modèle : le solde d'un client en USD est une fonction du taux
-  du jour. Un agent en zone rurale annonce donc un reste à payer daté, pas un
-  reste éternel.
+- Un taux embarqué est **daté de sa saisie, non de la synchronisation**. Sous le
+  modèle du taux en vigueur (ADR-0003), il peut dater de plusieurs jours sans être
+  faux : tant qu'aucune saisie plus récente n'a eu lieu, il est exact. L'interface
+  dit toujours **de quelle date est le taux**.
 - À la synchronisation, le taux se rafraîchit et les soldes affichés changent.
   **Ce changement n'est pas un conflit** et ne doit pas produire de dossier de
   réconciliation : aucune donnée n'a été écrite en désaccord, seul un paramètre a
@@ -187,8 +191,9 @@ cas (dette en USD, paiement en CDF, paiement en USD) et un résultat non trivial
   paiement de 100 USD reste à zéro après un changement de taux, parce que les
   deux bougent ensemble. Le même montant payé en CDF ne solde pas. Ce test dit
   au code ce que le glossaire dit à l'humain.
-- **Un jour, un taux** : deux saisies différentes sur la même date sont refusées
-  ou journalisées comme ajustement. Jamais la seconde n'écrase la première.
+- **La séquence surpasse la date** : deux saisies le même jour sont les deux
+  conservées ; la plus récente fait foi pour la consultation, et aucune des deux
+  n'écrase l'autre.
 - **L'asymétrie des devises** : un paiement en CDF sur une créance en USD réduit
   le reste en CDF. Le même montant payé en USD ne réduit pas le reste de la même
   façon. C'est exactement le piège du prototype Excel, et c'est un test
@@ -217,7 +222,7 @@ couture de test — S1 l'a posée, et elle s'applique ici sans adaptation.
 - Une troisième devise, ou un niveau de conversion multi-devises.
 - Récupération automatique du taux depuis une banque centrale.
 - Comptabilisation des gains et pertes de change : le système calcule un solde au
-  taux du jour, il ne tient pas une comptabilité en valeur de réalisation.
+  taux en vigueur, il ne tient pas une comptabilité en valeur de réalisation.
 - Prévision de trésorerie, analyse de change.
 - arrondis et modes d'arrondi : une seule règle s'applique uniformément, elle est
   fixée ici et ne varie pas.
@@ -251,8 +256,8 @@ celui qu'on réclame, ce qui ne peut pas fonder une logique de recouvrement.
 
 **Valeur de référence du taux.** Le taux lui-même (~2 300 CDF par USD au moment de
 l'interview) n'est pas une décision d'architecture. Il se saisit dans
-l'application. Ce qui compte, c'est que la saisie soit unique par jour et
-historisée.
+l'application. Ce qui compte, c'est que chaque saisie soit historisée, tracée, et
+que le dernier saisi fasse foi (voir ADR-0003).
 
 **Ce qui n'est pas dans cette spec.** Le plafond de crédit d'un client, qui est un
 montant exprimé dans l'une de ces deux devises, arrive en S4. Les mouvements de
