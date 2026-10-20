@@ -1,5 +1,4 @@
-import { OrderActions } from "@/components/orders/order-actions";
-import { OrderRow } from "@/components/orders/order-row";
+import { OrderRegister } from "@/components/orders/order-register";
 import type { OrderView } from "@/modules/orders/read";
 
 function Section({
@@ -40,8 +39,8 @@ export function OrderQueue({
 
   if (commandes.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed px-4 py-10 text-center">
-        <p className="text-sm font-medium">Aucune commande ouverte.</p>
+      <div className="rounded-xl border bg-card p-6 text-center">
+        <p className="text-sm font-medium">Aucune commande ouverte</p>
         <p className="mt-1 text-xs text-muted-foreground">
           Une commande au comptoir se crée en moins d&apos;une minute.
         </p>
@@ -49,38 +48,27 @@ export function OrderQueue({
     );
   }
 
-  const ligne = (commande: OrderView) => (
-    <OrderRow key={commande.id} commande={commande}>
-      <OrderActions
-        orderId={commande.id}
-        state={commande.state}
-        mine={commande.lockedBy === acteurId}
-        canServe={canServe}
-        canCancel={canCancel}
-        retour={retour}
-      />
-    </OrderRow>
+  const registre = (liste: OrderView[]) => (
+    <OrderRegister
+      commandes={liste}
+      acteurId={acteurId}
+      canServe={canServe}
+      canCancel={canCancel}
+      retour={retour}
+    />
   );
 
   return (
-    <div className="flex flex-col gap-6">
-      <Section titre="À prendre" total={disponibles.length}>
-        {disponibles.length === 0 ? (
-          <p className="rounded-lg border border-dashed px-3 py-4 text-xs text-muted-foreground">
-            Rien en attente de prise.
-          </p>
-        ) : (
-          <ul className="divide-y overflow-hidden rounded-lg border bg-card">
-            {disponibles.map(ligne)}
-          </ul>
-        )}
-      </Section>
+    <div className="flex flex-col gap-5">
+      {disponibles.length > 0 ? (
+        <Section titre="À prendre" total={disponibles.length}>
+          {registre(disponibles)}
+        </Section>
+      ) : null}
 
       {autres.length > 0 ? (
         <Section titre="En cours" total={autres.length}>
-          <ul className="divide-y overflow-hidden rounded-lg border bg-card">
-            {autres.map(ligne)}
-          </ul>
+          {registre(autres)}
         </Section>
       ) : null}
     </div>

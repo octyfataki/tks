@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Badge } from "@/components/ui/badge";
+import { OrderBand } from "@/components/orders/order-band";
 import { OrderHistory } from "@/components/orders/order-history";
 import { OrderQueue } from "@/components/orders/order-queue";
 import { OrderReadout, type OrderStat } from "@/components/orders/order-readout";
@@ -64,15 +64,13 @@ export default async function AdminOrdersPage({
 
   const lecture: OrderStat[] = [
     {
-      label: "Commandes ouvertes",
+      label: "Ouvertes",
       value: String(stats.ouvertes),
-      hint: stats.aPrendre
-        ? `${stats.aPrendre} à prendre`
-        : "aucune à prendre",
+      hint: `${stats.aPrendre} à prendre`,
       accent: stats.aPrendre > 0,
     },
     {
-      label: "En main d'un agent",
+      label: "En main",
       value: String(stats.enCours),
       hint: "verrou de quinze minutes",
     },
@@ -87,43 +85,60 @@ export default async function AdminOrdersPage({
       value:
         stats.engageCredit.length === 0
           ? "0"
-          : montant(
-              stats.engageCredit[0].amount,
-              stats.engageCredit[0].currency,
-            ),
-      hint: stats.engageCredit.length > 1 ? "plusieurs devises" : "à recouvrer",
+          : montant(stats.engageCredit[0].amount, stats.engageCredit[0].currency),
+      hint: "à recouvrer",
     },
   ];
 
   return (
-    <div className="flex flex-1 flex-col gap-5 p-4 pt-4">
-      <header>
-        <Badge variant="outline">Pilotage</Badge>
-        <h1 className="mt-2 text-2xl font-semibold tracking-tight">
+    <div className="flex flex-1 flex-col gap-4 p-4 pt-4">
+      <div>
+        <p className="text-[11px] font-semibold tracking-widest text-muted-foreground uppercase">
+          Pilotage
+        </p>
+        <h1 className="mt-1 text-2xl font-semibold tracking-tight">
           Toutes les commandes
         </h1>
         <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-          La file est partagée : l&apos;administrateur voit les commandes de
-          tous les agents, et sait qui tient laquelle. Une commande à crédit
-          servie devient une créance.
+          {stats.ouvertes === 0
+            ? "Aucune commande ouverte pour le moment."
+            : `${stats.ouvertes} commande${stats.ouvertes > 1 ? "s" : ""} ouverte${stats.ouvertes > 1 ? "s" : ""}, tous agents confondus.`}{" "}
+          Une commande à crédit servie devient une créance.
         </p>
-      </header>
+      </div>
 
       {message ? (
-        <p className="rounded-lg border border-emerald-600/40 bg-emerald-500/10 px-3 py-2 text-sm text-emerald-800 dark:text-emerald-300">
+        <p className="rounded-lg border border-emerald-600/40 bg-emerald-500/10 px-3 py-2 text-xs text-emerald-800 dark:text-emerald-300">
           {message}
         </p>
       ) : null}
       {params.erreur ? (
         <p
           role="alert"
-          className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+          className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-xs text-destructive"
         >
           {params.erreur}
         </p>
       ) : null}
 
       <OrderReadout stats={lecture} />
+
+      {stats.preuveAttendue > 0 ? (
+        <OrderBand
+          alerte
+          titre={`${stats.preuveAttendue} commande${stats.preuveAttendue > 1 ? "s" : ""} attend${stats.preuveAttendue > 1 ? "ent" : ""} sa preuve`}
+          detail="— le client doit déposer un reçu avant le service."
+          lien="/admin/proofs"
+          libelle="Ouvrir les preuves"
+          compte={stats.preuveAttendue}
+        />
+      ) : (
+        <OrderBand
+          alerte={false}
+          titre="Aucune preuve en attente"
+          detail="— les commandes en ligne passent au comptoir dès que le client a déposé."
+        />
+      )}
 
       <OrderQueue
         commandes={queue}

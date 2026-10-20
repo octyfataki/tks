@@ -1,6 +1,6 @@
-import { Badge } from "@/components/ui/badge";
 import { networkLabel } from "@/modules/pricing/price-record";
 import type { OrderView } from "@/modules/orders/read";
+import { CachetEtat } from "./etat-commande";
 import { NetworkThumb } from "./network-thumb";
 
 export function dateCourte(valeur: Date): string {
@@ -10,32 +10,20 @@ export function dateCourte(valeur: Date): string {
   }).format(valeur);
 }
 
-function Etat({ commande }: { commande: OrderView }) {
-  if (commande.state === "SERVED") {
-    return (
-      <Badge variant="outline" className="bg-secondary text-secondary-foreground">
-        Servie
-      </Badge>
-    );
-  }
-  return (
-    <Badge variant="outline" className="text-muted-foreground">
-      Annulée
-    </Badge>
-  );
-}
-
 export function OrderHistory({ commandes }: { commandes: OrderView[] }) {
   if (commandes.length === 0) {
     return (
-      <p className="rounded-lg border border-dashed px-4 py-6 text-center text-xs text-muted-foreground">
-        Aucune commande terminée pour l&apos;instant.
-      </p>
+      <div className="rounded-xl border bg-card p-6 text-center">
+        <p className="text-sm font-medium">Aucune commande terminée</p>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Les commandes servies ou annulées apparaîtront ici.
+        </p>
+      </div>
     );
   }
   return (
-    <div className="overflow-x-auto rounded-lg border bg-card">
-      <table className="w-full min-w-[720px] border-collapse text-left text-xs">
+    <div className="overflow-x-auto rounded-xl border bg-card">
+      <table className="w-full min-w-[760px] border-collapse text-left text-xs">
         <caption className="sr-only">
           Dernières commandes terminées, tous agents confondus
         </caption>
@@ -70,15 +58,17 @@ export function OrderHistory({ commandes }: { commandes: OrderView[] }) {
             </th>
           </tr>
         </thead>
-        <tbody>
+        <tbody className="divide-y">
           {commandes.map((commande) => (
             <tr
               key={commande.id}
-              className="border-b last:border-0 hover:bg-muted/40"
+              className="transition-colors hover:bg-muted/30"
             >
-              <td className="px-3 py-2.5">
-                <span className="font-medium">{commande.profileName}</span>
-                <span className="ml-2 text-muted-foreground">
+              <td className="max-w-56 px-3 py-2.5">
+                <span className="block truncate font-medium">
+                  {commande.profileName}
+                </span>
+                <span className="block truncate text-[11px] text-muted-foreground">
                   {commande.profilePhone}
                 </span>
               </td>
@@ -98,12 +88,12 @@ export function OrderHistory({ commandes }: { commandes: OrderView[] }) {
                 </span>
               </td>
               <td className="px-3 py-2.5">
-                <Etat commande={commande} />
+                <CachetEtat etat={commande.state} />
               </td>
               <td className="px-3 py-2.5 text-muted-foreground">
                 {commande.lockedByName ?? "—"}
               </td>
-              <td className="px-3 py-2.5 text-muted-foreground">
+              <td className="px-3 py-2.5 whitespace-nowrap text-muted-foreground tabular-nums">
                 {dateCourte(commande.createdAt)}
               </td>
             </tr>

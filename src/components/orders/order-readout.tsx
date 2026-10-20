@@ -10,10 +10,12 @@ export type OrderStat = {
 export function OrderReadout({ stats }: { stats: OrderStat[] }) {
   if (stats.length === 0) return null;
   return (
-    <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-lg bg-border sm:grid-cols-4">
+    <dl className="grid grid-cols-2 divide-x divide-y divide-dashed divide-border overflow-hidden rounded-lg border bg-card sm:grid-cols-4 sm:divide-y-0">
       {stats.map((stat) => (
-        <div key={stat.label} className="bg-card px-4 py-3">
-          <dt className="text-xs text-muted-foreground">{stat.label}</dt>
+        <div key={stat.label} className="px-4 py-3">
+          <dt className="text-[11px] font-semibold tracking-widest text-muted-foreground uppercase">
+            {stat.label}
+          </dt>
           <dd
             className={cn(
               "mt-1 text-2xl font-semibold tracking-tight tabular-nums",
@@ -25,7 +27,7 @@ export function OrderReadout({ stats }: { stats: OrderStat[] }) {
             {stat.value}
           </dd>
           {stat.hint ? (
-            <p className="mt-0.5 text-xs text-muted-foreground">{stat.hint}</p>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">{stat.hint}</p>
           ) : null}
         </div>
       ))}
