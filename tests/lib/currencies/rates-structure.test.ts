@@ -8,7 +8,7 @@ describe("S3 — le taux en vigueur, par la base", () => {
     "utf-8",
   );
   const refonte = readFileSync(
-    resolve(process.cwd(), "drizzle/0021_taux-en-vigueur.sql"),
+    resolve(process.cwd(), "drizzle/0029_taux-en-vigueur.sql"),
     "utf-8",
   );
 
