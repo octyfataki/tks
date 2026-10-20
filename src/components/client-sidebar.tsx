@@ -22,6 +22,7 @@ import {
   LayoutDashboardIcon,
   ScaleIcon,
   SettingsIcon,
+  TagsIcon,
 } from "lucide-react"
 
 const groups: { label: string; items: NavItem[] }[] = [
@@ -39,6 +40,11 @@ const groups: { label: string; items: NavItem[] }[] = [
   {
     label: "Opérations",
     items: [
+      {
+        title: "Tarifs",
+        url: "/clients/pricing",
+        icon: <TagsIcon />,
+      },
       {
         title: "Commandes",
         url: "#",

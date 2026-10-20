@@ -14,7 +14,7 @@ import {
   networkLabel,
   type Network,
 } from "@/modules/pricing/price-record";
-import { NETWORK_BANNERS } from "./network-logo";
+import { NETWORK_BANNERS } from "@/components/network-assets";
 import type { OfficialRate, PriceEntry } from "./pricing-display";
 import { PriceEditor } from "./price-editor";
 

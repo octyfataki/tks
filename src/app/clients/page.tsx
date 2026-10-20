@@ -1,4 +1,12 @@
 import Link from "next/link";
+import { ArrowRightIcon } from "lucide-react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 
 export default function ClientHomePage() {
   return (
@@ -25,6 +33,25 @@ export default function ClientHomePage() {
           Aide — vos raccourcis client
         </Link>
       </div>
+      <Link
+        href="/clients/pricing"
+        className="block w-full max-w-md text-left"
+      >
+        <Card size="sm" className="transition-colors hover:ring-primary/40">
+          <CardHeader>
+            <CardTitle className="text-base">Tarifs du jour</CardTitle>
+            <CardDescription>
+              Les prix des 100 unités pour Orange, Airtel, Africell et Vodacom.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <span className="inline-flex items-center gap-1 text-sm font-medium text-primary">
+              Voir les tarifs
+              <ArrowRightIcon className="size-4" aria-hidden="true" />
+            </span>
+          </CardContent>
+        </Card>
+      </Link>
     </div>
   );
 }

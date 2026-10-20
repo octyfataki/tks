@@ -26,6 +26,10 @@ type Segment = { etiquette: string; href?: string };
 
 const FIL_ARIANE_PAR_CHEMIN: Record<string, Segment[]> = {
   "/clients": [{ etiquette: "Votre compte" }],
+  "/clients/pricing": [
+    { etiquette: "Votre compte", href: "/clients" },
+    { etiquette: "Tarifs" },
+  ],
   "/clients/profile": [
     { etiquette: "Votre compte", href: "/clients" },
     { etiquette: "Mon compte" },

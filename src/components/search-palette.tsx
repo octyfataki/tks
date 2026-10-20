@@ -298,6 +298,23 @@ export const GROUPES_CLIENT: GroupeSuggestions[] = [
     titre: "Opérations",
     elements: [
       {
+        etiquette: "Tarifs",
+        motsCles: [
+          "tarif",
+          "prix",
+          "grille",
+          "orange",
+          "airtel",
+          "africell",
+          "vodacom",
+          "unité",
+          "cdf",
+          "usd",
+        ],
+        icone: TagsIcon,
+        href: "/clients/pricing",
+      },
+      {
         etiquette: "Commandes",
         motsCles: ["commande", "airtime", "unités", "montant", "suivi"],
         icone: ClipboardListIcon,

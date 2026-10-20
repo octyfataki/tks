@@ -34,7 +34,7 @@ import {
   type Network,
 } from "@/modules/pricing/price-record";
 import { publierPrixAction, type ResultatPrix } from "./actions";
-import { NETWORK_LOGOS } from "./network-logo";
+import { NETWORK_LOGOS } from "@/components/network-assets";
 import {
   NOMBRE,
   SAMPLE_UNITS,
