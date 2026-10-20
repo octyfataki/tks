@@ -9,8 +9,22 @@ import { orderEvents, orders } from "@/modules/orders/table";
 
 import type { MySqlTable } from "drizzle-orm/mysql-core";
 
+const JOURNAL = JSON.parse(
+  readFileSync(join(process.cwd(), "drizzle", "meta", "_journal.json"), "utf8"),
+) as { entries: { tag: string }[] };
+
+const TAG_MIGRATION = JOURNAL.entries.find((entree) =>
+  entree.tag.includes("orders-proofs-receivables"),
+)?.tag;
+
+if (!TAG_MIGRATION) {
+  throw new Error(
+    "migration orders-proofs-receivables absente du journal drizzle",
+  );
+}
+
 const MIGRATION = readFileSync(
-  join(process.cwd(), "drizzle", "0021_orders-proofs-receivables.sql"),
+  join(process.cwd(), "drizzle", `${TAG_MIGRATION}.sql`),
   "utf8",
 );
 

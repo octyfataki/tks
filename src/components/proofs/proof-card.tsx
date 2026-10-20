@@ -1,13 +1,9 @@
+import { ExternalLinkIcon, FileTextIcon } from "lucide-react";
+import { NetworkThumb } from "@/components/orders/network-thumb";
 import { networkLabel } from "@/modules/pricing/price-record";
 import type { ProofView } from "@/modules/proofs/read";
+import { attenteDepuis, dateCourte } from "./proof-format";
 import { ProofReview } from "./proof-review";
-
-export function dateCourte(valeur: Date): string {
-  return new Intl.DateTimeFormat("fr-FR", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(valeur);
-}
 
 export function ProofCard({
   preuve,
@@ -16,46 +12,68 @@ export function ProofCard({
   preuve: ProofView;
   retour: string;
 }) {
+  const url = `/api/proofs/${preuve.id}`;
   return (
-    <li className="flex flex-col overflow-hidden rounded-lg border">
-      {preuve.mime.startsWith("image/") ? (
-        <a
-          href={`/api/proofs/${preuve.id}`}
-          target="_blank"
-          rel="noreferrer"
-          className="block bg-muted"
-        >
-          {/* eslint-disable-next-line @next/next/no-img-element -- preuve privée servie par une route protégée */}
+    <li className="flex flex-col overflow-hidden rounded-lg border bg-card">
+      <a
+        href={url}
+        target="_blank"
+        rel="noreferrer"
+        aria-label={`Ouvrir la preuve de ${preuve.profileName} en grand format`}
+        className="group relative block border-b bg-muted"
+      >
+        {preuve.mime.startsWith("image/") ? (
+          /* eslint-disable-next-line @next/next/no-img-element -- preuve privée servie par une route protégée */
           <img
-            src={`/api/proofs/${preuve.id}`}
+            src={url}
             alt={`Preuve de paiement de ${preuve.profileName}`}
-            className="h-52 w-full object-contain"
+            className="h-56 w-full object-contain"
           />
-        </a>
-      ) : (
-        <a
-          href={`/api/proofs/${preuve.id}`}
-          target="_blank"
-          rel="noreferrer"
-          className="flex h-52 items-center justify-center bg-muted text-sm text-muted-foreground underline-offset-4 hover:underline"
+        ) : (
+          <span className="flex h-56 flex-col items-center justify-center gap-1.5 text-xs text-muted-foreground">
+            <FileTextIcon aria-hidden className="size-5" />
+            Ouvrir le fichier ({preuve.mime})
+          </span>
+        )}
+        <span
+          aria-hidden
+          className="absolute right-2 top-2 flex size-6 items-center justify-center rounded-md bg-background/90 text-muted-foreground ring-1 ring-border"
         >
-          Ouvrir le fichier ({preuve.mime})
-        </a>
-      )}
+          <ExternalLinkIcon className="size-3.5" />
+        </span>
+      </a>
+
       <div className="flex flex-1 flex-col gap-3 p-3">
-        <div>
-          <p className="text-sm font-medium">{preuve.profileName}</p>
-          <p className="text-xs text-muted-foreground">
-            {preuve.profilePhone} · déposée le {dateCourte(preuve.submittedAt)}
+        <div className="flex items-start gap-2">
+          <NetworkThumb network={preuve.network} />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium">{preuve.profileName}</p>
+            <p className="truncate text-xs text-muted-foreground">
+              {preuve.profilePhone}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-end justify-between gap-3">
+          <div className="min-w-0">
+            <p className="truncate text-xs text-muted-foreground">
+              {networkLabel(preuve.network)} ·{" "}
+              {preuve.units.toLocaleString("fr-FR")} unités
+            </p>
+            <p className="truncate text-xs text-muted-foreground">
+              déposée le {dateCourte(preuve.submittedAt)} ·{" "}
+              {attenteDepuis(preuve.submittedAt)}
+            </p>
+          </div>
+          <p className="shrink-0 text-sm font-semibold tabular-nums">
+            {preuve.amount.toLocaleString("fr-FR")}
+            {" "}
+            <span className="text-xs font-normal text-muted-foreground">
+              {preuve.currency}
+            </span>
           </p>
         </div>
-        <p className="text-sm">
-          {networkLabel(preuve.network)} ·{" "}
-          {preuve.units.toLocaleString("fr-FR")} unités ·{" "}
-          <span className="tabular-nums font-medium">
-            {preuve.amount.toLocaleString("fr-FR")} {preuve.currency}
-          </span>
-        </p>
+
         <ProofReview proofId={preuve.id} retour={retour} />
       </div>
     </li>

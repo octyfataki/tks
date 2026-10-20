@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,9 +10,11 @@ import { refuseProofAction, validateProofAction } from "@/modules/proofs/actions
 function PendingButton({
   children,
   variant,
+  className,
 }: {
   children: React.ReactNode;
-  variant?: "default" | "outline";
+  variant?: "default" | "outline" | "destructive";
+  className?: string;
 }) {
   const { pending } = useFormStatus();
   return (
@@ -19,6 +22,7 @@ function PendingButton({
       type="submit"
       size="sm"
       variant={variant ?? "default"}
+      className={className}
       disabled={pending}
     >
       {pending ? "…" : children}
@@ -33,27 +37,58 @@ export function ProofReview({
   proofId: string;
   retour: string;
 }) {
+  const [refusOuvert, setRefusOuvert] = useState(false);
+  const champMotif = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (refusOuvert) champMotif.current?.focus();
+  }, [refusOuvert]);
+
   return (
-    <div className="flex flex-col gap-3">
-      <form action={validateProofAction}>
-        <input type="hidden" name="proofId" value={proofId} />
-        <input type="hidden" name="retour" value={retour} />
-        <PendingButton>Valider la preuve</PendingButton>
-      </form>
-      <form action={refuseProofAction} className="flex flex-col gap-2">
-        <input type="hidden" name="proofId" value={proofId} />
-        <input type="hidden" name="retour" value={retour} />
-        <Label htmlFor={`reason-${proofId}`} className="text-xs">
-          Motif du refus, si la preuve ne convient pas
-        </Label>
-        <Input
-          id={`reason-${proofId}`}
-          name="reason"
-          placeholder="Capture illisible, montant différent…"
-          autoComplete="off"
-        />
-        <PendingButton variant="outline">Refuser</PendingButton>
-      </form>
+    <div className="mt-auto flex flex-col gap-2 border-t pt-3">
+      {refusOuvert ? (
+        <form action={refuseProofAction} className="flex flex-col gap-2">
+          <input type="hidden" name="proofId" value={proofId} />
+          <input type="hidden" name="retour" value={retour} />
+          <Label htmlFor={`reason-${proofId}`}>Motif du refus</Label>
+          <Input
+            ref={champMotif}
+            id={`reason-${proofId}`}
+            name="reason"
+            placeholder="Capture illisible, montant différent…"
+            autoComplete="off"
+          />
+          <div className="flex items-center gap-2">
+            <PendingButton variant="destructive" className="flex-1">
+              Refuser la preuve
+            </PendingButton>
+            <Button
+              type="button"
+              size="sm"
+              variant="ghost"
+              onClick={() => setRefusOuvert(false)}
+            >
+              Annuler
+            </Button>
+          </div>
+        </form>
+      ) : (
+        <div className="flex items-center gap-2">
+          <form action={validateProofAction} className="flex-1">
+            <input type="hidden" name="proofId" value={proofId} />
+            <input type="hidden" name="retour" value={retour} />
+            <PendingButton className="w-full">Valider la preuve</PendingButton>
+          </form>
+          <Button
+            type="button"
+            size="sm"
+            variant="outline"
+            onClick={() => setRefusOuvert(true)}
+          >
+            Refuser
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

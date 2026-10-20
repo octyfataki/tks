@@ -1,4 +1,4 @@
-import { asc, desc, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, gte, inArray, sql } from "drizzle-orm";
 import { db, type ExecuteurDb } from "@/lib/db/client";
 import { comptesStaff } from "@/lib/db/schema/accounts";
 import { user } from "@/lib/db/schema/auth-schema";
@@ -189,4 +189,57 @@ export async function readRecentDecisions(
     .orderBy(desc(paymentProofs.reviewedAt))
     .limit(limit);
   return hydrate(db, lignes, now);
+}
+
+export type ProofStats = {
+  enAttente: number;
+  montantEnAttente: { currency: string; amount: number }[];
+  valideesAujourdhui: number;
+  refuseesAujourdhui: number;
+  attenteMinutes: number | null;
+};
+
+export async function readProofStats(
+  preuvesEnAttente: ProofView[],
+  now: Date = new Date(),
+): Promise<ProofStats> {
+  const jour = new Date(now);
+  jour.setHours(0, 0, 0, 0);
+  const lignes = await db
+    .select({ status: paymentProofs.status, total: sql<string>`count(*)` })
+    .from(paymentProofs)
+    .where(
+      and(
+        gte(paymentProofs.reviewedAt, jour),
+        inArray(paymentProofs.status, ["VALIDATED", "REFUSED"]),
+      ),
+    )
+    .groupBy(paymentProofs.status);
+  const parStatut = new Map(
+    lignes.map((ligne) => [ligne.status, Number(ligne.total)]),
+  );
+
+  const montants = new Map<string, number>();
+  let plusAncienne: number | null = null;
+  for (const preuve of preuvesEnAttente) {
+    montants.set(
+      preuve.currency,
+      (montants.get(preuve.currency) ?? 0) + preuve.amount,
+    );
+    const instant = preuve.submittedAt.getTime();
+    if (plusAncienne === null || instant < plusAncienne) plusAncienne = instant;
+  }
+
+  return {
+    enAttente: preuvesEnAttente.length,
+    montantEnAttente: [...montants]
+      .map(([currency, amount]) => ({ currency, amount }))
+      .sort((gauche, droite) => droite.amount - gauche.amount),
+    valideesAujourdhui: parStatut.get("VALIDATED") ?? 0,
+    refuseesAujourdhui: parStatut.get("REFUSED") ?? 0,
+    attenteMinutes:
+      plusAncienne === null
+        ? null
+        : Math.max(0, Math.round((now.getTime() - plusAncienne) / 60000)),
+  };
 }
