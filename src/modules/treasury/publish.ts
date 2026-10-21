@@ -15,6 +15,7 @@ import {
   prepareAccount,
   prepareMovement,
   prepareTransfer,
+  reseauLabel,
   sensCorrection,
   type AccountDraft,
   type CashAccountRow,
@@ -286,6 +287,24 @@ export async function ouvrirCompte(
         throw new CashError(
           "ACCOUNT_EXISTS",
           "La caisse existe déjà : une seule caisse physique.",
+        );
+      }
+    } else {
+      const dejaOuvert = await tx
+        .select({ id: cashAccounts.id })
+        .from(cashAccounts)
+        .where(
+          and(
+            eq(cashAccounts.type, prepare.type),
+            eq(cashAccounts.network, prepare.network),
+            eq(cashAccounts.currency, prepare.currency),
+          ),
+        )
+        .limit(1);
+      if (dejaOuvert.length > 0) {
+        throw new CashError(
+          "ACCOUNT_EXISTS",
+          `Ce compte ${reseauLabel(prepare.network)} en ${prepare.currency} existe déjà.`,
         );
       }
     }
