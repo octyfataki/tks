@@ -9,6 +9,7 @@ export default defineConfig({
     "./src/lib/db/schema/clients/index.ts",
     "./src/lib/db/schema/annotations/index.ts",
     "./src/modules/pricing/table.ts",
+    "./src/modules/treasury/table.ts",
   ],
   out: "./drizzle",
   dialect: "mysql",

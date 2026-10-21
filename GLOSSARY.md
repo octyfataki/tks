@@ -98,6 +98,12 @@ du code et de la base.
 | `cash_movement.category` | `REMBOURSEMENT` | `REPAYMENT` |
 | `cash_movement.category` | `TRANSFERT` | `TRANSFER` |
 | `cash_movement.category` | `RETRAIT_PROPRIETAIRE` | `OWNER_WITHDRAWAL` |
+| `cash_account.type` | `CAISSE` | `CASH` |
+| `cash_account.type` | `MONNAIE_ELECTRONIQUE` | `ELECTRONIC_MONEY` |
+| `cash_movement.direction` | `ENTREE` | `IN` |
+| `cash_movement.direction` | `SORTIE` | `OUT` |
+| `cash_movement.source` | `SAISIE` | `MANUAL` |
+| `cash_movement.source` | `AUTOMATIQUE` | `AUTOMATIC` |
 | `identity_document.verdict` | `EN_ATTENTE` | `PENDING` |
 | `identity_document.verdict` | `ACCEPTEE` | `ACCEPTED` |
 | `identity_document.verdict` | `REFUSEE` | `REJECTED` |

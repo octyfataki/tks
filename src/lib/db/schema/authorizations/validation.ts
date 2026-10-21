@@ -96,6 +96,19 @@ export function peutConsulterJournal(
   );
 }
 
+/**
+ * Tenir la trésorerie : l'administrateur principal et l'agent de service
+ * lawsuits par la permission `tresorerie.mouvement`. L'administrateur
+ * technique n'y touche jamais : aucun pouvoir métier (GLOSSARY).
+ */
+export function peutTenirTresorerie(
+  roleDemandeur: string,
+  etatDemandeur: string,
+): boolean {
+  if (etatDemandeur !== "VALIDE") return false;
+  return roleDemandeur === "ADMIN_PRINCIPAL" || roleDemandeur === "AGENT";
+}
+
 export function canManagePriceGrid(
   roleRequester: string,
   stateRequester: string,
