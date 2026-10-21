@@ -131,15 +131,16 @@ export default async function AdminOrdersPage({
 
   const lecture: OrderStat[] = [
     {
-      label: "Ouvertes",
+      label: "Commandes ouvertes",
       value: String(stats.ouvertes),
       hint: `${stats.aPrendre} à prendre`,
       accent: stats.aPrendre > 0,
     },
     {
-      label: "En main",
+      label: "En main d'un agent",
       value: String(stats.enCours),
       hint: "verrou de quinze minutes",
+      secondary: true,
     },
     {
       label: "Preuve attendue",
@@ -154,6 +155,7 @@ export default async function AdminOrdersPage({
           ? "0"
           : montant(stats.engageCredit[0].amount, stats.engageCredit[0].currency),
       hint: "à recouvrer",
+      secondary: true,
     },
   ];
 

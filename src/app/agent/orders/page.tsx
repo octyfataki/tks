@@ -93,6 +93,7 @@ export default async function AgentOrdersPage({
       label: "En main",
       value: String(stats.enCours),
       hint: "prises, pas servies",
+      secondary: true,
     },
     {
       label: "Preuve attendue",
@@ -104,6 +105,7 @@ export default async function AgentOrdersPage({
       label: "Servies aujourd'hui",
       value: String(stats.serviesAujourdhui),
       hint: "tous agents confondus",
+      secondary: true,
     },
   ];
 

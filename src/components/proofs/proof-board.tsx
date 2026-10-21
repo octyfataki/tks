@@ -27,18 +27,20 @@ function lecture(stats: ProofStats): ProofStat[] {
           ? `plus ${autres
               .map((ligne) => montant(ligne.amount, ligne.currency))
               .join(", ")}`
-          : "à vérifier avant validation"
+          : "à vérifier avant de servir"
         : "aucun montant en jeu",
     },
     {
       label: "Validées aujourd'hui",
       value: String(stats.valideesAujourdhui),
-      hint: "depuis minuit",
+      hint: "commandes entrées en file",
+      secondary: true,
     },
     {
       label: "Refusées aujourd'hui",
       value: String(stats.refuseesAujourdhui),
-      hint: "motif obligatoire",
+      hint: "le client doit redéposer",
+      secondary: true,
     },
   ];
 }
