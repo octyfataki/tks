@@ -2,11 +2,7 @@ import type { Metadata } from "next";
 import { OrderBand } from "@/components/orders/order-band";
 import { OrderQueue } from "@/components/orders/order-queue";
 import { OrderReadout, type OrderStat } from "@/components/orders/order-readout";
-import { OrderRegister } from "@/components/orders/order-register";
-import {
-  OrderToolbar,
-  type LigneExportCommande,
-} from "@/components/orders/order-toolbar";
+import { OrderToolbar } from "@/components/orders/order-toolbar";
 import { PermissionRefusee } from "@/components/permission-denied";
 import { aPermission } from "@/lib/authorizations/permissions";
 import {
@@ -17,23 +13,20 @@ import {
   filtreCommandes,
   filtresActifs,
   normaliserFiltres,
+  paginerCommandes,
+  separatesCommandes,
   trieCommandes,
 } from "@/modules/orders/filtres";
 import {
   readAllOrders,
   readOrderStats,
-  readQueue,
-  readRecentOrders,
 } from "@/modules/orders/read";
-import { PaginationTableau } from "@/components/pagination-tableau";
 
 export const metadata: Metadata = {
   title: "Commandes — Administration — TKS",
   description:
     "Toutes les commandes, tous agents confondus : file ouverte et historique.",
 };
-
-const LIGNES_PAR_PAGE = 15;
 
 const MESSAGES: Record<string, string> = {
   "order-taken": "Commande prise.",
@@ -53,9 +46,18 @@ type Filtres = {
   periode?: string;
   tri?: string;
   page?: string;
+  onglet?: string;
   ok?: string;
   erreur?: string;
 };
+
+const ONGLETS = ["prendre", "cours", "terminees"] as const;
+
+type Onglet = (typeof ONGLETS)[number];
+
+function ongletValide(valeur: string | undefined): Onglet {
+  return ONGLETS.includes(valeur as Onglet) ? (valeur as Onglet) : "prendre";
+}
 
 export default async function AdminOrdersPage({
   searchParams,
@@ -79,11 +81,10 @@ export default async function AdminOrdersPage({
 
   const params = await searchParams;
   const filtres = normaliserFiltres(params);
+  const onglet = ongletValide(params.onglet);
   const compte = await currentStaffAccount();
-  const [toutes, queue, recents, stats, canServe, canCancel] = await Promise.all([
+  const [toutes, stats, canServe, canCancel] = await Promise.all([
     readAllOrders(),
-    readQueue(),
-    readRecentOrders(15),
     readOrderStats(),
     compte ? aPermission(compte.id, "commande.servir") : false,
     compte ? aPermission(compte.id, "commande.annuler") : false,
@@ -93,16 +94,19 @@ export default async function AdminOrdersPage({
     filtreCommandes(toutes, filtres, new Date()),
     filtres.tri,
   );
-  const totalPages = Math.max(1, Math.ceil(filtrees.length / LIGNES_PAR_PAGE));
-  const demandee = Number.parseInt(params.page ?? "1", 10);
-  const page = Math.min(
-    Math.max(1, Number.isNaN(demandee) ? 1 : demandee),
-    totalPages,
-  );
-  const visibles = filtrees.slice(
-    (page - 1) * LIGNES_PAR_PAGE,
-    page * LIGNES_PAR_PAGE,
-  );
+  const groupes = separatesCommandes(filtrees);
+  const pageDemandee = Number.parseInt(params.page ?? "1", 10);
+  const demande = Number.isNaN(pageDemandee) ? 1 : pageDemandee;
+
+  const fenetrePrendre = paginerCommandes(groupes.prendre, demande);
+  const fenetreCours = paginerCommandes(groupes.cours, demande);
+  const fenetreTerminees = paginerCommandes(groupes.terminees, demande);
+  const fenetre =
+    onglet === "prendre"
+      ? fenetrePrendre
+      : onglet === "cours"
+        ? fenetreCours
+        : fenetreTerminees;
 
   const conserves = new URLSearchParams();
   if (filtres.q) conserves.set("q", filtres.q);
@@ -111,10 +115,10 @@ export default async function AdminOrdersPage({
   if (filtres.type) conserves.set("type", filtres.type);
   if (filtres.periode) conserves.set("periode", filtres.periode);
   if (filtres.tri) conserves.set("tri", filtres.tri);
-  const chaine = conserves.toString();
-  const hrefBase = chaine ? `/admin/orders?${chaine}` : "/admin/orders";
+  conserves.set("onglet", onglet);
+  const hrefBase = `/admin/orders?${conserves.toString()}`;
 
-  const exportLignes: LigneExportCommande[] = filtrees.map((commande) => ({
+  const exportLignes = filtrees.map((commande) => ({
     client: commande.profileName,
     telephone: commande.profilePhone,
     reseau: commande.network,
@@ -216,46 +220,32 @@ export default async function AdminOrdersPage({
         complet
       />
 
-      {filtre ? (
-        <section className="flex flex-col gap-2">
-          <div className="flex items-baseline justify-between gap-3">
-            <h2 className="text-sm font-medium">Commandes filtrées</h2>
-            <span className="text-xs tabular-nums text-muted-foreground">
-              {filtrees.length}
-            </span>
-          </div>
-          {visibles.length === 0 ? (
-            <div className="rounded-xl border bg-card p-6 text-center">
-              <p className="text-sm font-medium">Aucune commande ne correspond</p>
-              <p className="mt-1 text-xs text-muted-foreground">
-                Élargissez les filtres pour retrouver vos commandes.
-              </p>
-            </div>
-          ) : (
-            <OrderRegister
-              commandes={visibles}
-              acteurId={acteur.id}
-              canServe={canServe}
-              canCancel={canCancel}
-              retour="/admin/orders"
-            />
-          )}
-          <PaginationTableau
-            page={page}
-            totalPages={totalPages}
-            hrefBase={hrefBase}
-          />
-        </section>
-      ) : (
-        <OrderQueue
-          commandes={queue}
-          terminees={recents}
-          acteurId={acteur.id}
-          canServe={canServe}
-          canCancel={canCancel}
-          retour="/admin/orders"
-        />
-      )}
+      <OrderQueue
+        ongletInitial={onglet}
+        prendre={fenetrePrendre.visibles}
+        cours={fenetreCours.visibles}
+        terminees={fenetreTerminees.visibles}
+        totaux={{
+          prendre: groupes.prendre.length,
+          cours: groupes.cours.length,
+          terminees: groupes.terminees.length,
+        }}
+        pagination={{
+          page: fenetre.page,
+          totalPages: fenetre.totalPages,
+          hrefBase,
+        }}
+        acteurId={acteur.id}
+        canServe={canServe}
+        canCancel={canCancel}
+        retour="/admin/orders"
+      />
+
+      {filtre && filtrees.length === 0 ? (
+        <p className="text-xs text-muted-foreground">
+          Aucune commande ne correspond à ces filtres.
+        </p>
+      ) : null}
     </div>
   );
 }

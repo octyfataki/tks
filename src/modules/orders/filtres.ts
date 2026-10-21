@@ -124,3 +124,48 @@ export function trieCommandes(
   triees.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
   return triees;
 }
+
+export const LIGNES_PAR_PAGE = 15;
+
+export type FenetreCommandes = {
+  visibles: OrderView[];
+  page: number;
+  totalPages: number;
+  total: number;
+};
+
+export function paginerCommandes(
+  commandes: readonly OrderView[],
+  pageDemandee: number,
+  lignesParPage: number = LIGNES_PAR_PAGE,
+): FenetreCommandes {
+  const totalPages = Math.max(1, Math.ceil(commandes.length / lignesParPage));
+  const page = Math.min(Math.max(1, pageDemandee), totalPages);
+  return {
+    visibles: commandes.slice(
+      (page - 1) * lignesParPage,
+      page * lignesParPage,
+    ),
+    page,
+    totalPages,
+    total: commandes.length,
+  };
+}
+
+export function separatesCommandes(commandes: readonly OrderView[]): {
+  prendre: OrderView[];
+  cours: OrderView[];
+  terminees: OrderView[];
+} {
+  return {
+    prendre: commandes.filter((commande) => commande.state === "QUEUED"),
+    cours: commandes.filter(
+      (commande) =>
+        commande.state === "LOCKED" || commande.state === "AWAITING_PROOF",
+    ),
+    terminees: commandes.filter(
+      (commande) =>
+        commande.state === "SERVED" || commande.state === "CANCELLED",
+    ),
+  };
+}

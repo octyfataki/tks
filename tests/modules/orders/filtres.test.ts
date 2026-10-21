@@ -4,6 +4,8 @@ import {
   filtresActifs,
   filtresVides,
   normaliserFiltres,
+  paginerCommandes,
+  separatesCommandes,
   trieCommandes,
 } from "@/modules/orders/filtres";
 import type { OrderView } from "@/modules/orders/read";
@@ -218,5 +220,54 @@ describe("tri des commandes", () => {
     const avant = commandes.map((ligne) => ligne.id);
     trieCommandes(commandes, "montant");
     expect(commandes.map((ligne) => ligne.id)).toEqual(avant);
+  });
+});
+
+describe("répartition des commandes par onglet", () => {
+  const commandes = [
+    commande({ id: "a", state: "QUEUED" }),
+    commande({ id: "b", state: "LOCKED" }),
+    commande({ id: "c", state: "AWAITING_PROOF" }),
+    commande({ id: "d", state: "SERVED" }),
+    commande({ id: "e", state: "CANCELLED" }),
+  ];
+
+  it("sépare les trois onglets", () => {
+    const groupes = separatesCommandes(commandes);
+    expect(groupes.prendre.map((ligne) => ligne.id)).toEqual(["a"]);
+    expect(groupes.cours.map((ligne) => ligne.id)).toEqual(["b", "c"]);
+    expect(groupes.terminees.map((ligne) => ligne.id)).toEqual(["d", "e"]);
+  });
+});
+
+describe("pagination des commandes", () => {
+  const commandes = Array.from({ length: 22 }, (_, index) =>
+    commande({ id: `cmd-${index}` }),
+  );
+
+  it("découpe la page demandée", () => {
+    const fenetre = paginerCommandes(commandes, 1, 15);
+    expect(fenetre.visibles).toHaveLength(15);
+    expect(fenetre.totalPages).toBe(2);
+    expect(fenetre.total).toBe(22);
+    expect(fenetre.page).toBe(1);
+  });
+
+  it("donne le reste sur la dernière page", () => {
+    const fenetre = paginerCommandes(commandes, 2, 15);
+    expect(fenetre.visibles).toHaveLength(7);
+    expect(fenetre.page).toBe(2);
+  });
+
+  it("ramène une page hors bornes dans l'intervalle", () => {
+    expect(paginerCommandes(commandes, 99, 15).page).toBe(2);
+    expect(paginerCommandes(commandes, 0, 15).page).toBe(1);
+    expect(paginerCommandes(commandes, -3, 15).page).toBe(1);
+  });
+
+  it("garde une page unique quand il y a moins d'une page", () => {
+    const fenetre = paginerCommandes(commandes.slice(0, 3), 1, 15);
+    expect(fenetre.totalPages).toBe(1);
+    expect(fenetre.visibles).toHaveLength(3);
   });
 });

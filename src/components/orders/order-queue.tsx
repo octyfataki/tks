@@ -1,30 +1,49 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { OrderHistory } from "@/components/orders/order-history";
 import { OrderRegister } from "@/components/orders/order-register";
+import { PaginationTableau } from "@/components/pagination-tableau";
 import type { OrderView } from "@/modules/orders/read";
 
+export type PaginationOnglet = {
+  page: number;
+  totalPages: number;
+  hrefBase: string;
+};
+
+export type OngletsCommandes = {
+  ongletInitial: "prendre" | "cours" | "terminees";
+  prendre: OrderView[];
+  cours: OrderView[];
+  terminees: OrderView[];
+  totaux: { prendre: number; cours: number; terminees: number };
+  pagination: PaginationOnglet;
+};
+
 export function OrderQueue({
-  commandes,
+  ongletInitial,
+  prendre,
+  cours,
   terminees,
+  totaux,
+  pagination,
   acteurId,
   canServe,
   canCancel,
   retour,
-}: {
-  commandes: OrderView[];
-  terminees: OrderView[];
+}: OngletsCommandes & {
   acteurId: string;
   canServe: boolean;
   canCancel: boolean;
   retour: string;
 }) {
-  const disponibles = commandes.filter((commande) => commande.state === "QUEUED");
-  const autres = commandes.filter((commande) => commande.state !== "QUEUED");
-
-  if (commandes.length === 0 && terminees.length === 0) {
+  if (
+    totaux.prendre === 0 &&
+    totaux.cours === 0 &&
+    totaux.terminees === 0
+  ) {
     return (
       <div className="rounded-xl border bg-card p-6 text-center">
-        <p className="text-sm font-medium">Aucune commande ouverte</p>
+        <p className="text-sm font-medium">Aucune commande</p>
         <p className="mt-1 text-xs text-muted-foreground">
           Une commande au comptoir se crée en moins d&apos;une minute.
         </p>
@@ -55,12 +74,13 @@ export function OrderQueue({
         />
       );
 
-  const ongletInitial =
-    disponibles.length > 0
-      ? "prendre"
-      : autres.length > 0
-        ? "cours"
-        : "terminees";
+  const paginationOnglet = (
+    <PaginationTableau
+      page={pagination.page}
+      totalPages={pagination.totalPages}
+      hrefBase={pagination.hrefBase}
+    />
+  );
 
   return (
     <Tabs defaultValue={ongletInitial} className="w-full gap-3">
@@ -71,13 +91,13 @@ export function OrderQueue({
         <TabsTrigger value="prendre" className="flex-none px-3 py-1.5 text-sm">
           À prendre
           <span className="tabular-nums text-muted-foreground">
-            {disponibles.length}
+            {totaux.prendre}
           </span>
         </TabsTrigger>
         <TabsTrigger value="cours" className="flex-none px-3 py-1.5 text-sm">
           En cours
           <span className="tabular-nums text-muted-foreground">
-            {autres.length}
+            {totaux.cours}
           </span>
         </TabsTrigger>
         <TabsTrigger
@@ -86,22 +106,29 @@ export function OrderQueue({
         >
           Terminées
           <span className="tabular-nums text-muted-foreground">
-            {terminees.length}
+            {totaux.terminees}
           </span>
         </TabsTrigger>
       </TabsList>
 
-      <TabsContent value="prendre">{registre(disponibles)}</TabsContent>
-      <TabsContent value="cours">
-        {autres.length === 0
+      <TabsContent value="prendre" className="flex flex-col gap-3">
+        {registre(prendre)}
+        {paginationOnglet}
+      </TabsContent>
+
+      <TabsContent value="cours" className="flex flex-col gap-3">
+        {cours.length === 0
           ? vide(
               "Aucune commande en cours",
               "Les commandes prises par un agent apparaîtront ici.",
             )
-          : registre(autres)}
+          : registre(cours)}
+        {paginationOnglet}
       </TabsContent>
-      <TabsContent value="terminees">
+
+      <TabsContent value="terminees" className="flex flex-col gap-3">
         <OrderHistory commandes={terminees} />
+        {paginationOnglet}
       </TabsContent>
     </Tabs>
   );

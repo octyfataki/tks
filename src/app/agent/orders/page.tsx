@@ -12,6 +12,8 @@ import {
 import {
   filtreCommandes,
   normaliserFiltres,
+  paginerCommandes,
+  separatesCommandes,
   trieCommandes,
 } from "@/modules/orders/filtres";
 import { readAllOrders, readOrderStats } from "@/modules/orders/read";
@@ -28,11 +30,21 @@ const MESSAGES: Record<string, string> = {
   "order-cancelled": "Commande annulée.",
 };
 
+const ONGLETS = ["prendre", "cours", "terminees"] as const;
+
+type Onglet = (typeof ONGLETS)[number];
+
+function ongletValide(valeur: string | undefined): Onglet {
+  return ONGLETS.includes(valeur as Onglet) ? (valeur as Onglet) : "prendre";
+}
+
 type Filtres = {
   q?: string;
   etat?: string;
   reseau?: string;
   tri?: string;
+  page?: string;
+  onglet?: string;
   ok?: string;
   erreur?: string;
 };
@@ -68,6 +80,7 @@ export default async function AgentOrdersPage({
 
   const params = await searchParams;
   const filtres = normaliserFiltres(params);
+  const onglet = ongletValide(params.onglet);
   const compte = await currentStaffAccount();
   const [toutes, stats, canServe, canCancel] = await Promise.all([
     readAllOrders(),
@@ -80,14 +93,28 @@ export default async function AgentOrdersPage({
     filtreCommandes(toutes, filtres, new Date()),
     filtres.tri,
   );
-  const ouvertes = filtrees.filter(
-    (commande) => commande.state !== "SERVED" && commande.state !== "CANCELLED",
-  );
-  const terminees = filtrees
-    .filter(
-      (commande) => commande.state === "SERVED" || commande.state === "CANCELLED",
-    )
-    .slice(0, 15);
+  const groupes = separatesCommandes(filtrees);
+  const pageDemandee = Number.parseInt(params.page ?? "1", 10);
+  const demande = Number.isNaN(pageDemandee) ? 1 : pageDemandee;
+
+  const fenetrePrendre = paginerCommandes(groupes.prendre, demande);
+  const fenetreCours = paginerCommandes(groupes.cours, demande);
+  const fenetreTerminees = paginerCommandes(groupes.terminees, demande);
+  const fenetre =
+    onglet === "prendre"
+      ? fenetrePrendre
+      : onglet === "cours"
+        ? fenetreCours
+        : fenetreTerminees;
+
+  const conserves = new URLSearchParams();
+  if (filtres.q) conserves.set("q", filtres.q);
+  if (filtres.etat) conserves.set("etat", filtres.etat);
+  if (filtres.reseau) conserves.set("reseau", filtres.reseau);
+  if (filtres.tri) conserves.set("tri", filtres.tri);
+  conserves.set("onglet", onglet);
+  const hrefBase = `/agent/orders?${conserves.toString()}`;
+
   const message = params.ok ? (MESSAGES[params.ok] ?? params.ok) : null;
 
   const lecture: OrderStat[] = [
@@ -177,8 +204,20 @@ export default async function AgentOrdersPage({
       />
 
       <OrderQueue
-        commandes={ouvertes}
-        terminees={terminees}
+        ongletInitial={onglet}
+        prendre={fenetrePrendre.visibles}
+        cours={fenetreCours.visibles}
+        terminees={fenetreTerminees.visibles}
+        totaux={{
+          prendre: groupes.prendre.length,
+          cours: groupes.cours.length,
+          terminees: groupes.terminees.length,
+        }}
+        pagination={{
+          page: fenetre.page,
+          totalPages: fenetre.totalPages,
+          hrefBase,
+        }}
         acteurId={acteur.id}
         canServe={canServe}
         canCancel={canCancel}
