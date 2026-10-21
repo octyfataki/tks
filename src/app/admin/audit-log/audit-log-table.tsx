@@ -10,6 +10,7 @@ import {
   SearchIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PaginationTableau } from "@/components/pagination-tableau";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   DropdownMenu,
@@ -244,7 +245,6 @@ export function RegistreJournal({ lignes }: { lignes: LigneJournal[] }) {
     (pageSure - 1) * LIGNES_PAR_PAGE,
     pageSure * LIGNES_PAR_PAGE,
   );
-  const pages = Array.from({ length: totalPages }, (_, i) => i + 1);
 
   return (
     <div className="flex flex-1 flex-col gap-4">
@@ -624,46 +624,7 @@ export function RegistreJournal({ lignes }: { lignes: LigneJournal[] }) {
       )}
 
       {totalPages > 1 ? (
-        <nav
-          aria-label="Pagination"
-          className="flex items-center justify-end gap-1"
-        >
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            disabled={pageSure <= 1}
-            onClick={() => setPage(pageSure - 1)}
-          >
-            Précédent
-          </Button>
-          {pages.map((p) => (
-            <button
-              key={p}
-              type="button"
-              onClick={() => setPage(p)}
-              aria-current={p === pageSure ? "page" : undefined}
-              aria-label={`Page ${p}`}
-              className={cn(
-                "flex size-7 items-center justify-center rounded-md text-xs tabular-nums",
-                p === pageSure
-                  ? "bg-primary/15 font-medium text-primary"
-                  : "text-muted-foreground hover:bg-muted",
-              )}
-            >
-              {p}
-            </button>
-          ))}
-          <Button
-            type="button"
-            size="sm"
-            variant="outline"
-            disabled={pageSure >= totalPages}
-            onClick={() => setPage(pageSure + 1)}
-          >
-            Suivant
-          </Button>
-        </nav>
+        <PaginationTableau page={pageSure} totalPages={totalPages} onChange={setPage} />
       ) : null}
     </div>
   );

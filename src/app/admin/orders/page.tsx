@@ -25,7 +25,7 @@ import {
   readQueue,
   readRecentOrders,
 } from "@/modules/orders/read";
-import { PaginationListe } from "@/app/admin/list/list-pagination";
+import { PaginationTableau } from "@/components/pagination-tableau";
 
 export const metadata: Metadata = {
   title: "Commandes — Administration — TKS",
@@ -240,7 +240,7 @@ export default async function AdminOrdersPage({
               retour="/admin/orders"
             />
           )}
-          <PaginationListe
+          <PaginationTableau
             page={page}
             totalPages={totalPages}
             hrefBase={hrefBase}
