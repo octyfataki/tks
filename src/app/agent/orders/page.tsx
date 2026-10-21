@@ -14,7 +14,7 @@ import {
   normaliserFiltres,
   trieCommandes,
 } from "@/modules/orders/filtres";
-import { readOrderStats, readQueue } from "@/modules/orders/read";
+import { readAllOrders, readOrderStats } from "@/modules/orders/read";
 
 export const metadata: Metadata = {
   title: "Commandes — Agent — TKS",
@@ -69,17 +69,25 @@ export default async function AgentOrdersPage({
   const params = await searchParams;
   const filtres = normaliserFiltres(params);
   const compte = await currentStaffAccount();
-  const [queue, stats, canServe, canCancel] = await Promise.all([
-    readQueue(),
+  const [toutes, stats, canServe, canCancel] = await Promise.all([
+    readAllOrders(),
     readOrderStats(),
     compte ? aPermission(compte.id, "commande.servir") : false,
     compte ? aPermission(compte.id, "commande.annuler") : false,
   ]);
 
   const filtrees = trieCommandes(
-    filtreCommandes(queue, filtres, new Date()),
+    filtreCommandes(toutes, filtres, new Date()),
     filtres.tri,
   );
+  const ouvertes = filtrees.filter(
+    (commande) => commande.state !== "SERVED" && commande.state !== "CANCELLED",
+  );
+  const terminees = filtrees
+    .filter(
+      (commande) => commande.state === "SERVED" || commande.state === "CANCELLED",
+    )
+    .slice(0, 15);
   const message = params.ok ? (MESSAGES[params.ok] ?? params.ok) : null;
 
   const lecture: OrderStat[] = [
@@ -169,7 +177,8 @@ export default async function AgentOrdersPage({
       />
 
       <OrderQueue
-        commandes={filtrees}
+        commandes={ouvertes}
+        terminees={terminees}
         acteurId={acteur.id}
         canServe={canServe}
         canCancel={canCancel}

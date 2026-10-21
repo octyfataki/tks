@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { OrderBand } from "@/components/orders/order-band";
-import { OrderHistory } from "@/components/orders/order-history";
 import { OrderQueue } from "@/components/orders/order-queue";
 import { OrderReadout, type OrderStat } from "@/components/orders/order-readout";
 import { OrderRegister } from "@/components/orders/order-register";
@@ -248,26 +247,14 @@ export default async function AdminOrdersPage({
           />
         </section>
       ) : (
-        <>
-          <OrderQueue
-            commandes={queue}
-            acteurId={acteur.id}
-            canServe={canServe}
-            canCancel={canCancel}
-            retour="/admin/orders"
-          />
-          <section className="flex flex-col gap-2">
-            <div className="flex items-baseline justify-between gap-3">
-              <h2 className="text-sm font-medium">
-                Dernières commandes terminées
-              </h2>
-              <span className="text-xs tabular-nums text-muted-foreground">
-                {recents.length}
-              </span>
-            </div>
-            <OrderHistory commandes={recents} />
-          </section>
-        </>
+        <OrderQueue
+          commandes={queue}
+          terminees={recents}
+          acteurId={acteur.id}
+          canServe={canServe}
+          canCancel={canCancel}
+          retour="/admin/orders"
+        />
       )}
     </div>
   );

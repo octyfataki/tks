@@ -1,34 +1,18 @@
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { OrderHistory } from "@/components/orders/order-history";
 import { OrderRegister } from "@/components/orders/order-register";
 import type { OrderView } from "@/modules/orders/read";
 
-function Section({
-  titre,
-  total,
-  children,
-}: {
-  titre: string;
-  total: number;
-  children: React.ReactNode;
-}) {
-  return (
-    <section className="flex flex-col gap-2">
-      <div className="flex items-baseline justify-between gap-3">
-        <h2 className="text-sm font-medium">{titre}</h2>
-        <span className="text-xs tabular-nums text-muted-foreground">{total}</span>
-      </div>
-      {children}
-    </section>
-  );
-}
-
 export function OrderQueue({
   commandes,
+  terminees,
   acteurId,
   canServe,
   canCancel,
   retour,
 }: {
   commandes: OrderView[];
+  terminees: OrderView[];
   acteurId: string;
   canServe: boolean;
   canCancel: boolean;
@@ -37,7 +21,7 @@ export function OrderQueue({
   const disponibles = commandes.filter((commande) => commande.state === "QUEUED");
   const autres = commandes.filter((commande) => commande.state !== "QUEUED");
 
-  if (commandes.length === 0) {
+  if (commandes.length === 0 && terminees.length === 0) {
     return (
       <div className="rounded-xl border bg-card p-6 text-center">
         <p className="text-sm font-medium">Aucune commande ouverte</p>
@@ -48,29 +32,77 @@ export function OrderQueue({
     );
   }
 
-  const registre = (liste: OrderView[]) => (
-    <OrderRegister
-      commandes={liste}
-      acteurId={acteurId}
-      canServe={canServe}
-      canCancel={canCancel}
-      retour={retour}
-    />
+  const vide = (titre: string, detail: string) => (
+    <div className="rounded-xl border bg-card p-6 text-center">
+      <p className="text-sm font-medium">{titre}</p>
+      <p className="mt-1 text-xs text-muted-foreground">{detail}</p>
+    </div>
   );
 
-  return (
-    <div className="flex flex-col gap-5">
-      {disponibles.length > 0 ? (
-        <Section titre="À prendre" total={disponibles.length}>
-          {registre(disponibles)}
-        </Section>
-      ) : null}
+  const registre = (liste: OrderView[]) =>
+    liste.length === 0
+      ? vide(
+          "Rien en attente de prise",
+          "La file est vide : la prochaine commande arrivera ici.",
+        )
+      : (
+        <OrderRegister
+          commandes={liste}
+          acteurId={acteurId}
+          canServe={canServe}
+          canCancel={canCancel}
+          retour={retour}
+        />
+      );
 
-      {autres.length > 0 ? (
-        <Section titre="En cours" total={autres.length}>
-          {registre(autres)}
-        </Section>
-      ) : null}
-    </div>
+  const ongletInitial =
+    disponibles.length > 0
+      ? "prendre"
+      : autres.length > 0
+        ? "cours"
+        : "terminees";
+
+  return (
+    <Tabs defaultValue={ongletInitial} className="w-full gap-3">
+      <TabsList
+        aria-label="File des commandes"
+        className="inline-flex h-auto w-fit max-w-full flex-wrap items-center gap-1 p-1"
+      >
+        <TabsTrigger value="prendre" className="flex-none px-3 py-1.5 text-sm">
+          À prendre
+          <span className="tabular-nums text-muted-foreground">
+            {disponibles.length}
+          </span>
+        </TabsTrigger>
+        <TabsTrigger value="cours" className="flex-none px-3 py-1.5 text-sm">
+          En cours
+          <span className="tabular-nums text-muted-foreground">
+            {autres.length}
+          </span>
+        </TabsTrigger>
+        <TabsTrigger
+          value="terminees"
+          className="flex-none px-3 py-1.5 text-sm"
+        >
+          Terminées
+          <span className="tabular-nums text-muted-foreground">
+            {terminees.length}
+          </span>
+        </TabsTrigger>
+      </TabsList>
+
+      <TabsContent value="prendre">{registre(disponibles)}</TabsContent>
+      <TabsContent value="cours">
+        {autres.length === 0
+          ? vide(
+              "Aucune commande en cours",
+              "Les commandes prises par un agent apparaîtront ici.",
+            )
+          : registre(autres)}
+      </TabsContent>
+      <TabsContent value="terminees">
+        <OrderHistory commandes={terminees} />
+      </TabsContent>
+    </Tabs>
   );
 }
