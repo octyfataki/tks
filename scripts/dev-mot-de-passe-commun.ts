@@ -31,7 +31,6 @@ async function main() {
   }
   const connexion = await mysql.createConnection(url);
   try {
-    const empreinte = await hashPassword(motDePasse);
     for (const email of comptes) {
       const [users] = (await connexion.query(
         "SELECT id FROM user WHERE email = ?",
@@ -41,10 +40,15 @@ async function main() {
         console.log(`Compte absent, ignoré : ${email}`);
         continue;
       }
-      await connexion.query(
+      const empreinte = await hashPassword(motDePasse);
+      const [resultat] = (await connexion.query(
         "UPDATE account SET password = ?, updated_at = NOW() WHERE user_id = ? AND provider_id = 'credential'",
         [empreinte, users[0].id],
-      );
+      )) as [{ affectedRows: number }, unknown];
+      if (resultat.affectedRows === 0) {
+        console.log(`Aucun compte de connexion mis à jour : ${email}`);
+        continue;
+      }
       console.log(`Mot de passe commun appliqué : ${email}`);
     }
   } finally {
