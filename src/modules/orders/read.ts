@@ -211,6 +211,19 @@ export async function readOrderStats(now: Date = new Date()): Promise<OrderStats
   };
 }
 
+export async function readAllOrders(
+  limit: number = 500,
+  now: Date = new Date(),
+): Promise<OrderView[]> {
+  const lignes = await db
+    .select(COLUMNS)
+    .from(orders)
+    .innerJoin(profilsClients, eq(profilsClients.id, orders.profileId))
+    .orderBy(desc(orders.receivedAt))
+    .limit(limit);
+  return hydrate(db, lignes, now);
+}
+
 export async function readRecentOrders(
   limit: number = 20,
   now: Date = new Date(),

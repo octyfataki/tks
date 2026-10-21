@@ -3,11 +3,17 @@ import Link from "next/link";
 import { OrderBand } from "@/components/orders/order-band";
 import { OrderQueue } from "@/components/orders/order-queue";
 import { OrderReadout, type OrderStat } from "@/components/orders/order-readout";
+import { OrderToolbar } from "@/components/orders/order-toolbar";
 import { aPermission } from "@/lib/authorizations/permissions";
 import {
   currentStaffAccount,
   staffActorWithAny,
 } from "@/lib/authorizations/staff-actor";
+import {
+  filtreCommandes,
+  normaliserFiltres,
+  trieCommandes,
+} from "@/modules/orders/filtres";
 import { readOrderStats, readQueue } from "@/modules/orders/read";
 
 export const metadata: Metadata = {
@@ -22,10 +28,19 @@ const MESSAGES: Record<string, string> = {
   "order-cancelled": "Commande annulée.",
 };
 
+type Filtres = {
+  q?: string;
+  etat?: string;
+  reseau?: string;
+  tri?: string;
+  ok?: string;
+  erreur?: string;
+};
+
 export default async function AgentOrdersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ ok?: string; erreur?: string }>;
+  searchParams: Promise<Filtres>;
 }) {
   const acteur = await staffActorWithAny([
     "commande.creer",
@@ -51,6 +66,8 @@ export default async function AgentOrdersPage({
     );
   }
 
+  const params = await searchParams;
+  const filtres = normaliserFiltres(params);
   const compte = await currentStaffAccount();
   const [queue, stats, canServe, canCancel] = await Promise.all([
     readQueue(),
@@ -58,7 +75,11 @@ export default async function AgentOrdersPage({
     compte ? aPermission(compte.id, "commande.servir") : false,
     compte ? aPermission(compte.id, "commande.annuler") : false,
   ]);
-  const params = await searchParams;
+
+  const filtrees = trieCommandes(
+    filtreCommandes(queue, filtres, new Date()),
+    filtres.tri,
+  );
   const message = params.ok ? (MESSAGES[params.ok] ?? params.ok) : null;
 
   const lecture: OrderStat[] = [
@@ -139,8 +160,14 @@ export default async function AgentOrdersPage({
         />
       ) : null}
 
+      <OrderToolbar
+        lignes={filtrees.length}
+        exportLignes={[]}
+        complet={false}
+      />
+
       <OrderQueue
-        commandes={queue}
+        commandes={filtrees}
         acteurId={acteur.id}
         canServe={canServe}
         canCancel={canCancel}

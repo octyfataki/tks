@@ -3,6 +3,11 @@ import { OrderBand } from "@/components/orders/order-band";
 import { OrderHistory } from "@/components/orders/order-history";
 import { OrderQueue } from "@/components/orders/order-queue";
 import { OrderReadout, type OrderStat } from "@/components/orders/order-readout";
+import { OrderRegister } from "@/components/orders/order-register";
+import {
+  OrderToolbar,
+  type LigneExportCommande,
+} from "@/components/orders/order-toolbar";
 import { PermissionRefusee } from "@/components/permission-denied";
 import { aPermission } from "@/lib/authorizations/permissions";
 import {
@@ -10,16 +15,26 @@ import {
   staffActorWithAny,
 } from "@/lib/authorizations/staff-actor";
 import {
+  filtreCommandes,
+  filtresActifs,
+  normaliserFiltres,
+  trieCommandes,
+} from "@/modules/orders/filtres";
+import {
+  readAllOrders,
   readOrderStats,
   readQueue,
   readRecentOrders,
 } from "@/modules/orders/read";
+import { PaginationListe } from "@/app/admin/list/list-pagination";
 
 export const metadata: Metadata = {
   title: "Commandes — Administration — TKS",
   description:
     "Toutes les commandes, tous agents confondus : file ouverte et historique.",
 };
+
+const LIGNES_PAR_PAGE = 15;
 
 const MESSAGES: Record<string, string> = {
   "order-taken": "Commande prise.",
@@ -31,10 +46,22 @@ function montant(valeur: number, devise: string): string {
   return `${valeur.toLocaleString("fr-FR")} ${devise}`;
 }
 
+type Filtres = {
+  q?: string;
+  etat?: string;
+  reseau?: string;
+  type?: string;
+  periode?: string;
+  tri?: string;
+  page?: string;
+  ok?: string;
+  erreur?: string;
+};
+
 export default async function AdminOrdersPage({
   searchParams,
 }: {
-  searchParams: Promise<{ ok?: string; erreur?: string }>;
+  searchParams: Promise<Filtres>;
 }) {
   const acteur = await staffActorWithAny([
     "commande.prendre",
@@ -51,15 +78,55 @@ export default async function AdminOrdersPage({
     );
   }
 
+  const params = await searchParams;
+  const filtres = normaliserFiltres(params);
   const compte = await currentStaffAccount();
-  const [queue, recents, stats, canServe, canCancel] = await Promise.all([
+  const [toutes, queue, recents, stats, canServe, canCancel] = await Promise.all([
+    readAllOrders(),
     readQueue(),
     readRecentOrders(15),
     readOrderStats(),
     compte ? aPermission(compte.id, "commande.servir") : false,
     compte ? aPermission(compte.id, "commande.annuler") : false,
   ]);
-  const params = await searchParams;
+
+  const filtrees = trieCommandes(
+    filtreCommandes(toutes, filtres, new Date()),
+    filtres.tri,
+  );
+  const totalPages = Math.max(1, Math.ceil(filtrees.length / LIGNES_PAR_PAGE));
+  const demandee = Number.parseInt(params.page ?? "1", 10);
+  const page = Math.min(
+    Math.max(1, Number.isNaN(demandee) ? 1 : demandee),
+    totalPages,
+  );
+  const visibles = filtrees.slice(
+    (page - 1) * LIGNES_PAR_PAGE,
+    page * LIGNES_PAR_PAGE,
+  );
+
+  const conserves = new URLSearchParams();
+  if (filtres.q) conserves.set("q", filtres.q);
+  if (filtres.etat) conserves.set("etat", filtres.etat);
+  if (filtres.reseau) conserves.set("reseau", filtres.reseau);
+  if (filtres.type) conserves.set("type", filtres.type);
+  if (filtres.periode) conserves.set("periode", filtres.periode);
+  if (filtres.tri) conserves.set("tri", filtres.tri);
+  const chaine = conserves.toString();
+  const hrefBase = chaine ? `/admin/orders?${chaine}` : "/admin/orders";
+
+  const exportLignes: LigneExportCommande[] = filtrees.map((commande) => ({
+    client: commande.profileName,
+    telephone: commande.profilePhone,
+    reseau: commande.network,
+    etat: commande.state,
+    type: commande.type,
+    unites: String(commande.units),
+    montant: String(commande.amount),
+    devise: commande.currency,
+    creeLe: commande.createdAt.toISOString(),
+  }));
+
   const message = params.ok ? (MESSAGES[params.ok] ?? params.ok) : null;
 
   const lecture: OrderStat[] = [
@@ -89,6 +156,8 @@ export default async function AdminOrdersPage({
       hint: "à recouvrer",
     },
   ];
+
+  const filtre = filtresActifs(filtres);
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-4 pt-4">
@@ -140,23 +209,64 @@ export default async function AdminOrdersPage({
         />
       )}
 
-      <OrderQueue
-        commandes={queue}
-        acteurId={acteur.id}
-        canServe={canServe}
-        canCancel={canCancel}
-        retour="/admin/orders"
+      <OrderToolbar
+        lignes={filtrees.length}
+        exportLignes={exportLignes}
+        complet
       />
 
-      <section className="flex flex-col gap-2">
-        <div className="flex items-baseline justify-between gap-3">
-          <h2 className="text-sm font-medium">Dernières commandes terminées</h2>
-          <span className="text-xs tabular-nums text-muted-foreground">
-            {recents.length}
-          </span>
-        </div>
-        <OrderHistory commandes={recents} />
-      </section>
+      {filtre ? (
+        <section className="flex flex-col gap-2">
+          <div className="flex items-baseline justify-between gap-3">
+            <h2 className="text-sm font-medium">Commandes filtrées</h2>
+            <span className="text-xs tabular-nums text-muted-foreground">
+              {filtrees.length}
+            </span>
+          </div>
+          {visibles.length === 0 ? (
+            <div className="rounded-xl border bg-card p-6 text-center">
+              <p className="text-sm font-medium">Aucune commande ne correspond</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Élargissez les filtres pour retrouver vos commandes.
+              </p>
+            </div>
+          ) : (
+            <OrderRegister
+              commandes={visibles}
+              acteurId={acteur.id}
+              canServe={canServe}
+              canCancel={canCancel}
+              retour="/admin/orders"
+            />
+          )}
+          <PaginationListe
+            page={page}
+            totalPages={totalPages}
+            hrefBase={hrefBase}
+          />
+        </section>
+      ) : (
+        <>
+          <OrderQueue
+            commandes={queue}
+            acteurId={acteur.id}
+            canServe={canServe}
+            canCancel={canCancel}
+            retour="/admin/orders"
+          />
+          <section className="flex flex-col gap-2">
+            <div className="flex items-baseline justify-between gap-3">
+              <h2 className="text-sm font-medium">
+                Dernières commandes terminées
+              </h2>
+              <span className="text-xs tabular-nums text-muted-foreground">
+                {recents.length}
+              </span>
+            </div>
+            <OrderHistory commandes={recents} />
+          </section>
+        </>
+      )}
     </div>
   );
 }
