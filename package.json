@@ -11,7 +11,8 @@
     "db:generate": "drizzle-kit generate",
     "db:migrate": "drizzle-kit migrate",
     "db:triggers": "tsx scripts/install-append-only-triggers.ts",
-    "db:bootstrap-technical-admin": "tsx --env-file=.env.local scripts/bootstrap-technical-admin.ts"
+    "db:bootstrap-technical-admin": "tsx --env-file=.env.local scripts/bootstrap-technical-admin.ts",
+    "db:mdp-commun": "tsx --env-file=.env.local scripts/dev-mot-de-passe-commun.ts"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
