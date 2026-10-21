@@ -383,7 +383,7 @@ export function RegistreInvitationsAgents({
           </p>
         </div>
       ) : (
-        <div className="overflow-x-auto rounded-xl border bg-card">
+        <div className="tks-defilement-masque min-w-0 overflow-x-auto rounded-xl border bg-card">
           <table className="w-full min-w-[680px] border-collapse text-left text-xs">
             <caption className="sr-only">
               Liens d&apos;invitation agents, page {pageSure} sur {totalPages}

@@ -18,10 +18,10 @@ export function NetworkThumb({ network }: { network: string }) {
       <Image
         src={NETWORK_LOGOS[network]}
         alt={networkLabel(network)}
-        width={24}
-        height={24}
+        width={32}
+        height={32}
         unoptimized
-        className="size-6 object-contain"
+        className="size-8 object-cover"
       />
     </span>
   );

@@ -37,7 +37,7 @@ export function ProofCard({
               <img
                 src={url}
                 alt={`Preuve de paiement de ${preuve.profileName}`}
-                className="h-full w-full object-contain"
+                className="size-full object-cover"
               />
             ) : (
               <span className="flex h-full flex-col items-center justify-center gap-1.5 text-xs text-muted-foreground">

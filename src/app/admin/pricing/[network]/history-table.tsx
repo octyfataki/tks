@@ -32,7 +32,7 @@ export function PriceHistoryTable({ rows }: { rows: HistoryRow[] }) {
   }
 
   return (
-    <div className="overflow-x-auto rounded-xl border bg-card">
+    <div className="tks-defilement-masque min-w-0 overflow-x-auto rounded-xl border bg-card">
       <table className="w-full border-collapse text-left text-xs">
         <caption className="sr-only">
           Historique des prix publiés, de la publication la plus récente à la
