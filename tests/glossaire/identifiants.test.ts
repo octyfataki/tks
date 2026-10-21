@@ -16,6 +16,12 @@ import {
   DEVISES_PLAFOND,
   STATUTS_PROFIL,
 } from "@/lib/db/schema/clients/profils-clients";
+import {
+  ACCOUNT_TYPES,
+  CATEGORIES,
+  MOVEMENT_DIRECTIONS,
+  SOURCE_KINDS,
+} from "@/modules/treasury/cash-record";
 
 type Ligne = {
   portee: string;
@@ -41,6 +47,22 @@ const LISTES_METIER: ReadonlyArray<{
   { portee: "identity_document.verdict", valeurs: STATUTS_PIECE },
   { portee: "identity_document.kind", valeurs: TYPES_PIECE },
   { portee: "invitation_link.state", valeurs: ETATS_LIEN_INVITATION },
+];
+
+/**
+ * Les valeurs métier dont le code est en anglais : la colonne « terme
+ * français » de la table porte le mot du métier (VENTE), la colonne
+ * « identifiant en code » porte ce que la base stocke (SALE). Ces listes
+ * se vérifient donc sur la colonne identifiant, pas sur la colonne terme.
+ */
+const LISTES_IDENTIFIANTS: ReadonlyArray<{
+  portee: string;
+  valeurs: readonly string[];
+}> = [
+  { portee: "cash_account.type", valeurs: ACCOUNT_TYPES },
+  { portee: "cash_movement.category", valeurs: CATEGORIES },
+  { portee: "cash_movement.direction", valeurs: MOVEMENT_DIRECTIONS },
+  { portee: "cash_movement.source", valeurs: SOURCE_KINDS },
 ];
 
 const LIGNE_TABLE =
@@ -85,6 +107,26 @@ describe("Vocabulaire — la table de correspondance du glossaire", () => {
       );
       for (const valeur of liste.valeurs) {
         expect(termes, `${liste.portee} : ${valeur}`).toContain(valeur);
+      }
+    }
+  });
+
+  it("couvre chaque identifiant en code dans la colonne identifiant", () => {
+    const parPortee = new Map<string, string[]>();
+    for (const ligne of table) {
+      const identifiants = parPortee.get(ligne.portee) ?? [];
+      identifiants.push(ligne.identifiant);
+      parPortee.set(ligne.portee, identifiants);
+    }
+
+    for (const liste of LISTES_IDENTIFIANTS) {
+      const identifiants = parPortee.get(liste.portee) ?? [];
+      expect(
+        identifiants.length,
+        `portée absente : ${liste.portee}`,
+      ).toBeGreaterThan(0);
+      for (const valeur of liste.valeurs) {
+        expect(identifiants, `${liste.portee} : ${valeur}`).toContain(valeur);
       }
     }
   });

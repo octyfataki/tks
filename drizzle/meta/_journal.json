@@ -155,6 +155,13 @@
       "when": 1792498044166,
       "tag": "0029_taux-en-vigueur",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "5",
+      "when": 1792541802798,
+      "tag": "0031_treasury",
+      "breakpoints": true
     }
   ]
 }
