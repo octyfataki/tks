@@ -21,15 +21,18 @@ function pagesAutour(page: number, totalPages: number): (number | "…")[] {
 export function PaginationTableau({
   page,
   totalPages,
+  total,
   hrefBase,
   onChange,
 }: {
   page: number;
   totalPages: number;
+  total?: number;
   hrefBase?: string;
   onChange?: (page: number) => void;
 }) {
-  if (totalPages <= 1) return null;
+  const visible = total === undefined ? totalPages > 1 : total > 0;
+  if (!visible) return null;
 
   const lien = (cible: number) =>
     `${hrefBase ?? ""}${hrefBase && !hrefBase.includes("?") ? "?" : "&"}page=${cible}`;

@@ -121,6 +121,7 @@ export default async function AgentOrdersPage({
     return {
       page: fenetre.page,
       totalPages: fenetre.totalPages,
+      total: fenetre.total,
       hrefBase: `/agent/orders?${parametres.toString()}`,
     };
   };

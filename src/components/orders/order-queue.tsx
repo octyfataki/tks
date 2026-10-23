@@ -75,6 +75,7 @@ export function OrderQueue({
     <PaginationTableau
       page={pagination[nom].page}
       totalPages={pagination[nom].totalPages}
+      total={pagination[nom].total}
       hrefBase={pagination[nom].hrefBase}
     />
   );

@@ -49,10 +49,16 @@ function commande(id: string, etat: OrderView["state"]): OrderView {
   };
 }
 
-function pagination(nom: string, page = 1, totalPages = 4) {
+function pagination(
+  nom: string,
+  page = 1,
+  totalPages = 4,
+  total = 60,
+) {
   return {
     page,
     totalPages,
+    total,
     hrefBase: `/admin/orders?tri=recents&onglet=${nom}`,
   };
 }
@@ -126,17 +132,53 @@ describe("OrderQueue", () => {
     );
   });
 
-  it("sans deuxième page, pas de pagination", () => {
+  it("une liste vide n'a pas de pagination", () => {
     rendre({
+      ongletInitial: "cours",
+      cours: [],
       pagination: {
-        prendre: pagination("prendre", 1, 1),
-        cours: pagination("cours", 1, 1),
-        terminees: pagination("terminees", 1, 1),
+        prendre: pagination("prendre", 1, 4, 60),
+        cours: pagination("cours", 1, 1, 0),
+        terminees: pagination("terminees", 1, 4, 60),
       },
     });
     expect(
       screen.queryByRole("navigation", { name: "Pagination" }),
     ).not.toBeInTheDocument();
+  });
+
+  it("une seule page de lignes affiche quand même la pagination", () => {
+    rendre({
+      ongletInitial: "cours",
+      pagination: {
+        prendre: pagination("prendre", 1, 1, 0),
+        cours: pagination("cours", 1, 1, 12),
+        terminees: pagination("terminees", 1, 1, 0),
+      },
+    });
+    const nav = screen.getByRole("navigation", { name: "Pagination" });
+    expect(
+      within(nav).getByRole("link", { name: "Page 1" }),
+    ).toBeInTheDocument();
+    expect(
+      within(nav).queryByRole("link", { name: "Page 2" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("une seule page de lignes, deux boutons bloqués", () => {
+    rendre({
+      ongletInitial: "cours",
+      pagination: {
+        prendre: pagination("prendre", 1, 1, 0),
+        cours: pagination("cours", 1, 1, 12),
+        terminees: pagination("terminees", 1, 1, 0),
+      },
+    });
+    const nav = screen.getByRole("navigation", { name: "Pagination" });
+    expect(
+      within(nav).getByRole("button", { name: "Précédent" }),
+    ).toBeDisabled();
+    expect(within(nav).getByRole("button", { name: "Suivant" })).toBeDisabled();
   });
 
   it("garde la page demandée dans le lien", () => {

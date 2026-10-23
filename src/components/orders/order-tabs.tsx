@@ -9,6 +9,7 @@ export type OngletNom = "prendre" | "cours" | "terminees";
 export type PaginationOnglet = {
   page: number;
   totalPages: number;
+  total: number;
   hrefBase: string;
 };
 

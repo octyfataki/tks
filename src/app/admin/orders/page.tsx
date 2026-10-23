@@ -124,6 +124,7 @@ export default async function AdminOrdersPage({
     return {
       page: fenetre.page,
       totalPages: fenetre.totalPages,
+      total: fenetre.total,
       hrefBase: `/admin/orders?${parametres.toString()}`,
     };
   };
