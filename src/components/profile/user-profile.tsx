@@ -60,6 +60,7 @@ export type ProfilUtilisateurProps = {
   formulaireSecondFacteur?: ReactNode;
   formulaireMotDePasse?: ReactNode;
   activite?: ActiviteRecente[] | null;
+  journalAccessible?: boolean;
   piecesIdentite?: PieceIdentiteProfil[] | null;
   formulairePieceIdentite?: ReactNode;
   className?: string;
@@ -159,6 +160,7 @@ export function ProfilUtilisateur({
   formulaireSecondFacteur,
   formulaireMotDePasse,
   activite,
+  journalAccessible,
   piecesIdentite,
   formulairePieceIdentite,
   className,
@@ -330,7 +332,7 @@ export function ProfilUtilisateur({
           ) : null}
 
           {activite && activite.length > 0 ? (
-            <BlocActiviteRecente activite={activite} />
+            <BlocActiviteRecente activite={activite} journalAccessible={journalAccessible ?? false} />
           ) : null}
         </div>
 
@@ -339,6 +341,7 @@ export function ProfilUtilisateur({
             <TitreBloc
               titre="Sécurité"
               description="Mot de passe, second facteur, sessions : ce qui protège ce compte."
+              pastille={formulaireMotDePasse ? "modifiable" : "lecture-seule"}
             />
             <Separator className="mt-2" />
             {formulaireMotDePasse ? (

@@ -13,6 +13,7 @@ import { FormulaireMonProfil } from "./my-profile-form";
 import { FormulaireMotDePasse } from "@/components/profile/change-password-form";
 import { ActivationSecondFacteur, DesactivationSecondFacteur } from "@/components/profile";
 import { listerActiviteRecente } from "@/lib/authorizations/activite";
+import { peutConsulterJournal } from "@/lib/db/schema/authorizations";
 import { and, desc, eq, gt } from "drizzle-orm";
 import { headers } from "next/headers";
 
@@ -113,6 +114,10 @@ export default async function AdminProfilPage() {
   const peutModifierCoordonnees =
     profil.type === "STAFF" && peutModifierSesCoordonnees(profil.role, profil.etat);
 
+  const peutConsulter =
+    profil.type === "STAFF" &&
+    peutConsulterJournal(profil.role, profil.etat);
+
   return (
     <div className="flex flex-1 flex-col gap-4 bg-background p-4 sm:p-6">
       <ProfilUtilisateur
@@ -129,6 +134,7 @@ export default async function AdminProfilPage() {
         creePar={creePar}
         sessions={sessions}
         activite={activite}
+        journalAccessible={peutConsulter}
         peutModifierCoordonnees={peutModifierCoordonnees}
         motifCoordonneesVerrouillees={
           profil.type === "STAFF"

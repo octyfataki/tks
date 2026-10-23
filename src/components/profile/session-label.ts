@@ -68,16 +68,19 @@ export function libelleAppareil(userAgent: string | null | undefined): string {
 const ADRESSES_LOOPBACK = new Set([
   "::1",
   "0:0:0:0:0:0:0:1",
-  "0000:0000:0000:0000:0000:0000:0000:0000",
-  "::",
-  "0:0:0:0:0:0:0:0",
+  "0000:0000:0000:0000:0000:0000:0000:0001",
 ]);
 
 export function formaterAdresseSession(adresse: string | null | undefined): string | null {
   const brute = (adresse ?? "").trim();
   if (brute === "") return null;
-  if (ADRESSES_LOOPBACK.has(brute.toLowerCase())) return "127.0.0.1";
-  if (brute.toLowerCase().startsWith("::ffff:")) {
+  const minuscule = brute.toLowerCase();
+  const groupes = minuscule.split(":");
+  if (groupes.length > 1 && groupes.every((groupe) => Number(groupe) === 0)) {
+    return null;
+  }
+  if (ADRESSES_LOOPBACK.has(minuscule)) return "127.0.0.1";
+  if (minuscule.startsWith("::ffff:")) {
     return brute.slice("::ffff:".length);
   }
   return brute;

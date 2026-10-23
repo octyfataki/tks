@@ -13,6 +13,7 @@ import { FormulaireMonProfil } from "@/app/admin/profile/my-profile-form";
 import { FormulaireMotDePasse } from "@/components/profile/change-password-form";
 import { ActivationSecondFacteur, DesactivationSecondFacteur } from "@/components/profile";
 import { listerActiviteRecente } from "@/lib/authorizations/activite";
+import { peutConsulterJournal } from "@/lib/db/schema/authorizations";
 import { and, desc, eq, gt } from "drizzle-orm";
 import { headers } from "next/headers";
 
@@ -110,6 +111,10 @@ export default async function AgentProfilePage() {
 
   const activite = staffAccountId ? await listerActiviteRecente(staffAccountId) : [];
 
+  const peutConsulterJournalAudit =
+    profile.type === "STAFF" &&
+    peutConsulterJournal(profile.role, profile.etat);
+
   const canEditContactDetails =
     profile.type === "STAFF" && peutModifierSesCoordonnees(profile.role, profile.etat);
 
@@ -129,6 +134,7 @@ export default async function AgentProfilePage() {
         creePar={createdBy}
         sessions={sessions}
         activite={activite}
+        journalAccessible={peutConsulterJournalAudit}
         peutModifierCoordonnees={canEditContactDetails}
         motifCoordonneesVerrouillees={
           profile.type === "STAFF"

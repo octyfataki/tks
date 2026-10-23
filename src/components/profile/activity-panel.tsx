@@ -2,7 +2,13 @@ import Link from "next/link";
 import type { ActiviteRecente } from "@/lib/authorizations/activite";
 import { dateHeure } from "./dates";
 
-export function BlocActiviteRecente({ activite }: { activite: ActiviteRecente[] }) {
+export function BlocActiviteRecente({
+  activite,
+  journalAccessible,
+}: {
+  activite: ActiviteRecente[];
+  journalAccessible: boolean;
+}) {
   if (activite.length === 0) return null;
 
   return (
@@ -32,7 +38,7 @@ export function BlocActiviteRecente({ activite }: { activite: ActiviteRecente[] 
             {activite.map((ligne) => (
               <tr key={ligne.id} className="transition-colors hover:bg-muted/30">
                 <td className="px-4 py-2.5 align-top whitespace-nowrap tabular-nums text-muted-foreground">
-                  {dateHeure(ligne.ecritLe)}
+                  {dateHeure(ligne.recuLe)}
                 </td>
                 <td className="max-w-72 px-3 py-2.5 font-medium break-words">
                   {ligne.resume}
@@ -42,12 +48,14 @@ export function BlocActiviteRecente({ activite }: { activite: ActiviteRecente[] 
           </tbody>
         </table>
       </div>
-      <Link
-        href="/admin/audit-log"
-        className="mt-3 inline-block text-xs font-medium text-primary underline-offset-4 hover:underline"
-      >
-        Voir le journal d&apos;audit
-      </Link>
+      {journalAccessible ? (
+        <Link
+          href="/admin/audit-log"
+          className="mt-3 inline-block text-xs font-medium text-primary underline-offset-4 hover:underline"
+        >
+          Voir le journal d&apos;audit
+        </Link>
+      ) : null}
     </section>
   );
 }

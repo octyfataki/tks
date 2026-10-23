@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import { ProfilUtilisateur } from "@/components/profile/user-profile";
 import { FormulaireMonProfil } from "@/app/admin/profile/my-profile-form";
 import { FormulaireMotDePasse } from "@/components/profile/change-password-form";
@@ -218,7 +218,8 @@ describe("ProfilUtilisateur", () => {
         formulaireCoordonnees={null}
       />,
     );
-    expect(screen.getByText("Lecture seule")).toBeInTheDocument();
+    const blocCoordonnees = screen.getByRole("region", { name: "Coordonnées" });
+    expect(within(blocCoordonnees).getByText("Lecture seule")).toBeInTheDocument();
     expect(
       screen.getByText(/le rôle d'administrateur technique ne permet pas/),
     ).toBeInTheDocument();
@@ -358,13 +359,36 @@ describe("ProfilUtilisateur", () => {
           {
             id: "e1",
             resume: "Taux saisi : 2 300 CDF pour 1 USD",
-            ecritLe: new Date("2026-10-02T08:00:00Z"),
+            recuLe: new Date("2026-10-02T08:00:00Z"),
           },
         ]}
+        journalAccessible
       />,
     );
     expect(screen.getByRole("heading", { name: "Activité récente" })).toBeInTheDocument();
-    expect(screen.getByText("Taux saisi : 2 300 CDF pour 1 USD")).toBeInTheDocument();
+    expect(screen.getByText(/Taux saisi : 2 300 CDF pour 1 USD/)).toBeInTheDocument();
+    expect(screen.getByText(/2 oct\./)).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Voir le journal d'audit" })).toBeInTheDocument();
+  });
+
+  it("n'affiche pas de lien journal à un compte qui ne le consulte pas", () => {
+    render(
+      <ProfilUtilisateur
+        nom="Agent Terrain"
+        email="agent@example.com"
+        compte={{ type: "STAFF", role: "AGENT", etat: "VALIDE" }}
+        activite={[
+          {
+            id: "e2",
+            resume: "Commande servie — 50 unités",
+            recuLe: new Date("2026-10-02T08:00:00Z"),
+          },
+        ]}
+        journalAccessible={false}
+      />,
+    );
+    expect(screen.getByRole("heading", { name: "Activité récente" })).toBeInTheDocument();
+    expect(screen.queryByRole("link", { name: "Voir le journal d'audit" })).not.toBeInTheDocument();
   });
 
   it("n'affiche aucun bloc d'activité quand le compte n'a rien fait", () => {
@@ -374,6 +398,7 @@ describe("ProfilUtilisateur", () => {
         email="chef@example.com"
         compte={{ type: "STAFF", role: "ADMIN_PRINCIPAL", etat: "VALIDE" }}
         activite={[]}
+        journalAccessible
       />,
     );
     expect(screen.queryByRole("heading", { name: "Activité récente" })).not.toBeInTheDocument();

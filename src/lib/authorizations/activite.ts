@@ -6,7 +6,7 @@ import { resumerEvenement } from "./journal-summary";
 export type ActiviteRecente = {
   id: string;
   resume: string;
-  ecritLe: Date;
+  recuLe: Date;
 };
 
 export async function listerActiviteRecente(
@@ -24,7 +24,7 @@ export async function listerActiviteRecente(
       avant: journalAudit.avant,
       apres: journalAudit.apres,
       motif: journalAudit.motif,
-      horodatageLocal: journalAudit.horodatageLocal,
+      recuLe: journalAudit.recuLe,
     })
     .from(journalAudit)
     .where(eq(journalAudit.acteurId, acteurId))
@@ -44,7 +44,7 @@ export async function listerActiviteRecente(
     activite.push({
       id: ligne.id,
       resume,
-      ecritLe: ligne.horodatageLocal,
+      recuLe: ligne.recuLe,
     });
     if (activite.length === limite) break;
   }

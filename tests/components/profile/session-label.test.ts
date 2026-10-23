@@ -42,9 +42,8 @@ describe("libelleAppareil", () => {
 describe("formaterAdresseSession", () => {
   it("normalise le loopback IPv6 en IPv4", () => {
     expect(formaterAdresseSession("::1")).toBe("127.0.0.1");
-    expect(formaterAdresseSession("0000:0000:0000:0000:0000:0000:0000:0000")).toBe(
-      "127.0.0.1",
-    );
+    expect(formaterAdresseSession("0000:0000:0000:0000:0000:0000:0000:0000")).toBeNull();
+    expect(formaterAdresseSession("::")).toBeNull();
     expect(formaterAdresseSession("::ffff:192.0.2.10")).toBe("192.0.2.10");
   });
 
