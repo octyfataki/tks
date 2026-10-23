@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { FingerprintIcon, ShieldCheckIcon } from "lucide-react";
+import { FingerprintIcon, LockIcon, MailIcon, ShieldCheckIcon } from "lucide-react";
 import { BoutonCopierMatricule } from "./copy-registration-number-button";
 import { BoutonDeconnexionAutres } from "./sign-out-other-devices-button";
 import { PhotoProfilModifiable } from "./editable-profile-photo";
@@ -139,6 +139,33 @@ function TitreBloc({
   );
 }
 
+function LigneVerrouillee({
+  icone: Icone,
+  etiquette,
+  valeur,
+  aide,
+}: {
+  icone: typeof MailIcon;
+  etiquette: string;
+  valeur: string;
+  aide: string;
+}) {
+  return (
+    <div className="flex items-start gap-2.5 rounded-lg border border-dashed bg-muted/40 p-3">
+      <Icone className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
+      <div className="min-w-0 flex-1">
+        <p className="text-xs font-medium">{etiquette}</p>
+        <p className="mt-0.5 break-words text-sm font-medium" title={valeur}>{valeur}</p>
+        <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">{aide}</p>
+      </div>
+      <LockIcon
+        className="mt-0.5 size-3.5 shrink-0 text-muted-foreground"
+        aria-label="Verrouillé"
+      />
+    </div>
+  );
+}
+
 export function ProfilUtilisateur({
   nom,
   email,
@@ -208,7 +235,7 @@ export function ProfilUtilisateur({
               </Badge>
             </div>
             <p className="mt-1 min-w-0 break-words text-sm text-muted-foreground">
-              {email} · {precisionRole(compte)}
+              {precisionRole(compte)}
             </p>
             <div className="mt-1.5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs text-muted-foreground sm:justify-start">
               {reperes.map((repere, index) => (
@@ -218,12 +245,6 @@ export function ProfilUtilisateur({
                 </span>
               ))}
             </div>
-            {estStaff ? (
-              <p className="mt-1.5 text-[11px] leading-relaxed text-muted-foreground">
-                Rôle immuable : tout changement passe par révocation et recréation
-                tracées.
-              </p>
-            ) : null}
           </div>
         </div>
       </header>
@@ -233,7 +254,7 @@ export function ProfilUtilisateur({
           <section aria-label="Coordonnées" className="rounded-xl border bg-card p-4 sm:p-5">
             <SectionModifiable
               titre="Coordonnées"
-              description="Nom et téléphone retouchables. L'identifiant de connexion reste votre email : il ne se change pas ici."
+              description="Nom et téléphone retouchables. L'identifiant et le rôle sont fixés à la création."
               peutModifier={coordonneesModifiables}
               motifVerrouille={
                 motifCoordonneesVerrouillees ?? "Lecture seule : la correction est indisponible."
@@ -241,13 +262,33 @@ export function ProfilUtilisateur({
               cleRepli={cleCoordonnees}
               pastille={coordonneesModifiables ? "modifiable" : "lecture-seule"}
               lecture={
-                <dl className="mt-4 grid gap-x-8 gap-y-4 sm:grid-cols-2">
-                  <Champ etiquette="Nom affiché" valeur={nom} />
-                  <Champ
-                    etiquette="Téléphone contact"
-                    valeur={telephoneAffiche ?? "Non renseigné"}
-                  />
-                </dl>
+                <>
+                  <dl className="mt-4 grid gap-x-8 gap-y-4 sm:grid-cols-2">
+                    <Champ etiquette="Nom affiché" valeur={nom} />
+                    <Champ
+                      etiquette="Téléphone contact"
+                      valeur={telephoneAffiche ?? "Non renseigné"}
+                    />
+                  </dl>
+                  <div className="mt-4 flex flex-col gap-2">
+                    <LigneVerrouillee
+                      icone={MailIcon}
+                      etiquette="Adresse email"
+                      valeur={email}
+                      aide="Identifiant de connexion : la confiance passe par l'email."
+                    />
+                    <LigneVerrouillee
+                      icone={ShieldCheckIcon}
+                      etiquette="Rôle"
+                      valeur={libelleRole(compte)}
+                      aide={
+                        estStaff
+                          ? "Immuable : tout changement passe par révocation + recréation tracées."
+                          : "Le compte client ne porte aucun pouvoir de distribution."
+                      }
+                    />
+                  </div>
+                </>
               }
               formulaire={formulaireCoordonnees}
             />
