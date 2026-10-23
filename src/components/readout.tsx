@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export type ReadoutStat = {
   label: string;
@@ -40,6 +41,21 @@ export function Readout({ stats }: { stats: ReadoutStat[] }) {
               {stat.hint}
             </p>
           ) : null}
+        </div>
+      ))}
+    </dl>
+  );
+}
+
+const ETAGES_LECTURE = [0, 1, 2, 3];
+
+export function ReadoutChargement() {
+  return (
+    <dl className="grid grid-cols-2 divide-x divide-y divide-dashed divide-border overflow-hidden rounded-lg border bg-card sm:grid-cols-4 sm:divide-y-0">
+      {ETAGES_LECTURE.map((etage) => (
+        <div key={etage} className="px-4 py-3">
+          <Skeleton className="h-3.5 w-20 max-w-full" />
+          <Skeleton className="mt-2 h-7 w-16" />
         </div>
       ))}
     </dl>
