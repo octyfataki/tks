@@ -27,7 +27,7 @@ export function AuthShell({
   sideNote = "Compte validé sur pièce d'identité : chaque écriture est attribuée à son auteur, chaque chiffre se vérifie jusqu'à la créance.",
 }: AuthShellProps) {
   return (
-    <div className="relative flex min-h-full flex-1 items-center justify-center overflow-hidden bg-background px-4 py-6">
+    <div className="relative flex flex-1 items-center justify-center overflow-hidden bg-background px-4 py-6">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0"
