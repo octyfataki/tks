@@ -1,14 +1,29 @@
-import { describe, expect, it, vi } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+import { fireEvent, render, screen, within } from "@testing-library/react";
 import type { ComponentProps } from "react";
 import { OrderQueue } from "@/components/orders/order-queue";
 import type { OrderView } from "@/modules/orders/read";
+
+const { pousses } = vi.hoisted(() => ({ pousses: [] as string[] }));
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({
+    push: (url: string) => pousses.push(url),
+    replace: (url: string) => pousses.push(url),
+    back: () => undefined,
+    prefetch: () => undefined,
+  }),
+}));
 
 vi.mock("@/modules/orders/actions", () => ({
   takeOrderAction: vi.fn(),
   serveOrderAction: vi.fn(),
   cancelOrderAction: vi.fn(),
 }));
+
+beforeEach(() => {
+  pousses.length = 0;
+});
 
 function commande(id: string, etat: OrderView["state"]): OrderView {
   return {
@@ -42,8 +57,8 @@ function pagination(nom: string, page = 1, totalPages = 4) {
   };
 }
 
-function rendre(props: Partial<ComponentProps<typeof OrderQueue>> = {}) {
-  return render(
+function element(props: Partial<ComponentProps<typeof OrderQueue>> = {}) {
+  return (
     <OrderQueue
       ongletInitial="prendre"
       prendre={[commande("a", "QUEUED")]}
@@ -60,8 +75,12 @@ function rendre(props: Partial<ComponentProps<typeof OrderQueue>> = {}) {
       canCancel
       retour="/admin/orders"
       {...props}
-    />,
+    />
   );
+}
+
+function rendre(props: Partial<ComponentProps<typeof OrderQueue>> = {}) {
+  return render(element(props));
 }
 
 describe("OrderQueue", () => {
@@ -149,5 +168,28 @@ describe("OrderQueue", () => {
     rendre({ ongletInitial: "cours", cours: [] });
     expect(screen.getByRole("tab", { name: /En cours/ })).toBeInTheDocument();
     expect(screen.getByText("Aucune commande en cours")).toBeInTheDocument();
+  });
+
+  it("un clic d'onglet écrit l'URL de cet onglet", () => {
+    rendre({ ongletInitial: "terminees" });
+    fireEvent.click(screen.getByRole("tab", { name: /À prendre/ }));
+    expect(pousses).toEqual(["/admin/orders?tri=recents&onglet=prendre"]);
+    expect(
+      screen.getByRole("tab", { name: /À prendre/ }),
+    ).toHaveAttribute("aria-selected", "true");
+  });
+
+  it("l'onglet déjà ouvert ne recharge pas la page", () => {
+    rendre({ ongletInitial: "cours" });
+    fireEvent.click(screen.getByRole("tab", { name: /En cours/ }));
+    expect(pousses).toEqual([]);
+  });
+
+  it("un retour arrière du navigateur suit l'URL", () => {
+    const { rerender } = rendre({ ongletInitial: "prendre" });
+    rerender(element({ ongletInitial: "terminees" }));
+    expect(
+      screen.getByRole("tab", { name: /Terminées/ }),
+    ).toHaveAttribute("aria-selected", "true");
   });
 });
