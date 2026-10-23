@@ -1,7 +1,8 @@
 import { render, screen, within } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 import { AideContenu } from "@/components/help/help-content";
-import { AIDE_SECTIONS } from "@/lib/help-content";
+import { AIDE_SECTIONS, destinationAide } from "@/lib/help-content";
+import type { Profil } from "@/lib/accounts/session-role";
 
 const ROUTES_EXISTANTES = new Set([
   "/",
@@ -104,6 +105,26 @@ describe("page d'aide", () => {
         ).toMatch(/jamais|n'existent pas|n’existent pas/);
         index = texte.indexOf(interdit, index + 1);
       }
+    }
+  });
+});
+
+describe("aiguillage de l'aide", () => {
+  it("chaque destination renvoie vers une page qui existe", () => {
+    const profils: Profil[] = [
+      { type: "ANONYME" },
+      { type: "CLIENT", etat: "VALIDE" },
+      { type: "STAFF", role: "AGENT", etat: "VALIDE" },
+      { type: "STAFF", role: "ADMIN_PRINCIPAL", etat: "VALIDE" },
+      { type: "STAFF", role: "ADMIN_TECHNIQUE", etat: "VALIDE" },
+    ];
+
+    for (const profil of profils) {
+      const destination = destinationAide(profil);
+      expect(
+        ROUTES_EXISTANTES.has(destination),
+        `destinationAide(${profil.type}) renvoie ${destination}, qui doit exister`,
+      ).toBe(true);
     }
   });
 });

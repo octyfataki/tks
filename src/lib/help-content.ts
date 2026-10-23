@@ -211,7 +211,7 @@ export const AIDE_BIENTOT: { theme: string; entrees: string[] }[] = [
 export function destinationAide(profil: Profil): string {
   if (profil.type === "CLIENT") return "/clients/help";
   if (profil.type === "STAFF" && profil.etat === "VALIDE") {
-    return profil.role === "AGENT" ? "/agent/help" : "/admin/aide";
+    return profil.role === "AGENT" ? "/agent/help" : "/admin/help";
   }
   return DESTINATION_CONNEXION;
 }
