@@ -1,12 +1,18 @@
 import type { CompteProfil, SessionEnCoursProfil } from "@/components/profile";
 import { ProfilUtilisateur } from "@/components/profile";
 import { profilSession } from "@/lib/accounts/session-profile";
+import {
+  motifCoordonneesVerrouillees,
+  peutModifierSesCoordonnees,
+} from "@/lib/accounts/compte-profil";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
 import { session as tableSession, user } from "@/lib/db/schema/auth-schema";
 import { comptesStaff, facteurs2faAdmin } from "@/lib/db/schema/accounts";
 import { FormulaireMonProfil } from "@/app/admin/profile/my-profile-form";
+import { FormulaireMotDePasse } from "@/components/profile/change-password-form";
 import { ActivationSecondFacteur, DesactivationSecondFacteur } from "@/components/profile";
+import { listerActiviteRecente } from "@/lib/authorizations/activite";
 import { and, desc, eq, gt } from "drizzle-orm";
 import { headers } from "next/headers";
 
@@ -35,6 +41,7 @@ export default async function AgentProfilePage() {
   let createdBy: string | null = null;
   let secondFactorEnabled: boolean | null = null;
   let secondFactorDevice: string | null = null;
+  let staffAccountId: string | null = null;
 
   if (userId && profile.type === "STAFF") {
     const rows = await db
@@ -54,6 +61,7 @@ export default async function AgentProfilePage() {
       telephone = row.telephone ?? null;
       staffNumber = row.id.slice(0, 8).toUpperCase();
       createdAt = row.createdAt;
+      staffAccountId = row.id;
       if (row.createdBy) {
         const creators = await db
           .select({ email: comptesStaff.email, name: user.name })
@@ -100,8 +108,10 @@ export default async function AgentProfilePage() {
     sessions = sessionRows;
   }
 
+  const activite = staffAccountId ? await listerActiviteRecente(staffAccountId) : [];
+
   const canEditContactDetails =
-    profile.type === "STAFF" && profile.etat === "VALIDE";
+    profile.type === "STAFF" && peutModifierSesCoordonnees(profile.role, profile.etat);
 
   return (
     <div className="flex flex-1 flex-col gap-4 bg-background p-4 sm:p-6">
@@ -111,20 +121,30 @@ export default async function AgentProfilePage() {
         telephone={telephone}
         avatarUrl={avatarUrl}
         compte={account}
-        dossier={null}
+        profilClient={null}
         secondFacteurActif={secondFactorEnabled}
         appareilSecondFacteur={secondFactorDevice}
         matricule={staffNumber}
         creeLe={createdAt}
         creePar={createdBy}
         sessions={sessions}
+        activite={activite}
         peutModifierCoordonnees={canEditContactDetails}
-        motifCoordonneesVerrouillees="Lecture seule : votre compte ne permet pas la correction."
+        motifCoordonneesVerrouillees={
+          profile.type === "STAFF"
+            ? motifCoordonneesVerrouillees(profile.role, profile.etat)
+            : "Lecture seule : la correction est indisponible."
+        }
         cleCoordonnees={`${name}-${telephone ?? ""}`}
         formulaireCoordonnees={
           <FormulaireMonProfil nomInitial={name} telephoneInitial={telephone ?? ""} />
         }
         sessionActuelleId={currentSessionId}
+        formulaireMotDePasse={
+          profile.type === "STAFF" && profile.etat === "VALIDE" ? (
+            <FormulaireMotDePasse />
+          ) : undefined
+        }
         formulaireSecondFacteur={
           profile.type === "STAFF" && profile.etat === "VALIDE" ? (
             secondFactorEnabled === true ? (

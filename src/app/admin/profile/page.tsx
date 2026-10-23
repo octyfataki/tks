@@ -1,13 +1,18 @@
 import type { CompteProfil, SessionEnCoursProfil } from "@/components/profile";
 import { ProfilUtilisateur } from "@/components/profile";
 import { profilSession } from "@/lib/accounts/session-profile";
+import {
+  motifCoordonneesVerrouillees,
+  peutModifierSesCoordonnees,
+} from "@/lib/accounts/compte-profil";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/db/client";
 import { session as tableSession, user } from "@/lib/db/schema/auth-schema";
 import { comptesStaff, facteurs2faAdmin } from "@/lib/db/schema/accounts";
-import { peutModifierAdmin } from "@/lib/db/schema/accounts";
 import { FormulaireMonProfil } from "./my-profile-form";
+import { FormulaireMotDePasse } from "@/components/profile/change-password-form";
 import { ActivationSecondFacteur, DesactivationSecondFacteur } from "@/components/profile";
+import { listerActiviteRecente } from "@/lib/authorizations/activite";
 import { and, desc, eq, gt } from "drizzle-orm";
 import { headers } from "next/headers";
 
@@ -36,6 +41,7 @@ export default async function AdminProfilPage() {
   let creePar: string | null = null;
   let secondFacteurActif: boolean | null = null;
   let appareilSecondFacteur: string | null = null;
+  let compteStaffId: string | null = null;
 
   if (userId && profil.type === "STAFF") {
     const lignes = await db
@@ -55,6 +61,7 @@ export default async function AdminProfilPage() {
       telephone = ligne.telephone ?? null;
       matricule = ligne.id.slice(0, 8).toUpperCase();
       creeLe = ligne.createdAt;
+      compteStaffId = ligne.id;
       if (ligne.creePar) {
         const createurs = await db
           .select({ email: comptesStaff.email, nom: user.name })
@@ -101,8 +108,10 @@ export default async function AdminProfilPage() {
     sessions = lignesSessions;
   }
 
+  const activite = compteStaffId ? await listerActiviteRecente(compteStaffId) : [];
+
   const peutModifierCoordonnees =
-    profil.type === "STAFF" && peutModifierAdmin(profil.role, profil.etat);
+    profil.type === "STAFF" && peutModifierSesCoordonnees(profil.role, profil.etat);
 
   return (
     <div className="flex flex-1 flex-col gap-4 bg-background p-4 sm:p-6">
@@ -112,20 +121,30 @@ export default async function AdminProfilPage() {
         telephone={telephone}
         avatarUrl={avatarUrl}
         compte={compte}
-        dossier={null}
+        profilClient={null}
         secondFacteurActif={secondFacteurActif}
         appareilSecondFacteur={appareilSecondFacteur}
         matricule={matricule}
         creeLe={creeLe}
         creePar={creePar}
         sessions={sessions}
+        activite={activite}
         peutModifierCoordonnees={peutModifierCoordonnees}
-        motifCoordonneesVerrouillees="Lecture seule : votre compte ne permet pas la correction."
+        motifCoordonneesVerrouillees={
+          profil.type === "STAFF"
+            ? motifCoordonneesVerrouillees(profil.role, profil.etat)
+            : "Lecture seule : la correction est indisponible."
+        }
         cleCoordonnees={`${nom}-${telephone ?? ""}`}
         formulaireCoordonnees={
           <FormulaireMonProfil nomInitial={nom} telephoneInitial={telephone ?? ""} />
         }
         sessionActuelleId={sessionActuelleId}
+        formulaireMotDePasse={
+          profil.type === "STAFF" && profil.etat === "VALIDE" ? (
+            <FormulaireMotDePasse />
+          ) : undefined
+        }
         formulaireSecondFacteur={
           profil.type === "STAFF" && profil.etat === "VALIDE" ? (
             secondFacteurActif === true ? (

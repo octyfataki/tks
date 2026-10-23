@@ -1,7 +1,7 @@
 export {
   ProfilUtilisateur,
   type CompteProfil,
-  type DossierRattacheProfil,
+  type ProfilClientRattache,
   type ProfilUtilisateurProps,
   type SessionEnCoursProfil,
 } from "./user-profile";
@@ -17,3 +17,4 @@ export { BoutonRetirerPiece } from "./remove-document-button";
 export { ProfilSquelette } from "./profile-skeleton";
 export { ActivationSecondFacteur } from "./two-factor-activation";
 export { DesactivationSecondFacteur } from "./two-factor-deactivation";
+export { FormulaireMotDePasse } from "./change-password-form";

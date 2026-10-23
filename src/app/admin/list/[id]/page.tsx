@@ -23,7 +23,7 @@ import { Badge } from "@/components/ui/badge";
 import { buttonVariants } from "@/components/ui/button";
 import { FormulaireAppareil } from "./device-form";
 import { FormulaireCoordonnees } from "./contact-details-form";
-import { SectionModifiable } from "./editable-section";
+import { SectionModifiable } from "@/components/editable-section";
 import { InterrupteurEtat } from "../status-toggle";
 import { BoutonRevocation } from "./revoke-button";
 

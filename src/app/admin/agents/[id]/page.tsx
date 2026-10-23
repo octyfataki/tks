@@ -29,7 +29,7 @@ import { FormulaireEmailAgent } from "./email-form";
 import { FormulaireLienMotDePasse } from "./password-link-form";
 import { LienMotDePasseEnAttente } from "./pending-password-link";
 import { SessionsAgent } from "./agent-sessions";
-import { SectionModifiable } from "../../list/[id]/editable-section";
+import { SectionModifiable } from "@/components/editable-section";
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 
