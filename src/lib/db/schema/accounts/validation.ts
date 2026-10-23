@@ -12,6 +12,15 @@ export function estRoleStaff(role: string): role is RoleStaff {
   return (ROLES_STAFF as readonly string[]).includes(role);
 }
 
+export function estAdminTechnique(role: string): boolean {
+  return role === "ADMIN_TECHNIQUE";
+}
+
+export function peutModifierSesCoordonnees(role: string, etat: string): boolean {
+  if (etat !== "VALIDE") return false;
+  return estAdminTechnique(role) === false;
+}
+
 export function estEtatStaff(etat: string): etat is EtatStaff {
   return (ETATS_STAFF as readonly string[]).includes(etat);
 }

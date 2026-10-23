@@ -8,6 +8,12 @@ import { headers } from "next/headers";
 import { and, eq, gt, ne } from "drizzle-orm";
 import sharp from "sharp";
 import { auth } from "@/lib/auth";
+import { messageErreurChangementMotDePasse, type ErreurAuth } from "@/lib/auth-errors";
+import { motDePasseTropCourt } from "@/lib/auth-password";
+import {
+  motifCoordonneesVerrouillees,
+  peutModifierSesCoordonnees,
+} from "@/lib/accounts/compte-profil";
 import { db } from "@/lib/db/client";
 import { session as tableSession, twoFactor as tableDoubleFacteur, user } from "@/lib/db/schema/auth-schema";
 import {
@@ -224,6 +230,9 @@ export async function modifierMonProfilAction(
   if (moi.etat !== "VALIDE") {
     return { ok: false, erreur: "Modification impossible (compte non modifiable)." };
   }
+  if (!peutModifierSesCoordonnees(moi.role, moi.etat)) {
+    return { ok: false, erreur: motifCoordonneesVerrouillees(moi.role, moi.etat) };
+  }
   const nom = String(donnees.get("nom") ?? "").trim();
   const telephone = String(donnees.get("telephone") ?? "").trim();
   if (!nom) {
@@ -267,6 +276,84 @@ export async function modifierMonProfilAction(
   revalidatePath("/agent", "layout");
   revalidatePath("/clients", "layout");
   return { ok: true, inchange: false };
+}
+
+export type ResultatChangementMotDePasse =
+  | { ok: true }
+  | { ok: false; erreur: string };
+
+export async function changerMotDePasseAction(
+  _precedent: ResultatChangementMotDePasse | null,
+  donnees: FormData,
+): Promise<ResultatChangementMotDePasse> {
+  const session = await auth.api.getSession({ headers: await headers() });
+  const userId = session?.user?.id;
+  if (!userId) {
+    return {
+      ok: false,
+      erreur: "Vous devez être connecté pour changer votre mot de passe.",
+    };
+  }
+  const lignesMoi = await db
+    .select({ id: comptesStaff.id, role: comptesStaff.role, etat: comptesStaff.etat })
+    .from(comptesStaff)
+    .where(eq(comptesStaff.betterAuthUserId, userId))
+    .limit(1);
+  const moi = lignesMoi[0];
+  if (!moi) {
+    return {
+      ok: false,
+      erreur: "Le changement de mot de passe est réservé aux comptes du personnel.",
+    };
+  }
+  if (moi.etat !== "VALIDE") {
+    return { ok: false, erreur: "Modification impossible (compte non modifiable)." };
+  }
+  const motDePasseActuel = String(donnees.get("motDePasseActuel") ?? "");
+  const nouveauMotDePasse = String(donnees.get("nouveauMotDePasse") ?? "");
+  const confirmation = String(donnees.get("confirmationMotDePasse") ?? "");
+  if (motDePasseActuel.trim() === "") {
+    return { ok: false, erreur: "Le mot de passe actuel est exigé." };
+  }
+  if (motDePasseTropCourt(nouveauMotDePasse)) {
+    return {
+      ok: false,
+      erreur: "Le nouveau mot de passe doit faire au moins 8 caractères.",
+    };
+  }
+  if (nouveauMotDePasse !== confirmation) {
+    return {
+      ok: false,
+      erreur: "La confirmation ne correspond pas au nouveau mot de passe.",
+    };
+  }
+  if (nouveauMotDePasse === motDePasseActuel) {
+    return {
+      ok: false,
+      erreur: "Le nouveau mot de passe doit être différent de l'ancien.",
+    };
+  }
+  try {
+    const resultat = (await auth.api.changePassword({
+      body: {
+        currentPassword: motDePasseActuel,
+        newPassword: nouveauMotDePasse,
+        revokeOtherSessions: true,
+      },
+      headers: await headers(),
+    })) as { error?: ErreurAuth };
+    if (resultat.error) {
+      return { ok: false, erreur: messageErreurChangementMotDePasse(resultat.error) };
+    }
+  } catch (erreur) {
+    return {
+      ok: false,
+      erreur: messageErreurChangementMotDePasse(erreur as ErreurAuth),
+    };
+  }
+  revalidatePath("/admin/profile");
+  revalidatePath("/agent/profile");
+  return { ok: true };
 }
 
 export async function deconnecterAutresSessionsAction(): Promise<ResultatDeconnexionAutres> {

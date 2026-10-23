@@ -1,7 +1,8 @@
-type ErreurAuth = {
+export type ErreurAuth = {
   code?: string;
   message?: string;
   status?: number;
+  body?: { code?: string } | null;
 } | null | undefined;
 
 export const MESSAGE_RESEAU = "Impossible de joindre le serveur. Vérifiez votre connexion.";
@@ -28,8 +29,16 @@ const SECOND_FACTEUR: Record<string, string> = {
   ENVOI_REFUSE: "Envoi refusé. Réessayez.",
 };
 
+const MOT_DE_PASSE: Record<string, string> = {
+  INVALID_PASSWORD: "Mot de passe actuel incorrect.",
+  PASSWORD_TOO_SHORT: "Le nouveau mot de passe est trop court.",
+  PASSWORD_TOO_LONG: "Le nouveau mot de passe est trop long.",
+  CREDENTIAL_ACCOUNT_NOT_FOUND: "Ce compte n'a pas de mot de passe.",
+  SESSION_EXPIRED: "Session expirée : reconnectez-vous.",
+};
+
 function traduire(erreur: ErreurAuth, catalogue: Record<string, string>, generique: string): string {
-  const code = erreur?.code;
+  const code = erreur?.code ?? erreur?.body?.code ?? undefined;
   if (code && code in catalogue) return catalogue[code];
   if (erreur?.status === 429) return TROP_DE_TENTATIVES;
   if (erreur?.message && process.env.NODE_ENV !== "production") {
@@ -44,4 +53,7 @@ export function messageErreurConnexion(erreur: ErreurAuth): string {
 
 export function messageErreurSecondFacteur(erreur: ErreurAuth): string {
   return traduire(erreur, SECOND_FACTEUR, "Code refusé. Réessayez.");
+}
+export function messageErreurChangementMotDePasse(erreur: ErreurAuth): string {
+  return traduire(erreur, MOT_DE_PASSE, "Changement refusé. Reessayez.");
 }
