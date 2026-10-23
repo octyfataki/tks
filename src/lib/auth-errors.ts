@@ -2,6 +2,7 @@ export type ErreurAuth = {
   code?: string;
   message?: string;
   status?: number;
+  body?: { code?: string } | null;
 } | null | undefined;
 
 export const MESSAGE_RESEAU = "Impossible de joindre le serveur. Vérifiez votre connexion.";
@@ -37,7 +38,7 @@ const MOT_DE_PASSE: Record<string, string> = {
 };
 
 function traduire(erreur: ErreurAuth, catalogue: Record<string, string>, generique: string): string {
-  const code = erreur?.code;
+  const code = erreur?.code ?? erreur?.body?.code ?? undefined;
   if (code && code in catalogue) return catalogue[code];
   if (erreur?.status === 429) return TROP_DE_TENTATIVES;
   if (erreur?.message && process.env.NODE_ENV !== "production") {

@@ -21,6 +21,7 @@ const SYSTEMES: ReadonlyArray<readonly [RegExp, string]> = [
 
 const SERVEURS: ReadonlyArray<readonly [RegExp, string]> = [
   [/node/i, "Session serveur (Node)"],
+  [/opencode\//i, "Session opencode (CLI)"],
   [/python-requests|curl|wget|httpx|postman|insomnia/i, "Session script"],
 ];
 

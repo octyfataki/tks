@@ -25,13 +25,16 @@ export function SectionModifiable({
   pastille?: EtatBloc;
 }) {
   const [ouvert, setOuvert] = React.useState(false);
+  const motifAffiche = peutModifier ? null : motifVerrouille;
 
   return (
     <div>
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <h2 className="text-sm font-medium">{titre}</h2>
-          <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">
+            {motifAffiche ?? description}
+          </p>
         </div>
         <div className="flex shrink-0 items-center gap-2">
           {pastille ? <PastilleBloc etat={pastille} /> : null}
@@ -61,11 +64,6 @@ export function SectionModifiable({
           )}
         </div>
       </div>
-      {pastille && !peutModifier && motifVerrouille ? (
-        <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
-          {motifVerrouille}
-        </p>
-      ) : null}
       {peutModifier && ouvert ? (
         <div key={cleRepli}>{formulaire}</div>
       ) : (

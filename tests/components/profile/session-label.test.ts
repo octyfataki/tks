@@ -27,6 +27,9 @@ describe("libelleAppareil", () => {
 
   it("reconnaît une session serveur", () => {
     expect(libelleAppareil("node")).toBe("Session serveur (Node)");
+    expect(libelleAppareil("opencode/latest/2.1.3/cli")).toBe(
+      "Session opencode (CLI)",
+    );
   });
 
   it("retombe sur un appareil inconnu", () => {
