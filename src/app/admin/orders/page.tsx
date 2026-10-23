@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import { OrderBand } from "@/components/orders/order-band";
 import { OrderQueue } from "@/components/orders/order-queue";
+import type {
+  OngletNom,
+  PaginationOnglet,
+} from "@/components/orders/order-queue";
 import { OrderReadout, type OrderStat } from "@/components/orders/order-readout";
 import { OrderToolbar } from "@/components/orders/order-toolbar";
 import { PermissionRefusee } from "@/components/permission-denied";
@@ -16,6 +20,7 @@ import {
   paginerCommandes,
   separatesCommandes,
   trieCommandes,
+  type FenetreCommandes,
 } from "@/modules/orders/filtres";
 import {
   readAllOrders,
@@ -101,12 +106,6 @@ export default async function AdminOrdersPage({
   const fenetrePrendre = paginerCommandes(groupes.prendre, demande);
   const fenetreCours = paginerCommandes(groupes.cours, demande);
   const fenetreTerminees = paginerCommandes(groupes.terminees, demande);
-  const fenetre =
-    onglet === "prendre"
-      ? fenetrePrendre
-      : onglet === "cours"
-        ? fenetreCours
-        : fenetreTerminees;
 
   const conserves = new URLSearchParams();
   if (filtres.q) conserves.set("q", filtres.q);
@@ -115,8 +114,19 @@ export default async function AdminOrdersPage({
   if (filtres.type) conserves.set("type", filtres.type);
   if (filtres.periode) conserves.set("periode", filtres.periode);
   if (filtres.tri) conserves.set("tri", filtres.tri);
-  conserves.set("onglet", onglet);
-  const hrefBase = `/admin/orders?${conserves.toString()}`;
+
+  const paginationOnglet = (
+    nom: OngletNom,
+    fenetre: FenetreCommandes,
+  ): PaginationOnglet => {
+    const parametres = new URLSearchParams(conserves);
+    parametres.set("onglet", nom);
+    return {
+      page: fenetre.page,
+      totalPages: fenetre.totalPages,
+      hrefBase: `/admin/orders?${parametres.toString()}`,
+    };
+  };
 
   const exportLignes = filtrees.map((commande) => ({
     client: commande.profileName,
@@ -231,9 +241,9 @@ export default async function AdminOrdersPage({
           terminees: groupes.terminees.length,
         }}
         pagination={{
-          page: fenetre.page,
-          totalPages: fenetre.totalPages,
-          hrefBase,
+          prendre: paginationOnglet("prendre", fenetrePrendre),
+          cours: paginationOnglet("cours", fenetreCours),
+          terminees: paginationOnglet("terminees", fenetreTerminees),
         }}
         acteurId={acteur.id}
         canServe={canServe}

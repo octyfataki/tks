@@ -2,6 +2,10 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { OrderBand } from "@/components/orders/order-band";
 import { OrderQueue } from "@/components/orders/order-queue";
+import type {
+  OngletNom,
+  PaginationOnglet,
+} from "@/components/orders/order-queue";
 import { OrderReadout, type OrderStat } from "@/components/orders/order-readout";
 import { OrderToolbar } from "@/components/orders/order-toolbar";
 import { aPermission } from "@/lib/authorizations/permissions";
@@ -15,6 +19,7 @@ import {
   paginerCommandes,
   separatesCommandes,
   trieCommandes,
+  type FenetreCommandes,
 } from "@/modules/orders/filtres";
 import { readAllOrders, readOrderStats } from "@/modules/orders/read";
 
@@ -100,20 +105,25 @@ export default async function AgentOrdersPage({
   const fenetrePrendre = paginerCommandes(groupes.prendre, demande);
   const fenetreCours = paginerCommandes(groupes.cours, demande);
   const fenetreTerminees = paginerCommandes(groupes.terminees, demande);
-  const fenetre =
-    onglet === "prendre"
-      ? fenetrePrendre
-      : onglet === "cours"
-        ? fenetreCours
-        : fenetreTerminees;
 
   const conserves = new URLSearchParams();
   if (filtres.q) conserves.set("q", filtres.q);
   if (filtres.etat) conserves.set("etat", filtres.etat);
   if (filtres.reseau) conserves.set("reseau", filtres.reseau);
   if (filtres.tri) conserves.set("tri", filtres.tri);
-  conserves.set("onglet", onglet);
-  const hrefBase = `/agent/orders?${conserves.toString()}`;
+
+  const paginationOnglet = (
+    nom: OngletNom,
+    fenetre: FenetreCommandes,
+  ): PaginationOnglet => {
+    const parametres = new URLSearchParams(conserves);
+    parametres.set("onglet", nom);
+    return {
+      page: fenetre.page,
+      totalPages: fenetre.totalPages,
+      hrefBase: `/agent/orders?${parametres.toString()}`,
+    };
+  };
 
   const message = params.ok ? (MESSAGES[params.ok] ?? params.ok) : null;
 
@@ -214,9 +224,9 @@ export default async function AgentOrdersPage({
           terminees: groupes.terminees.length,
         }}
         pagination={{
-          page: fenetre.page,
-          totalPages: fenetre.totalPages,
-          hrefBase,
+          prendre: paginationOnglet("prendre", fenetrePrendre),
+          cours: paginationOnglet("cours", fenetreCours),
+          terminees: paginationOnglet("terminees", fenetreTerminees),
         }}
         acteurId={acteur.id}
         canServe={canServe}

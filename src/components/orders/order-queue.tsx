@@ -4,6 +4,8 @@ import { OrderRegister } from "@/components/orders/order-register";
 import { PaginationTableau } from "@/components/pagination-tableau";
 import type { OrderView } from "@/modules/orders/read";
 
+export type OngletNom = "prendre" | "cours" | "terminees";
+
 export type PaginationOnglet = {
   page: number;
   totalPages: number;
@@ -11,12 +13,12 @@ export type PaginationOnglet = {
 };
 
 export type OngletsCommandes = {
-  ongletInitial: "prendre" | "cours" | "terminees";
+  ongletInitial: OngletNom;
   prendre: OrderView[];
   cours: OrderView[];
   terminees: OrderView[];
   totaux: { prendre: number; cours: number; terminees: number };
-  pagination: PaginationOnglet;
+  pagination: Record<OngletNom, PaginationOnglet>;
 };
 
 export function OrderQueue({
@@ -74,11 +76,11 @@ export function OrderQueue({
         />
       );
 
-  const paginationOnglet = (
+  const paginationOnglet = (nom: OngletNom) => (
     <PaginationTableau
-      page={pagination.page}
-      totalPages={pagination.totalPages}
-      hrefBase={pagination.hrefBase}
+      page={pagination[nom].page}
+      totalPages={pagination[nom].totalPages}
+      hrefBase={pagination[nom].hrefBase}
     />
   );
 
@@ -113,7 +115,7 @@ export function OrderQueue({
 
       <TabsContent value="prendre" className="flex flex-col gap-3">
         {registre(prendre)}
-        {paginationOnglet}
+        {paginationOnglet("prendre")}
       </TabsContent>
 
       <TabsContent value="cours" className="flex flex-col gap-3">
@@ -123,12 +125,12 @@ export function OrderQueue({
               "Les commandes prises par un agent apparaîtront ici.",
             )
           : registre(cours)}
-        {paginationOnglet}
+        {paginationOnglet("cours")}
       </TabsContent>
 
       <TabsContent value="terminees" className="flex flex-col gap-3">
         <OrderHistory commandes={terminees} />
-        {paginationOnglet}
+        {paginationOnglet("terminees")}
       </TabsContent>
     </Tabs>
   );
