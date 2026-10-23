@@ -1,5 +1,7 @@
+import { CheckCheckIcon } from "lucide-react";
 import { networkLabel } from "@/modules/pricing/price-record";
 import type { OrderView } from "@/modules/orders/read";
+import { FileVideMessage, type ContenuVide } from "./file-vide";
 import { CachetEtat } from "./etat-commande";
 import { NetworkThumb } from "./network-thumb";
 
@@ -10,17 +12,13 @@ export function dateCourte(valeur: Date): string {
   }).format(valeur);
 }
 
-export function OrderHistory({ commandes }: { commandes: OrderView[] }) {
-  if (commandes.length === 0) {
-    return (
-      <div className="rounded-xl border bg-card p-6 text-center">
-        <p className="text-sm font-medium">Aucune commande terminée</p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Les commandes servies ou annulées apparaîtront ici.
-        </p>
-      </div>
-    );
-  }
+export function OrderHistory({
+  commandes,
+  vide,
+}: {
+  commandes: OrderView[];
+  vide?: ContenuVide;
+}) {
   return (
     <div className="tks-defilement-masque min-w-0 overflow-x-auto rounded-xl border bg-card">
       <table className="w-full min-w-[760px] border-collapse text-left text-xs">
@@ -59,45 +57,61 @@ export function OrderHistory({ commandes }: { commandes: OrderView[] }) {
           </tr>
         </thead>
         <tbody className="divide-y">
-          {commandes.map((commande) => (
-            <tr
-              key={commande.id}
-              className="transition-colors hover:bg-muted/30"
-            >
-              <td className="max-w-56 px-3 py-2.5">
-                <span className="block truncate font-medium">
-                  {commande.profileName}
-                </span>
-                <span className="block truncate text-[11px] text-muted-foreground">
-                  {commande.profilePhone}
-                </span>
-              </td>
-              <td className="px-3 py-2.5">
-                <span className="flex items-center gap-2">
-                  <NetworkThumb network={commande.network} />
-                  {networkLabel(commande.network)}
-                </span>
-              </td>
-              <td className="px-3 py-2.5 text-right tabular-nums">
-                {commande.units.toLocaleString("fr-FR")}
-              </td>
-              <td className="px-3 py-2.5 text-right font-medium tabular-nums">
-                {commande.amount.toLocaleString("fr-FR")}{" "}
-                <span className="font-normal text-muted-foreground">
-                  {commande.currency}
-                </span>
-              </td>
-              <td className="px-3 py-2.5">
-                <CachetEtat etat={commande.state} />
-              </td>
-              <td className="px-3 py-2.5 text-muted-foreground">
-                {commande.lockedByName ?? "—"}
-              </td>
-              <td className="px-3 py-2.5 whitespace-nowrap text-muted-foreground tabular-nums">
-                {dateCourte(commande.createdAt)}
+          {commandes.length === 0 ? (
+            <tr>
+              <td colSpan={7}>
+                <FileVideMessage
+                  icone={vide?.icone ?? CheckCheckIcon}
+                  titre={vide?.titre ?? "Le registre est vide"}
+                  detail={
+                    vide?.detail ??
+                    "Chaque commande servie ou annulée s'inscrit ici, avec son agent et son heure."
+                  }
+                  action={vide?.action}
+                />
               </td>
             </tr>
-          ))}
+          ) : (
+            commandes.map((commande) => (
+              <tr
+                key={commande.id}
+                className="transition-colors hover:bg-muted/30"
+              >
+                <td className="max-w-56 px-3 py-2.5">
+                  <span className="block truncate font-medium">
+                    {commande.profileName}
+                  </span>
+                  <span className="block truncate text-[11px] text-muted-foreground">
+                    {commande.profilePhone}
+                  </span>
+                </td>
+                <td className="px-3 py-2.5">
+                  <span className="flex items-center gap-2">
+                    <NetworkThumb network={commande.network} />
+                    {networkLabel(commande.network)}
+                  </span>
+                </td>
+                <td className="px-3 py-2.5 text-right tabular-nums">
+                  {commande.units.toLocaleString("fr-FR")}
+                </td>
+                <td className="px-3 py-2.5 text-right font-medium tabular-nums">
+                  {commande.amount.toLocaleString("fr-FR")}{" "}
+                  <span className="font-normal text-muted-foreground">
+                    {commande.currency}
+                  </span>
+                </td>
+                <td className="px-3 py-2.5">
+                  <CachetEtat etat={commande.state} />
+                </td>
+                <td className="px-3 py-2.5 text-muted-foreground">
+                  {commande.lockedByName ?? "—"}
+                </td>
+                <td className="px-3 py-2.5 whitespace-nowrap text-muted-foreground tabular-nums">
+                  {dateCourte(commande.createdAt)}
+                </td>
+              </tr>
+            ))
+          )}
         </tbody>
       </table>
     </div>

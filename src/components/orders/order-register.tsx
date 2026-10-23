@@ -1,5 +1,7 @@
+import { InboxIcon } from "lucide-react";
 import { networkLabel } from "@/modules/pricing/price-record";
 import type { OrderView } from "@/modules/orders/read";
+import { FileVideMessage, type ContenuVide } from "./file-vide";
 import { CachetEtat } from "./etat-commande";
 import { NetworkThumb } from "./network-thumb";
 import { OrderActions } from "./order-actions";
@@ -10,12 +12,14 @@ export function OrderRegister({
   canServe,
   canCancel,
   retour,
+  vide,
 }: {
   commandes: OrderView[];
   acteurId: string;
   canServe: boolean;
   canCancel: boolean;
   retour: string;
+  vide?: ContenuVide;
 }) {
   return (
     <div className="tks-defilement-masque min-w-0 overflow-x-auto rounded-xl border bg-card">
@@ -56,7 +60,22 @@ export function OrderRegister({
           </tr>
         </thead>
         <tbody className="divide-y">
-          {commandes.map((commande) => (
+          {commandes.length === 0 ? (
+            <tr>
+              <td colSpan={7}>
+                <FileVideMessage
+                  icone={vide?.icone ?? InboxIcon}
+                  titre={vide?.titre ?? "Aucune commande ouverte"}
+                  detail={
+                    vide?.detail ??
+                    "Les commandes du comptoir apparaissent ici, en tête de file."
+                  }
+                  action={vide?.action}
+                />
+              </td>
+            </tr>
+          ) : (
+            commandes.map((commande) => (
             <tr key={commande.id} className="transition-colors hover:bg-muted/30">
               <td className="max-w-56 px-3 py-2.5">
                 <span className="block truncate font-medium">
@@ -108,7 +127,8 @@ export function OrderRegister({
                 </div>
               </td>
             </tr>
-          ))}
+          ))
+          )}
         </tbody>
       </table>
     </div>

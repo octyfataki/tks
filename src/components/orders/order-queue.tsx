@@ -1,7 +1,10 @@
+import { CheckCheckIcon, HourglassIcon, InboxIcon, SearchXIcon } from "lucide-react";
+import Link from "next/link";
+import type { ReactNode } from "react";
 import { OrderHistory } from "@/components/orders/order-history";
 import { OrderRegister } from "@/components/orders/order-register";
 import { OrderTabs } from "@/components/orders/order-tabs";
-import type { ReactNode } from "react";
+import { FileVideMessage, type ContenuVide } from "@/components/orders/file-vide";
 import { PaginationTableau } from "@/components/pagination-tableau";
 import type { OrderView } from "@/modules/orders/read";
 
@@ -20,6 +23,37 @@ export type OngletsCommandes = {
   pagination: Record<OngletNom, PaginationOnglet>;
 };
 
+const VIDE_FILTRES: ContenuVide = {
+  icone: SearchXIcon,
+  titre: "Aucune commande ne correspond",
+  detail:
+    "Modifiez ou réinitialisez les filtres pour retrouver la file complète.",
+};
+
+const VIDE_PAR_ONGLET: Record<OngletNom, ContenuVide> = {
+  prendre: {
+    icone: InboxIcon,
+    titre: "La file est à jour",
+    detail:
+      "Rien n'attend de prise. Les commandes du comptoir arrivent ici, en tête de file.",
+  },
+  cours: {
+    icone: HourglassIcon,
+    titre: "Aucune commande en main",
+    detail:
+      "Quand un agent prend une commande dans la file, elle s'affiche ici jusqu'au service.",
+  },
+  terminees: {
+    icone: CheckCheckIcon,
+    titre: "Le registre est vide",
+    detail:
+      "Chaque commande servie ou annulée s'inscrit ici, avec son agent et son heure.",
+  },
+};
+
+const CLASSES_LIEN_CREATION =
+  "inline-flex items-center rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90";
+
 export function OrderQueue({
   ongletInitial,
   prendre,
@@ -31,45 +65,68 @@ export function OrderQueue({
   canServe,
   canCancel,
   retour,
+  filtres,
+  creation,
 }: OngletsCommandes & {
   acteurId: string;
   canServe: boolean;
   canCancel: boolean;
   retour: string;
+  filtres: boolean;
+  creation?: { href: string; libelle: string };
 }) {
   if (totaux.prendre === 0 && totaux.cours === 0 && totaux.terminees === 0) {
+    if (filtres) {
+      return (
+        <div className="rounded-xl border bg-card">
+          <FileVideMessage {...VIDE_FILTRES} />
+        </div>
+      );
+    }
     return (
-      <div className="rounded-xl border bg-card p-6 text-center">
-        <p className="text-sm font-medium">Aucune commande</p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Une commande au comptoir se crée en moins d&apos;une minute.
-        </p>
+      <div className="rounded-xl border bg-card">
+        <FileVideMessage
+          icone={InboxIcon}
+          titre="Aucune commande"
+          detail="Le comptoir n'a pas de commande ouverte aujourd'hui."
+          action={
+            creation ? (
+              <Link href={creation.href} className={CLASSES_LIEN_CREATION}>
+                {creation.libelle}
+              </Link>
+            ) : undefined
+          }
+        />
       </div>
     );
   }
 
-  const vide = (titre: string, detail: string) => (
-    <div className="rounded-xl border bg-card p-6 text-center">
-      <p className="text-sm font-medium">{titre}</p>
-      <p className="mt-1 text-xs text-muted-foreground">{detail}</p>
-    </div>
+  const registre = (
+    liste: OrderView[],
+    nom: OngletNom,
+  ): ReactNode => (
+    <OrderRegister
+      commandes={liste}
+      acteurId={acteurId}
+      canServe={canServe}
+      canCancel={canCancel}
+      retour={retour}
+      vide={
+        filtres
+          ? VIDE_FILTRES
+          : nom === "prendre" && creation
+            ? {
+                ...VIDE_PAR_ONGLET.prendre,
+                action: (
+                  <Link href={creation.href} className={CLASSES_LIEN_CREATION}>
+                    {creation.libelle}
+                  </Link>
+                ),
+              }
+            : VIDE_PAR_ONGLET[nom]
+      }
+    />
   );
-
-  const registre = (liste: OrderView[]) =>
-    liste.length === 0
-      ? vide(
-          "Rien en attente de prise",
-          "La file est vide : la prochaine commande arrivera ici.",
-        )
-      : (
-        <OrderRegister
-          commandes={liste}
-          acteurId={acteurId}
-          canServe={canServe}
-          canCancel={canCancel}
-          retour={retour}
-        />
-      );
 
   const paginationOnglet = (nom: OngletNom) => (
     <PaginationTableau
@@ -83,24 +140,22 @@ export function OrderQueue({
   const panneaux: Record<OngletNom, ReactNode> = {
     prendre: (
       <>
-        {registre(prendre)}
+        {registre(prendre, "prendre")}
         {paginationOnglet("prendre")}
       </>
     ),
     cours: (
       <>
-        {cours.length === 0
-          ? vide(
-              "Aucune commande en cours",
-              "Les commandes prises par un agent apparaîtront ici.",
-            )
-          : registre(cours)}
+        {registre(cours, "cours")}
         {paginationOnglet("cours")}
       </>
     ),
     terminees: (
       <>
-        <OrderHistory commandes={terminees} />
+        <OrderHistory
+          commandes={terminees}
+          vide={filtres ? VIDE_FILTRES : VIDE_PAR_ONGLET.terminees}
+        />
         {paginationOnglet("terminees")}
       </>
     ),

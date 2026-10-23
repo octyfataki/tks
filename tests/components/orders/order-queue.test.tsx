@@ -80,6 +80,7 @@ function element(props: Partial<ComponentProps<typeof OrderQueue>> = {}) {
       canServe
       canCancel
       retour="/admin/orders"
+      filtres={false}
       {...props}
     />
   );
@@ -209,7 +210,77 @@ describe("OrderQueue", () => {
   it("un onglet vide garde son libellé et son message", () => {
     rendre({ ongletInitial: "cours", cours: [] });
     expect(screen.getByRole("tab", { name: /En cours/ })).toBeInTheDocument();
-    expect(screen.getByText("Aucune commande en cours")).toBeInTheDocument();
+    expect(screen.getByText("Aucune commande en main")).toBeInTheDocument();
+  });
+
+  it("un filtre sans résultat parle des filtres, pas de la file", () => {
+    rendre({ ongletInitial: "cours", cours: [], filtres: true });
+    expect(
+      screen.getByText("Aucune commande ne correspond"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Aucune commande en main")).not.toBeInTheDocument();
+  });
+
+  it("la file à prendre vide côté agent propose d'en ouvrir une", () => {
+    rendre({
+      ongletInitial: "prendre",
+      prendre: [],
+      creation: { href: "/agent/orders/new", libelle: "Ouvrir une commande" },
+    });
+    expect(
+      screen.getByRole("link", { name: "Ouvrir une commande" }),
+    ).toHaveAttribute("href", "/agent/orders/new");
+  });
+
+  it("sans droit d'ouverture, la file vide reste sans lien", () => {
+    rendre({ ongletInitial: "prendre", prendre: [] });
+    expect(
+      screen.queryByRole("link", { name: "Ouvrir une commande" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("toutes les listes vides sous filtre parlent des filtres", () => {
+    rendre({
+      prendre: [],
+      cours: [],
+      terminees: [],
+      totaux: { prendre: 0, cours: 0, terminees: 0 },
+      filtres: true,
+      creation: { href: "/agent/orders/new", libelle: "Ouvrir une commande" },
+    });
+    expect(
+      screen.getByText("Aucune commande ne correspond"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: "Ouvrir une commande" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("toutes les listes vides sans filtre : le comptoir propose d'ouvrir une commande", () => {
+    rendre({
+      prendre: [],
+      cours: [],
+      terminees: [],
+      totaux: { prendre: 0, cours: 0, terminees: 0 },
+      creation: { href: "/agent/orders/new", libelle: "Ouvrir une commande" },
+    });
+    expect(screen.getByText("Aucune commande")).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Ouvrir une commande" }),
+    ).toHaveAttribute("href", "/agent/orders/new");
+  });
+
+  it("la file totalement vide reste sans lien pour l'admin", () => {
+    rendre({
+      prendre: [],
+      cours: [],
+      terminees: [],
+      totaux: { prendre: 0, cours: 0, terminees: 0 },
+    });
+    expect(screen.getByText("Aucune commande")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("link", { name: "Ouvrir une commande" }),
+    ).not.toBeInTheDocument();
   });
 
   it("un clic d'onglet écrit l'URL de cet onglet", () => {

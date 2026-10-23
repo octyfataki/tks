@@ -15,6 +15,7 @@ import {
 } from "@/lib/authorizations/staff-actor";
 import {
   filtreCommandes,
+  filtresActifs,
   normaliserFiltres,
   paginerCommandes,
   separatesCommandes,
@@ -99,6 +100,7 @@ export default async function AgentOrdersPage({
     filtres.tri,
   );
   const groupes = separatesCommandes(filtrees);
+  const filtre = filtresActifs(filtres);
   const pageDemandee = Number.parseInt(params.page ?? "1", 10);
   const demande = Number.isNaN(pageDemandee) ? 1 : pageDemandee;
 
@@ -233,6 +235,8 @@ export default async function AgentOrdersPage({
         canServe={canServe}
         canCancel={canCancel}
         retour="/agent/orders"
+        filtres={filtre}
+        creation={{ href: "/agent/orders/new", libelle: "Ouvrir une commande" }}
       />
     </div>
   );

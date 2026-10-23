@@ -250,6 +250,7 @@ export default async function AdminOrdersPage({
         canServe={canServe}
         canCancel={canCancel}
         retour="/admin/orders"
+        filtres={filtre}
       />
 
       {filtre && filtrees.length === 0 ? (
