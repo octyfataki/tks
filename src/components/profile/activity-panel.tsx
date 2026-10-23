@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { Separator } from "@/components/ui/separator";
 import type { ActiviteRecente } from "@/lib/authorizations/activite";
 import { dateHeure } from "./dates";
 
@@ -14,20 +13,35 @@ export function BlocActiviteRecente({ activite }: { activite: ActiviteRecente[] 
           Les dernières actions de ce compte.
         </p>
       </div>
-      <Separator className="mt-2" />
-      <ol className="mt-4 flex flex-col gap-2">
-        {activite.map((ligne) => (
-          <li
-            key={ligne.id}
-            className="min-w-0 rounded-lg border px-3 py-2 text-xs"
-          >
-            <p className="break-words font-medium">{ligne.resume}</p>
-            <p className="mt-0.5 text-muted-foreground tabular-nums">
-              {dateHeure(ligne.ecritLe)}
-            </p>
-          </li>
-        ))}
-      </ol>
+      <div className="-mx-4 -mb-1 mt-3 overflow-x-auto border-t">
+        <table className="w-full text-left text-xs">
+          <caption className="sr-only">
+            Dernières actions de ce compte, reçues par le journal d&apos;audit
+          </caption>
+          <thead>
+            <tr className="border-b bg-muted/40 text-muted-foreground">
+              <th scope="col" className="px-4 py-2.5 font-medium">
+                Reçu le
+              </th>
+              <th scope="col" className="px-3 py-2.5 font-medium">
+                Action
+              </th>
+            </tr>
+          </thead>
+          <tbody className="divide-y">
+            {activite.map((ligne) => (
+              <tr key={ligne.id} className="transition-colors hover:bg-muted/30">
+                <td className="px-4 py-2.5 align-top whitespace-nowrap tabular-nums text-muted-foreground">
+                  {dateHeure(ligne.ecritLe)}
+                </td>
+                <td className="max-w-72 px-3 py-2.5 font-medium break-words">
+                  {ligne.resume}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
       <Link
         href="/admin/audit-log"
         className="mt-3 inline-block text-xs font-medium text-primary underline-offset-4 hover:underline"
