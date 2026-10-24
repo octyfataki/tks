@@ -29,7 +29,7 @@ export function TauxDuJourAuto({ className }: { className?: string }) {
         if (resultat.ok) {
           setEtat({
             taux: resultat.taux,
-            historique: resultat.historique,
+            historique: resultat.historique.slice(0, 5),
             peutSaisir: resultat.peutSaisir,
           });
         } else {
@@ -56,7 +56,7 @@ export function TauxDuJourAuto({ className }: { className?: string }) {
               jour: resultat.taux.depuisLe,
               saisiPar: resultat.taux.saisiPar,
             },
-            ...(precedent?.historique ?? []).slice(0, 9),
+            ...(precedent?.historique ?? []).slice(0, 4),
           ],
           peutSaisir: true,
         }));
