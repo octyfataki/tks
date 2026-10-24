@@ -4,6 +4,7 @@ import { db, type ExecuteurDb } from "@/lib/db/client";
 import { profilsClients } from "@/lib/db/schema/clients";
 import { insertRow } from "@/platform/writes";
 import { staffActorWith } from "@/lib/authorizations/staff-actor";
+import { enregistrerEvenement } from "@/lib/authorizations/journal";
 import {
   DEFAULT_PROFILE_CURRENCY,
   DEFAULT_PROFILE_STATUS,
@@ -92,31 +93,64 @@ export async function ensureCounterProfile(input: {
   phone: unknown;
   address?: unknown;
 }): Promise<ProfileSummary> {
-  const actor = await staffActorWith("commande.creer");
+  const actor = await staffActorWith("dossier.creer");
   if (!actor) {
     throw new ProfileError(
       "NOT_AUTHORIZED",
-      "Créer un profil au comptoir exige la permission « commande.creer ».",
+      "Créer un profil au comptoir exige la permission « dossier.creer ».",
     );
   }
   const prepared = prepareCounterProfile(input);
   const existants = await db
     .select(COLUMNS)
     .from(profilsClients)
-    .where(eq(profilsClients.contactTelephone, prepared.phone))
-    .limit(1);
-  if (existants[0]) return toSummary(existants[0]);
+    .where(eq(profilsClients.contactTelephone, prepared.phone));
   const id = randomUUID();
-  await insertRow(db, profilsClients, {
-    id,
-    nom: prepared.name,
-    adresse: prepared.address,
-    contactTelephone: prepared.phone,
-    statut: DEFAULT_PROFILE_STATUS,
-    plafondMontant: 0,
-    plafondDevise: DEFAULT_PROFILE_CURRENCY,
-    creePar: actor.id,
-    horodatageLocal: new Date(),
+  const instant = new Date();
+  await db.transaction(async (ex) => {
+    await insertRow(ex, profilsClients, {
+      id,
+      nom: prepared.name,
+      adresse: prepared.address,
+      contactTelephone: prepared.phone,
+      statut: DEFAULT_PROFILE_STATUS,
+      plafondMontant: 0,
+      plafondDevise: DEFAULT_PROFILE_CURRENCY,
+      creePar: actor.id,
+      horodatageLocal: instant,
+    });
+    const trace = await enregistrerEvenement(
+      {
+        acteurId: actor.id,
+        roleAuMoment: actor.role,
+        typeAction: "profil.creer",
+        entite: "profil_client",
+        entiteId: id,
+        avant:
+          existants.length > 0
+            ? {
+                profilsPartages: existants.map((existant) => ({
+                  id: existant.id,
+                  nom: existant.name,
+                })),
+              }
+            : undefined,
+        apres: {
+          nom: prepared.name,
+          contactTelephone: prepared.phone,
+          plafondMontant: 0,
+          plafondDevise: DEFAULT_PROFILE_CURRENCY,
+        },
+        horodatageLocal: instant,
+      },
+      ex,
+    );
+    if (!trace.ok) {
+      throw new ProfileError(
+        "AUDIT_UNAVAILABLE",
+        "Journal indisponible : le profil n'est pas créé.",
+      );
+    }
   });
   return {
     id,

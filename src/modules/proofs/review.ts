@@ -3,12 +3,7 @@ import { and, asc, eq } from "drizzle-orm";
 import { db, type ExecuteurDb } from "@/lib/db/client";
 import { enregistrerEvenement } from "@/lib/authorizations/journal";
 import { staffActorWith } from "@/lib/authorizations/staff-actor";
-import {
-  enregistrer,
-  FichierError,
-  lire,
-  supprimer,
-} from "@/platform/files";
+import { FichierError, lire } from "@/platform/files";
 import { insertRow, updateRow } from "@/platform/writes";
 import {
   deriveOrder,
@@ -18,14 +13,6 @@ import {
 import { orderEvents, orders } from "@/modules/orders/table";
 import { prepareRefusal, prepareValidation } from "./proof-record";
 import { paymentProofs, type PaymentProofRow } from "./table";
-
-export type SubmitProofInput = {
-  orderId: string;
-  file: { name: string; mime: string; bytes: Uint8Array };
-  submittedBy: string | null;
-  deviceId?: string | null;
-  localTimestamp?: Date;
-};
 
 async function orderState(
   ex: ExecuteurDb,
@@ -87,81 +74,6 @@ async function appendProofEvent(
     localTimestamp: input.localTimestamp,
     deviceId: input.deviceId,
   });
-}
-
-export async function submitProof(
-  input: SubmitProofInput,
-): Promise<{ proofId: string }> {
-  const instant = input.localTimestamp ?? new Date();
-  const etat = await orderState(db, input.orderId);
-  if (etat.state !== "AWAITING_PROOF") {
-    throw new OrderError(
-      "ILLEGAL_TRANSITION",
-      "Cette commande n'attend pas de preuve de paiement.",
-    );
-  }
-
-  let depose;
-  try {
-    depose = await enregistrer("preuve_paiement", {
-      nom: input.file.name,
-      mime: input.file.mime,
-      octets: input.file.bytes,
-    });
-  } catch (erreur) {
-    if (erreur instanceof FichierError) {
-      throw new OrderError("PROOF_INVALID", erreur.message);
-    }
-    throw erreur;
-  }
-
-  const proofId = randomUUID();
-  try {
-    await db.transaction(async (tx) => {
-      await insertRow(tx, paymentProofs, {
-        id: proofId,
-        orderId: input.orderId,
-        fileKey: depose.cle,
-        mime: depose.mime,
-        sizeBytes: depose.tailleOctets,
-        status: "PENDING",
-        submittedBy: input.submittedBy,
-        localTimestamp: instant,
-        deviceId: input.deviceId ?? null,
-      });
-      await appendProofEvent(tx, {
-        orderId: input.orderId,
-        kind: "PROOF_SUBMITTED",
-        actorId: input.submittedBy,
-        payload: { proofId },
-        localTimestamp: instant,
-        deviceId: input.deviceId ?? null,
-      });
-      const trace = await enregistrerEvenement(
-        {
-          acteurId: input.submittedBy,
-          roleAuMoment: input.submittedBy ? "CLIENT" : "SYSTEME",
-          typeAction: "payment_proof.submit",
-          entite: "payment_proof",
-          entiteId: proofId,
-          apres: { orderId: input.orderId, mime: depose.mime },
-          horodatageLocal: instant,
-          appareilId: input.deviceId ?? null,
-        },
-        tx,
-      );
-      if (!trace.ok) {
-        throw new OrderError(
-          "AUDIT_UNAVAILABLE",
-          "Journal indisponible : la preuve n'est pas enregistrée.",
-        );
-      }
-    });
-  } catch (erreur) {
-    await supprimer(depose.cle).catch(() => undefined);
-    throw erreur;
-  }
-  return { proofId };
 }
 
 async function loadProofForUpdate(

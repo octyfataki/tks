@@ -127,4 +127,38 @@ describe("S2 — résumé lisible du journal", () => {
       }),
     ).toContain("BON_PAYEUR");
   });
+
+  it("formule la prise en main et garde l'ancien code de verrouillage lisible", () => {
+    const prise = {
+      typeAction: "order.claim",
+      entite: "order",
+      apres: { state: "QUEUED" },
+    } as const;
+    expect(resumerEvenement(prise)).toBe("Commande verrouillée");
+    expect(
+      resumerEvenement({
+        ...prise,
+        avant: { state: "QUEUED" },
+        apres: { state: "LOCKED" },
+      }),
+    ).toBe("Commande verrouillée (QUEUED → LOCKED)");
+    expect(resumerEvenement({ ...prise, typeAction: "order.lock" })).toBe(
+      "Commande verrouillée",
+    );
+  });
+
+  it("formule le refus de crédit avec le montant manquant", () => {
+    expect(
+      resumerEvenement({
+        typeAction: "order.credit_refuse",
+        entite: "profil_client",
+        apres: { amount: 500, currency: "USD", reason: "EXCEEDED", disponible: 300, manque: 200 },
+      }),
+    ).toBe("Crédit refusé : il manque 200 USD");
+  });
+
+  it("nomme les entités commande et profil client", () => {
+    expect(nomEntite("order")).toBe("Commande");
+    expect(nomEntite("profil_client")).toBe("Profil client");
+  });
 });

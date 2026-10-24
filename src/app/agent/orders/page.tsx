@@ -22,7 +22,8 @@ import {
   trieCommandes,
   type FenetreCommandes,
 } from "@/modules/orders/filtres";
-import { readAllOrders, readOrderStats } from "@/modules/orders/read";
+import { readOrdersAndStats } from "@/modules/orders/read";
+import { OrderIllisibles } from "@/components/orders/order-illisibles";
 
 export const metadata: Metadata = {
   title: "Commandes — Agent — TKS",
@@ -88,12 +89,13 @@ export default async function AgentOrdersPage({
   const filtres = normaliserFiltres(params);
   const onglet = ongletValide(params.onglet);
   const compte = await currentStaffAccount();
-  const [toutes, stats, canServe, canCancel] = await Promise.all([
-    readAllOrders(),
-    readOrderStats(),
+  const [flux, canServe, canCancel] = await Promise.all([
+    readOrdersAndStats(),
     compte ? aPermission(compte.id, "commande.servir") : false,
     compte ? aPermission(compte.id, "commande.annuler") : false,
   ]);
+  const toutes = flux.commandes;
+  const stats = flux.stats;
 
   const filtrees = trieCommandes(
     filtreCommandes(toutes, filtres, new Date()),
@@ -196,6 +198,7 @@ export default async function AgentOrdersPage({
           {params.erreur}
         </p>
       ) : null}
+      <OrderIllisibles illisibles={flux.illisibles} />
 
       <OrderReadout stats={lecture} />
 

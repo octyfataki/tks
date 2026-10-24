@@ -8,6 +8,7 @@ import {
   OrderError,
   ORDER_EVENT_KINDS,
   ORDER_STATES,
+  UNITS_MAX,
   prepareOrder,
   resolveQuantity,
   unitsForBilledAmount,
@@ -222,6 +223,16 @@ describe("quantités et montants", () => {
     expect(() =>
       resolveQuantity({ pricePerHundred: 2350, units: 1.5 }),
     ).toThrow(OrderError);
+  });
+
+  it("une quantité hors limite lève la garde AMOUNT_OVERFLOW", () => {
+    try {
+      resolveQuantity({ pricePerHundred: 2350, units: UNITS_MAX });
+      expect.unreachable("la garde doit lever");
+    } catch (erreur) {
+      expect(erreur).toBeInstanceOf(OrderError);
+      expect((erreur as OrderError).code).toBe("AMOUNT_OVERFLOW");
+    }
   });
 
   it("prépare une commande au réseau et au canal connus", () => {

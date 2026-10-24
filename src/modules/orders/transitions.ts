@@ -138,7 +138,7 @@ export async function lockOrder(orderId: string): Promise<void> {
       kind: "LOCKED",
       actor,
       localTimestamp: new Date(),
-      typeAction: "order.lock",
+      typeAction: "order.claim",
     });
   });
 }
