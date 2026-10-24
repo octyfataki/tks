@@ -1,67 +1,80 @@
-import { WifiOff } from "lucide-react";
+import Link from "next/link";
+import { ArrowUpRightIcon, CommandIcon } from "lucide-react";
 import { AideExplorer } from "@/components/help/help-explorer";
-import { Separator } from "@/components/ui/separator";
-import { AIDE_SECTIONS, type AideNiveau } from "@/lib/help-content";
+import { Badge } from "@/components/ui/badge";
+import {
+  AIDE_ROLES,
+  type AideNiveau,
+  parcoursDuNiveau,
+  reperesDuNiveau,
+} from "@/lib/help-content";
 
-export function AideContenu({ niveau }: { niveau?: AideNiveau }) {
+export function AideContenu({ niveau }: { niveau: AideNiveau }) {
+  const role = AIDE_ROLES[niveau];
+  const parcours = parcoursDuNiveau(niveau);
+  const reperes = reperesDuNiveau(niveau);
+  const departs = role.depart.flatMap((id) => {
+    const item = parcours.find((parcours) => parcours.id === id);
+    return item?.lien
+      ? [{ id: item.id, titre: item.titre, href: item.lien.href }]
+      : [];
+  });
+
   return (
-    <>
-      <div className="flex max-w-3xl flex-col gap-2">
-        <p className="inline-flex w-fit items-center rounded-full border border-primary/30 bg-primary/10 px-2.5 py-1 text-[11px] font-medium text-primary">
-          TKS · crédit airtime en RDC
-        </p>
-        <h1 className="text-2xl font-semibold tracking-tight text-balance sm:text-3xl">
-          Perdu ? Trouvez le raccourci
-        </h1>
-        <p className="text-sm leading-relaxed text-muted-foreground">
-          Aide Client, Aide Agent, Aide Admin : chaque rubrique ne liste que
-          les pages de son niveau qui existent. Le reste est marqué
-          « Bientôt », sans lien mort. Astuce clavier : Ctrl+K ouvre la
-          palette de recherche partout dans l’app.
-        </p>
-      </div>
-
-      <AideExplorer sections={AIDE_SECTIONS} niveauFixe={niveau} />
-
-      <Separator />
-
-      <section
-        id="memo"
-        aria-labelledby="memo-titre"
-        className="grid grid-cols-1 gap-4 lg:grid-cols-2"
-      >
-        <div className="flex flex-col gap-2 rounded-xl border bg-card p-4 sm:p-5">
-          <h2 id="memo-titre" className="text-base font-semibold">
-            Mémo : les mots justes
-          </h2>
-          <p className="text-xs leading-relaxed text-muted-foreground">
-            Dire « client » et jamais « shop », « commande » et jamais
-            « réalisation », « preuve de paiement » et jamais « facture » :
-            c’est ainsi qu’on ne mélange ni les dettes ni les dossiers.
-            « Virtuel », « e-money », « objectif airtime » : n’existent pas
-            ici.
+    <div className="flex w-full flex-col gap-8">
+      <header className="flex flex-col gap-6 border-b pb-6">
+        <div className="flex max-w-3xl flex-col gap-3">
+          <Badge variant="outline" className="w-fit">
+            Aide {role.niveau}
+          </Badge>
+          <h1 className="text-2xl font-semibold tracking-tight text-balance sm:text-3xl">
+            {role.titre}
+          </h1>
+          <p className="text-[15px] leading-relaxed text-foreground">
+            {role.chapeau}
+          </p>
+          <p className="text-sm leading-relaxed text-muted-foreground">
+            {role.intro}
           </p>
         </div>
-        <div className="flex flex-col gap-2 rounded-xl border bg-card p-4 sm:p-5">
-          <h2 className="text-base font-semibold">
-            Mémo : le calcul (normatif)
-          </h2>
-          <p className="text-xs leading-relaxed text-muted-foreground">
-            Dette de 100 USD, taux 1 USD = 2 300 CDF, soit 230 000 CDF.
-            Paiement 1 : 50 000 CDF. Paiement 2 : 50 USD, soit 115 000 CDF.{" "}
-            <strong className="font-semibold text-foreground">
-              Reste à payer : 65 000 CDF.
-            </strong>
-          </p>
-          <p className="flex items-start gap-2 text-xs leading-relaxed text-muted-foreground">
-            <WifiOff aria-hidden className="mt-0.5 size-3.5 shrink-0 text-primary" />
-            <span>
-              Sans réseau, l’app continue : écritures en file d’attente,
-              synchronisation sans doublon au retour.
-            </span>
-          </p>
-        </div>
-      </section>
-    </>
+
+        {departs.length > 0 ? (
+          <div className="flex flex-col gap-2 border-t pt-4 sm:flex-row sm:items-baseline sm:gap-6">
+            <p className="shrink-0 text-xs font-medium text-muted-foreground">
+              Commencez ici
+            </p>
+            <ul className="flex flex-wrap gap-x-6 gap-y-2">
+              {departs.map((depart) => (
+                <li key={depart.id}>
+                  <Link
+                    href={depart.href}
+                    className="group inline-flex items-center gap-1 text-sm font-medium text-foreground underline decoration-border underline-offset-4 outline-none hover:decoration-primary focus-visible:ring-2 focus-visible:ring-ring/40"
+                  >
+                    {depart.titre}
+                    <ArrowUpRightIcon
+                      aria-hidden
+                      className="size-3.5 text-muted-foreground transition-transform group-hover:-translate-y-px group-hover:translate-x-px"
+                    />
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ) : null}
+      </header>
+
+      <AideExplorer niveau={niveau} parcours={parcours} reperes={reperes} />
+
+      <footer className="flex flex-col gap-2 border-t pt-4 text-xs leading-relaxed text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
+        <p className="flex items-center gap-1.5">
+          <CommandIcon aria-hidden className="size-3.5" />
+          Ctrl+K ouvre la recherche de l’application, partout.
+        </p>
+        <p>
+          Cette aide décrit uniquement les écrans de votre niveau. Le reste est
+          annoncé sans lien mort.
+        </p>
+      </footer>
+    </div>
   );
 }
