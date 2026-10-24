@@ -1,7 +1,16 @@
 import { SearchIcon, UserPlusIcon } from "lucide-react";
 import Link from "next/link";
+import type { ReactNode } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Button, buttonVariants } from "@/components/ui/button";
+import {
+  Card,
+  CardAction,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { staffActorWith } from "@/lib/authorizations/staff-actor";
@@ -28,6 +37,27 @@ const STATUT_LABELS: Record<string, string> = {
   EN_EVALUATION: "En évaluation",
   PRIVILEGIE: "Privilégié",
 };
+
+function ChampComptoir({
+  id,
+  libelle,
+  nom,
+  defaut,
+  requis,
+}: {
+  id: string;
+  libelle: string;
+  nom: string;
+  defaut?: string;
+  requis?: boolean;
+}): ReactNode {
+  return (
+    <div className="flex flex-col gap-1.5">
+      <Label htmlFor={id}>{libelle}</Label>
+      <Input id={id} name={nom} defaultValue={defaut} required={requis} />
+    </div>
+  );
+}
 
 export async function CounterOrderStart({
   retour,
@@ -69,7 +99,7 @@ export async function CounterOrderStart({
     }));
     return (
       <div className="flex flex-1 flex-col gap-5 p-4 pt-4">
-        <header>
+        <header className="max-w-2xl">
           <Badge variant="outline">Caisse rapide</Badge>
           <h1 className="mt-2 text-2xl font-semibold tracking-tight">
             Commande au comptoir
@@ -82,31 +112,35 @@ export async function CounterOrderStart({
         {filtres.erreur ? (
           <p
             role="alert"
-            className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+            className="max-w-2xl rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive"
           >
             {filtres.erreur}
           </p>
         ) : null}
 
-        <section className="flex flex-wrap items-center justify-between gap-2 rounded-lg border px-4 py-3">
-          <div>
-            <p className="text-sm font-medium">{profile.name}</p>
-            <p className="text-sm text-muted-foreground">
+        <Card size="sm" className="max-w-2xl">
+          <CardHeader>
+            <CardTitle className="text-sm font-semibold">
+              {profile.name}
+            </CardTitle>
+            <CardAction>
+              <Link
+                href={retour}
+                className={buttonVariants({ variant: "outline", size: "sm" })}
+              >
+                Changer de client
+              </Link>
+            </CardAction>
+            <CardDescription>
               {profile.phone} ·{" "}
               {STATUT_LABELS[profile.status] ?? profile.status} · plafond{" "}
               <span className="tabular-nums">
                 {profile.limitAmount.toLocaleString("fr-FR")}{" "}
                 {profile.limitCurrency}
               </span>
-            </p>
-          </div>
-          <Link
-            href={retour}
-            className={buttonVariants({ variant: "outline", size: "sm" })}
-          >
-            Changer de client
-          </Link>
-        </section>
+            </CardDescription>
+          </CardHeader>
+        </Card>
 
         <CounterOrderForm
           profileId={profile.id}
@@ -122,7 +156,7 @@ export async function CounterOrderStart({
 
   return (
     <div className="flex flex-1 flex-col gap-5 p-4 pt-4">
-      <header>
+      <header className="max-w-2xl">
         <Badge variant="outline">Caisse rapide</Badge>
         <h1 className="mt-2 text-2xl font-semibold tracking-tight">
           Retrouver le client
@@ -136,93 +170,105 @@ export async function CounterOrderStart({
       {filtres.erreur ? (
         <p
           role="alert"
-          className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+          className="max-w-2xl rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive"
         >
           {filtres.erreur}
         </p>
       ) : null}
 
-      <form method="get" className="flex max-w-xl flex-wrap items-end gap-2">
-        <div className="flex flex-1 flex-col gap-1.5">
-          <Label htmlFor="q">Téléphone ou nom</Label>
-          <Input
-            id="q"
-            name="q"
-            defaultValue={q}
-            placeholder="0812 345 678"
-            autoComplete="off"
-          />
-        </div>
-        <Button type="submit" variant="outline">
-          <SearchIcon aria-hidden />
-          Chercher
-        </Button>
-      </form>
+      <Card size="sm" className="max-w-2xl">
+        <CardContent>
+          <form method="get" className="flex flex-wrap items-end gap-2">
+            <div className="flex min-w-0 flex-1 flex-col gap-1.5 basis-52">
+              <Label htmlFor="q">Téléphone ou nom</Label>
+              <Input
+                id="q"
+                name="q"
+                defaultValue={q}
+                placeholder="0812 345 678"
+                autoComplete="off"
+              />
+            </div>
+            <Button type="submit" variant="outline">
+              <SearchIcon aria-hidden />
+              Chercher
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
 
       {q !== "" ? (
         resultats.length === 0 ? (
-          <div className="max-w-xl rounded-lg border border-dashed px-4 py-5">
-            <p className="text-sm font-medium">Aucun profil ne correspond.</p>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Créez le profil du client pour cette commande. Le plafond part à
-              zéro : le crédit reste fermé jusqu&apos;à évaluation.
-            </p>
-            <form
-              action={createCounterProfileAction}
-              className="mt-4 flex flex-col gap-3"
-            >
-              <input type="hidden" name="retour" value={retour} />
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="name">Nom du client</Label>
-                <Input id="name" name="name" defaultValue={nom} required />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="phone">Téléphone</Label>
-                <Input
-                  id="phone"
-                  name="phone"
-                  defaultValue={telephone || q}
-                  required
+          <Card className="max-w-2xl">
+            <CardHeader>
+              <CardTitle>Aucun profil ne correspond</CardTitle>
+              <CardDescription>
+                Créez le profil du client pour cette commande. Le plafond part à
+                zéro : le crédit reste fermé jusqu&apos;à évaluation.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <form action={createCounterProfileAction} className="flex flex-col gap-3">
+                <input type="hidden" name="retour" value={retour} />
+                <ChampComptoir
+                  id="name"
+                  libelle="Nom du client"
+                  nom="name"
+                  defaut={nom}
+                  requis
                 />
-              </div>
-              <div className="flex flex-col gap-1.5">
-                <Label htmlFor="address">Adresse (facultatif)</Label>
-                <Input id="address" name="address" />
-              </div>
-              <Button type="submit" className="self-start">
-                <UserPlusIcon aria-hidden />
-                Créer le profil et continuer
-              </Button>
-            </form>
-          </div>
+                <ChampComptoir
+                  id="phone"
+                  libelle="Téléphone"
+                  nom="phone"
+                  defaut={telephone || q}
+                  requis
+                />
+                <ChampComptoir
+                  id="address"
+                  libelle="Adresse (facultatif)"
+                  nom="address"
+                />
+                <Button type="submit" className="self-start">
+                  <UserPlusIcon aria-hidden />
+                  Créer le profil et continuer
+                </Button>
+              </form>
+            </CardContent>
+          </Card>
         ) : (
-          <ul className="max-w-xl divide-y border-y">
-            {resultats.map((resultat) => (
-              <li
-                key={resultat.id}
-                className="flex flex-wrap items-center justify-between gap-2 py-3"
-              >
-                <div>
-                  <p className="text-sm font-medium">{resultat.name}</p>
-                  <p className="text-sm text-muted-foreground">
-                    {resultat.phone} ·{" "}
-                    {STATUT_LABELS[resultat.status] ?? resultat.status} ·
-                    plafond{" "}
-                    <span className="tabular-nums">
-                      {resultat.limitAmount.toLocaleString("fr-FR")}{" "}
-                      {resultat.limitCurrency}
-                    </span>
-                  </p>
-                </div>
-                <Link
-                  href={`${retour}?profileId=${encodeURIComponent(resultat.id)}`}
-                  className={buttonVariants({ variant: "outline", size: "sm" })}
+          <Card className="max-w-2xl overflow-hidden py-0">
+            <ul className="divide-y">
+              {resultats.map((resultat) => (
+                <li
+                  key={resultat.id}
+                  className="group flex flex-wrap items-center justify-between gap-2 px-4 py-3"
                 >
-                  Choisir
-                </Link>
-              </li>
-            ))}
-          </ul>
+                  <div>
+                    <p className="text-sm font-medium">{resultat.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {resultat.phone} ·{" "}
+                      {STATUT_LABELS[resultat.status] ?? resultat.status} ·
+                      plafond{" "}
+                      <span className="tabular-nums">
+                        {resultat.limitAmount.toLocaleString("fr-FR")}{" "}
+                        {resultat.limitCurrency}
+                      </span>
+                    </p>
+                  </div>
+                  <Link
+                    href={`${retour}?profileId=${encodeURIComponent(resultat.id)}`}
+                    className={buttonVariants({
+                      variant: "outline",
+                      size: "sm",
+                    })}
+                  >
+                    Choisir
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </Card>
         )
       ) : (
         <p className="text-sm text-muted-foreground">
