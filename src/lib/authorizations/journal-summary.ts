@@ -200,6 +200,7 @@ export function resumerEvenement(
     case "order.create": {
       return "Commande créée";
     }
+    case "order.claim":
     case "order.lock": {
       const avantEtat = texte(avantO?.["state"]);
       const apresEtat = texte(apresO?.["state"]);

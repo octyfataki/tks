@@ -6,7 +6,7 @@ import { enregistrerEvenement } from "@/lib/authorizations/journal";
 import { staffActorWith } from "@/lib/authorizations/staff-actor";
 import { insertRow } from "@/platform/writes";
 import { readPriceAt } from "@/modules/pricing/publish";
-import { decideCredit } from "@/modules/receivables/credit";
+import { decideCredit, type CreditDecision } from "@/modules/receivables/credit";
 import { readCreditPosition } from "./credit-position";
 import {
   initialState,
@@ -54,6 +54,8 @@ function creditMessage(
   return `Plafond insuffisant : ${decision.available} ${currency} disponible(s), il manque ${decision.shortfall} ${currency}.`;
 }
 
+type RefusCredit = Exclude<CreditDecision, { ok: true }>;
+
 export async function createOrder(
   input: CreateOrderInput,
 ): Promise<CreatedOrder> {
@@ -87,7 +89,7 @@ export async function createOrder(
 
   const id = randomUUID();
 
-  await db.transaction(async (tx) => {
+  const resultat = await db.transaction(async (tx): Promise<RefusCredit | null> => {
     const profils = await tx
       .select({
         id: profilsClients.id,
@@ -114,10 +116,7 @@ export async function createOrder(
         position,
       });
       if (!decision.ok) {
-        throw new OrderError(
-          "CREDIT_EXCEEDED",
-          creditMessage(decision, price.currency),
-        );
+        return decision;
       }
     }
 
@@ -180,7 +179,32 @@ export async function createOrder(
         "Journal indisponible : la commande n'est pas créée.",
       );
     }
+    return null;
   });
+
+  if (resultat) {
+    const refus = resultat;
+    await enregistrerEvenement({
+      acteurId: actor.id,
+      roleAuMoment: actor.role,
+      typeAction: "order.credit_refuse",
+      entite: "profile",
+      entiteId: input.profileId,
+      apres: {
+        amount: prepared.amount,
+        currency: price.currency,
+        reason: refus.reason,
+        disponible: refus.available,
+        manque: refus.shortfall,
+      },
+      horodatageLocal: instant,
+      appareilId: input.deviceId ?? null,
+    });
+    throw new OrderError(
+      "CREDIT_EXCEEDED",
+      creditMessage(refus, price.currency),
+    );
+  }
 
   return {
     id,

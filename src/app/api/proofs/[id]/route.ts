@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { aPermission } from "@/lib/authorizations/permissions";
-import { currentStaffAccount, estRoleAdmin } from "@/lib/authorizations/staff-actor";
+import { currentStaffAccount } from "@/lib/authorizations/staff-actor";
 import { readProofFile } from "@/modules/proofs/review";
 
 export async function GET(
@@ -12,9 +12,7 @@ export async function GET(
   if (!compte) {
     return NextResponse.json({ erreur: "Non connecté." }, { status: 401 });
   }
-  const peutLire =
-    estRoleAdmin(compte.role) ||
-    (await aPermission(compte.id, "preuve.valider"));
+  const peutLire = await aPermission(compte.id, "preuve.valider");
   if (!peutLire) {
     return NextResponse.json({ erreur: "Accès refusé." }, { status: 403 });
   }

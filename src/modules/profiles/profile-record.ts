@@ -12,7 +12,8 @@ export type ProfileErrorCode =
   | "PHONE_REQUIRED"
   | "PHONE_INVALID"
   | "NOT_FOUND"
-  | "NOT_AUTHORIZED";
+  | "NOT_AUTHORIZED"
+  | "AUDIT_UNAVAILABLE";
 
 export class ProfileError extends Error {
   code: ProfileErrorCode;

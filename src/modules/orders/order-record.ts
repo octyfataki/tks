@@ -49,6 +49,7 @@ export type OrderErrorCode =
   | "UNITS_INVALID"
   | "AMOUNT_INVALID"
   | "AMOUNT_TOO_SMALL"
+  | "AMOUNT_OVERFLOW"
   | "PRICE_MISSING"
   | "STATE_INVALID"
   | "ILLEGAL_TRANSITION"
@@ -141,6 +142,17 @@ export function billedAmount(pricePerHundred: number, units: number): number {
   return Math.round(amountForUnits(pricePerHundred, units));
 }
 
+function billedAmountGuard(pricePerHundred: number, units: number): number {
+  const montant = billedAmount(pricePerHundred, units);
+  if (montant > AMOUNT_MAX) {
+    throw new OrderError(
+      "AMOUNT_OVERFLOW",
+      "Quantité trop grande : le montant facturé dépasse la limite.",
+    );
+  }
+  return montant;
+}
+
 export function unitsForBilledAmount(
   pricePerHundred: number,
   amount: number,
@@ -167,7 +179,7 @@ export function resolveQuantity(input: {
     }
     return {
       units,
-      amount: billedAmount(input.pricePerHundred, units),
+      amount: billedAmountGuard(input.pricePerHundred, units),
     };
   }
   const amount = Number(input.amount);
@@ -190,7 +202,7 @@ export function resolveQuantity(input: {
   }
   return {
     units,
-    amount: billedAmount(input.pricePerHundred, units),
+    amount: billedAmountGuard(input.pricePerHundred, units),
   };
 }
 
