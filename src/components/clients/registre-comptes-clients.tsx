@@ -7,6 +7,7 @@ import { Cachet } from "./cachet";
 import { cn } from "@/lib/utils";
 import { dateCourte, nomAffiche } from "./affichage-partage";
 import { joursAttente, texteAttente, detailAttente } from "./affichage-client";
+import { BoutonCopierEmail } from "./copy-email-button";
 
 export type LigneCompteClient = {
   id: string;
@@ -121,8 +122,14 @@ export function RegistreComptesClients({
                     >
                       {nom}
                     </Link>
-                    <span className="block truncate text-[11px] text-muted-foreground">
-                      {ligne.email}
+                    <span className="flex items-center gap-0.5">
+                      <span className="min-w-0 truncate text-[11px] text-muted-foreground">
+                        {ligne.email}
+                      </span>
+                      <BoutonCopierEmail
+                        valeur={ligne.email}
+                        className="size-5"
+                      />
                     </span>
                   </td>
                   <td className="px-3 py-2.5">
@@ -165,7 +172,15 @@ export function RegistreComptesClients({
                           <dt className="text-[11px] text-muted-foreground">
                             Email
                           </dt>
-                          <dd className="mt-0.5 truncate">{ligne.email}</dd>
+                          <dd className="mt-0.5 flex items-center gap-0.5">
+                            <span className="min-w-0 truncate">
+                              {ligne.email}
+                            </span>
+                            <BoutonCopierEmail
+                              valeur={ligne.email}
+                              className="size-5"
+                            />
+                          </dd>
                         </div>
                         <div>
                           <dt className="text-[11px] text-muted-foreground">
