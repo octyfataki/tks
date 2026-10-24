@@ -1,7 +1,7 @@
 import { SearchIcon, UserPlusIcon } from "lucide-react";
 import Link from "next/link";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   CounterOrderForm,
   type CounterPrice,
@@ -122,34 +122,48 @@ export async function CounterOrderStart({
   const nom = filtres.nom?.trim() ?? "";
 
   return (
-    <div className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-5 p-4 pt-10">
-      <EnTeteCaisse
-        titre="Retrouver le client"
-        description="Un numéro ou un nom suffit. Deux clients qui partagent un numéro restent deux profils."
-      />
+    <div className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-4 p-4 pt-10">
+      <Card size="sm">
+        <CardContent>
+          <p className="text-[11px] font-semibold tracking-widest text-muted-foreground uppercase">
+            Caisse rapide
+          </p>
+          <h1 className="mt-1 text-xl font-semibold tracking-tight">
+            Retrouver le client
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Un numéro ou un nom suffit. Deux clients qui partagent un numéro
+            restent deux profils.
+          </p>
+        </CardContent>
+      </Card>
 
       {filtres.erreur ? <Alerte message={filtres.erreur} /> : null}
 
-      <form method="get" className="flex items-center gap-2">
-        <div className="relative min-w-0 flex-1">
-          <SearchIcon
-            aria-hidden
-            className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
-          />
-          <Input
-            id="q"
-            name="q"
-            defaultValue={q}
-            placeholder="0812 345 678 ou nom"
-            autoComplete="off"
-            autoFocus
-            className="h-10 pl-9"
-          />
-        </div>
-        <Button type="submit" className="h-10">
-          Chercher
-        </Button>
-      </form>
+      <Card size="sm">
+        <CardContent>
+          <form method="get" className="flex items-center gap-2">
+            <div className="relative min-w-0 flex-1">
+              <SearchIcon
+                aria-hidden
+                className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
+              />
+              <Input
+                id="q"
+                name="q"
+                defaultValue={q}
+                placeholder="0812 345 678 ou nom"
+                autoComplete="off"
+                autoFocus
+                className="h-10 pl-9"
+              />
+            </div>
+            <Button type="submit" className="h-10">
+              Chercher
+            </Button>
+          </form>
+        </CardContent>
+      </Card>
 
       {q !== "" ? (
         resultats.length === 0 ? (
