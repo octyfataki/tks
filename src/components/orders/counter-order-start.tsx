@@ -1,4 +1,4 @@
-import { SearchIcon, UserPlusIcon } from "lucide-react";
+import { UserPlusIcon } from "lucide-react";
 import Link from "next/link";
 import { Button, buttonVariants } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -6,6 +6,7 @@ import {
   CounterOrderForm,
   type CounterPrice,
 } from "@/components/orders/counter-order-form";
+import { CounterOrderSearch } from "@/components/orders/counter-order-search";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { staffActorWith } from "@/lib/authorizations/staff-actor";
@@ -140,30 +141,7 @@ export async function CounterOrderStart({
 
       {filtres.erreur ? <Alerte message={filtres.erreur} /> : null}
 
-      <Card size="sm">
-        <CardContent>
-          <form method="get" className="flex items-center gap-2">
-            <div className="relative min-w-0 flex-1">
-              <SearchIcon
-                aria-hidden
-                className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
-              />
-              <Input
-                id="q"
-                name="q"
-                defaultValue={q}
-                placeholder="0812 345 678 ou nom"
-                autoComplete="off"
-                autoFocus
-                className="h-10 pl-9"
-              />
-            </div>
-            <Button type="submit" className="h-10">
-              Chercher
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+      <CounterOrderSearch retour={retour} defaut={q} />
 
       {q !== "" ? (
         resultats.length === 0 ? (
