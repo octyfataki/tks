@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { createCounterOrderAction } from "../actions";
+import { createCounterOrderAction } from "@/modules/orders/actions";
 
 export type CounterPrice = {
   network: string;
@@ -16,9 +16,11 @@ export type CounterPrice = {
 export function CounterOrderForm({
   profileId,
   prices,
+  retour,
 }: {
   profileId: string;
   prices: CounterPrice[];
+  retour: string;
 }) {
   const [network, setNetwork] = useState(prices[0]?.network ?? "ORANGE");
   const [type, setType] = useState("PREPAID");
@@ -42,6 +44,7 @@ export function CounterOrderForm({
   return (
     <form action={createCounterOrderAction} className="flex flex-col gap-6">
       <input type="hidden" name="profileId" value={profileId} />
+      <input type="hidden" name="retour" value={retour} />
 
       <fieldset className="flex flex-col gap-2">
         <legend className="text-sm font-medium">Réseau</legend>
