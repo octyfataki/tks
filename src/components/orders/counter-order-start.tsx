@@ -1,7 +1,7 @@
 import { SearchIcon, UserPlusIcon } from "lucide-react";
 import Link from "next/link";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card } from "@/components/ui/card";
 import {
   CounterOrderForm,
   type CounterPrice,
@@ -32,21 +32,19 @@ const STATUT_LABELS: Record<string, string> = {
   PRIVILEGIE: "Privilégié",
 };
 
-function EnTetePage({
-  surtitre,
+function EnTeteCaisse({
   titre,
   description,
 }: {
-  surtitre: string;
   titre: string;
   description: string;
 }) {
   return (
-    <header className="max-w-2xl">
+    <header>
       <p className="text-[11px] font-semibold tracking-widest text-muted-foreground uppercase">
-        {surtitre}
+        Caisse rapide
       </p>
-      <h1 className="mt-1 text-2xl font-semibold tracking-tight">{titre}</h1>
+      <h1 className="mt-1 text-xl font-semibold tracking-tight">{titre}</h1>
       <p className="mt-1 text-sm text-muted-foreground">{description}</p>
     </header>
   );
@@ -56,7 +54,7 @@ function Alerte({ message }: { message: string }) {
   return (
     <p
       role="alert"
-      className="max-w-2xl rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive"
+      className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2 text-sm text-destructive"
     >
       {message}
     </p>
@@ -102,9 +100,8 @@ export async function CounterOrderStart({
       currency: entree.price?.currency ?? DEFAULT_PROFILE_CURRENCY,
     }));
     return (
-      <div className="flex flex-1 flex-col gap-5 p-4 pt-4">
-        <EnTetePage
-          surtitre="Caisse rapide"
+      <div className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-5 p-4 pt-6">
+        <EnTeteCaisse
           titre="Commande au comptoir"
           description="Le prix et le plafond sont vérifiés au moment de créer."
         />
@@ -125,50 +122,51 @@ export async function CounterOrderStart({
   const nom = filtres.nom?.trim() ?? "";
 
   return (
-    <div className="flex flex-1 flex-col gap-5 p-4 pt-4">
-      <EnTetePage
-        surtitre="Caisse rapide"
+    <div className="mx-auto flex w-full max-w-lg flex-1 flex-col gap-5 p-4 pt-10">
+      <EnTeteCaisse
         titre="Retrouver le client"
-        description="Un numéro suffit. Deux clients qui partagent un numéro restent deux profils : vérifiez le nom avant de choisir."
+        description="Un numéro ou un nom suffit. Deux clients qui partagent un numéro restent deux profils."
       />
 
       {filtres.erreur ? <Alerte message={filtres.erreur} /> : null}
 
-      <Card size="sm" className="max-w-2xl">
-        <CardContent>
-          <form method="get" className="flex flex-wrap items-end gap-2">
-            <div className="flex min-w-0 flex-1 flex-col gap-1.5 basis-52">
-              <Label htmlFor="q">Téléphone ou nom</Label>
-              <Input
-                id="q"
-                name="q"
-                defaultValue={q}
-                placeholder="0812 345 678"
-                autoComplete="off"
-              />
-            </div>
-            <Button type="submit" variant="outline">
-              <SearchIcon aria-hidden />
-              Chercher
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+      <form method="get" className="flex items-center gap-2">
+        <div className="relative min-w-0 flex-1">
+          <SearchIcon
+            aria-hidden
+            className="pointer-events-none absolute top-1/2 left-3 size-4 -translate-y-1/2 text-muted-foreground"
+          />
+          <Input
+            id="q"
+            name="q"
+            defaultValue={q}
+            placeholder="0812 345 678 ou nom"
+            autoComplete="off"
+            autoFocus
+            className="h-10 pl-9"
+          />
+        </div>
+        <Button type="submit" className="h-10">
+          Chercher
+        </Button>
+      </form>
 
       {q !== "" ? (
         resultats.length === 0 ? (
-          <Card className="max-w-2xl">
-            <CardContent>
-              <p className="text-sm font-semibold">
-                Aucun profil ne correspond.
-              </p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                Créez le profil du client pour cette commande. Le plafond part
-                à zéro : le crédit reste fermé jusqu&apos;à évaluation.
-              </p>
+          <Card size="sm" className="py-0">
+            <div className="flex flex-col gap-3 p-4">
+              <div>
+                <p className="text-sm font-semibold">
+                  Aucun profil ne correspond.
+                </p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Créez le profil du client pour cette commande. Le plafond
+                  part à zéro : le crédit reste fermé jusqu&apos;à évaluation.
+                </p>
+              </div>
               <form
                 action={createCounterProfileAction}
-                className="mt-4 flex flex-col gap-3"
+                className="flex flex-col gap-3"
               >
                 <input type="hidden" name="retour" value={retour} />
                 <div className="flex flex-col gap-1.5">
@@ -198,21 +196,21 @@ export async function CounterOrderStart({
                   Créer le profil et continuer
                 </Button>
               </form>
-            </CardContent>
+            </div>
           </Card>
         ) : (
-          <Card size="sm" className="max-w-2xl overflow-hidden py-0">
+          <Card size="sm" className="overflow-hidden py-0">
             <ul className="divide-y">
               {resultats.map((resultat) => (
                 <li
                   key={resultat.id}
-                  className="flex flex-wrap items-center justify-between gap-2 px-4 py-3"
+                  className="flex items-center justify-between gap-3 px-4 py-3"
                 >
-                  <div>
-                    <p className="text-sm font-medium">{resultat.name}</p>
-                    <p className="text-sm text-muted-foreground">
-                      {resultat.phone} ·{" "}
-                      {STATUT_LABELS[resultat.status] ?? resultat.status} ·
+                  <div className="min-w-0">
+                    <p className="truncate font-medium">{resultat.name}</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      <span className="tabular-nums">{resultat.phone}</span> ·{" "}
+                      {STATUT_LABELS[resultat.status] ?? resultat.status} ·{" "}
                       plafond{" "}
                       <span className="tabular-nums">
                         {resultat.limitAmount.toLocaleString("fr-FR")}{" "}
@@ -235,8 +233,8 @@ export async function CounterOrderStart({
           </Card>
         )
       ) : (
-        <p className="max-w-2xl text-sm text-muted-foreground">
-          Saisissez un numéro ou un nom pour commencer.
+        <p className="text-center text-sm text-muted-foreground">
+          Le résultat s&apos;affiche ici.
         </p>
       )}
     </div>

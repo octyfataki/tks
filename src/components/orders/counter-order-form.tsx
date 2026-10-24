@@ -74,7 +74,7 @@ export function CounterOrderForm({
   const pret = price !== null && units > 0;
 
   return (
-    <form action={createCounterOrderAction} className="max-w-2xl">
+    <form action={createCounterOrderAction} className="w-full">
       <input type="hidden" name="profileId" value={profileId} />
       <input type="hidden" name="retour" value={retour} />
 
