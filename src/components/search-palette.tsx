@@ -540,6 +540,7 @@ export function PaletteRecherche({
         onOpenChange={basculer}
         title="Recherche"
         description="Rechercher une page ou une action du projet"
+        className="top-1/2 -translate-y-1/2"
       >
         <Command label="Recherche" onValueChange={setRecherche}>
           <CommandInput placeholder="Rechercher une page, une action…" />
