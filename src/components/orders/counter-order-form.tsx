@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { useState, type ReactNode } from "react";
+import Link from "next/link";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { createCounterOrderAction } from "@/modules/orders/actions";
@@ -18,11 +19,37 @@ export type CounterPrice = {
   currency: string;
 };
 
+export type ClientTicket = {
+  nom: string;
+  detail: string;
+};
+
+function LigneTicket({
+  libelle,
+  children,
+}: {
+  libelle: string;
+  children: ReactNode;
+}) {
+  return (
+    <div className="flex items-baseline justify-between gap-4">
+      <span className="text-muted-foreground">{libelle}</span>
+      <span className="tabular-nums">{children}</span>
+    </div>
+  );
+}
+
 export function CounterOrderForm({
+  client,
+  clientDetail,
+  changerHref,
   profileId,
   prices,
   retour,
 }: {
+  client: string;
+  clientDetail: string;
+  changerHref: string;
   profileId: string;
   prices: CounterPrice[];
   retour: string;
@@ -51,8 +78,24 @@ export function CounterOrderForm({
       <input type="hidden" name="profileId" value={profileId} />
       <input type="hidden" name="retour" value={retour} />
 
-      <Card size="sm">
-        <CardContent className="flex flex-col gap-5">
+      <Card size="sm" className="gap-0 overflow-hidden py-0">
+        <div className="flex flex-wrap items-start justify-between gap-2 border-b border-dashed px-4 py-3">
+          <div>
+            <p className="text-[11px] font-semibold tracking-widest text-muted-foreground uppercase">
+              Client
+            </p>
+            <p className="mt-0.5 text-sm font-semibold">{client}</p>
+            <p className="text-sm text-muted-foreground">{clientDetail}</p>
+          </div>
+          <Link
+            href={changerHref}
+            className={buttonVariants({ variant: "outline", size: "sm" })}
+          >
+            Changer de client
+          </Link>
+        </div>
+
+        <div className="flex flex-col gap-5 px-4 py-4">
           <fieldset className="flex flex-col gap-2">
             <legend className="text-sm font-medium">Réseau</legend>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
@@ -156,56 +199,51 @@ export function CounterOrderForm({
               className="max-w-xs tabular-nums"
             />
           </div>
+        </div>
 
-          <div className="border-t border-dashed pt-4 text-sm">
-            {price === null ? (
-              <p className="text-muted-foreground">
-                Ce réseau n&apos;a pas de prix : la commande ne peut pas être
-                chiffrée.
+        <div className="border-t border-dashed px-4 py-3">
+          <p className="text-[11px] font-semibold tracking-widest text-muted-foreground uppercase">
+            Total
+          </p>
+          {price === null ? (
+            <p className="mt-1 text-sm text-muted-foreground">
+              Ce réseau n&apos;a pas de prix : la commande ne peut pas être
+              chiffrée.
+            </p>
+          ) : pret ? (
+            <>
+              <p className="mt-1 text-lg font-semibold tabular-nums">
+                {montant.toLocaleString("fr-FR")} {price.currency}{" "}
+                <span className="text-sm font-normal text-muted-foreground">
+                  à payer
+                </span>
               </p>
-            ) : pret ? (
-              <div className="flex flex-col gap-1.5">
-                <div className="flex items-baseline justify-between gap-4">
-                  <span className="text-muted-foreground">Unités</span>
-                  <span className="tabular-nums">
-                    {units.toLocaleString("fr-FR")}
-                  </span>
-                </div>
-                <div className="flex items-baseline justify-between gap-4">
-                  <span className="text-muted-foreground">
-                    À payer sur la facturation
-                  </span>
-                  <span className="font-medium tabular-nums">
-                    {montant.toLocaleString("fr-FR")} {price.currency}
-                  </span>
-                </div>
+              <div className="mt-1.5 flex flex-col gap-0.5">
+                <LigneTicket libelle="Unités">
+                  {units.toLocaleString("fr-FR")}
+                </LigneTicket>
                 {reste > 0 ? (
-                  <div className="flex items-baseline justify-between gap-4">
-                    <span className="text-muted-foreground">
-                      Non facturés
-                    </span>
-                    <span className="tabular-nums text-muted-foreground">
-                      {reste.toLocaleString("fr-FR")} {price.currency}
-                    </span>
-                  </div>
+                  <LigneTicket libelle="Non facturé">
+                    {reste.toLocaleString("fr-FR")} {price.currency}
+                  </LigneTicket>
                 ) : null}
               </div>
-            ) : (
-              <p className="text-muted-foreground">
-                Saisissez une quantité pour voir le montant.
-              </p>
-            )}
-          </div>
-
-          <div className="flex items-center justify-between gap-4">
-            <Button type="submit" disabled={!pret}>
-              Créer la commande
-            </Button>
-            <p className="text-xs text-muted-foreground">
-              Le prix est figé au moment de la création.
+            </>
+          ) : (
+            <p className="mt-1 text-sm text-muted-foreground">
+              Saisissez une quantité pour voir le montant.
             </p>
-          </div>
-        </CardContent>
+          )}
+        </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-4 border-t px-4 py-3">
+          <Button type="submit" disabled={!pret}>
+            Créer la commande
+          </Button>
+          <p className="text-xs text-muted-foreground">
+            Le prix est figé au moment de la création.
+          </p>
+        </div>
       </Card>
     </form>
   );
