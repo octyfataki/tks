@@ -1,6 +1,12 @@
 import type { Metadata } from "next";
-import { FileCheckIcon } from "lucide-react";
-import { AgentComingSoon } from "@/components/agent-coming-soon";
+import { PermissionRefusee } from "@/components/permission-denied";
+import { ProofBoard } from "@/components/proofs/proof-board";
+import { staffActorWith } from "@/lib/authorizations/staff-actor";
+import {
+  readProofQueue,
+  readProofStats,
+  readRecentDecisions,
+} from "@/modules/proofs/read";
 
 export const metadata: Metadata = {
   title: "Preuves de paiement — Agent — TKS",
@@ -8,15 +14,46 @@ export const metadata: Metadata = {
     "Preuves de paiement téléversées par les clients : valider ou refuser.",
 };
 
-export default function AgentProofsPage() {
-  return (
-    <div className="flex flex-1 flex-col">
-      <AgentComingSoon
-        icon={<FileCheckIcon aria-hidden className="size-6" />}
-        title="Preuves de paiement"
-        text="Les preuves téléversées par les clients, à valider ou à refuser."
-        upcoming="Les preuves de paiement arrivent avec S5 — image téléversée par le client, jamais écrasée."
+const MESSAGES: Record<string, string> = {
+  "proof-validated": "Preuve validée : la commande rejoint la file.",
+  "proof-refused": "Preuve refusée. Le client peut en déposer une autre.",
+};
+
+export default async function AgentProofsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ ok?: string; erreur?: string }>;
+}) {
+  const acteur = await staffActorWith("preuve.valider");
+  if (!acteur) {
+    return (
+      <PermissionRefusee
+        titre="Preuves de paiement"
+        detail="Trancher une preuve exige la permission « preuve.valider »."
+        action="Le socle de permissions l'accorde déjà à tout agent de service validé."
       />
-    </div>
+    );
+  }
+
+  const [preuves, decisions] = await Promise.all([
+    readProofQueue(),
+    readRecentDecisions(8),
+  ]);
+  const stats = await readProofStats(preuves);
+  const params = await searchParams;
+  const message = params.ok ? (MESSAGES[params.ok] ?? params.ok) : null;
+
+  return (
+    <ProofBoard
+      surTitre="Preuves"
+      titre="Preuves de paiement"
+      chapeau="Une preuve ne s'écrase jamais : un refus laisse le client en déposer une autre, et l'ancienne reste consultable."
+      preuves={preuves}
+      decisions={decisions}
+      stats={stats}
+      retour="/agent/proofs"
+      message={message}
+      erreur={params.erreur ?? null}
+    />
   );
 }

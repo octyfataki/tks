@@ -4,7 +4,7 @@ export function Cachet({
   encre,
   children,
 }: {
-  encre: "attente" | "fait" | "expire" | "revoque";
+  encre: "attente" | "actif" | "fait" | "expire" | "revoque";
   children: React.ReactNode;
 }) {
   return (
@@ -13,6 +13,8 @@ export function Cachet({
         "inline-block -rotate-1 rounded border-2 px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap",
         encre === "attente" &&
           "border-amber-600/60 text-amber-700 dark:text-amber-400",
+        encre === "actif" &&
+          "border-primary bg-primary text-primary-foreground",
         encre === "fait" &&
           "border-green-700/50 text-green-700 dark:text-green-400",
         encre === "expire" &&

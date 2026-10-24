@@ -11,6 +11,8 @@ import {
 } from "@/lib/db/schema/accounts";
 import type { Profil } from "./session-role";
 
+export { peutCreerAdminPrincipal } from "@/lib/db/schema/accounts";
+
 export async function profilSession(): Promise<Profil> {
   const session = await auth.api.getSession({ headers: await headers() });
   const userId = session?.user?.id;

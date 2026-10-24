@@ -1,0 +1,119 @@
+import { CheckCheckIcon } from "lucide-react";
+import { networkLabel } from "@/modules/pricing/price-record";
+import type { OrderView } from "@/modules/orders/read";
+import { FileVideMessage, type ContenuVide } from "./file-vide";
+import { CachetEtat } from "./etat-commande";
+import { NetworkThumb } from "./network-thumb";
+
+export function dateCourte(valeur: Date): string {
+  return new Intl.DateTimeFormat("fr-FR", {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(valeur);
+}
+
+export function OrderHistory({
+  commandes,
+  vide,
+}: {
+  commandes: OrderView[];
+  vide?: ContenuVide;
+}) {
+  return (
+    <div className="tks-defilement-masque min-w-0 overflow-x-auto rounded-xl border bg-card">
+      <table className="w-full min-w-[760px] border-collapse text-left text-xs">
+        <caption className="sr-only">
+          Dernières commandes terminées, tous agents confondus
+        </caption>
+        <thead>
+          <tr className="border-b bg-muted/40 text-muted-foreground">
+            <th scope="col" className="px-3 py-2.5 font-medium">
+              Client
+            </th>
+            <th scope="col" className="px-3 py-2.5 font-medium">
+              Réseau
+            </th>
+            <th
+              scope="col"
+              className="px-3 py-2.5 text-right font-medium"
+            >
+              Unités
+            </th>
+            <th
+              scope="col"
+              className="px-3 py-2.5 text-right font-medium"
+            >
+              Montant
+            </th>
+            <th scope="col" className="px-3 py-2.5 font-medium">
+              État
+            </th>
+            <th scope="col" className="px-3 py-2.5 font-medium">
+              Par
+            </th>
+            <th scope="col" className="px-3 py-2.5 font-medium">
+              Le
+            </th>
+          </tr>
+        </thead>
+        <tbody className="divide-y">
+          {commandes.length === 0 ? (
+            <tr>
+              <td colSpan={7}>
+                <FileVideMessage
+                  icone={vide?.icone ?? CheckCheckIcon}
+                  titre={vide?.titre ?? "Le registre est vide"}
+                  detail={
+                    vide?.detail ??
+                    "Chaque commande servie ou annulée s'inscrit ici, avec son agent et son heure."
+                  }
+                  action={vide?.action}
+                />
+              </td>
+            </tr>
+          ) : (
+            commandes.map((commande) => (
+              <tr
+                key={commande.id}
+                className="transition-colors hover:bg-muted/30"
+              >
+                <td className="max-w-56 px-3 py-2.5">
+                  <span className="block truncate font-medium">
+                    {commande.profileName}
+                  </span>
+                  <span className="block truncate text-[11px] text-muted-foreground">
+                    {commande.profilePhone}
+                  </span>
+                </td>
+                <td className="px-3 py-2.5">
+                  <span className="flex items-center gap-2">
+                    <NetworkThumb network={commande.network} />
+                    {networkLabel(commande.network)}
+                  </span>
+                </td>
+                <td className="px-3 py-2.5 text-right tabular-nums">
+                  {commande.units.toLocaleString("fr-FR")}
+                </td>
+                <td className="px-3 py-2.5 text-right font-medium tabular-nums">
+                  {commande.amount.toLocaleString("fr-FR")}{" "}
+                  <span className="font-normal text-muted-foreground">
+                    {commande.currency}
+                  </span>
+                </td>
+                <td className="px-3 py-2.5">
+                  <CachetEtat etat={commande.state} />
+                </td>
+                <td className="px-3 py-2.5 text-muted-foreground">
+                  {commande.lockedByName ?? "—"}
+                </td>
+                <td className="px-3 py-2.5 whitespace-nowrap text-muted-foreground tabular-nums">
+                  {dateCourte(commande.createdAt)}
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
+  );
+}

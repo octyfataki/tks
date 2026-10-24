@@ -65,7 +65,7 @@ export async function HistoriqueAgent({ agentId }: { agentId: string }) {
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="overflow-x-auto rounded-xl border bg-card">
+      <div className="tks-defilement-masque min-w-0 overflow-x-auto rounded-xl border bg-card">
         <table className="w-full min-w-[680px] border-collapse text-left text-xs">
           <caption className="sr-only">
             Activité de l&apos;agent, plus récente d&apos;abord

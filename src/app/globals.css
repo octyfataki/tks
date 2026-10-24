@@ -194,6 +194,14 @@
   mask-image: linear-gradient(to right, black 35%, transparent 85%);
 }
 
+.tks-defilement-masque {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.tks-defilement-masque::-webkit-scrollbar {
+  display: none;
+}
+
 @keyframes tks-loader-orbit {
   to {
     transform: rotate(360deg);
