@@ -183,26 +183,25 @@ export async function createOrder(
   });
 
   if (resultat) {
-    const refus = resultat;
     await enregistrerEvenement({
       acteurId: actor.id,
       roleAuMoment: actor.role,
       typeAction: "order.credit_refuse",
-      entite: "profile",
+      entite: "profil_client",
       entiteId: input.profileId,
       apres: {
         amount: prepared.amount,
         currency: price.currency,
-        reason: refus.reason,
-        disponible: refus.available,
-        manque: refus.shortfall,
+        reason: resultat.reason,
+        disponible: resultat.available,
+        manque: resultat.shortfall,
       },
       horodatageLocal: instant,
       appareilId: input.deviceId ?? null,
     });
     throw new OrderError(
       "CREDIT_EXCEEDED",
-      creditMessage(refus, price.currency),
+      creditMessage(resultat, price.currency),
     );
   }
 

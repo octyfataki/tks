@@ -3,7 +3,6 @@ import {
   asc,
   desc,
   eq,
-  exists,
   gte,
   inArray,
   notExists,
@@ -14,6 +13,7 @@ import { comptesStaff } from "@/lib/db/schema/accounts";
 import { user } from "@/lib/db/schema/auth-schema";
 import { profilsClients } from "@/lib/db/schema/clients";
 import { deriveOrder, type Channel, type DerivedOrder, type OrderEventKind, type OrderState, type OrderType } from "./order-record";
+import { separatesCommandes } from "./filtres";
 import { orderEvents, orders } from "./table";
 
 export type OrderView = {
@@ -94,14 +94,6 @@ async function agentNames(
   return new Map(lignes.map((ligne) => [ligne.id, ligne.name]));
 }
 
-async function hydrate(
-  ex: ExecuteurDb,
-  lines: readonly RawOrder[],
-  now: Date,
-): Promise<OrderView[]> {
-  return (await deriver(ex, lines, now)).vues;
-}
-
 export type OrderIllisible = {
   id: string;
   raison: string;
@@ -109,11 +101,11 @@ export type OrderIllisible = {
 
 async function deriver(
   ex: ExecuteurDb,
-  lines: readonly RawOrder[],
+  lignes: readonly RawOrder[],
   now: Date,
 ): Promise<{ vues: OrderView[]; illisibles: OrderIllisible[] }> {
-  if (lines.length === 0) return { vues: [], illisibles: [] };
-  const ids = lines.map((ligne) => ligne.id);
+  if (lignes.length === 0) return { vues: [], illisibles: [] };
+  const ids = lignes.map((ligne) => ligne.id);
   const evenements = await ex
     .select({
       orderId: orderEvents.orderId,
@@ -136,7 +128,7 @@ async function deriver(
   const retenues: Array<{ ligne: RawOrder; derived: DerivedOrder }> = [];
   const illisibles: OrderIllisible[] = [];
   const agentsEnMain: string[] = [];
-  for (const ligne of lines) {
+  for (const ligne of lignes) {
     let derived: DerivedOrder;
     try {
       derived = deriveOrder(
@@ -184,16 +176,6 @@ async function deriver(
     })),
     illisibles,
   };
-}
-
-export async function readQueue(now: Date = new Date()): Promise<OrderView[]> {
-  const lignes = await db
-    .select(COLUMNS)
-    .from(orders)
-    .innerJoin(profilsClients, eq(profilsClients.id, orders.profileId))
-    .where(openOrders(db))
-    .orderBy(asc(orders.localTimestamp), asc(orders.receivedAt));
-  return hydrate(db, lignes, now);
 }
 
 export type OrderStats = {
@@ -246,12 +228,6 @@ export async function readServiesAujourdhui(
   return Number(servies[0]?.total ?? 0);
 }
 
-export async function readOrderStats(now: Date = new Date()): Promise<OrderStats> {
-  const queue = await readQueue(now);
-  const serviesAujourdhui = await readServiesAujourdhui(db, now);
-  return deriveOrderStats(queue, serviesAujourdhui);
-}
-
 export async function readOrdersAndStats(
   now: Date = new Date(),
 ): Promise<{
@@ -264,58 +240,18 @@ export async function readOrdersAndStats(
       .select(COLUMNS)
       .from(orders)
       .innerJoin(profilsClients, eq(profilsClients.id, orders.profileId))
+      .where(openOrders(db))
       .orderBy(desc(orders.receivedAt))
       .limit(500),
     readServiesAujourdhui(db, now),
   ]);
   const { vues, illisibles } = await deriver(db, lignes, now);
-  const queue = vues.filter(
-    (commande) =>
-      commande.state === "QUEUED" ||
-      commande.state === "LOCKED" ||
-      commande.state === "AWAITING_PROOF",
-  );
+  const { prendre, cours } = separatesCommandes(vues);
   return {
     commandes: vues,
     illisibles,
-    stats: deriveOrderStats(queue, serviesAujourdhui),
+    stats: deriveOrderStats([...prendre, ...cours], serviesAujourdhui),
   };
-}
-
-export async function readAllOrders(
-  limit: number = 500,
-  now: Date = new Date(),
-): Promise<OrderView[]> {
-  const lignes = await db
-    .select(COLUMNS)
-    .from(orders)
-    .innerJoin(profilsClients, eq(profilsClients.id, orders.profileId))
-    .orderBy(desc(orders.receivedAt))
-    .limit(limit);
-  return hydrate(db, lignes, now);
-}
-
-export async function readRecentOrders(
-  limit: number = 20,
-  now: Date = new Date(),
-): Promise<OrderView[]> {
-  const clos = db
-    .select({ present: sql`1` })
-    .from(orderEvents)
-    .where(
-      and(
-        eq(orderEvents.orderId, orders.id),
-        inArray(orderEvents.kind, ["SERVED", "CANCELLED"]),
-      ),
-    );
-  const lignes = await db
-    .select(COLUMNS)
-    .from(orders)
-    .innerJoin(profilsClients, eq(profilsClients.id, orders.profileId))
-    .where(exists(clos))
-    .orderBy(desc(orders.receivedAt))
-    .limit(limit);
-  return hydrate(db, lignes, now);
 }
 
 export async function readOrder(
@@ -328,7 +264,7 @@ export async function readOrder(
     .innerJoin(profilsClients, eq(profilsClients.id, orders.profileId))
     .where(eq(orders.id, orderId))
     .limit(1);
-  const vues = await hydrate(db, lignes, now);
+  const { vues } = await deriver(db, lignes, now);
   return vues[0] ?? null;
 }
 
@@ -343,5 +279,5 @@ export async function readOrdersForProfile(
     .where(eq(orders.profileId, profileId))
     .orderBy(asc(orders.localTimestamp))
     .limit(limit);
-  return hydrate(db, lignes, new Date());
+  return (await deriver(db, lignes, new Date())).vues;
 }

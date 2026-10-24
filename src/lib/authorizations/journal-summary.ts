@@ -57,6 +57,10 @@ export function nomEntite(entite: string): string {
       return "Réglage";
     case "annotation_client":
       return "Annotation client";
+    case "order":
+      return "Commande";
+    case "profil_client":
+      return "Profil client";
     default:
       return entite;
   }
@@ -239,6 +243,17 @@ export function resumerEvenement(
     }
     case "receivable.create": {
       return "Créance créée";
+    }
+    case "profil.creer": {
+      return "Profil client créé au comptoir";
+    }
+    case "order.credit_refuse": {
+      const manque = nombre(apresO?.["manque"]);
+      const devise = texte(apresO?.["currency"]);
+      if (manque !== null && devise) {
+        return `Crédit refusé : il manque ${formaterMontant(manque)} ${devise}`;
+      }
+      return "Crédit refusé";
     }
     case "profil.acces.automatique": {
       return "Accès automatique accordé";

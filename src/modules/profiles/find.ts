@@ -105,7 +105,6 @@ export async function ensureCounterProfile(input: {
     .select(COLUMNS)
     .from(profilsClients)
     .where(eq(profilsClients.contactTelephone, prepared.phone));
-  const partages = existants.map((existant) => existant.id);
   const id = randomUUID();
   const instant = new Date();
   await db.transaction(async (ex) => {
@@ -127,7 +126,15 @@ export async function ensureCounterProfile(input: {
         typeAction: "profil.creer",
         entite: "profil_client",
         entiteId: id,
-        avant: partages.length > 0 ? { contactPartage: partages } : undefined,
+        avant:
+          existants.length > 0
+            ? {
+                profilsPartages: existants.map((existant) => ({
+                  id: existant.id,
+                  nom: existant.name,
+                })),
+              }
+            : undefined,
         apres: {
           nom: prepared.name,
           contactTelephone: prepared.phone,

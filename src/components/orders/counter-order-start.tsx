@@ -9,7 +9,7 @@ import {
 import { CounterOrderSearch } from "@/components/orders/counter-order-search";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { staffActorWith } from "@/lib/authorizations/staff-actor";
+import { staffActorWithAny } from "@/lib/authorizations/staff-actor";
 import { DEFAULT_PROFILE_CURRENCY } from "@/modules/profiles/profile-record";
 import {
   readProfile,
@@ -69,7 +69,7 @@ export async function CounterOrderStart({
   retour: string;
   filtres: FiltresCaisse;
 }) {
-  const acteur = await staffActorWith("commande.creer");
+  const acteur = await staffActorWithAny(["commande.creer", "dossier.creer"]);
   if (!acteur) {
     return (
       <div className="flex flex-1 items-center justify-center p-6">
@@ -80,7 +80,8 @@ export async function CounterOrderStart({
           />
           <h1 className="mt-3 text-lg font-semibold">Caisse rapide</h1>
           <p className="mt-1 text-sm text-muted-foreground">
-            Créer une commande exige la permission « commande.creer ».
+            La caisse exige « commande.creer » (placer la commande) et
+            « dossier.creer » (créer le profil client).
           </p>
         </div>
       </div>
