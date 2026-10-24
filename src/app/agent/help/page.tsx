@@ -4,13 +4,15 @@ import { AideContenu } from "@/components/help/help-content";
 export const metadata: Metadata = {
   title: "Aide Agent — TKS",
   description:
-    "Raccourcis du niveau agent de service : comptoir et terrain. Connecté uniquement.",
+    "Parcours de l’agent de service : valider un compte, lire une fiche, tenir la caisse et le mobile money.",
 };
 
 export default function AgentHelpPage() {
   return (
-    <div className="flex flex-1 flex-col gap-6 p-4 pt-4">
-      <AideContenu />
+    <div className="flex flex-1 flex-col p-4 pt-4 sm:p-6">
+      <main className="mx-auto w-full max-w-6xl">
+        <AideContenu niveau="Agent" />
+      </main>
     </div>
   );
 }

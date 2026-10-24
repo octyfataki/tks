@@ -1,18 +1,15 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useState } from "react";
 import {
-  ArrowDownUpIcon,
-  Briefcase,
   CheckIcon,
-  Hourglass,
-  LayoutDashboard,
   ListFilterIcon,
+  RotateCcwIcon,
   SearchIcon,
-  User,
-  RotateCcw,
+  SearchXIcon,
+  XIcon,
 } from "lucide-react";
-import { AideRaccourciCard } from "@/components/help/help-card";
+import { AideParcoursBloc } from "@/components/help/help-journey";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -23,275 +20,195 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import {
-  AIDE_BIENTOT,
-  AIDE_NIVEAUX,
+  AIDE_THEMES,
   type AideNiveau,
-  type AideRaccourci,
-  type AideSectionNiveau,
+  type AideParcours,
+  type AideRepere,
 } from "@/lib/help-content";
 
-const ICONES: Record<AideNiveau, typeof User> = {
-  Client: User,
-  Agent: Briefcase,
-  Admin: LayoutDashboard,
+type Filtre = "tout" | "ouverts" | "bientot" | "reperes";
+
+const SUGGESTIONS: Record<AideNiveau, string[]> = {
+  Client: ["tarifs", "compte", "pièce", "commande"],
+  Agent: ["validation", "caisse", "transfert", "client"],
+  Admin: ["valider", "permission", "trésorerie", "taux"],
 };
 
 function normaliser(texte: string) {
   return texte
     .toLowerCase()
     .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "");
+    .replace(/[\u0300-\u036f]/g, "");
 }
 
-function raccourciVisible(raccourci: AideRaccourci, mots: string[]) {
+function compter(nombre: number, singulier: string, pluriel: string) {
+  return `${nombre} ${nombre > 1 ? pluriel : singulier}`;
+}
+
+function libelleFiltre(filtre: Filtre) {
+  switch (filtre) {
+    case "tout":
+      return "Tout l’aide";
+    case "ouverts":
+      return "Parcours ouverts";
+    case "bientot":
+      return "Bientôt";
+    case "reperes":
+      return "Repères";
+  }
+}
+
+function contient(parcours: AideParcours, mots: string[]) {
   if (mots.length === 0) return true;
   const corpus = normaliser(
-    [raccourci.label, raccourci.description, ...(raccourci.motsCles ?? [])].join(
-      " ",
-    ),
+    [
+      parcours.titre,
+      parcours.resume,
+      parcours.theme,
+      ...parcours.etapes,
+      parcours.garde ?? "",
+      ...parcours.motsCles,
+    ].join(" "),
   );
   return mots.every((mot) => corpus.includes(mot));
 }
 
-const FILTRES = [
-  { valeur: "Tous", etiquette: "Tous" },
-  { valeur: "Client", etiquette: "Aide Client" },
-  { valeur: "Agent", etiquette: "Aide Agent" },
-  { valeur: "Admin", etiquette: "Aide Admin" },
-] as const;
-
-const TRIS = [
-  { valeur: "", etiquette: "Ordre conseillé" },
-  { valeur: "az", etiquette: "A → Z" },
-  { valeur: "za", etiquette: "Z → A" },
-] as const;
-
-function etiquette(
-  valeurs: readonly { valeur: string; etiquette: string }[],
-  actif: string,
-) {
-  return valeurs.find((v) => v.valeur === actif)?.etiquette ?? valeurs[0].etiquette;
-}
-
-function trierLabels<T extends { label?: string; entree?: string }>(
-  entrees: T[],
-  tri: string,
-  texte: (e: T) => string,
-): T[] {
-  if (tri === "az")
-    return [...entrees].sort((a, b) =>
-      texte(a).localeCompare(texte(b), "fr", { sensitivity: "base" }),
-    );
-  if (tri === "za")
-    return [...entrees].sort((a, b) =>
-      texte(b).localeCompare(texte(a), "fr", { sensitivity: "base" }),
-    );
-  return entrees;
-}
-
-function AideRubrique({
-  section,
-  mots,
-  tri,
-}: {
-  section: AideSectionNiveau;
-  mots: string[];
-  tri: string;
-}) {
-  const Icone = ICONES[section.niveau];
-  const visibles = section.raccourcis.filter((r) => raccourciVisible(r, mots));
-  const cartes = trierLabels(visibles, tri, (r) => r.label);
-  const astuceVisible =
-    mots.length === 0 ||
-    cartes.length > 0 ||
-    mots.every((mot) =>
-      normaliser(
-        `Aide ${section.niveau} ${section.phrase} ${section.astuce ?? ""}`,
-      ).includes(mot),
-    );
-  if (cartes.length === 0 && !astuceVisible) return null;
-
-  const ancre = `aide-${section.niveau.toLowerCase()}`;
-
-  return (
-    <section aria-labelledby={ancre} className="flex flex-col gap-3">
-      <div className="flex items-center gap-2">
-        <span className="flex size-9 items-center justify-center rounded-lg bg-primary/15 text-primary">
-          <Icone aria-hidden />
-        </span>
-        <div>
-          <h2 id={ancre} className="text-base font-semibold">
-            Aide {section.niveau}
-          </h2>
-          <p className="text-xs text-muted-foreground">{section.phrase}</p>
-        </div>
-      </div>
-      {cartes.length > 0 ? (
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-          {cartes.map((raccourci) => (
-            <AideRaccourciCard key={raccourci.label} raccourci={raccourci} />
-          ))}
-        </div>
-      ) : null}
-      {section.astuce && astuceVisible ? (
-        <p className="text-xs leading-relaxed text-muted-foreground">
-          <strong className="font-semibold text-foreground">Bon réflexe : </strong>
-          {section.astuce}
-        </p>
-      ) : null}
-    </section>
+function contientRepere(repere: AideRepere, mots: string[]) {
+  if (mots.length === 0) return true;
+  const corpus = normaliser(
+    [repere.titre, repere.texte, repere.exemple ?? ""].join(" "),
   );
+  return mots.every((mot) => corpus.includes(mot));
 }
 
 export function AideExplorer({
-  sections,
-  niveauFixe,
+  niveau,
+  parcours,
+  reperes,
 }: {
-  sections: AideSectionNiveau[];
-  niveauFixe?: AideNiveau;
+  niveau: AideNiveau;
+  parcours: AideParcours[];
+  reperes: AideRepere[];
 }) {
   const [recherche, setRecherche] = useState("");
-  const [niveau, setNiveau] = useState<(typeof AIDE_NIVEAUX)[number]>(
-    niveauFixe ?? "Tous",
-  );
-  const [tri, setTri] = useState("");
-  const [, startTransition] = useTransition();
-
-  function choisirNiveau(valeur: (typeof AIDE_NIVEAUX)[number]) {
-    startTransition(() => setNiveau(valeur));
-  }
-
-  function choisirTri(valeur: string) {
-    startTransition(() => setTri(valeur));
-  }
-
-  function toutReafficher() {
-    startTransition(() => {
-      setRecherche("");
-      setNiveau(niveauFixe ?? "Tous");
-      setTri("");
-    });
-  }
+  const [filtre, setFiltre] = useState<Filtre>("tout");
 
   const mots = useMemo(
-    () =>
-      normaliser(recherche.trim())
-        .split(/\s+/)
-        .filter(Boolean),
+    () => normaliser(recherche.trim()).split(/\s+/).filter(Boolean),
     [recherche],
   );
 
-  const niveauEffectif = niveauFixe ?? niveau;
+  const ouverts = useMemo(
+    () => parcours.filter((item) => !item.bientot && contient(item, mots)),
+    [parcours, mots],
+  );
+  const aVenir = useMemo(
+    () => parcours.filter((item) => item.bientot && contient(item, mots)),
+    [parcours, mots],
+  );
+  const reperesVisibles = useMemo(
+    () => reperes.filter((item) => contientRepere(item, mots)),
+    [reperes, mots],
+  );
 
-  const rubriques = useMemo(
+  const themes = useMemo(
     () =>
-      sections.filter((s) => niveauEffectif === "Tous" || s.niveau === niveauEffectif),
-    [sections, niveauEffectif],
+      AIDE_THEMES[niveau]
+        .map((theme) => ({
+          theme,
+          items: ouverts.filter((item) => item.theme === theme),
+        }))
+        .filter((groupe) => groupe.items.length > 0),
+    [niveau, ouverts],
   );
 
-  const bientotBrutes = useMemo(() => {
-    if (niveauEffectif !== "Tous") return [];
-    return AIDE_BIENTOT.flatMap((groupe) =>
-      groupe.entrees
-        .filter(
-          (entree) =>
-            mots.length === 0 ||
-            mots.every((mot) =>
-              normaliser(`Bientôt ${groupe.theme} ${entree}`).includes(mot),
-            ),
-        )
-        .map((entree) => ({ theme: groupe.theme, entree })),
-    );
-  }, [niveauEffectif, mots]);
-  const bientotEntrees = useMemo(
-    () => trierLabels(bientotBrutes, tri, (e) => e.entree),
-    [bientotBrutes, tri],
-  );
+  const voirOuverts = filtre === "tout" || filtre === "ouverts";
+  const voirBientot = filtre === "tout" || filtre === "bientot";
+  const voirReperes = filtre === "tout" || filtre === "reperes";
 
-  const bientotVisible = bientotEntrees.length > 0;
+  const totalVisible =
+    (voirOuverts ? ouverts.length : 0) +
+    (voirBientot ? aVenir.length : 0) +
+    (voirReperes ? reperesVisibles.length : 0);
 
-  const nbCartes =
-    rubriques.reduce(
-      (total, s) =>
-        total + s.raccourcis.filter((r) => raccourciVisible(r, mots)).length,
-      0,
-    ) + bientotEntrees.length;
-  const filtreActif =
-    recherche.trim() !== "" ||
-    (!niveauFixe && niveau !== "Tous") ||
-    tri !== "";
-  const rien = nbCartes === 0 && !bientotVisible;
+  const rechercheActive = recherche.trim() !== "";
+  const filtreActif = rechercheActive || filtre !== "tout";
+
+  const statut = [
+    voirOuverts
+      ? compter(ouverts.length, "parcours ouvert", "parcours ouverts")
+      : null,
+    voirBientot
+      ? compter(aVenir.length, "parcours à venir", "parcours à venir")
+      : null,
+    voirReperes ? compter(reperesVisibles.length, "repère", "repères") : null,
+  ]
+    .filter((element) => element !== null)
+    .join(" · ");
+
+  function reinitialiser() {
+    setRecherche("");
+    setFiltre("tout");
+  }
+
+  function chercherPartout(mot: string) {
+    setRecherche(mot);
+    setFiltre("tout");
+  }
 
   return (
-    <div className="flex flex-col gap-6">
-      <Card>
+    <div className="flex flex-col gap-4">
+      <Card size="sm">
         <CardContent>
           <div className="flex flex-wrap items-center gap-2">
-            <div className="relative min-w-0 flex-1 basis-52 sm:max-w-xs">
+            <div className="relative min-w-0 flex-1">
               <SearchIcon className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-muted-foreground" />
               <Input
-                id="aide-recherche"
-                type="search"
+                type="text"
                 role="searchbox"
-                aria-label="Rechercher un raccourci"
+                inputMode="search"
+                aria-label="Rechercher dans l’aide"
                 autoComplete="off"
-                placeholder="Ex. valider un compte, inviter, mot de passe…"
+                placeholder="Rechercher un geste : valider, encaisser, taux…"
                 value={recherche}
-                onChange={(e) => {
-                  const valeur = e.target.value;
-                  startTransition(() => setRecherche(valeur));
-                }}
-                className="pl-8"
+                onChange={(event) => setRecherche(event.target.value)}
+                className="pr-8 pl-8"
               />
+              {rechercheActive ? (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  onClick={() => setRecherche("")}
+                  aria-label="Effacer la recherche"
+                  className="absolute top-1/2 right-1.5 flex size-6 -translate-y-1/2 items-center justify-center rounded-sm text-muted-foreground outline-none hover:bg-muted hover:text-foreground focus-visible:ring-2 focus-visible:ring-ring/40"
+                >
+                  <XIcon aria-hidden className="size-3.5" />
+                </Button>
+              ) : null}
             </div>
 
-            <div className="ml-auto flex flex-wrap items-center gap-2">
-              {niveauFixe ? null : (
-                <DropdownMenu>
-                  <DropdownMenuTrigger
-                    render={
-                      <Button variant="outline" aria-label="Filtrer par niveau">
-                        <ListFilterIcon />
-                        {niveau === "Tous"
-                          ? "Filtrer"
-                          : etiquette(FILTRES, niveau)}
-                      </Button>
-                    }
-                  />
-                  <DropdownMenuContent align="end" className="w-56">
-                    {FILTRES.map((option) => (
-                      <DropdownMenuItem
-                        key={option.valeur}
-                        onClick={() =>
-                          choisirNiveau(
-                            option.valeur as (typeof AIDE_NIVEAUX)[number],
-                          )
-                        }
-                      >
-                        {niveau === option.valeur ? <CheckIcon /> : null}
-                        {option.etiquette}
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              )}
-
+            <div className="ml-auto flex shrink-0">
               <DropdownMenu>
                 <DropdownMenuTrigger
                   render={
-                    <Button variant="outline" aria-label="Trier les cartes">
-                      <ArrowDownUpIcon />
-                      {tri ? etiquette(TRIS, tri) : "Trier"}
+                    <Button variant="outline" aria-label="Filtrer l’aide">
+                      <ListFilterIcon />
+                      {libelleFiltre(filtre)}
                     </Button>
                   }
                 />
-                <DropdownMenuContent align="end" className="w-56">
-                  {TRIS.map((option) => (
+                <DropdownMenuContent align="end" className="w-60">
+                  {[
+                    { valeur: "tout" as const, etiquette: "Tout l’aide" },
+                    { valeur: "ouverts" as const, etiquette: "Parcours ouverts" },
+                    { valeur: "bientot" as const, etiquette: "Bientôt" },
+                    { valeur: "reperes" as const, etiquette: "Repères" },
+                  ].map((option) => (
                     <DropdownMenuItem
-                      key={option.valeur || "conseille"}
-                      onClick={() => choisirTri(option.valeur)}
+                      key={option.valeur}
+                      onClick={() => setFiltre(option.valeur)}
                     >
-                      {tri === option.valeur ? <CheckIcon /> : null}
+                      {filtre === option.valeur ? <CheckIcon /> : null}
                       {option.etiquette}
                     </DropdownMenuItem>
                   ))}
@@ -301,75 +218,171 @@ export function AideExplorer({
           </div>
         </CardContent>
       </Card>
-
-      <p role="status" aria-live="polite" className="text-xs text-muted-foreground">
-        {rien
-          ? "Aucune carte ne correspond. Essayez un autre mot ou réinitialisez."
-          : `${nbCartes} carte${nbCartes > 1 ? "s" : ""} affichée${nbCartes > 1 ? "s" : ""}${filtreActif ? " pour ce filtre" : " au total"}.`}
-      </p>
-
-      {rien ? (
-        <div
-          role="status"
-          className="flex flex-col items-center gap-2 rounded-lg border bg-card px-4 py-10 text-center"
-        >
-          <p className="text-sm font-medium">Rien ici pour « {recherche} »</p>
-          <p className="max-w-sm text-xs leading-relaxed text-muted-foreground">
-            Essayez « valider », « inviter », « mot de passe », « taux » —
-            {niveauFixe ? " ou réinitialisez la recherche." : " ou choisissez votre niveau ci-dessus."}
+      {totalVisible > 0 ? (
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 text-xs text-muted-foreground">
+          <p role="status" aria-live="polite">
+            {`${statut}${rechercheActive ? ` pour « ${recherche.trim()} »` : ""}.`}
           </p>
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={toutReafficher}
-            className="mt-1"
-          >
-            <RotateCcw aria-hidden data-icon="inline-start" />
-            Tout réafficher
-          </Button>
+          {filtreActif ? (
+            <Button
+              type="button"
+              variant="link"
+              onClick={reinitialiser}
+              className="gap-1 font-medium text-foreground outline-none hover:underline focus-visible:ring-2 focus-visible:ring-ring/40"
+            >
+              <RotateCcwIcon aria-hidden className="size-3" />
+              Tout réafficher
+            </Button>
+          ) : null}
         </div>
-      ) : (
-        <>
-          {rubriques.map((section) => (
-            <AideRubrique
-              key={section.niveau}
-              section={section}
-              mots={mots}
-              tri={tri}
-            />
-          ))}
-          {bientotVisible ? (
-            <section aria-labelledby="aide-bientot" className="flex flex-col gap-3">
-              <div className="flex items-center gap-2">
-                <span className="flex size-9 items-center justify-center rounded-lg bg-primary/15 text-primary">
-                  <Hourglass aria-hidden />
-                </span>
-                <div>
-                  <h2 id="aide-bientot" className="text-base font-semibold">
-                    Bientôt dans l’app
-                  </h2>
-                  <p className="text-xs text-muted-foreground">
-                    Annoncés par les specs, pas encore construits : ils
-                    s’allumeront ici et dans la palette (Ctrl+K) à leur
-                    livraison.
-                  </p>
+      ) : null}
+
+      {totalVisible === 0 ? (
+        <div className="rounded-xl border bg-card">
+          <div className="grid gap-6 p-6 sm:grid-cols-[auto_minmax(0,1fr)] sm:p-8">
+            <div className="flex size-14 items-center justify-center rounded-xl bg-muted/60 ring-1 ring-foreground/10">
+              <SearchXIcon
+                aria-hidden
+                className="size-6 text-muted-foreground"
+              />
+            </div>
+            <div>
+              <p className="text-[11px] font-medium text-primary">
+                Aucun résultat
+              </p>
+              <h2 className="mt-1 text-lg font-semibold tracking-tight">
+                {rechercheActive
+                  ? `Rien ici pour « ${recherche.trim()} »`
+                  : "Ce filtre ne montre rien"}
+              </h2>
+              <p className="mt-1 max-w-lg text-sm leading-relaxed text-muted-foreground">
+                L’aide ne décrit que ce que l’application fait. Élargissez la
+                recherche ou repartez de tous les parcours.
+              </p>
+              <div className="mt-5">
+                <p className="text-[11px] font-medium text-muted-foreground">
+                  Essayez plutôt
+                </p>
+                <div className="mt-2 flex flex-wrap gap-1.5">
+                  {SUGGESTIONS[niveau].map((suggestion) => (
+                    <Button
+                      key={suggestion}
+                      type="button"
+                      variant="outline"
+                      onClick={() => chercherPartout(suggestion)}
+                      className="rounded-full border bg-background px-2.5 py-1 text-xs text-foreground outline-none hover:border-primary/40 hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/40"
+                    >
+                      {suggestion}
+                    </Button>
+                  ))}
                 </div>
               </div>
-              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {bientotEntrees.map(({ theme, entree }) => (
-                  <AideRaccourciCard
-                    key={`${theme}:${entree}`}
-                    raccourci={{
-                      label: entree,
-                      description: theme,
-                    }}
+              <div className="mt-5 flex flex-wrap items-center gap-2">
+                <Button
+                  type="button"
+                  variant="default"
+                  onClick={reinitialiser}
+                  className="inline-flex h-8 items-center gap-1.5 rounded-md bg-primary px-3 text-xs font-medium text-primary-foreground outline-none hover:bg-primary/90 focus-visible:ring-2 focus-visible:ring-ring/40"
+                >
+                  <RotateCcwIcon aria-hidden className="size-3.5" />
+                  Tout réafficher
+                </Button>
+                {filtre !== "tout" ? (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setFiltre("tout")}
+                    className="inline-flex h-8 items-center rounded-md border px-3 text-xs font-medium outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring/40"
+                  >
+                    Chercher dans toute l’aide
+                  </Button>
+                ) : null}
+              </div>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-10">
+          {voirOuverts
+            ? themes.map((groupe) => (
+                <section key={groupe.theme}>
+                  <div className="mb-4 flex items-baseline justify-between gap-4 border-b pb-2">
+                    <h2 className="text-lg font-semibold tracking-tight">
+                      {groupe.theme}
+                    </h2>
+                    <span className="text-xs text-muted-foreground tabular-nums">
+                      {groupe.items.length}
+                    </span>
+                  </div>
+                  <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                    {groupe.items.map((item) => (
+                      <AideParcoursBloc key={item.id} parcours={item} />
+                    ))}
+                  </div>
+                </section>
+              ))
+            : null}
+
+          {voirBientot && aVenir.length > 0 ? (
+            <section>
+              <div className="mb-4 flex items-baseline justify-between gap-4 border-b pb-2">
+                <h2 className="text-lg font-semibold tracking-tight">
+                  Bientôt dans l’application
+                </h2>
+                <span className="text-xs text-muted-foreground tabular-nums">
+                  {aVenir.length}
+                </span>
+              </div>
+              <p className="mb-4 max-w-[65ch] text-sm leading-relaxed text-muted-foreground">
+                Décrits par les specs, pas encore livrés. Aucun lien : ces
+                écrans ne sont pas ouverts aujourd’hui.
+              </p>
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                {aVenir.map((item) => (
+                  <AideParcoursBloc
+                    key={item.id}
+                    parcours={item}
+                    afficherTheme
                   />
                 ))}
               </div>
             </section>
           ) : null}
-        </>
+
+          {voirReperes && reperesVisibles.length > 0 ? (
+            <section>
+              <div className="mb-4 flex items-baseline justify-between gap-4 border-b pb-2">
+                <h2 className="text-lg font-semibold tracking-tight">
+                  Repères
+                </h2>
+                <span className="text-xs text-muted-foreground tabular-nums">
+                  {reperesVisibles.length}
+                </span>
+              </div>
+              <p className="max-w-[65ch] text-sm leading-relaxed text-muted-foreground">
+                Les règles qui ne changent pas d’un écran à l’autre.
+              </p>
+              <dl className="mt-2 divide-y">
+                {reperesVisibles.map((repere) => (
+                  <div
+                    key={repere.id}
+                    className="grid gap-1.5 py-5 md:grid-cols-[11rem_minmax(0,1fr)] md:gap-6"
+                  >
+                    <dt className="text-sm font-medium">{repere.titre}</dt>
+                    <dd className="max-w-[65ch] text-sm leading-relaxed text-muted-foreground">
+                      <p>{repere.texte}</p>
+                      {repere.exemple ? (
+                        <p className="mt-2 border-l-2 border-primary/60 bg-muted/40 px-3 py-2 text-[13px] leading-relaxed text-foreground tabular-nums">
+                          {repere.exemple}
+                        </p>
+                      ) : null}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+          ) : null}
+        </div>
       )}
     </div>
   );
