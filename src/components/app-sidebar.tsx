@@ -139,6 +139,7 @@ const groups: { label: string; items: NavItem[] }[] = [
         icon: <ClipboardListIcon />,
         items: [
           { title: "Toutes les commandes", url: "/admin/orders" },
+          { title: "Caisse rapide", url: "/agent/orders/new" },
           { title: "Preuves de paiement", url: "/admin/proofs" },
         ],
       },
