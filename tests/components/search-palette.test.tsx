@@ -53,6 +53,16 @@ describe("PaletteRecherche", () => {
     expect(screen.getByText("Taux de change")).toBeInTheDocument();
   });
 
+  it("présente chaque suggestion en card avec sa description", () => {
+    ouvrir();
+    const titre = screen.getByText("Tableau de bord");
+    const card = titre.closest("[cmdk-item]");
+    expect(card).toHaveTextContent(
+      "Vue d'ensemble de l'activité et des chiffres du jour.",
+    );
+    expect(card).toHaveClass("rounded-lg", "border", "px-3");
+  });
+
   it("navigue vers l'écran choisi et referme le dialogue", () => {
     ouvrir();
     fireEvent.change(
@@ -64,6 +74,16 @@ describe("PaletteRecherche", () => {
     expect(
       screen.queryByRole("dialog", { name: "Recherche" }),
     ).not.toBeInTheDocument();
+  });
+
+  it("masque les séparateurs de groupe pendant une recherche", () => {
+    ouvrir();
+    expect(screen.getAllByRole("separator").length).toBeGreaterThan(0);
+    fireEvent.change(
+      screen.getByPlaceholderText(/rechercher une page/i),
+      { target: { value: "valider" } },
+    );
+    expect(screen.queryAllByRole("separator")).toHaveLength(0);
   });
 
   it("marque les écrans à venir désactivés avec Bientôt", () => {
