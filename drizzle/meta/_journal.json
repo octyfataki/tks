@@ -162,6 +162,13 @@
       "when": 1792517231190,
       "tag": "0030_orders-proofs-receivables",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "5",
+      "when": 1792541802798,
+      "tag": "0031_treasury",
+      "breakpoints": true
     }
   ]
 }

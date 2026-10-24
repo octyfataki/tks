@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { FingerprintIcon, LockIcon, MailIcon, PencilIcon, PhoneIcon, ShieldCheckIcon } from "lucide-react";
+import { FingerprintIcon, LockIcon, MailIcon, ShieldCheckIcon } from "lucide-react";
 import { BoutonCopierMatricule } from "./copy-registration-number-button";
 import { BoutonDeconnexionAutres } from "./sign-out-other-devices-button";
 import { PhotoProfilModifiable } from "./editable-profile-photo";
@@ -10,7 +10,12 @@ import {
   ListePiecesIdentite,
   type PieceIdentiteProfil,
 } from "./identity-document-list";
-import { SectionModifiable } from "@/app/admin/list/[id]/editable-section";
+import { SectionModifiable } from "@/components/editable-section";
+import { PastilleBloc, type EtatBloc } from "./pastille";
+import { dateHeure, dateLongue } from "./dates";
+import { formaterAdresseSession, libelleAppareil } from "./session-label";
+import { BlocActiviteRecente } from "./activity-panel";
+import type { ActiviteRecente } from "@/lib/authorizations/activite";
 
 export type CompteProfil =
   | { type: "CLIENT" }
@@ -20,7 +25,7 @@ export type CompteProfil =
       etat: "VALIDE" | "SUSPENDU" | "REVOQUE";
     };
 
-export type DossierRattacheProfil = {
+export type ProfilClientRattache = {
   nom: string;
   statut: "EN_EVALUATION" | "PRIVILEGIE";
   adresse?: string | null;
@@ -40,7 +45,7 @@ export type ProfilUtilisateurProps = {
   telephone?: string | null;
   avatarUrl?: string | null;
   compte: CompteProfil;
-  dossier?: DossierRattacheProfil | null;
+  profilClient?: ProfilClientRattache | null;
   secondFacteurActif?: boolean | null;
   appareilSecondFacteur?: string | null;
   matricule?: string | null;
@@ -53,6 +58,9 @@ export type ProfilUtilisateurProps = {
   motifCoordonneesVerrouillees?: string;
   cleCoordonnees?: string;
   formulaireSecondFacteur?: ReactNode;
+  formulaireMotDePasse?: ReactNode;
+  activite?: ActiviteRecente[] | null;
+  journalAccessible?: boolean;
   piecesIdentite?: PieceIdentiteProfil[] | null;
   formulairePieceIdentite?: ReactNode;
   className?: string;
@@ -77,12 +85,6 @@ function precisionRole(compte: CompteProfil): string {
   return "Diagnostic";
 }
 
-function espaceCompte(compte: CompteProfil): string {
-  if (compte.type === "CLIENT") return "Espace client";
-  if (compte.role === "AGENT") return "Espace agent";
-  return "Espace distributeur";
-}
-
 function libelleEtat(compte: CompteProfil): string {
   if (compte.type === "CLIENT") return "Compte client";
   switch (compte.etat) {
@@ -105,28 +107,7 @@ function pointEtat(compte: CompteProfil): string {
 function libelleSecondFacteur(actif: boolean | null | undefined): string {
   if (actif === true) return "Actif";
   if (actif === false) return "À activer";
-  return "Non vérifié";
-}
-
-function dateLongue(valeur: Date | string): string {
-  const date = valeur instanceof Date ? valeur : new Date(valeur);
-  if (Number.isNaN(date.getTime())) return String(valeur);
-  return date.toLocaleDateString("fr-FR", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  });
-}
-
-function dateHeure(valeur: Date | string): string {
-  const date = valeur instanceof Date ? valeur : new Date(valeur);
-  if (Number.isNaN(date.getTime())) return String(valeur);
-  return date.toLocaleString("fr-FR", {
-    day: "2-digit",
-    month: "short",
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return "Non activé";
 }
 
 function Champ({ etiquette, valeur }: { etiquette: string; valeur: string }) {
@@ -138,21 +119,22 @@ function Champ({ etiquette, valeur }: { etiquette: string; valeur: string }) {
   );
 }
 
-function TitreCarte({ titre, verrou }: { titre: string; verrou: string }) {
+function TitreBloc({
+  titre,
+  description,
+  pastille,
+}: {
+  titre: string;
+  description: string;
+  pastille?: EtatBloc;
+}) {
   return (
-    <div>
-      <div className="flex items-center justify-between gap-2">
+    <div className="flex items-start justify-between gap-2">
+      <div className="min-w-0">
         <h2 className="text-base font-semibold tracking-tight">{titre}</h2>
-        <span
-          role="img"
-          aria-label={`${titre} : ${verrou}`}
-          title={verrou}
-          className="inline-flex size-7 items-center justify-center rounded-md text-muted-foreground"
-        >
-          <PencilIcon className="size-4" aria-hidden />
-        </span>
+        <p className="mt-0.5 text-xs text-muted-foreground">{description}</p>
       </div>
-      <Separator className="mt-2" />
+      {pastille ? <PastilleBloc etat={pastille} /> : null}
     </div>
   );
 }
@@ -172,13 +154,14 @@ function LigneVerrouillee({
     <div className="flex items-start gap-2.5 rounded-lg border border-dashed bg-muted/40 p-3">
       <Icone className="mt-0.5 size-4 shrink-0 text-muted-foreground" />
       <div className="min-w-0 flex-1">
-        <p className="flex items-center gap-1.5 text-xs font-medium">
-          {etiquette}
-          <LockIcon className="size-3 text-muted-foreground" aria-label="Verrouillé" />
-        </p>
-        <p className="mt-0.5 break-words text-sm">{valeur}</p>
+        <p className="text-xs font-medium">{etiquette}</p>
+        <p className="mt-0.5 break-words text-sm font-medium" title={valeur}>{valeur}</p>
         <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">{aide}</p>
       </div>
+      <LockIcon
+        className="mt-0.5 size-3.5 shrink-0 text-muted-foreground"
+        aria-label="Verrouillé"
+      />
     </div>
   );
 }
@@ -189,7 +172,7 @@ export function ProfilUtilisateur({
   telephone,
   avatarUrl,
   compte,
-  dossier,
+  profilClient,
   secondFacteurActif,
   appareilSecondFacteur,
   matricule,
@@ -202,68 +185,67 @@ export function ProfilUtilisateur({
   motifCoordonneesVerrouillees,
   cleCoordonnees,
   formulaireSecondFacteur,
+  formulaireMotDePasse,
+  activite,
+  journalAccessible,
   piecesIdentite,
   formulairePieceIdentite,
   className,
 }: ProfilUtilisateurProps) {
   const estStaff = compte.type === "STAFF";
   const estAgent = estStaff && compte.role === "AGENT";
-  const estAdmin = estStaff && compte.role !== "AGENT";
-  const dossierAffiche = compte.type === "CLIENT" ? (dossier ?? null) : null;
+  const profilClientAffiche = compte.type === "CLIENT" ? (profilClient ?? null) : null;
   const telephoneAffiche = telephone?.trim() ? telephone : null;
   const sessionsAffichees = sessions ?? null;
   const nbAutresSessions = sessionsAffichees
     ? sessionsAffichees.filter((s) => s.id !== sessionActuelleId).length
     : 0;
+  const coordonneesModifiables = peutModifierCoordonnees ?? false;
+
+  const reperes: ReactNode[] = [];
+  if (matricule) {
+    reperes.push(
+      <span key="matricule" className="inline-flex items-center gap-1">
+        <FingerprintIcon className="size-3.5" aria-hidden />
+        Matricule {matricule}
+        <BoutonCopierMatricule valeur={matricule} className="size-5" />
+      </span>,
+    );
+  }
+  if (creeLe) {
+    reperes.push(<span key="cree">Compte créé le {dateLongue(creeLe)}</span>);
+  }
+  reperes.push(
+    <span key="etat" className="inline-flex items-center gap-1.5">
+      <span className={cn("size-1.5 rounded-full", pointEtat(compte))} aria-hidden />
+      {libelleEtat(compte)}
+    </span>,
+  );
 
   return (
     <section aria-label="Mon compte" className={cn("w-full min-w-0", className)}>
       <header className="rounded-xl border bg-card p-4 sm:p-6">
-        <div className="flex flex-col gap-5 sm:flex-row">
-          <div className="flex min-w-0 flex-1 flex-col items-center gap-3 text-center sm:flex-row sm:gap-4 sm:text-left">
-            <PhotoProfilModifiable nom={nom} avatarUrl={avatarUrl} />
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
-                <h1 className="min-w-0 break-words text-xl font-semibold tracking-tight">{nom}</h1>
-                <Badge variant="secondary" className="rounded-full">
-                  {libelleRole(compte)}
-                </Badge>
-              </div>
-              <p className="mt-1 min-w-0 break-words text-sm text-muted-foreground">
-                {email} · {precisionRole(compte)}
-              </p>
-              <p className="mt-1.5 flex flex-wrap items-center justify-center gap-1.5 text-xs text-muted-foreground sm:justify-start">
-                {matricule ? (
-                  <span className="inline-flex items-center gap-1">
-                    <FingerprintIcon className="size-3.5" aria-hidden />
-                    Matricule {matricule}
-                    <BoutonCopierMatricule valeur={matricule} className="size-5" />
-                  </span>
-                ) : null}
-                {creeLe ? <span>Suivi depuis le {dateLongue(creeLe)}</span> : null}
-                {!matricule && !creeLe ? <span>Mon compte</span> : null}
-                <span aria-hidden>·</span>
-                <span className={cn("size-1.5 rounded-full", pointEtat(compte))} aria-hidden />
-                <span>{libelleEtat(compte)}</span>
-              </p>
+        <div className="flex min-w-0 flex-col items-center gap-3 text-center sm:flex-row sm:gap-4 sm:text-left">
+          <PhotoProfilModifiable nom={nom} avatarUrl={avatarUrl} />
+          <div className="min-w-0">
+            <div className="flex flex-wrap items-center justify-center gap-2 sm:justify-start">
+              <h1 className="min-w-0 break-words text-xl font-semibold tracking-tight">{nom}</h1>
+              <Badge variant="secondary" className="rounded-full">
+                {libelleRole(compte)}
+              </Badge>
+            </div>
+            <p className="mt-1 min-w-0 break-words text-sm text-muted-foreground">
+              {precisionRole(compte)}
+            </p>
+            <div className="mt-1.5 flex flex-wrap items-center justify-center gap-x-2 gap-y-1 text-xs text-muted-foreground sm:justify-start">
+              {reperes.map((repere, index) => (
+                <span key={index} className="inline-flex items-center gap-1.5">
+                  {index > 0 ? <span aria-hidden>·</span> : null}
+                  {repere}
+                </span>
+              ))}
             </div>
           </div>
-
-          <Separator orientation="vertical" className="hidden sm:block" />
-          <Separator className="sm:hidden" />
-
-          <dl className="grid flex-1 grid-cols-1 gap-x-8 gap-y-3 sm:grid-cols-2 sm:max-w-sm">
-            <div className="min-w-0">
-              <dt className="text-xs text-muted-foreground">Matricule</dt>
-              <dd className="mt-0.5 flex items-center gap-1 text-sm font-medium text-foreground">
-                <span className="min-w-0 truncate">{matricule ?? "—"}</span>
-                {matricule ? <BoutonCopierMatricule valeur={matricule} className="size-5 shrink-0" /> : null}
-              </dd>
-            </div>
-            <Champ etiquette="Téléphone" valeur={telephoneAffiche ?? "Non renseigné"} />
-            <Champ etiquette="Identifiant" valeur={email} />
-            <Champ etiquette="Espace" valeur={espaceCompte(compte)} />
-          </dl>
         </div>
       </header>
 
@@ -272,42 +254,40 @@ export function ProfilUtilisateur({
           <section aria-label="Coordonnées" className="rounded-xl border bg-card p-4 sm:p-5">
             <SectionModifiable
               titre="Coordonnées"
-              description="Nom et téléphone retouchables. L'identifiant et le rôle ne se changent pas ici."
-              peutModifier={peutModifierCoordonnees ?? false}
+              description="Nom et téléphone retouchables. L'identifiant et le rôle sont fixés à la création."
+              peutModifier={coordonneesModifiables}
               motifVerrouille={
                 motifCoordonneesVerrouillees ?? "Lecture seule : la correction est indisponible."
               }
               cleRepli={cleCoordonnees}
+              pastille={coordonneesModifiables ? "modifiable" : "lecture-seule"}
               lecture={
                 <>
-    <dl className="mt-4 grid gap-x-8 gap-y-4 sm:grid-cols-2">
-                  <Champ etiquette="Nom affiché" valeur={nom} />
-                  <div className="min-w-0">
-                    <dt className="flex items-center gap-1 text-xs text-muted-foreground">
-                      <PhoneIcon className="size-3" aria-hidden />
-                      Téléphone contact
-                    </dt>
-                    <dd className="mt-0.5 break-words text-sm font-medium">{telephoneAffiche ?? "Non renseigné"}</dd>
+                  <dl className="mt-4 grid gap-x-8 gap-y-4 sm:grid-cols-2">
+                    <Champ etiquette="Nom affiché" valeur={nom} />
+                    <Champ
+                      etiquette="Téléphone contact"
+                      valeur={telephoneAffiche ?? "Non renseigné"}
+                    />
+                  </dl>
+                  <div className="mt-4 flex flex-col gap-2">
+                    <LigneVerrouillee
+                      icone={MailIcon}
+                      etiquette="Adresse email"
+                      valeur={email}
+                      aide="Identifiant de connexion : la confiance passe par l'email."
+                    />
+                    <LigneVerrouillee
+                      icone={ShieldCheckIcon}
+                      etiquette="Rôle"
+                      valeur={libelleRole(compte)}
+                      aide={
+                        estStaff
+                          ? "Immuable : tout changement passe par révocation + recréation tracées."
+                          : "Le compte client ne porte aucun pouvoir de distribution."
+                      }
+                    />
                   </div>
-                </dl>
-                <div className="mt-4 flex flex-col gap-2">
-                  <LigneVerrouillee
-                    icone={MailIcon}
-                    etiquette="Adresse email"
-                    valeur={email}
-                    aide="Identifiant de connexion : la confiance passe par l'email, il ne se change pas ici."
-                  />
-                  <LigneVerrouillee
-                    icone={ShieldCheckIcon}
-                    etiquette="Rôle"
-                    valeur={libelleRole(compte)}
-                    aide={
-                      estStaff
-                        ? "Immuable : tout changement passe par révocation + recréation tracées."
-                        : "Le compte client ne porte aucun pouvoir de distribution."
-                    }
-                  />
-                </div>
                 </>
               }
               formulaire={formulaireCoordonnees}
@@ -316,7 +296,12 @@ export function ProfilUtilisateur({
 
           {compte.type === "CLIENT" && piecesIdentite !== undefined ? (
             <section aria-label="Pièce d'identité" className="rounded-xl border bg-card p-4 sm:p-5">
-              <TitreCarte titre="Pièce d'identité" verrou="lecture seule : la validation se fait au comptoir" />
+              <TitreBloc
+                titre="Pièce d'identité"
+                description="Le document déposé pour vérifier la personne."
+                pastille="lecture-seule"
+              />
+              <Separator className="mt-2" />
               {piecesIdentite === null || piecesIdentite.length === 0 ? (
                 <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
                   Aucune pièce déposée pour l&apos;instant.
@@ -331,26 +316,39 @@ export function ProfilUtilisateur({
           ) : null}
 
           {compte.type === "CLIENT" ? (
-            <section aria-label="Dossier client" className="rounded-xl border bg-card p-4 sm:p-5">
-              <TitreCarte titre="Dossier client" verrou="lecture seule : le rattachement se fait par un distributeur" />
-              {dossierAffiche ? (
+            <section aria-label="Profil client" className="rounded-xl border bg-card p-4 sm:p-5">
+              <TitreBloc
+                titre="Profil client"
+                description="La fiche du client auquel ce compte est rattaché."
+                pastille="lecture-seule"
+              />
+              <Separator className="mt-2" />
+              {profilClientAffiche ? (
                 <dl className="mt-4 grid gap-x-8 gap-y-4 sm:grid-cols-2">
-                  <Champ etiquette="Nom du dossier" valeur={dossierAffiche.nom} />
+                  <Champ etiquette="Nom du profil" valeur={profilClientAffiche.nom} />
                   <Champ
                     etiquette="Statut"
-                    valeur={dossierAffiche.statut === "PRIVILEGIE" ? "Privilégié" : "En évaluation"}
+                    valeur={
+                      profilClientAffiche.statut === "PRIVILEGIE"
+                        ? "Privilégié"
+                        : "En évaluation"
+                    }
                   />
                   <div className="sm:col-span-2">
                     <Champ
                       etiquette="Adresse"
-                      valeur={dossierAffiche.adresse?.trim() ? dossierAffiche.adresse : "Non renseignée"}
+                      valeur={
+                        profilClientAffiche.adresse?.trim()
+                          ? profilClientAffiche.adresse
+                          : "Non renseignée"
+                      }
                     />
                   </div>
                 </dl>
               ) : (
                 <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
-                  Aucun dossier rattaché : aucun dossier ni solde n&apos;est visible tant que le
-                  rattachement n&apos;est pas fait.
+                  Aucun profil client rattaché : aucune donnée financière n&apos;est
+                  visible tant que l&apos;accès n&apos;est pas confirmé.
                 </p>
               )}
             </section>
@@ -358,7 +356,12 @@ export function ProfilUtilisateur({
 
           {estAgent ? (
             <section aria-label="Mission de terrain" className="rounded-xl border bg-card p-4 sm:p-5">
-              <TitreCarte titre="Mission de terrain" verrou="lecture seule : la mission est définie par le distributeur" />
+              <TitreBloc
+                titre="Mission de terrain"
+                description="Ce que l&apos;agent de service fait sur le terrain."
+                pastille="lecture-seule"
+              />
+              <Separator className="mt-2" />
               <dl className="mt-4 grid gap-x-8 gap-y-4 sm:grid-cols-2">
                 <Champ etiquette="Fonction" valeur="Agent de service" />
                 <Champ etiquette="Mode de travail" valeur="Hors-ligne capable" />
@@ -369,32 +372,31 @@ export function ProfilUtilisateur({
             </section>
           ) : null}
 
-          {estAdmin ? (
-            <section aria-label="Administration" className="rounded-xl border bg-card p-4 sm:p-5">
-              <TitreCarte titre="Administration" verrou="lecture seule : le pouvoir métier ne se change pas ici" />
-              <dl className="mt-4 grid gap-x-8 gap-y-4 sm:grid-cols-2">
-                <Champ
-                  etiquette="Pouvoir métier"
-                  valeur={
-                    compte.role === "ADMIN_PRINCIPAL"
-                      ? "Distributeur : taux, plafonds, promotions"
-                      : "Diagnostic seul, action tracée"
-                  }
-                />
-                <Champ etiquette="Second facteur" valeur={libelleSecondFacteur(secondFacteurActif)} />
-              </dl>
-            </section>
+          {activite && activite.length > 0 ? (
+            <BlocActiviteRecente activite={activite} journalAccessible={journalAccessible ?? false} />
           ) : null}
         </div>
 
         <div className="flex min-w-0 flex-col gap-4">
           <section aria-label="Sécurité" className="rounded-xl border bg-card p-4 sm:p-5">
-            <TitreCarte titre="Sécurité" verrou="lecture seule : la sécurité se gère hors de cette fiche" />
-            <div className="mt-4 flex items-center justify-between gap-2">
-              <p className="text-xs text-muted-foreground">Connexion</p>
-              <Badge variant="outline">Mot de passe</Badge>
-            </div>
-            <Separator className="my-3" />
+            <TitreBloc
+              titre="Sécurité"
+              description="Mot de passe, second facteur, sessions : ce qui protège ce compte."
+              pastille={formulaireMotDePasse ? "modifiable" : "lecture-seule"}
+            />
+            <Separator className="mt-2" />
+            {formulaireMotDePasse ? (
+              <div className="mt-4">
+                <p className="text-xs font-medium">Mot de passe</p>
+                <p className="mt-0.5 text-[11px] leading-relaxed text-muted-foreground">
+                  Changer le mot de passe déconnecte les autres appareils.
+                </p>
+                <div className="mt-3">{formulaireMotDePasse}</div>
+              </div>
+            ) : null}
+            {formulaireMotDePasse && formulaireSecondFacteur ? (
+              <Separator className="my-4" />
+            ) : null}
             <div className="flex items-center justify-between gap-2">
               <p className="text-xs text-muted-foreground">Second facteur</p>
               <Badge variant={secondFacteurActif ? "secondary" : "outline"}>
@@ -416,17 +418,21 @@ export function ProfilUtilisateur({
               <div className="mt-3">{formulaireSecondFacteur}</div>
             ) : null}
             <p className="mt-3 flex items-center gap-1.5 text-[11px] text-muted-foreground">
-              <FingerprintIcon className="size-3.5" aria-hidden />
+              <ShieldCheckIcon className="size-3.5" aria-hidden />
               Session à durée bornée, survit à la coupure.
             </p>
           </section>
 
-          {creeLe || creePar ? (
+          {creePar ? (
             <section aria-label="Traçabilité" className="rounded-xl border bg-card p-4 sm:p-5">
-              <TitreCarte titre="Traçabilité" verrou="lecture seule : le journal ne se modifie pas" />
+              <TitreBloc
+                titre="Traçabilité"
+                description="Qui a créé ce compte."
+                pastille="lecture-seule"
+              />
+              <Separator className="mt-2" />
               <dl className="mt-4 grid gap-x-8 gap-y-4">
-                {creePar ? <Champ etiquette="Créé par" valeur={creePar} /> : null}
-                {creeLe ? <Champ etiquette="Compte créé le" valeur={dateLongue(creeLe)} /> : null}
+                <Champ etiquette="Créé par" valeur={creePar} />
               </dl>
             </section>
           ) : null}
@@ -447,29 +453,32 @@ export function ProfilUtilisateur({
               <Separator className="mt-2" />
               {sessionsAffichees.length > 0 ? (
                 <dl className="mt-4 flex flex-col gap-2">
-                  {sessionsAffichees.map((s) => (
-                    <div
-                      key={s.id}
-                      className="min-w-0 rounded-lg border px-3 py-2 text-xs"
-                      title={s.appareil || "Appareil inconnu"}
-                    >
-                      <dt className="sr-only">Session</dt>
-                      <dd className="flex items-center justify-between gap-2">
-                        <span className="min-w-0 truncate font-medium">
-                          {(s.appareil || "Appareil inconnu").slice(0, 48)}
-                        </span>
-                        {s.id === sessionActuelleId ? (
-                          <Badge variant="secondary" className="shrink-0 rounded-full">
-                            Cet appareil
-                          </Badge>
-                        ) : null}
-                      </dd>
-                      <dd className="mt-0.5 break-words text-muted-foreground tabular-nums">
-                        {s.adresse ? `${s.adresse} · ` : ""}depuis le {dateHeure(s.creeLe)}
-                        {" · "}expire le {dateHeure(s.expireLe)}
-                      </dd>
-                    </div>
-                  ))}
+                  {sessionsAffichees.map((s) => {
+                    const adresse = formaterAdresseSession(s.adresse);
+                    return (
+                      <div
+                        key={s.id}
+                        className="min-w-0 rounded-lg border px-3 py-2 text-xs"
+                        title={s.appareil ?? "Appareil inconnu"}
+                      >
+                        <dt className="sr-only">Session</dt>
+                        <dd className="flex items-center justify-between gap-2">
+                          <span className="min-w-0 truncate font-medium">
+                            {libelleAppareil(s.appareil)}
+                          </span>
+                          {s.id === sessionActuelleId ? (
+                            <Badge variant="secondary" className="shrink-0 rounded-full">
+                              Cet appareil
+                            </Badge>
+                          ) : null}
+                        </dd>
+                        <dd className="mt-0.5 break-words text-muted-foreground tabular-nums">
+                          {adresse ? `${adresse} · ` : ""}depuis le {dateHeure(s.creeLe)}
+                          {" · "}expire le {dateHeure(s.expireLe)}
+                        </dd>
+                      </div>
+                    );
+                  })}
                 </dl>
               ) : null}
             </section>

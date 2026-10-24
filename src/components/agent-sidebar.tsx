@@ -23,6 +23,7 @@ import {
   SettingsIcon,
   ScaleIcon,
   UsersIcon,
+  WalletIcon,
 } from "lucide-react"
 
 const groups: { label: string; items: NavItem[] }[] = [
@@ -77,6 +78,16 @@ const groups: { label: string; items: NavItem[] }[] = [
         title: "Créances et dettes",
         url: "/agent/receivables",
         icon: <ScaleIcon />,
+      },
+    ],
+  },
+  {
+    label: "Trésorerie",
+    items: [
+      {
+        title: "Caisse et mobile money",
+        url: "/agent/treasury",
+        icon: <WalletIcon />,
       },
     ],
   },

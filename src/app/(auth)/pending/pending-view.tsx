@@ -246,7 +246,7 @@ export default function PendingVue() {
       ];
 
   return (
-    <div className="relative flex min-h-dvh flex-col bg-background">
+    <div className="relative flex flex-1 flex-col bg-background">
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0"
@@ -469,14 +469,6 @@ export default function PendingVue() {
               )}
         </section>
       </main>
-
-      <footer className="relative z-10 border-t bg-background/80 backdrop-blur">
-        <p className="mx-auto w-full max-w-2xl px-4 py-4 text-xs text-muted-foreground sm:px-6">
-          Un compte non validé ne voit aucun dossier et aucun solde. La
-          validation dit que vous êtes client ; le rattachement, fait ensuite
-          par le distributeur, dit que vous êtes ce client-là.
-        </p>
-      </footer>
     </div>
   );
 }

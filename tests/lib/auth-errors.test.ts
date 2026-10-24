@@ -1,9 +1,22 @@
 import { describe, expect, it, vi } from "vitest";
 import {
   MESSAGE_RESEAU,
+  messageErreurChangementMotDePasse,
   messageErreurConnexion,
   messageErreurSecondFacteur,
 } from "@/lib/auth-errors";
+
+describe("messageErreurChangementMotDePasse", () => {
+  it("lit le code porté par body (APIError côté serveur better-auth)", () => {
+    expect(
+      messageErreurChangementMotDePasse({
+        message: "Invalid password",
+        status: 400,
+        body: { code: "INVALID_PASSWORD" },
+      }),
+    ).toBe("Mot de passe actuel incorrect.");
+  });
+});
 
 describe("messageErreurConnexion", () => {
   it("traduit les identifiants incorrects", () => {

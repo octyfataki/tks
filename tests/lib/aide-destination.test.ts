@@ -21,10 +21,10 @@ describe("destinationAide", () => {
   it("envoie chaque administrateur validé sur l'aide admin", () => {
     expect(
       destinationAide({ type: "STAFF", role: "ADMIN_PRINCIPAL", etat: "VALIDE" }),
-    ).toBe("/admin/aide");
+    ).toBe("/admin/help");
     expect(
       destinationAide({ type: "STAFF", role: "ADMIN_TECHNIQUE", etat: "VALIDE" }),
-    ).toBe("/admin/aide");
+    ).toBe("/admin/help");
   });
 
   it("renvoie le staff non validé à la connexion", () => {

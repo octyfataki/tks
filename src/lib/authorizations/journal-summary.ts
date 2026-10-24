@@ -82,6 +82,8 @@ export function resumerEvenement(
   const apresO = estObjet(apres) ? apres : null;
 
   switch (input.typeAction) {
+    default:
+      return null;
     case "taux.saisir": {
       const jour = texte(apresO?.["jour"]);
       const valeur = nombre(apresO?.["valeur"]);
@@ -195,16 +197,50 @@ export function resumerEvenement(
         ? `Réglage modifié (${cles.join(", ")})`
         : "Réglage modifié";
     }
-    case "price_grid.manage": {
-      const network = texte(apresO?.["network"]);
-      const amount = nombre(apresO?.["amount"]);
-      const currency = texte(apresO?.["currency"]);
-      if (network && amount !== null && currency) {
-        return `Prix ${network} : ${formaterMontant(amount)} ${currency} les 100 unités`;
-      }
-      return "Prix de la grille modifié";
+    case "order.create": {
+      return "Commande créée";
     }
-    default:
-      return null;
+    case "order.lock": {
+      const avantEtat = texte(avantO?.["state"]);
+      const apresEtat = texte(apresO?.["state"]);
+      if (avantEtat && apresEtat) return `Commande verrouillée (${avantEtat} → ${apresEtat})`;
+      return "Commande verrouillée";
+    }
+    case "order.serve": {
+      const avantEtat = texte(avantO?.["state"]);
+      const apresEtat = texte(apresO?.["state"]);
+      if (avantEtat && apresEtat) return `Commande servie (${avantEtat} → ${apresEtat})`;
+      return "Commande servie";
+    }
+    case "order.cancel": {
+      const avantEtat = texte(avantO?.["state"]);
+      const apresEtat = texte(apresO?.["state"]);
+      if (avantEtat && apresEtat) return `Commande annulée (${avantEtat} → ${apresEtat})`;
+      return "Commande annulée";
+    }
+    case "payment_proof.validate": {
+      const orderId = texte(apresO?.["orderId"]);
+      return orderId ? `Preuve de paiement validée (commande ${orderId})` : "Preuve de paiement validée";
+    }
+    case "payment_proof.refuse": {
+      const orderId = texte(apresO?.["orderId"]);
+      const reason = texte(apresO?.["reason"]) ?? input.motif?.trim();
+      const suffix = reason ? `, motif : ${reason}` : "";
+      return orderId
+        ? `Preuve de paiement refusée (commande ${orderId}${suffix})`
+        : `Preuve de paiement refusée${suffix}`;
+    }
+    case "cash.movement": {
+      return "Mouvement de caisse";
+    }
+    case "entry.correct": {
+      return "Correction d'entrée";
+    }
+    case "receivable.create": {
+      return "Créance créée";
+    }
+    case "profil.acces.automatique": {
+      return "Accès automatique accordé";
+    }
   }
 }

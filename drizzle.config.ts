@@ -12,6 +12,7 @@ export default defineConfig({
     "./src/modules/orders/table.ts",
     "./src/modules/receivables/table.ts",
     "./src/modules/proofs/table.ts",
+    "./src/modules/treasury/table.ts",
   ],
   out: "./drizzle",
   dialect: "mysql",

@@ -162,14 +162,8 @@ const groups: { label: string; items: NavItem[] }[] = [
     items: [
       {
         title: "Caisse et mobile money",
-        url: "#",
+        url: "/admin/treasury",
         icon: <WalletIcon />,
-        soon: true,
-        items: [
-          { title: "Comptes", soon: true },
-          { title: "Mouvements", soon: true },
-          { title: "Transferts", soon: true },
-        ],
       },
       {
         title: "Taux de change",
