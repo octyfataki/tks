@@ -106,12 +106,14 @@ export function TauxDuJour({
   taux = null,
   historique = [],
   peutSaisir = true,
+  estClient = false,
   onEnregistrer,
   className,
 }: {
   taux?: TauxEnVigueur | null
   historique?: TauxHistorique[]
   peutSaisir?: boolean
+  estClient?: boolean
   onEnregistrer?: (
     valeur: number
   ) => ResultatSaisieTaux | Promise<ResultatSaisieTaux>
@@ -259,7 +261,7 @@ export function TauxDuJour({
               </p>
             ) : null}
           </>
-        ) : (
+        ) : estClient ? null : (
           <p className="text-xs/relaxed text-muted-foreground">
             Lecture seule : seul un compte autorisé peut saisir le taux.
           </p>

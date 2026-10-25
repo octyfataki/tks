@@ -16,6 +16,7 @@ type EtatTaux = {
   taux: TauxEnVigueur | null;
   historique: TauxHistorique[];
   peutSaisir: boolean;
+  estClient: boolean;
 };
 
 export function TauxDuJourAuto({ className }: { className?: string }) {
@@ -31,13 +32,25 @@ export function TauxDuJourAuto({ className }: { className?: string }) {
             taux: resultat.taux,
             historique: resultat.historique.slice(0, 5),
             peutSaisir: resultat.peutSaisir,
+            estClient: resultat.estClient,
           });
         } else {
-          setEtat({ taux: null, historique: [], peutSaisir: false });
+          setEtat({
+            taux: null,
+            historique: [],
+            peutSaisir: false,
+            estClient: false,
+          });
         }
       })
       .catch(() => {
-        if (actif) setEtat({ taux: null, historique: [], peutSaisir: false });
+        if (actif)
+          setEtat({
+            taux: null,
+            historique: [],
+            peutSaisir: false,
+            estClient: false,
+          });
       });
     return () => {
       actif = false;
@@ -59,6 +72,7 @@ export function TauxDuJourAuto({ className }: { className?: string }) {
             ...(precedent?.historique ?? []).slice(0, 4),
           ],
           peutSaisir: true,
+          estClient: precedent?.estClient ?? false,
         }));
         return { ok: true };
       }
@@ -72,6 +86,7 @@ export function TauxDuJourAuto({ className }: { className?: string }) {
       taux={etat?.taux ?? null}
       historique={etat?.historique ?? []}
       peutSaisir={etat?.peutSaisir ?? false}
+      estClient={etat?.estClient ?? false}
       onEnregistrer={enregistrer}
       className={className}
     />

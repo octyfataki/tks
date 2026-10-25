@@ -30,6 +30,7 @@ export type TauxHistoriqueAffiche = {
 export type ResultatChargementTaux = ResultatAction<{
   taux: TauxAffiche | null;
   peutSaisir: boolean;
+  estClient: boolean;
   historique: TauxHistoriqueAffiche[];
 }>;
 
@@ -79,16 +80,26 @@ export async function chargerTauxEnVigueurAction(): Promise<ResultatChargementTa
       lireHistoriqueTaux(10),
       compteCourant(),
     ]);
-    const peutSaisir = compte ? await autoriserSaisieTaux(compte) : false;
+    const estClient = compte === null;
+    const peutSaisir = estClient
+      ? false
+      : await autoriserSaisieTaux(compte);
+    const tauxAffiche = taux ? versAffiche(taux) : null;
     return {
       ok: true,
-      taux: taux ? versAffiche(taux) : null,
+      taux:
+        tauxAffiche && estClient
+          ? { ...tauxAffiche, saisiPar: undefined }
+          : tauxAffiche,
       peutSaisir,
-      historique: historique.map((ligne) => ({
-        valeur: ligne.valeur,
-        jour: ligne.jour,
-        saisiPar: ligne.saisiParNom ?? undefined,
-      })),
+      estClient,
+      historique: estClient
+        ? []
+        : historique.map((ligne) => ({
+            valeur: ligne.valeur,
+            jour: ligne.jour,
+            saisiPar: ligne.saisiParNom ?? undefined,
+          })),
     };
   } catch {
     return { ok: false, erreur: "Taux en vigueur indisponible." };

@@ -20,6 +20,7 @@ describe("TauxDuJourAuto", () => {
       ok: true,
       taux: { valeur: 2300, depuisLe: "2026-10-10" },
       peutSaisir: true,
+      estClient: false,
       historique: [],
     });
     render(<TauxDuJourAuto />);
@@ -38,6 +39,7 @@ describe("TauxDuJourAuto", () => {
       ok: true,
       taux: { valeur: 2300, depuisLe: "2026-10-10" },
       peutSaisir: false,
+      estClient: false,
       historique: [],
     });
     render(<TauxDuJourAuto />);
@@ -52,11 +54,35 @@ describe("TauxDuJourAuto", () => {
     expect(screen.getByText(/lecture seule/i)).toBeInTheDocument();
   });
 
+  it("vue client : ni historique, ni nom du saisisseur, ni mention lecture seule", async () => {
+    charger.mockResolvedValue({
+      ok: true,
+      taux: { valeur: 2300, depuisLe: "2026-10-10" },
+      peutSaisir: false,
+      estClient: true,
+      historique: [],
+    });
+    render(<TauxDuJourAuto />);
+
+    fireEvent.click(
+      await screen.findByRole("button", { name: "Consulter le taux" }),
+    );
+    const dialogue = await screen.findByRole("dialog", {
+      name: "Taux en vigueur",
+    });
+    expect(dialogue).toHaveTextContent("2 300");
+    expect(dialogue).toHaveTextContent("En vigueur depuis le 10 octobre");
+    expect(dialogue).not.toHaveTextContent("saisi par");
+    expect(screen.queryByText(/lecture seule/i)).not.toBeInTheDocument();
+    expect(dialogue).not.toHaveTextContent("CDF.");
+  });
+
   it("enregistre la saisie et met à jour la pastille et l'historique", async () => {
     charger.mockResolvedValue({
       ok: true,
       taux: { valeur: 2300, depuisLe: "2026-10-06" },
       peutSaisir: true,
+      estClient: false,
       historique: [{ valeur: 2300, jour: "2026-10-06" }],
     });
     enregistrer.mockResolvedValue({
@@ -94,6 +120,7 @@ describe("TauxDuJourAuto", () => {
       ok: true,
       taux: { valeur: 2300, depuisLe: "2026-10-10" },
       peutSaisir: true,
+      estClient: false,
       historique: [],
     });
     enregistrer.mockResolvedValue({
